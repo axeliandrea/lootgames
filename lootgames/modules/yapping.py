@@ -6,20 +6,17 @@ from pyrogram import filters, Client
 from pyrogram.types import Message
 
 # ================= CONFIG ================= #
-GROUP_ID = -1002904817520  # Ganti sesuai grup target
+GROUP_ID = -1002904817520  # ganti sesuai grup target
 POINT_FILE = "lootgames/modules/yapping_point.json"
 
 # ================= INIT DATA ================= #
 point_data = {}
 
-# Buat file baru jika belum ada
+# Buat file jika belum ada
 if not os.path.exists(POINT_FILE):
-    try:
-        with open(POINT_FILE, "w") as f:
-            json.dump({}, f, indent=2)
-        print(f"[YAPPING] Created new point file: {POINT_FILE}")
-    except Exception as e:
-        print(f"[YAPPING] Failed to create point file: {e}")
+    with open(POINT_FILE, "w") as f:
+        json.dump({}, f, indent=2)
+    print(f"[YAPPING] Created new point file: {POINT_FILE}")
 
 # Load data JSON
 try:
@@ -32,7 +29,6 @@ except Exception as e:
 
 # ================= UTILITY ================= #
 def save_points():
-    """Simpan point ke file JSON"""
     try:
         with open(POINT_FILE, "w") as f:
             json.dump(point_data, f, indent=2)
@@ -41,18 +37,15 @@ def save_points():
         print(f"[YAPPING] Failed to save point_data: {e}")
 
 def load_points():
-    """Load point dan kembalikan dictionary"""
     global point_data
     try:
         if os.path.exists(POINT_FILE):
             with open(POINT_FILE, "r") as f:
                 point_data = json.load(f)
-            print(f"[YAPPING] Loaded point_data from {POINT_FILE}")
         else:
             point_data = {}
             with open(POINT_FILE, "w") as f:
                 json.dump(point_data, f, indent=2)
-            print(f"[YAPPING] Point file not found. Created new file.")
     except Exception as e:
         print(f"[YAPPING] Error loading points: {e}")
         traceback.print_exc()
@@ -62,10 +55,8 @@ def load_points():
 def register(app: Client):
     print("[YAPPING] Registering handlers...")
 
-    # ================= HANDLER CHAT POINT ================= #
-    @app.on_message(filters.text & ~filters.private)  # Sementara, tangkap semua chat untuk debug
+    @app.on_message(filters.chat(GROUP_ID) & filters.text & ~filters.private)
     async def yapping_point(client: Client, message: Message):
-        """Handler chat point utama"""
         try:
             user = message.from_user
             if not user:
@@ -73,18 +64,19 @@ def register(app: Client):
                 return
 
             text = message.text.strip()
-            if len(text) < 5:
-                print(f"[YAPPING] Message too short ({len(text)} chars), skipping")
-                return  # minimal 5 karakter
+            char_count = len(text)
+            print(f"[YAPPING-CHAT] {user.first_name} ({user.id}) in {message.chat.title if message.chat else 'Unknown chat'}: '{text}' ({char_count} chars)")
 
-            user_id = str(user.id)
-            if user_id not in point_data:
-                point_data[user_id] = {"username": user.first_name, "points": 0}
-
-            point_data[user_id]["points"] += 1
-            save_points()
-
-            print(f"[YAPPING] {user.first_name} ({user.id}) → total points: {point_data[user_id]['points']}")
+            # Beri point jika >=5 karakter
+            if char_count >= 5:
+                user_id = str(user.id)
+                if user_id not in point_data:
+                    point_data[user_id] = {"username": user.first_name, "points": 0}
+                point_data[user_id]["points"] += 1
+                save_points()
+                print(f"[YAPPING-POINT] {user.first_name} gained 1 point → total: {point_data[user_id]['points']}")
+            else:
+                print(f"[YAPPING] Message too short, no point added")
         except Exception as e:
             print(f"[YAPPING] Exception in yapping_point: {e}")
             traceback.print_exc()
@@ -92,15 +84,14 @@ def register(app: Client):
     # ================= COMMAND CHECK POINT ================= #
     @app.on_message(filters.command("point") & ~filters.private)
     async def check_point(client: Client, message: Message):
-        """Cek point sendiri atau user lain"""
         try:
             args = message.text.split()
             if len(args) == 1:
                 user_id = str(message.from_user.id)
-                pts = point_data.get(user_id, {"points": 0})["points"]
+                pts = point_data.get(user_id, {"points":0})["points"]
                 await message.reply_text(f"Total Chat Pointmu: {pts}")
             elif len(args) == 2:
-                username = args[1].replace("@", "")
+                username = args[1].replace("@","")
                 found = None
                 for uid, data in point_data.items():
                     if data.get("username") == username:
@@ -110,7 +101,6 @@ def register(app: Client):
                     await message.reply_text(f"Total Chat Point {username}: {found['points']}")
                 else:
                     await message.reply_text("User tidak ditemukan.")
-            print(f"[YAPPING] /point command processed by {message.from_user.first_name}")
         except Exception as e:
             print(f"[YAPPING] Exception in check_point: {e}")
             traceback.print_exc()
@@ -118,19 +108,16 @@ def register(app: Client):
     # ================= COMMAND LEADERBOARD ================= #
     @app.on_message(filters.command("board") & ~filters.private)
     async def leaderboard(client: Client, message: Message):
-        """Leaderboard top 10"""
         try:
             if not point_data:
                 await message.reply_text("Leaderboard masih kosong.")
-                print("[YAPPING] Leaderboard empty")
                 return
 
             sorted_board = sorted(point_data.items(), key=lambda x: x[1]["points"], reverse=True)
             text = "🏆 Leaderboard Chat Points 🏆\n\n"
-            for i, (uid, data) in enumerate(sorted_board[:10], 1):
+            for i, (uid, data) in enumerate(sorted_board[:10],1):
                 text += f"{i}. {data['username']} → {data['points']} pts\n"
             await message.reply_text(text)
-            print(f"[YAPPING] Leaderboard sent by {message.from_user.first_name}")
         except Exception as e:
             print(f"[YAPPING] Exception in leaderboard: {e}")
             traceback.print_exc()
