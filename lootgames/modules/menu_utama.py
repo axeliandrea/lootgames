@@ -1,6 +1,6 @@
 # lootgames/modules/menu_utama.py
 import logging
-from pyrogram import Client, handlers
+from pyrogram import Client, handlers, filters
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery, Message
 
 # ---------------- CONFIG ---------------- #
@@ -89,3 +89,4 @@ def register(app: Client):
     app.add_handler(handlers.MessageHandler(open_menu, filters.command("menufish", prefixes=".")))
     app.add_handler(handlers.CallbackQueryHandler(callback_handler))
     logger.info("[INFO] Handler menu_utama berhasil terdaftar.")
+
