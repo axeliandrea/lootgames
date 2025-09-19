@@ -4,13 +4,11 @@ import os
 import re
 from pyrogram import filters
 from pyrogram.types import Message
-import lootgames.modules.yapping as yapping
 
 # File penyimpanan point
 POINT_FILE = "lootgames/modules/yapping_point.json"
 GROUP_ID = -1002904817520  # ID grup target
 
-points = yapping.load_points()
 # Load atau inisialisasi data point
 if os.path.exists(POINT_FILE):
     with open(POINT_FILE, "r") as f:
@@ -18,13 +16,21 @@ if os.path.exists(POINT_FILE):
 else:
     point_data = {}
 
+# --- Fungsi untuk mengelola point ---
 def save_points():
     with open(POINT_FILE, "w") as f:
         json.dump(point_data, f, indent=4)
 
-# Fungsi register modul untuk __main__.py
-def register(app):
+def load_points():
+    """Mengembalikan seluruh data point"""
+    return point_data
 
+def get_point(user_id):
+    """Mengembalikan point user tertentu"""
+    return point_data.get(str(user_id), 0)
+
+# --- Fungsi register modul untuk __main__.py ---
+def register(app):
     @app.on_message(filters.chat(GROUP_ID) & filters.text & ~filters.private)
     async def yapping_point(client, message: Message):
         user_id = str(message.from_user.id)
@@ -46,5 +52,5 @@ def register(app):
         point_data[user_id] += 1
         save_points()
 
-        # Opsional: reply atau log di terminal
+        # Log di terminal
         print(f"[YAPPING] {message.from_user.first_name} ({user_id}) mendapat 1 point. Total: {point_data[user_id]}")
