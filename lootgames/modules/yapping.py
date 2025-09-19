@@ -6,7 +6,7 @@ from pyrogram.types import Message
 
 # ================= CONFIG ================= #
 POINT_FILE = "storage/chat_points.json"
-TARGET_GROUP = -1002946278772  # ganti sesuai grup chat
+TARGET_GROUP = -1002904817520  # ganti sesuai grup chat
 DEBUG = True
 
 # ================= INIT DATA ================= #
