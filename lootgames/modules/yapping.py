@@ -1,13 +1,15 @@
 # lootgames/modules/yapping.py
-import json
 import os
-from pyrogram import Client, filters
+import json
+from pyrogram import filters
 from pyrogram.types import Message
+from pyrogram import Client
 
+# ================= CONFIG ================= #
 GROUP_ID = -1002904817520  # Ganti sesuai grup target
 POINT_FILE = "lootgames/modules/yapping_point.json"
 
-# Load atau buat data point
+# ================= INIT DATA ================= #
 if os.path.exists(POINT_FILE):
     with open(POINT_FILE, "r") as f:
         point_data = json.load(f)
@@ -18,9 +20,12 @@ def save_points():
     with open(POINT_FILE, "w") as f:
         json.dump(point_data, f, indent=2)
 
+# ================= REGISTER HANDLER ================= #
 def register(app: Client):
+
     @app.on_message(filters.chat(GROUP_ID) & filters.text & ~filters.private)
     async def yapping_point(client: Client, message: Message):
+        """Handler utama untuk chat point"""
         user = message.from_user
         if not user:
             return
@@ -33,14 +38,14 @@ def register(app: Client):
         if user_id not in point_data:
             point_data[user_id] = {"name": user.first_name, "point": 0}
 
-        # Tambah point
         point_data[user_id]["point"] += 1
         save_points()
 
-        print(f"[DEBUG] {user.first_name} ({user.id}) mengirim chat: '{text}' → total point: {point_data[user_id]['point']}")
+        print(f"[DEBUG] {user.first_name} ({user.id}) chat: '{text}' → total point: {point_data[user_id]['point']}")
 
     @app.on_message(filters.command("point") & ~filters.private)
     async def check_point(client: Client, message: Message):
+        """Cek point sendiri atau user lain"""
         args = message.text.split()
         if len(args) == 1:
             # Cek point sendiri
@@ -62,6 +67,7 @@ def register(app: Client):
 
     @app.on_message(filters.command("board") & ~filters.private)
     async def leaderboard(client: Client, message: Message):
+        """Leaderboard top 10"""
         if not point_data:
             await message.reply_text("Leaderboard masih kosong.")
             return
@@ -72,11 +78,11 @@ def register(app: Client):
             text += f"{i}. {data['name']} → {data['point']} point\n"
         await message.reply_text(text)
 
-# Auto-register jika diimport
-from pyrogram import Client as _App
+# ================= AUTO REGISTER (optional) ================= #
+# Ini berguna kalau modul diimport langsung
 try:
-    app  # Cek apakah variabel app ada
-except NameError:
+    from lootgames.__main__ import app
+except ImportError:
     pass
 else:
     register(app)
