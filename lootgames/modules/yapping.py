@@ -6,19 +6,17 @@ from pyrogram import Client, filters
 from pyrogram.types import Message
 
 # ================= CONFIG ================= #
-GROUP_ID = -1002904817520  # ganti sesuai grup target
+GROUP_ID = -1002904817520  # ID grup target
 POINT_FILE = "lootgames/modules/yapping_point.json"
 
 # ================= INIT DATA ================= #
 point_data = {}
 
-# Buat file jika belum ada
 if not os.path.exists(POINT_FILE):
     with open(POINT_FILE, "w") as f:
         json.dump({}, f, indent=2)
     print(f"[YAPPING] Created new point file: {POINT_FILE}")
 
-# Load data JSON
 try:
     with open(POINT_FILE, "r") as f:
         point_data = json.load(f)
@@ -27,7 +25,6 @@ except Exception as e:
     print(f"[YAPPING] Failed to load point_data: {e}")
     point_data = {}
 
-# ================= UTILITY ================= #
 def save_points():
     try:
         with open(POINT_FILE, "w") as f:
@@ -56,32 +53,34 @@ def register(app: Client):
     print("[YAPPING] Registering handlers...")
 
     # ---------------- CHAT POINT ---------------- #
-    @app.on_message(filters.text & ~filters.private & filters.chat(GROUP_ID))
+    @app.on_message(filters.text & ~filters.private)
     async def yapping_point(client: Client, message: Message):
         try:
             user = message.from_user
-            if not user:
-                print("[YAPPING] Message has no from_user, skipping")
+            chat_id = message.chat.id
+            text = message.text.strip()
+            
+            # Log semua pesan masuk
+            print(f"[SUPERDEBUG] Message from {user.first_name if user else 'Unknown'} ({user.id if user else 'N/A'}) in chat {chat_id}: '{text}'")
+
+            # Hanya grup target (opsional, bisa comment untuk debug)
+            if chat_id != GROUP_ID:
                 return
 
-            print(f"[SUPERDEBUG] Message received from {user.first_name} ({user.id}): '{message.text}' in chat {message.chat.id}")
-
-            text = message.text.strip()
-            if len(text) >= 5:
+            # Cek panjang pesan ≥5
+            if len(text) >= 5 and user:
                 user_id = str(user.id)
                 if user_id not in point_data:
                     point_data[user_id] = {"username": user.first_name, "points": 0}
                 point_data[user_id]["points"] += 1
                 save_points()
                 print(f"[YAPPING-POINT] {user.first_name} → total points: {point_data[user_id]['points']}")
-            else:
-                print(f"[YAPPING] Message too short (<5 chars), no point added")
         except Exception as e:
             print(f"[YAPPING] Exception: {e}")
             traceback.print_exc()
 
     # ---------------- COMMAND CHECK POINT ---------------- #
-    @app.on_message(filters.command("point") & ~filters.private & filters.chat(GROUP_ID))
+    @app.on_message(filters.command("point") & ~filters.private)
     async def check_point(client: Client, message: Message):
         try:
             args = message.text.split()
@@ -105,7 +104,7 @@ def register(app: Client):
             traceback.print_exc()
 
     # ---------------- COMMAND LEADERBOARD ---------------- #
-    @app.on_message(filters.command("board") & ~filters.private & filters.chat(GROUP_ID))
+    @app.on_message(filters.command("board") & ~filters.private)
     async def leaderboard(client: Client, message: Message):
         try:
             if not point_data:
