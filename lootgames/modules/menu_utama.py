@@ -1,5 +1,6 @@
 # lootgames/modules/menu_utama.py
 import logging
+import asyncio
 from pyrogram import Client, filters, handlers
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery, Message
 
@@ -20,7 +21,7 @@ MENU_STRUCTURE = {
     "main": {
         "title": "📋 [Menu Utama]",
         "buttons": [
-            ("UMPAN", "A"),  
+            ("UMPAN", "A"),
             ("Menu B", "B"), ("Menu C", "C"), ("Menu D", "D"),
             ("Menu E", "E"), ("Menu F", "F"), ("Menu G", "G"),
             ("Menu H", "H"), ("Menu I", "I"), ("Menu J", "J"),
@@ -48,18 +49,6 @@ MENU_STRUCTURE["AAA"] = {
     "buttons": [("Klik OK untuk transfer", "TRANSFER_OK"), ("⬅️ Kembali", "AA")]
 }
 
-# ---------------- KEYBOARD BUILDER ---------------- #
-def make_keyboard(menu_key: str, user_id=None) -> InlineKeyboardMarkup:
-    buttons = []
-    for text, callback in MENU_STRUCTURE[menu_key]["buttons"]:
-        # Tampilkan jumlah umpan di title AA
-        if menu_key == "AA" and user_id is not None:
-            title = f"{text} ({USER_DB.get(user_id, {}).get('umpan', 0)})"
-        else:
-            title = text
-        buttons.append([InlineKeyboardButton(title, callback_data=callback)])
-    return InlineKeyboardMarkup(buttons)
-
 # ---------------- GENERATOR MENU B–L ---------------- #
 for letter in "BCDEFGHIJKL":
     key1 = letter
@@ -73,19 +62,31 @@ for letter in "BCDEFGHIJKL":
 def make_keyboard(menu_key: str, user_id=None) -> InlineKeyboardMarkup:
     buttons = []
     for text, callback in MENU_STRUCTURE[menu_key]["buttons"]:
-        if menu_key == "AA" and user_id is not None:
+        # Tampilkan jumlah UMPAN di tombol menu AA
+        if menu_key == "AA" and user_id is not None and text == "TRANSFER UMPAN":
             u = USER_DB.get(user_id, {}).get("umpan", 0)
-            text = f"Jumlah UMPAN: {u}"
-        buttons.append([InlineKeyboardButton(text, callback_data=callback)])
+            display_text = f"{text} ({u})"
+        else:
+            display_text = text
+        buttons.append([InlineKeyboardButton(display_text, callback_data=callback)])
     return InlineKeyboardMarkup(buttons)
 
 # ---------------- MENU HANDLERS ---------------- #
 async def open_menu(client: Client, message: Message):
-    await message.reply_text(MENU_STRUCTURE["main"]["title"], reply_markup=make_keyboard("main", message.from_user.id))
+    await message.reply_text(
+        MENU_STRUCTURE["main"]["title"],
+        reply_markup=make_keyboard("main", message.from_user.id)
+    )
 
 async def callback_handler(client: Client, callback_query: CallbackQuery):
     data = callback_query.data
     user_id = callback_query.from_user.id
+
+    # Jawab callback segera supaya tombol tidak loading
+    await callback_query.answer()
+
+    # Delay 2 detik untuk mencegah flood
+    await asyncio.sleep(2)
 
     if data == "TRANSFER_OK":
         # Aktifkan mode input transfer untuk user
@@ -94,7 +95,6 @@ async def callback_handler(client: Client, callback_query: CallbackQuery):
             "📥 Masukkan transfer dalam format:\n@username jumlah_umpan\nContoh: @axeliandrea 1",
             reply_markup=None
         )
-        await callback_query.answer()
         return
 
     elif data in MENU_STRUCTURE:
@@ -102,7 +102,6 @@ async def callback_handler(client: Client, callback_query: CallbackQuery):
             MENU_STRUCTURE[data]["title"],
             reply_markup=make_keyboard(data, user_id)
         )
-        await callback_query.answer()
     else:
         await callback_query.answer("Menu tidak tersedia.", show_alert=True)
         logger.error(f"❌ Callback {data} tidak dikenal!")
@@ -154,5 +153,3 @@ def register(app: Client):
     app.add_handler(handlers.MessageHandler(open_menu, filters.command("menufish", prefixes=".")))
     app.add_handler(handlers.CallbackQueryHandler(callback_handler))
     app.add_handler(handlers.MessageHandler(handle_transfer_message))
-
-
