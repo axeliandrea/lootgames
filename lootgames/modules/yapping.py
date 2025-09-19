@@ -11,7 +11,7 @@ from pyrogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton, 
 
 # ---------------- CONFIG ---------------- #
 OWNER_ID = 6395738130
-TARGET_GROUP = -1002904817520  # ganti sesuai grup
+TARGET_GROUP = -1002904817520
 BOT_USERNAME = "justforfvckingfun_bot"
 
 POINT_FILE = "storage/chat_points.json"
@@ -22,7 +22,7 @@ GIT_LOG_FILE = "storage/git_sync.log"
 IGNORED_USERS = ["6946903915"]
 DEBUG = True
 
-# ------------------------------- UTILS -------------------------------
+# ---------------- UTILS ---------------- #
 
 def log_debug(msg: str, to_file=True):
     timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
@@ -53,7 +53,7 @@ def save_json(file_path, data):
     if DEBUG:
         print(f"[DEBUG] Data disimpan ke {file_path}: {data}")
 
-# ------------------------------- POINTS -------------------------------
+# ---------------- POINTS ---------------- #
 
 def load_points():
     return load_json(POINT_FILE)
@@ -106,7 +106,7 @@ def auto_reset_daily_points(daily_points):
         save_json(DAILY_RESET_FILE, {"last_reset": today})
         log_debug(f"Daily points direset otomatis: {today}")
 
-# ------------------------------- BADGE & LEVEL -------------------------------
+# ---------------- BADGE & LEVEL ---------------- #
 
 LEVEL_EXP = {}
 base_exp = 10000
@@ -146,16 +146,17 @@ def clean_text(text: str) -> str:
     text = re.sub(r"[^a-zA-Z ]", "", text or "")
     cleaned = ""
     for char in text:
-        if not cleaned or cleaned[-1] != char:
+        if not cleaned or cleaned[-1] != char:  # skip double huruf
             cleaned += char
     return cleaned.lower()
 
 def calculate_points(text: str) -> tuple[int,str]:
     cleaned = clean_text(text)
     length = len(cleaned.replace(" ", ""))
-    return length // 5, cleaned
+    points = length // 5
+    return points, cleaned
 
-# ------------------------------- LEADERBOARD -------------------------------
+# ---------------- LEADERBOARD ---------------- #
 
 def generate_leaderboard_page(points: dict, page: int, page_size: int = 10) -> str:
     sorted_points = sorted(points.items(), key=lambda x: x[1].get("points", 0), reverse=True)
@@ -185,7 +186,7 @@ def leaderboard_keyboard(page: int, max_page: int) -> InlineKeyboardMarkup:
     rows.append([InlineKeyboardButton("⬅️ Back", callback_data="menu")])
     return InlineKeyboardMarkup(rows)
 
-# ------------------------------- BACKGROUND TASKS -------------------------------
+# ---------------- BACKGROUND TASKS ---------------- #
 
 async def git_auto_sync():
     while True:
@@ -225,11 +226,10 @@ async def auto_midnight_reset():
             log_debug(f"❌ Error di auto_midnight_reset: {e}")
             await asyncio.sleep(5)
 
-# ------------------------------- REGISTER COMMANDS -------------------------------
+# ---------------- REGISTER COMMANDS ---------------- #
 
 def register_commands(bot: Client):
 
-    # Auto point handler
     @bot.on_message(filters.group & ~filters.command(prefixes=[".", "/"]))
     async def auto_point(client, message: Message):
         user = message.from_user
@@ -239,18 +239,16 @@ def register_commands(bot: Client):
         user_id = str(user.id)
         username = user.username or user.first_name or "Unknown"
         content = (message.text or message.caption or "").strip()
-        if len(content) < 5: return  # skip pesan terlalu pendek
+        if len(content) < 5: return
 
         points_to_add, cleaned_text = calculate_points(content)
-        points_to_add = min(points_to_add, 5)
         if points_to_add < 1: return
 
         add_points(user_id, username, points_to_add)
-
         if DEBUG:
-            print(f"[DEBUG] {username} ({user_id}) +{points_to_add} point | content: {content} | cleaned: {cleaned_text}")
+            print(f"[DEBUG] {username} ({user_id}) +{points_to_add} point | cleaned: {cleaned_text}")
 
-    # ----------------- MILESTONE -----------------
+        # Milestone
         points = load_points()
         last_milestone = points[user_id].get("last_milestone",0)
         new_index = points[user_id]["points"] // 100
@@ -262,7 +260,7 @@ def register_commands(bot: Client):
                 await message.reply(f"🎉 Congrats {username}! Reached {new_index*100} points 💗", quote=True)
             except: pass
 
-    # ----------------- LEVEL UP -----------------
+        # Level Up
         new_level = check_level_up(points[user_id])
         if new_level != -1:
             save_points(points)
@@ -308,7 +306,6 @@ def register_commands(bot: Client):
 
     @bot.on_message(filters.user(OWNER_ID) & filters.command(["editp"], prefixes="."))
     async def edit_point_command(client, message: Message):
-        # format: .editp @username 100
         if len(message.command)<3:
             await message.reply("Usage: .editp @username <jumlah>")
             return
