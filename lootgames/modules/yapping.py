@@ -11,7 +11,7 @@ from pyrogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton, 
 
 # ---------------- CONFIG ---------------- #
 OWNER_ID = 6395738130
-TARGET_GROUP = -1002946278772  # ganti sesuai grup
+TARGET_GROUP = -1002904817520  # ganti sesuai grup
 BOT_USERNAME = "justforfvckingfun_bot"
 
 POINT_FILE = "storage/chat_points.json"
