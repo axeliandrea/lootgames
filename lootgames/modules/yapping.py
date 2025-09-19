@@ -270,27 +270,6 @@ def register_commands(bot: Client):
             await message.reply(f"🎉 Selamat {username}, naik level {new_level}! {get_badge(new_level)}", quote=True)
         except: pass
 
-
-        # Milestone
-        points = load_points()
-        last_milestone = points[user_id].get("last_milestone",0)
-        new_index = points[user_id]["points"]//100
-        last_index = last_milestone//100
-        if new_index>last_index and new_index>0:
-            points[user_id]["last_milestone"] = new_index*100
-            save_points(points)
-            try:
-                await message.reply(f"🎉 Congrats {username}! Reached {new_index*100} points 💗", quote=True)
-            except: pass
-
-        # Level up
-        new_level = check_level_up(points[user_id])
-        if new_level != -1:
-            save_points(points)
-            try:
-                await message.reply(f"🎉 Selamat {username}, naik level {new_level}! {get_badge(new_level)}", quote=True)
-            except: pass
-
     # /mypoint
     @bot.on_message(filters.command(["mypoint", f"mypoint@{BOT_USERNAME}"], prefixes="/") & (filters.private | filters.group))
     async def mypoint_handler(client, message: Message):
