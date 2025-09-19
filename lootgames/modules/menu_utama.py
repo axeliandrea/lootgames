@@ -1,12 +1,11 @@
 # lootgames/modules/menu_utama.py
 import logging
 import asyncio
-from pyrogram import Client, handlers
+from pyrogram import Client, filters, handlers
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery, Message
 
-# import database & yapping
+# import database
 from lootgames.modules import database as db
-from lootgames.modules import yapping as yp
 
 logger = logging.getLogger(__name__)
 
@@ -21,8 +20,7 @@ MENU_STRUCTURE = {
         "title": "📋 [Menu Utama]",
         "buttons": [
             ("UMPAN", "A"),
-            ("YAPPING", "B"),
-            ("Menu C", "C"), ("Menu D", "D"),
+            ("Menu B", "B"), ("Menu C", "C"), ("Menu D", "D"),
             ("Menu E", "E"), ("Menu F", "F"), ("Menu G", "G"),
             ("Menu H", "H"), ("Menu I", "I"), ("Menu J", "J"),
             ("Menu K", "K"), ("Menu L", "L"),
@@ -49,6 +47,35 @@ MENU_STRUCTURE["AAA"] = {
     "buttons": [("Klik OK untuk transfer", "TRANSFER_OK"), ("⬅️ Kembali", "AA")]
 }
 
+# ---------------- GENERATOR MENU B–L ---------------- #
+for letter in "BCDEFGHIJKL":
+    key1 = letter
+    key2 = f"{letter}{letter}"
+    key3 = f"{letter}{letter}{letter}"
+    
+    MENU_STRUCTURE[key1] = {
+        "title": f"📋 Menu {key1}",
+        "buttons": [
+            (f"Menu {key2}", key2),
+            ("⬅️ Kembali", "main")
+        ]
+    }
+    
+    MENU_STRUCTURE[key2] = {
+        "title": f"📋 Menu {key2}",
+        "buttons": [
+            (f"Menu {key3}", key3),
+            ("⬅️ Kembali", key1)
+        ]
+    }
+    
+    MENU_STRUCTURE[key3] = {
+        "title": f"📋 Menu {key3} (Tampilan Terakhir)",
+        "buttons": [
+            ("⬅️ Kembali", key2)
+        ]
+    }
+
 # ---------------- CUSTOM MENU B → BB → BBB ---------------- #
 MENU_STRUCTURE["B"] = {
     "title": "📋 YAPPING",
@@ -67,35 +94,6 @@ MENU_STRUCTURE["BBB"] = {
     "title": "📋 Leaderboard Yapping",
     "buttons": [("⬅️ Kembali", "BB")]
 }
-
-# ---------------- GENERATOR MENU C → L ---------------- #
-for letter in "CDEFGHIJKL":
-    key1 = letter
-    key2 = f"{letter}{letter}"
-    key3 = f"{letter}{letter}{letter}"
-
-    MENU_STRUCTURE[key1] = {
-        "title": f"📋 Menu {key1}",
-        "buttons": [
-            (f"Menu {key2}", key2),
-            ("⬅️ Kembali", "main")
-        ]
-    }
-
-    MENU_STRUCTURE[key2] = {
-        "title": f"📋 Menu {key2}",
-        "buttons": [
-            (f"Menu {key3}", key3),
-            ("⬅️ Kembali", key1)
-        ]
-    }
-
-    MENU_STRUCTURE[key3] = {
-        "title": f"📋 Menu {key3} (Tampilan Terakhir)",
-        "buttons": [
-            ("⬅️ Kembali", key2)
-        ]
-    }
 
 # ---------------- KEYBOARD BUILDER ---------------- #
 def make_keyboard(menu_key: str, user_id=None) -> InlineKeyboardMarkup:
@@ -122,11 +120,13 @@ async def callback_handler(client: Client, callback_query: CallbackQuery):
     data = callback_query.data
     user_id = callback_query.from_user.id
 
-    await callback_query.answer()
-    await asyncio.sleep(1)
+    await callback_query.answer()  # jawaban awal supaya tombol tidak loading
 
-    # ---------------- TRANSFER ---------------- #
+    # Delay 2 detik untuk mencegah flood
+    await asyncio.sleep(2)
+
     if data == "TRANSFER_OK":
+        # Aktifkan mode input transfer untuk user
         TRANSFER_STATE[user_id] = True
         await callback_query.message.edit_text(
             "📥 Masukkan transfer dalam format:\n@username jumlah_umpan\nContoh: @axeliandrea 1",
@@ -134,33 +134,6 @@ async def callback_handler(client: Client, callback_query: CallbackQuery):
         )
         return
 
-    # ---------------- YAPPING MENU ---------------- #
-    if data == "BB":
-        points = yp.load_points()
-        text = "📊 Total Chat Points:\n\n"
-        for uid, pdata in points.items():
-            text += f"- {pdata['username']}: {pdata['points']} pts\n"
-        await callback_query.message.edit_text(text, reply_markup=make_keyboard("BB", user_id))
-        return
-
-    elif data == "BBB":
-        points = yp.load_points()
-        text = yp.generate_leaderboard_page(points, 0)
-        max_page = max(0, (len(points)-1)//10)
-        keyboard = yp.leaderboard_keyboard(0, max_page)
-        await callback_query.message.edit_text(text, reply_markup=keyboard)
-        return
-
-    elif data.startswith("leaderboard_"):
-        page = int(data.split("_")[1])
-        points = yp.load_points()
-        text = yp.generate_leaderboard_page(points, page)
-        max_page = max(0, (len(points)-1)//10)
-        keyboard = yp.leaderboard_keyboard(page, max_page)
-        await callback_query.message.edit_text(text, reply_markup=keyboard)
-        return
-
-    # ---------------- DEFAULT NAVIGATION ---------------- #
     elif data in MENU_STRUCTURE:
         await callback_query.message.edit_text(
             MENU_STRUCTURE[data]["title"],
@@ -192,6 +165,7 @@ async def handle_transfer_message(client: Client, message: Message):
             await message.reply("Jumlah harus lebih dari 0.")
             return
 
+        # Ambil data penerima
         recipient_user = await client.get_users(username)
         recipient_id = recipient_user.id
 
@@ -201,6 +175,7 @@ async def handle_transfer_message(client: Client, message: Message):
         if total_umpan < amount:
             await message.reply("❌ Umpan tidak cukup!")
         else:
+            # Kurangi umpan A/B/C dari pengirim secara berurutan
             remaining = amount
             for jenis in ["A", "B", "C"]:
                 if sender_data["umpan"][jenis] >= remaining:
@@ -212,6 +187,7 @@ async def handle_transfer_message(client: Client, message: Message):
                     db.remove_umpan(user_id, jenis, sub)
                     remaining -= sub
 
+            # Tambah umpan ke penerima (default A)
             db.add_umpan(recipient_id, "A", amount)
             await message.reply(f"✅ Transfer berhasil! Anda transfer {amount} umpan ke {username}")
 
