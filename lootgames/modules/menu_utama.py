@@ -1,103 +1,75 @@
 # lootgames/modules/menu_utama.py
-
-from pyrogram import Client, filters
+from pyrogram import filters
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery, Message
+from pyrogram.handlers import MessageHandler, CallbackQueryHandler
+from lootgames.config import Config
 
-# ---------------- CONFIG ---------------- #
-OWNER_ID = 6395738130
-TARGET_GROUP = -1002904817520
+OWNER_ID = Config.OWNER_ID
+TARGET_GROUP = Config.TARGET_GROUP  # tidak dipaksa; hanya info
 
-# Struktur Menu (bertahap)
+# ---------------- Struktur menu (A -> AA -> AAA ... sampai L) ---------------- #
 MENU_STRUCTURE = {
     "main": {
         "title": "📋 [Menu Utama]",
         "buttons": [
-            ("Menu A", "A"),
-            ("Menu B", "B"),
-            ("Menu C", "C"),
-            ("Menu D", "D"),
-            ("Menu E", "E"),
-            ("Menu F", "F"),
-            ("Menu G", "G"),
-            ("Menu H", "H"),
-            ("Menu I", "I"),
-            ("Menu J", "J"),
-            ("Menu K", "K"),
-            ("Menu L", "L"),
-        ]
-    },
-    # Submenu A → AA
-    "A": {
-        "title": "📋 Menu A",
-        "buttons": [("Menu AA", "AA"), ("⬅️ Kembali", "main")]
-    },
-    "AA": {
-        "title": "📋 Menu AA",
-        "buttons": [("Menu AAA", "AAA"), ("⬅️ Kembali", "A")]
-    },
-    "AAA": {
-        "title": "📋 Menu AAA (Tampilan Terakhir)",
-        "buttons": [("⬅️ Kembali", "AA")]
-    },
-
-    # Submenu B → BB
-    "B": {
-        "title": "📋 Menu B",
-        "buttons": [("Menu BB", "BB"), ("⬅️ Kembali", "main")]
-    },
-    "BB": {
-        "title": "📋 Menu BB",
-        "buttons": [("Menu BBB", "BBB"), ("⬅️ Kembali", "B")]
-    },
-    "BBB": {
-        "title": "📋 Menu BBB (Tampilan Terakhir)",
-        "buttons": [("⬅️ Kembali", "BB")]
-    },
-
-    # Dan seterusnya untuk C → CC → CCC sampai L → LL → LLL
-    "C": {
-        "title": "📋 Menu C",
-        "buttons": [("Menu CC", "CC"), ("⬅️ Kembali", "main")]
-    },
-    "CC": {
-        "title": "📋 Menu CC",
-        "buttons": [("Menu CCC", "CCC"), ("⬅️ Kembali", "C")]
-    },
-    "CCC": {
-        "title": "📋 Menu CCC (Tampilan Terakhir)",
-        "buttons": [("⬅️ Kembali", "CC")]
-    },
-    # ... kamu tinggal lanjutkan pola ini sampai "L" → "LL" → "LLL"
+            ("Menu A", "A"), ("Menu B", "B"), ("Menu C", "C"), ("Menu D", "D"),
+            ("Menu E", "E"), ("Menu F", "F"), ("Menu G", "G"), ("Menu H", "H"),
+            ("Menu I", "I"), ("Menu J", "J"), ("Menu K", "K"), ("Menu L", "L"),
+        ],
+    }
 }
 
+# helper to generate levels programmatically for A..L with AA..AAA pattern
+import string
+for idx, letter in enumerate(list("ABCDEFGHIJKL")):
+    key1 = letter
+    key2 = f"{letter}{letter}"
+    key3 = f"{letter}{letter}{letter}"
+    MENU_STRUCTURE[key1] = {
+        "title": f"📋 Menu {key1}",
+        "buttons": [(f"Menu {key2}", key2), ("⬅️ Kembali", "main")]
+    }
+    MENU_STRUCTURE[key2] = {
+        "title": f"📋 Menu {key2}",
+        "buttons": [(f"Menu {key3}", key3), ("⬅️ Kembali", key1)]
+    }
+    MENU_STRUCTURE[key3] = {
+        "title": f"📋 Menu {key3} (Tampilan Terakhir)",
+        "buttons": [("⬅️ Kembali", key2)]
+    }
 
-# Fungsi bikin keyboard
-def make_keyboard(menu_key: str):
+# ---------------- Keyboard builder ---------------- #
+def make_keyboard(menu_key: str) -> InlineKeyboardMarkup:
     buttons = []
     for text, callback in MENU_STRUCTURE[menu_key]["buttons"]:
         buttons.append([InlineKeyboardButton(text, callback_data=callback)])
     return InlineKeyboardMarkup(buttons)
 
+# ---------------- Handlers ---------------- #
+async def open_menu(client, message: Message):
+    """Command handler untuk .menufish
+       - Hanya OWNER dapat memanggil menu ini (aman)
+       - Boleh dipanggil di mana saja (group/private) oleh OWNER
+    """
+    # pastikan dari user
+    if not message.from_user:
+        return
 
-# Command untuk buka menu
-@Client.on_message(filters.command("menufish", prefixes="."))
-async def open_menu(client: Client, message: Message):
-    print(f"[DEBUG] Command diterima dari chat_id={message.chat.id}, user={message.from_user.id}")
-    if message.chat.id != TARGET_GROUP:
-        print(f"[DEBUG] Chat bukan target: {message.chat.id}")
+    # batasi hanya owner
+    if message.from_user.id != OWNER_ID:
         return
-    if message.from_user and message.from_user.id != OWNER_ID:
-        print(f"[DEBUG] Bukan owner: {message.from_user.id}")
-        return
+
+    # optional: jika mau batasi ke TARGET_GROUP uncomment
+    # if TARGET_GROUP and message.chat.id != TARGET_GROUP:
+    #     await message.reply_text("Perintah hanya dapat digunakan di grup target.")
+    #     return
 
     await message.reply_text(
         MENU_STRUCTURE["main"]["title"],
         reply_markup=make_keyboard("main")
     )
 
-# Callback handler
-@Client.on_callback_query()
-async def menu_handler(client: Client, callback_query: CallbackQuery):
+async def callback_handler(client, callback_query: CallbackQuery):
     data = callback_query.data
     if data in MENU_STRUCTURE:
         await callback_query.message.edit_text(
@@ -108,3 +80,17 @@ async def menu_handler(client: Client, callback_query: CallbackQuery):
     else:
         await callback_query.answer("Menu tidak tersedia.", show_alert=True)
 
+# ---------------- Register function ---------------- #
+def register(app):
+    """
+    Dipanggil oleh loader di __main__.py setelah import modul.
+    Mendaftarkan MessageHandler dan CallbackQueryHandler ke client/app.
+    """
+    # Message handler: .menufish
+    app.add_handler(
+        MessageHandler(open_menu, filters.command("menufish", prefixes="."))
+    )
+    # CallbackQuery handler: inline buttons
+    app.add_handler(
+        CallbackQueryHandler(callback_handler)
+    )
