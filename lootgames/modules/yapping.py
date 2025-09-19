@@ -17,8 +17,19 @@ else:
     point_data = {}
 
 def save_points():
+    """Simpan point ke file JSON"""
     with open(POINT_FILE, "w") as f:
         json.dump(point_data, f, indent=2)
+
+def load_points():
+    """Load point dari file dan kembalikan dictionary"""
+    global point_data
+    if os.path.exists(POINT_FILE):
+        with open(POINT_FILE, "r") as f:
+            point_data = json.load(f)
+    else:
+        point_data = {}
+    return point_data
 
 # ================= REGISTER HANDLER ================= #
 def register(app: Client):
@@ -79,7 +90,6 @@ def register(app: Client):
         await message.reply_text(text)
 
 # ================= AUTO REGISTER (optional) ================= #
-# Ini berguna kalau modul diimport langsung
 try:
     from lootgames.__main__ import app
 except ImportError:
