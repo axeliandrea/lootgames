@@ -3,7 +3,7 @@ import logging
 import os
 from pyrogram import Client, filters
 from pyrogram.types import Message
-from .config import ALLOWED_GROUP_ID, POINTS_PER_CHARS, USER_DATA_FILE
+from ..config import ALLOWED_GROUP_ID, POINTS_PER_CHARS, USER_DATA_FILE
 
 logger = logging.getLogger(__name__)
 
