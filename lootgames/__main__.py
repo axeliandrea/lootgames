@@ -7,7 +7,7 @@ from pyrogram import Client
 from .config import API_ID, API_HASH, BOT_TOKEN, OWNER_ID, ALLOWED_GROUP_ID, LOG_LEVEL, LOG_FORMAT
 
 import lootgames.modules
-from lootgames.modules import yapping  # gunakan yapping sebagai modul chat point
+from lootgames.modules import chat_point  # gunakan yapping sebagai modul chat point
 
 # ================= LOGGING ================= #
 logging.basicConfig(level=LOG_LEVEL, format=LOG_FORMAT)
@@ -76,3 +76,4 @@ if __name__ == "__main__":
     except ImportError:
         pass
     asyncio.run(main())
+
