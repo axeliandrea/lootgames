@@ -27,19 +27,24 @@ def load_modules():
         logging.info(f"✅ Loaded module: {module_name}")
 
 
-@app.on_connected()
-async def notify_start(client: Client):
-    logging.info("🚀 LootGames Bot Starting...")
+async def main():
+    load_modules()
+    await app.start()
+    logging.info("🚀 LootGames Bot Started...")
+
+    # Kirim notifikasi ke OWNER
     try:
-        await client.send_message(
-            Config.OWNER_ID,  # isi dengan user ID kamu (angka), bukan username
+        await app.send_message(
+            Config.OWNER_ID,  # isi dengan user ID angka, bukan username
             "🤖 LootGames Bot sudah aktif dan siap dipakai!"
         )
         logging.info("📢 Notifikasi start terkirim ke OWNER.")
     except Exception as e:
         logging.error(f"Gagal kirim notifikasi start: {e}")
 
+    # Biar bot tetap jalan
+    await asyncio.Event().wait()
+
 
 if __name__ == "__main__":
-    load_modules()
-    app.run()
+    asyncio.run(main())
