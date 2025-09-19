@@ -3,10 +3,11 @@
 import importlib
 import pkgutil
 import logging
+import asyncio
 from pyrogram import Client
 from lootgames.config import Config
 
-# Logging biar keliatan error/debug
+# Logging
 logging.basicConfig(
     format="%(asctime)s - %(levelname)s - %(message)s",
     level=logging.INFO
@@ -26,12 +27,12 @@ def load_modules():
         logging.info(f"✅ Loaded module: {module_name}")
 
 
-# Fungsi startup (sinkron)
-def on_startup(client: Client):
+@app.on_connected()
+async def notify_start(client: Client):
     logging.info("🚀 LootGames Bot Starting...")
     try:
-        client.send_message(
-            Config.OWNER_ID,
+        await client.send_message(
+            Config.OWNER_ID,  # isi dengan user ID kamu (angka), bukan username
             "🤖 LootGames Bot sudah aktif dan siap dipakai!"
         )
         logging.info("📢 Notifikasi start terkirim ke OWNER.")
@@ -41,4 +42,4 @@ def on_startup(client: Client):
 
 if __name__ == "__main__":
     load_modules()
-    app.run(on_startup=on_startup)
+    app.run()
