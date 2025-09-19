@@ -1,4 +1,5 @@
 # lootgames/modules/menu_utama.py
+import logging
 from pyrogram import filters
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery, Message
 from pyrogram.handlers import MessageHandler, CallbackQueryHandler
@@ -6,6 +7,8 @@ from lootgames.config import Config
 
 OWNER_ID = Config.OWNER_ID
 TARGET_GROUP = Config.TARGET_GROUP  # tidak dipaksa; hanya info
+
+logger = logging.getLogger(__name__)
 
 # ---------------- Struktur menu (A -> AA -> AAA ... sampai L) ---------------- #
 MENU_STRUCTURE = {
@@ -20,8 +23,7 @@ MENU_STRUCTURE = {
 }
 
 # helper to generate levels programmatically for A..L with AA..AAA pattern
-import string
-for idx, letter in enumerate(list("ABCDEFGHIJKL")):
+for letter in list("ABCDEFGHIJKL"):
     key1 = letter
     key2 = f"{letter}{letter}"
     key3 = f"{letter}{letter}{letter}"
@@ -40,6 +42,7 @@ for idx, letter in enumerate(list("ABCDEFGHIJKL")):
 
 # ---------------- Keyboard builder ---------------- #
 def make_keyboard(menu_key: str) -> InlineKeyboardMarkup:
+    logger.debug(f"🔧 Membuat keyboard untuk menu: {menu_key}")
     buttons = []
     for text, callback in MENU_STRUCTURE[menu_key]["buttons"]:
         buttons.append([InlineKeyboardButton(text, callback_data=callback)])
@@ -47,23 +50,18 @@ def make_keyboard(menu_key: str) -> InlineKeyboardMarkup:
 
 # ---------------- Handlers ---------------- #
 async def open_menu(client, message: Message):
-    """Command handler untuk .menufish
-       - Hanya OWNER dapat memanggil menu ini (aman)
-       - Boleh dipanggil di mana saja (group/private) oleh OWNER
-    """
-    # pastikan dari user
     if not message.from_user:
+        logger.warning("⚠️ Pesan tidak punya from_user, dilewati.")
         return
+
+    logger.info(f"📥 Command .menufish diterima dari {message.from_user.id} di chat {message.chat.id}")
 
     # batasi hanya owner
     if message.from_user.id != OWNER_ID:
+        logger.warning(f"⛔ User {message.from_user.id} mencoba akses menu tanpa izin.")
         return
 
-    # optional: jika mau batasi ke TARGET_GROUP uncomment
-    # if TARGET_GROUP and message.chat.id != TARGET_GROUP:
-    #     await message.reply_text("Perintah hanya dapat digunakan di grup target.")
-    #     return
-
+    logger.info("✅ Owner valid, menampilkan Menu Utama...")
     await message.reply_text(
         MENU_STRUCTURE["main"]["title"],
         reply_markup=make_keyboard("main")
@@ -71,26 +69,22 @@ async def open_menu(client, message: Message):
 
 async def callback_handler(client, callback_query: CallbackQuery):
     data = callback_query.data
+    logger.info(f"🔘 Callback ditekan: {data} oleh {callback_query.from_user.id}")
+
     if data in MENU_STRUCTURE:
         await callback_query.message.edit_text(
             MENU_STRUCTURE[data]["title"],
             reply_markup=make_keyboard(data)
         )
         await callback_query.answer()
+        logger.info(f"✅ Menu {data} berhasil ditampilkan.")
     else:
         await callback_query.answer("Menu tidak tersedia.", show_alert=True)
+        logger.error(f"❌ Callback {data} tidak dikenal!")
 
 # ---------------- Register function ---------------- #
 def register(app):
-    """
-    Dipanggil oleh loader di __main__.py setelah import modul.
-    Mendaftarkan MessageHandler dan CallbackQueryHandler ke client/app.
-    """
-    # Message handler: .menufish
-    app.add_handler(
-        MessageHandler(open_menu, filters.command("menufish", prefixes="."))
-    )
-    # CallbackQuery handler: inline buttons
-    app.add_handler(
-        CallbackQueryHandler(callback_handler)
-    )
+    logger.info("📝 Mendaftarkan handler menu_utama...")
+    app.add_handler(MessageHandler(open_menu, filters.command("menufish", prefixes=".")))
+    app.add_handler(CallbackQueryHandler(callback_handler))
+    logger.info("✅ Handler menu_utama berhasil terdaftar.")
