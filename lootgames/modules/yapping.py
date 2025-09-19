@@ -1,4 +1,3 @@
-# lootgames/modules/simple_chat_point.py
 import os
 import json
 from pyrogram import Client, filters
@@ -23,13 +22,31 @@ try:
 except Exception:
     points_data = {}
 
-def save_points():
-    with open(POINT_FILE, "w") as f:
-        json.dump(points_data, f, indent=2)
+# ================= UTILITY ================= #
+def load_points():
+    global points_data
+    try:
+        if os.path.exists(POINT_FILE):
+            with open(POINT_FILE, "r") as f:
+                points_data = json.load(f)
+        else:
+            points_data = {}
+    except Exception as e:
+        print(f"[LOAD_POINTS] Error: {e}")
+    return points_data
+
+def save_points(data=None):
+    global points_data
+    if data is not None:
+        points_data = data
+    try:
+        with open(POINT_FILE, "w") as f:
+            json.dump(points_data, f, indent=2)
+    except Exception as e:
+        print(f"[SAVE_POINTS] Error: {e}")
 
 # ================= REGISTER HANDLER ================= #
 def register(app: Client):
-
     @app.on_message(filters.chat(TARGET_GROUP) & filters.text & ~filters.private)
     async def chat_point_handler(client: Client, message: Message):
         user = message.from_user
