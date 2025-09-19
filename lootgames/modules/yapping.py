@@ -55,7 +55,7 @@ def load_points():
 def register(app: Client):
     print("[YAPPING] Registering handlers...")
 
-    @app.on_message(filters.chat(GROUP_ID) & filters.text & ~filters.private)
+       @app.on_message(filters.text & ~filters.private)
     async def yapping_point(client: Client, message: Message):
         try:
             user = message.from_user
@@ -63,23 +63,20 @@ def register(app: Client):
                 print("[YAPPING] Message has no from_user, skipping")
                 return
 
-            text = message.text.strip()
-            char_count = len(text)
-            print(f"[YAPPING-CHAT] {user.first_name} ({user.id}) in {message.chat.title if message.chat else 'Unknown chat'}: '{text}' ({char_count} chars)")
+            print(f"[SUPERDEBUG] Message received from {user.first_name} ({user.id}): '{message.text}' in chat {message.chat.id}")
 
-            # Beri point jika >=5 karakter
-            if char_count >= 5:
+            text = message.text.strip()
+            if len(text) >= 5:
                 user_id = str(user.id)
                 if user_id not in point_data:
                     point_data[user_id] = {"username": user.first_name, "points": 0}
                 point_data[user_id]["points"] += 1
                 save_points()
-                print(f"[YAPPING-POINT] {user.first_name} gained 1 point → total: {point_data[user_id]['points']}")
+                print(f"[YAPPING-POINT] {user.first_name} → total points: {point_data[user_id]['points']}")
             else:
-                print(f"[YAPPING] Message too short, no point added")
+                print(f"[YAPPING] Message too short (<5 chars), no point added")
         except Exception as e:
-            print(f"[YAPPING] Exception in yapping_point: {e}")
-            traceback.print_exc()
+            print(f"[YAPPING] Exception: {e}")
 
     # ================= COMMAND CHECK POINT ================= #
     @app.on_message(filters.command("point") & ~filters.private)
