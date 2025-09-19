@@ -236,18 +236,40 @@ def register_commands(bot: Client):
         if not user: return
         if str(user.id) in IGNORED_USERS: return
 
+        user_id = str(user.id)
+        username = user.username or user.first_name or "Unknown"
         content = (message.text or message.caption or "").strip()
         if len(content) < 5: return  # skip pesan terlalu pendek
 
-        points_to_add = len(content) // 5
+        points_to_add, cleaned_text = calculate_points(content)
         points_to_add = min(points_to_add, 5)
         if points_to_add < 1: return
 
-        username = user.username or user.first_name or "Unknown"
-        add_points(user.id, username, points_to_add)
+        add_points(user_id, username, points_to_add)
 
         if DEBUG:
-            print(f"[DEBUG] {username} ({user.id}) +{points_to_add} point | content: {content}")
+            print(f"[DEBUG] {username} ({user_id}) +{points_to_add} point | content: {content} | cleaned: {cleaned_text}")
+
+    # Milestone
+    points = load_points()
+    last_milestone = points[user_id].get("last_milestone", 0)
+    new_index = points[user_id]["points"] // 100
+    last_index = last_milestone // 100
+    if new_index > last_index and new_index > 0:
+        points[user_id]["last_milestone"] = new_index * 100
+        save_points(points)
+        try:
+            await message.reply(f"🎉 Congrats {username}! Reached {new_index*100} points 💗", quote=True)
+        except: pass
+
+    # Level up
+    new_level = check_level_up(points[user_id])
+    if new_level != -1:
+        save_points(points)
+        try:
+            await message.reply(f"🎉 Selamat {username}, naik level {new_level}! {get_badge(new_level)}", quote=True)
+        except: pass
+
 
         # Milestone
         points = load_points()
