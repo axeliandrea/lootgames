@@ -8,7 +8,7 @@ import logging
 import asyncio
 from telegram import Update
 from telegram.ext import Application, CommandHandler, CallbackQueryHandler, ContextTypes
-from config import BOT_TOKEN, ALLOWED_GROUP_ID, OWNER_ID, LOG_LEVEL, LOG_FORMAT
+from .config import BOT_TOKEN, ALLOWED_GROUP_ID, OWNER_ID, LOG_LEVEL, LOG_FORMAT
 from modules.menu_utama import MenuUtama
 
 # Configure logging
@@ -103,3 +103,4 @@ if __name__ == "__main__":
         logger.info("🛑 Bot stopped by user")
     except Exception as e:
         logger.error(f"❌ Unexpected error: {e}")
+
