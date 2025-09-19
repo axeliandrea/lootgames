@@ -2,7 +2,7 @@
 import os
 import json
 import traceback
-from pyrogram import filters, Client
+from pyrogram import Client, filters
 from pyrogram.types import Message
 
 # ================= CONFIG ================= #
@@ -55,7 +55,8 @@ def load_points():
 def register(app: Client):
     print("[YAPPING] Registering handlers...")
 
-       @app.on_message(filters.text & ~filters.private)
+    # ---------------- CHAT POINT ---------------- #
+    @app.on_message(filters.text & ~filters.private & filters.chat(GROUP_ID))
     async def yapping_point(client: Client, message: Message):
         try:
             user = message.from_user
@@ -77,9 +78,10 @@ def register(app: Client):
                 print(f"[YAPPING] Message too short (<5 chars), no point added")
         except Exception as e:
             print(f"[YAPPING] Exception: {e}")
+            traceback.print_exc()
 
-    # ================= COMMAND CHECK POINT ================= #
-    @app.on_message(filters.command("point") & ~filters.private)
+    # ---------------- COMMAND CHECK POINT ---------------- #
+    @app.on_message(filters.command("point") & ~filters.private & filters.chat(GROUP_ID))
     async def check_point(client: Client, message: Message):
         try:
             args = message.text.split()
@@ -102,8 +104,8 @@ def register(app: Client):
             print(f"[YAPPING] Exception in check_point: {e}")
             traceback.print_exc()
 
-    # ================= COMMAND LEADERBOARD ================= #
-    @app.on_message(filters.command("board") & ~filters.private)
+    # ---------------- COMMAND LEADERBOARD ---------------- #
+    @app.on_message(filters.command("board") & ~filters.private & filters.chat(GROUP_ID))
     async def leaderboard(client: Client, message: Message):
         try:
             if not point_data:
