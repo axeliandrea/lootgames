@@ -3,8 +3,8 @@ import pkgutil
 import logging
 import asyncio
 from pyrogram import Client
+import lootgames.modules  # pastikan __init__.py ada
 from lootgames.config import Config
-import lootgames.modules  # pastikan folder modules ada __init__.py kosong
 
 # ---------------- Logging ---------------- #
 logging.basicConfig(
@@ -20,21 +20,18 @@ app = Client(
     bot_token=Config.BOT_TOKEN if Config.BOT_TOKEN else None,
 )
 
-
 # ---------------- Loader ---------------- #
 def load_modules():
     """Auto load semua modul dari lootgames/modules dan daftarkan handler."""
     for _, module_name, _ in pkgutil.iter_modules(lootgames.modules.__path__):
         mod = importlib.import_module(f"lootgames.modules.{module_name}")
         logging.info(f"✅ Loaded module: {module_name}")
-        # Jika modul punya register(app) -> panggil
         if hasattr(mod, "register"):
             try:
                 mod.register(app)
                 logging.info(f"🔌 Registered handlers for module: {module_name}")
             except Exception as e:
                 logging.error(f"❌ Gagal register handler {module_name}: {e}")
-
 
 # ---------------- Main ---------------- #
 async def main():
@@ -54,7 +51,6 @@ async def main():
 
     # biar bot tetap jalan
     await asyncio.Event().wait()
-
 
 if __name__ == "__main__":
     asyncio.run(main())
