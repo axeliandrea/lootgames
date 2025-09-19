@@ -6,6 +6,7 @@ import logging
 import asyncio
 from pyrogram import Client
 from lootgames.config import Config
+import lootgames.modules.menu_utama
 
 # Logging
 logging.basicConfig(
@@ -48,3 +49,4 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
+
