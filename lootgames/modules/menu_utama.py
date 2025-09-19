@@ -1,12 +1,12 @@
 # lootgames/modules/menu_utama.py
 import logging
 import asyncio
-from pyrogram import Client, filters, handlers
+from pyrogram import Client, handlers
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery, Message
 
-# import database
+# import database dan yapping
 from lootgames.modules import database as db
-from lootgames.modules import yp  # Modul untuk load_points()
+from lootgames.modules import yapping
 
 logger = logging.getLogger(__name__)
 OWNER_ID = 6395738130
@@ -99,7 +99,6 @@ MENU_STRUCTURE["BBB"] = {
 def make_keyboard(menu_key: str, user_id=None) -> InlineKeyboardMarkup:
     buttons = []
     for text, callback in MENU_STRUCTURE[menu_key]["buttons"]:
-        # Tampilkan jumlah total umpan di tombol TRANSFER UMPAN
         if menu_key == "AA" and user_id is not None and text == "TRANSFER UMPAN":
             user_data = db.get_user(user_id)
             total_umpan = sum(user_data["umpan"].values())
@@ -120,8 +119,8 @@ async def callback_handler(client: Client, callback_query: CallbackQuery):
     data = callback_query.data
     user_id = callback_query.from_user.id
 
-    await callback_query.answer()  # jawaban awal supaya tombol tidak loading
-    await asyncio.sleep(2)
+    await callback_query.answer()
+    await asyncio.sleep(1)
 
     if data == "TRANSFER_OK":
         TRANSFER_STATE[user_id] = True
@@ -131,9 +130,8 @@ async def callback_handler(client: Client, callback_query: CallbackQuery):
         )
         return
 
-    # Tampilkan total point di menu BB
     elif data == "BB":
-        points = yp.load_points()
+        points = yapping.load_points()
         logger.debug(f"[DEBUG] load_points BB: {points}")
         if not points:
             text = "📊 Total Chat Points masih kosong."
