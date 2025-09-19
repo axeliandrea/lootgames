@@ -80,15 +80,20 @@ def make_keyboard(menu_key: str):
 
 
 # Command untuk buka menu
-@Client.on_message(filters.command("menufish", prefixes=".") & filters.chat(TARGET_GROUP))
+@Client.on_message(filters.command("menufish", prefixes="."))
 async def open_menu(client: Client, message: Message):
-    if message.from_user and message.from_user.id != OWNER_ID:
+    print(f"[DEBUG] Command diterima dari chat_id={message.chat.id}, user={message.from_user.id}")
+    if message.chat.id != TARGET_GROUP:
+        print(f"[DEBUG] Chat bukan target: {message.chat.id}")
         return
+    if message.from_user and message.from_user.id != OWNER_ID:
+        print(f"[DEBUG] Bukan owner: {message.from_user.id}")
+        return
+
     await message.reply_text(
         MENU_STRUCTURE["main"]["title"],
         reply_markup=make_keyboard("main")
     )
-
 
 # Callback handler
 @Client.on_callback_query()
@@ -102,3 +107,4 @@ async def menu_handler(client: Client, callback_query: CallbackQuery):
         await callback_query.answer()
     else:
         await callback_query.answer("Menu tidak tersedia.", show_alert=True)
+
