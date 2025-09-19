@@ -63,7 +63,7 @@ def register(app: Client):
     print("[YAPPING] Registering handlers...")
 
     # ================= HANDLER CHAT POINT ================= #
-    @app.on_message(filters.text & ~filters.private)  # sementara untuk testing semua chat
+    @app.on_message(filters.text & ~filters.private)  # Sementara, tangkap semua chat untuk debug
     async def yapping_point(client: Client, message: Message):
         """Handler chat point utama"""
         try:
