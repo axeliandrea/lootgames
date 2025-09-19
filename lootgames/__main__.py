@@ -1,17 +1,19 @@
 # lootgames/__main__.py
+
 import importlib
 import pkgutil
 import logging
-import asyncio
 
 from pyrogram import Client
 from lootgames.config import Config
 
+# Logging biar keliatan error/debug
 logging.basicConfig(
     format="%(asctime)s - %(levelname)s - %(message)s",
     level=logging.INFO
 )
 
+# Session name
 app = Client(
     "lootgames",
     api_id=Config.API_ID,
@@ -19,28 +21,24 @@ app = Client(
     bot_token=Config.BOT_TOKEN if Config.BOT_TOKEN else None,
 )
 
+# Auto load semua module di folder modules
 def load_modules():
     for _, module_name, _ in pkgutil.iter_modules(["lootgames/modules"]):
         importlib.import_module(f"lootgames.modules.{module_name}")
         logging.info(f"✅ Loaded module: {module_name}")
 
-async def send_start_message():
+@app.on_start()
+async def notify_start(client):
     try:
-        target = Config.TARGET_GROUP or Config.OWNER_ID
-        await app.send_message(target, "✅ LootGames Bot sudah aktif 🚀")
-        logging.info("📢 Notifikasi bot aktif terkirim.")
+        await app.send_message(
+            Config.OWNER_ID,  # kirim ke owner ID biar masuk ke private chat
+            "🤖 LootGames Bot sudah aktif dan siap dipakai!"
+        )
+        logging.info("📢 Notifikasi start terkirim ke OWNER.")
     except Exception as e:
         logging.error(f"Gagal kirim notifikasi start: {e}")
 
 if __name__ == "__main__":
     load_modules()
     logging.info("🚀 LootGames Bot Starting...")
-
-    async def main():
-        await app.start()
-        await send_start_message()
-        logging.info("🤖 Bot sedang berjalan. Tekan CTRL+C untuk stop.")
-        # Ganti idle() dengan asyncio.Event biar tetap nyala
-        await asyncio.Event().wait()
-
-    asyncio.run(main())
+    app.run()
