@@ -4,14 +4,12 @@ import asyncio
 from pyrogram import Client, filters, handlers
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery, Message
 
+# import database
+from lootgames.modules import database as db
+
 logger = logging.getLogger(__name__)
 
 OWNER_ID = 6395738130
-
-# ---------------- SIMULASI DATABASE ---------------- #
-USER_DB = {
-    6395738130: {"umpan": 10},
-}
 
 # ---------------- STATE TRANSFER ---------------- #
 TRANSFER_STATE = {}  # user_id: True jika menunggu input transfer
@@ -39,7 +37,7 @@ MENU_STRUCTURE["A"] = {
 MENU_STRUCTURE["AA"] = {
     "title": "📋 Jumlah UMPAN",
     "buttons": [
-        ("TRANSFER UMPAN", "AAA"),  # tombol untuk masuk transfer
+        ("TRANSFER UMPAN", "AAA"),
         ("⬅️ Kembali", "A")
     ]
 }
@@ -54,18 +52,39 @@ for letter in "BCDEFGHIJKL":
     key1 = letter
     key2 = f"{letter}{letter}"
     key3 = f"{letter}{letter}{letter}"
-    MENU_STRUCTURE[key1] = {"title": f"📋 Menu {key1}", "buttons": [(f"Menu {key2}", key2), ("⬅️ Kembali", "main")]}
-    MENU_STRUCTURE[key2] = {"title": f"📋 Menu {key2}", "buttons": [(f"Menu {key3}", key3), ("⬅️ Kembali", key1)]}
-    MENU_STRUCTURE[key3] = {"title": f"📋 Menu {key3} (Tampilan Terakhir)", "buttons": [("⬅️ Kembali", key2)]}
+    
+    MENU_STRUCTURE[key1] = {
+        "title": f"📋 Menu {key1}",
+        "buttons": [
+            (f"Menu {key2}", key2),
+            ("⬅️ Kembali", "main")
+        ]
+    }
+    
+    MENU_STRUCTURE[key2] = {
+        "title": f"📋 Menu {key2}",
+        "buttons": [
+            (f"Menu {key3}", key3),
+            ("⬅️ Kembali", key1)
+        ]
+    }
+    
+    MENU_STRUCTURE[key3] = {
+        "title": f"📋 Menu {key3} (Tampilan Terakhir)",
+        "buttons": [
+            ("⬅️ Kembali", key2)
+        ]
+    }
 
 # ---------------- KEYBOARD BUILDER ---------------- #
 def make_keyboard(menu_key: str, user_id=None) -> InlineKeyboardMarkup:
     buttons = []
     for text, callback in MENU_STRUCTURE[menu_key]["buttons"]:
-        # Tampilkan jumlah UMPAN di tombol menu AA
+        # Tampilkan jumlah total umpan di tombol TRANSFER UMPAN
         if menu_key == "AA" and user_id is not None and text == "TRANSFER UMPAN":
-            u = USER_DB.get(user_id, {}).get("umpan", 0)
-            display_text = f"{text} ({u})"
+            user_data = db.get_user(user_id)
+            total_umpan = sum(user_data["umpan"].values())
+            display_text = f"{text} ({total_umpan})"
         else:
             display_text = text
         buttons.append([InlineKeyboardButton(display_text, callback_data=callback)])
@@ -82,8 +101,7 @@ async def callback_handler(client: Client, callback_query: CallbackQuery):
     data = callback_query.data
     user_id = callback_query.from_user.id
 
-    # Jawab callback segera supaya tombol tidak loading
-    await callback_query.answer()
+    await callback_query.answer()  # jawaban awal supaya tombol tidak loading
 
     # Delay 2 detik untuk mencegah flood
     await asyncio.sleep(2)
@@ -110,7 +128,7 @@ async def callback_handler(client: Client, callback_query: CallbackQuery):
 async def handle_transfer_message(client: Client, message: Message):
     user_id = message.from_user.id
     if not TRANSFER_STATE.get(user_id):
-        return  # tidak sedang transfer
+        return
 
     try:
         parts = message.text.strip().split()
@@ -128,22 +146,34 @@ async def handle_transfer_message(client: Client, message: Message):
             await message.reply("Jumlah harus lebih dari 0.")
             return
 
-        # Cek penerima
+        # Ambil data penerima
         recipient_user = await client.get_users(username)
         recipient_id = recipient_user.id
 
-        # Cek saldo pengirim
-        sender = USER_DB.get(user_id, {"umpan": 0})
-        if sender["umpan"] < amount:
+        sender_data = db.get_user(user_id)
+        total_umpan = sum(sender_data["umpan"].values())
+
+        if total_umpan < amount:
             await message.reply("❌ Umpan tidak cukup!")
         else:
-            sender["umpan"] -= amount
-            USER_DB.setdefault(recipient_id, {"umpan": 0})
-            USER_DB[recipient_id]["umpan"] += amount
+            # Kurangi umpan A/B/C dari pengirim secara berurutan
+            remaining = amount
+            for jenis in ["A", "B", "C"]:
+                if sender_data["umpan"][jenis] >= remaining:
+                    db.remove_umpan(user_id, jenis, remaining)
+                    remaining = 0
+                    break
+                else:
+                    sub = sender_data["umpan"][jenis]
+                    db.remove_umpan(user_id, jenis, sub)
+                    remaining -= sub
+
+            # Tambah umpan ke penerima (default A)
+            db.add_umpan(recipient_id, "A", amount)
             await message.reply(f"✅ Transfer berhasil! Anda transfer {amount} umpan ke {username}")
 
-        # Reset state
         TRANSFER_STATE[user_id] = False
+
     except Exception as e:
         await message.reply(f"❌ Error: {e}")
         TRANSFER_STATE[user_id] = False
