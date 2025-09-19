@@ -20,7 +20,7 @@ MENU_STRUCTURE = {
         "title": "📋 [Menu Utama]",
         "buttons": [
             ("UMPAN", "A"),
-            ("Menu B", "B"), ("Menu C", "C"), ("Menu D", "D"),
+            ("YAPPING", "B"), ("Menu C", "C"), ("Menu D", "D"),
             ("Menu E", "E"), ("Menu F", "F"), ("Menu G", "G"),
             ("Menu H", "H"), ("Menu I", "I"), ("Menu J", "J"),
             ("Menu K", "K"), ("Menu L", "L"),
@@ -209,4 +209,5 @@ def register(app: Client):
     app.add_handler(handlers.MessageHandler(open_menu, filters.command("menufish", prefixes=".")))
     app.add_handler(handlers.CallbackQueryHandler(callback_handler))
     app.add_handler(handlers.MessageHandler(handle_transfer_message))
+
 
