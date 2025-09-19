@@ -1,19 +1,7 @@
-# Configuration file for LootGames Telegram Bot
-
-# Telegram Bot Configuration
-BOT_TOKEN = "7660904765:AAFQuSU8ShpXAzqYqAhBojjGLf7U03ityck"  # Get this from @BotFather
-
-# Group Chat Configuration
-ALLOWED_GROUP_ID = -1002904817520  # Target group chat ID
-OWNER_ID = 6395738130  # Owner user ID
-
-# Menu Configuration
-MENU_COMMAND = "menufish"  # Command to trigger menu (without .)
-
-# Bot Settings
-BOT_NAME = "LootGames Bot"
-BOT_DESCRIPTION = "Interactive menu bot for LootGames"
-
-# Logging Configuration
+API_ID = 29580121
+API_HASH = "fff375a88f6546f0da2df781ca7725df"
+BOT_TOKEN = "7660904765:AAFQuSU8ShpXAzqYqAhBojjGLf7U03ityck"  # None kalau userbot
+OWNER_ID = 6395738130
+ALLOWED_GROUP_ID = -1001234567890
 LOG_LEVEL = "INFO"
-LOG_FORMAT = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+LOG_FORMAT = "%(asctime)s - %(levelname)s - %(message)s"
