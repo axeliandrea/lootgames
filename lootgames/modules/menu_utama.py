@@ -1,6 +1,6 @@
 # lootgames/modules/menu_utama.py
 import logging
-from pyrogram import Client, filters, handlers
+from pyrogram import Client, handlers
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery, Message
 
 # ---------------- CONFIG ---------------- #
@@ -24,7 +24,7 @@ MENU_STRUCTURE = {
     }
 }
 
-# buat menu A..L -> AA..AAA pattern
+# Buat menu A..L -> AA..AAA
 for letter in "ABCDEFGHIJKL":
     key1 = letter
     key2 = f"{letter}{letter}"
@@ -45,7 +45,6 @@ for letter in "ABCDEFGHIJKL":
 
 # ---------------- KEYBOARD BUILDER ---------------- #
 def make_keyboard(menu_key: str) -> InlineKeyboardMarkup:
-    logger.debug(f"[DEBUG] Membuat keyboard untuk menu: {menu_key}")
     buttons = []
     row = []
     for i, (text, callback) in enumerate(MENU_STRUCTURE[menu_key]["buttons"], start=1):
@@ -60,12 +59,10 @@ def make_keyboard(menu_key: str) -> InlineKeyboardMarkup:
 # ---------------- HANDLER COMMAND ---------------- #
 async def open_menu(client: Client, message: Message):
     logger.info(f"[DEBUG] Command .menufish diterima dari {message.from_user.id}")
-
-    # untuk testing, cek owner sementara di-comment
+    # Owner check (optional)
     # if message.from_user.id != OWNER_ID:
     #     await message.reply_text("⚠️ Kamu tidak punya akses ke menu ini.")
     #     return
-
     await message.reply_text(
         MENU_STRUCTURE["main"]["title"],
         reply_markup=make_keyboard("main")
@@ -74,7 +71,6 @@ async def open_menu(client: Client, message: Message):
 # ---------------- HANDLER CALLBACK ---------------- #
 async def callback_handler(client: Client, callback_query: CallbackQuery):
     logger.info(f"[DEBUG] Callback diterima: {callback_query.data} dari {callback_query.from_user.id}")
-
     data = callback_query.data
     if data in MENU_STRUCTURE:
         await callback_query.message.edit_text(
@@ -89,15 +85,7 @@ async def callback_handler(client: Client, callback_query: CallbackQuery):
 # ---------------- REGISTER FUNCTION ---------------- #
 def register(app: Client):
     logger.info("[INFO] Mendaftarkan handler menu_utama...")
-
-    # MessageHandler
-    app.add_handler(
-        handlers.MessageHandler(open_menu, filters.command("menufish", prefixes="."))
-    )
-
-    # CallbackQueryHandler
-    app.add_handler(
-        handlers.CallbackQueryHandler(callback_handler)
-    )
-
+    from pyrogram import handlers
+    app.add_handler(handlers.MessageHandler(open_menu, filters.command("menufish", prefixes=".")))
+    app.add_handler(handlers.CallbackQueryHandler(callback_handler))
     logger.info("[INFO] Handler menu_utama berhasil terdaftar.")
