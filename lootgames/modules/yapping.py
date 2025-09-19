@@ -4,11 +4,13 @@ import os
 import re
 from pyrogram import filters
 from pyrogram.types import Message
+import lootgames.modules.yapping as yapping
 
 # File penyimpanan point
 POINT_FILE = "lootgames/modules/yapping_point.json"
 GROUP_ID = -1002904817520  # ID grup target
 
+points = yapping.load_points()
 # Load atau inisialisasi data point
 if os.path.exists(POINT_FILE):
     with open(POINT_FILE, "r") as f:
