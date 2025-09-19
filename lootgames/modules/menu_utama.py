@@ -7,17 +7,20 @@ logger = logging.getLogger(__name__)
 
 OWNER_ID = 6395738130
 
-# Simulasi database
+# ---------------- SIMULASI DATABASE ---------------- #
 USER_DB = {
     6395738130: {"umpan": 10},
 }
+
+# ---------------- STATE TRANSFER ---------------- #
+TRANSFER_STATE = {}  # user_id: True jika menunggu input transfer
 
 # ---------------- MAIN MENU ---------------- #
 MENU_STRUCTURE = {
     "main": {
         "title": "📋 [Menu Utama]",
         "buttons": [
-            ("UMPAN", "A"),  # Menu A diganti UMPAN
+            ("UMPAN", "A"),  
             ("Menu B", "B"), ("Menu C", "C"), ("Menu D", "D"),
             ("Menu E", "E"), ("Menu F", "F"), ("Menu G", "G"),
             ("Menu H", "H"), ("Menu I", "I"), ("Menu J", "J"),
@@ -70,19 +73,14 @@ async def callback_handler(client: Client, callback_query: CallbackQuery):
     user_id = callback_query.from_user.id
 
     if data == "TRANSFER_OK":
-        sender = USER_DB.get(user_id, {"umpan": 0})
-        recipient_id = 123456789  # contoh, bisa diganti input user
-        amount = 1
-
-        if sender["umpan"] >= amount:
-            sender["umpan"] -= amount
-            USER_DB.setdefault(recipient_id, {"umpan": 0})
-            USER_DB[recipient_id]["umpan"] += amount
-            text = f"✅ Transfer berhasil! Anda transfer {amount} umpan ke {recipient_id}"
-        else:
-            text = "❌ Umpan tidak cukup!"
-        await callback_query.message.edit_text(text, reply_markup=make_keyboard("AA", user_id))
+        # Aktifkan mode input transfer untuk user
+        TRANSFER_STATE[user_id] = True
+        await callback_query.message.edit_text(
+            "📥 Masukkan transfer dalam format:\n@username jumlah_umpan\nContoh: @axeliandrea 1",
+            reply_markup=None
+        )
         await callback_query.answer()
+        return
 
     elif data in MENU_STRUCTURE:
         await callback_query.message.edit_text(
@@ -94,7 +92,50 @@ async def callback_handler(client: Client, callback_query: CallbackQuery):
         await callback_query.answer("Menu tidak tersedia.", show_alert=True)
         logger.error(f"❌ Callback {data} tidak dikenal!")
 
+# ---------------- HANDLE TRANSFER MESSAGE ---------------- #
+async def handle_transfer_message(client: Client, message: Message):
+    user_id = message.from_user.id
+    if not TRANSFER_STATE.get(user_id):
+        return  # tidak sedang transfer
+
+    try:
+        parts = message.text.strip().split()
+        if len(parts) != 2:
+            await message.reply("Format salah. Contoh: @axeliandrea 1")
+            return
+
+        username, amount = parts
+        if not username.startswith("@"):
+            await message.reply("Username harus diawali '@'. Contoh: @axeliandrea")
+            return
+
+        amount = int(amount)
+        if amount <= 0:
+            await message.reply("Jumlah harus lebih dari 0.")
+            return
+
+        # Cek penerima
+        recipient_user = await client.get_users(username)
+        recipient_id = recipient_user.id
+
+        # Cek saldo pengirim
+        sender = USER_DB.get(user_id, {"umpan": 0})
+        if sender["umpan"] < amount:
+            await message.reply("❌ Umpan tidak cukup!")
+        else:
+            sender["umpan"] -= amount
+            USER_DB.setdefault(recipient_id, {"umpan": 0})
+            USER_DB[recipient_id]["umpan"] += amount
+            await message.reply(f"✅ Transfer berhasil! Anda transfer {amount} umpan ke {username}")
+
+        # Reset state
+        TRANSFER_STATE[user_id] = False
+    except Exception as e:
+        await message.reply(f"❌ Error: {e}")
+        TRANSFER_STATE[user_id] = False
+
 # ---------------- REGISTER ---------------- #
 def register(app: Client):
     app.add_handler(handlers.MessageHandler(open_menu, filters.command("menufish", prefixes=".")))
     app.add_handler(handlers.CallbackQueryHandler(callback_handler))
+    app.add_handler(handlers.MessageHandler(handle_transfer_message))
