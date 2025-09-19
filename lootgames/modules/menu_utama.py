@@ -1,13 +1,14 @@
 # lootgames/modules/menu_utama.py
 import logging
-from pyrogram import filters, Client
+from pyrogram import Client, filters
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery, Message
 
 from lootgames.config import Config
 
 OWNER_ID = Config.OWNER_ID
-TARGET_GROUP = Config.TARGET_GROUP  # info saja
+TARGET_GROUP = Config.TARGET_GROUP  # hanya info
 
+# ---------------- Logging ---------------- #
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
 
@@ -94,6 +95,15 @@ async def callback_handler(client: Client, callback_query: CallbackQuery):
 # ---------------- Register function ---------------- #
 def register(app: Client):
     logger.info("📝 Mendaftarkan handler menu_utama...")
-    app.add_handler(MessageHandler(open_menu, filters.command("menufish", prefixes=".")))
-    app.add_handler(CallbackQueryHandler(callback_handler))
+
+    # handler command .menufish
+    @app.on_message(filters.command("menufish", prefixes="."))
+    async def _open_menu(client, message):
+        await open_menu(client, message)
+
+    # handler callback query
+    @app.on_callback_query()
+    async def _callback(client, callback_query):
+        await callback_handler(client, callback_query)
+
     logger.info("✅ Handler menu_utama berhasil terdaftar.")
