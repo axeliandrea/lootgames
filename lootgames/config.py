@@ -1,18 +1,19 @@
-# lootgames/config.py
+# Configuration file for LootGames Telegram Bot
 
-import os
-from dotenv import load_dotenv
+# Telegram Bot Configuration
+BOT_TOKEN = "7660904765:AAFQuSU8ShpXAzqYqAhBojjGLf7U03ityck"  # Get this from @BotFather
 
-# Load variabel dari file .env
-load_dotenv()
+# Group Chat Configuration
+ALLOWED_GROUP_ID = -1002904817520  # Target group chat ID
+OWNER_ID = 6395738130  # Owner user ID
 
-class Config:
-    # Wajib isi di .env
-    API_ID = int(os.getenv("API_ID"))
-    API_HASH = os.getenv("API_HASH")
-    BOT_TOKEN = os.getenv("BOT_TOKEN")  # kalau pakai bot
-    SESSION_STRING = os.getenv("SESSION_STRING")  # kalau pakai Ubot (userbot)
+# Menu Configuration
+MENU_COMMAND = "menufish"  # Command to trigger menu (without .)
 
-    # Owner & Target Group
-    OWNER_ID = int(os.getenv("OWNER_ID"))
-    TARGET_GROUP = int(os.getenv("TARGET_GROUP"))
+# Bot Settings
+BOT_NAME = "LootGames Bot"
+BOT_DESCRIPTION = "Interactive menu bot for LootGames"
+
+# Logging Configuration
+LOG_LEVEL = "INFO"
+LOG_FORMAT = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
