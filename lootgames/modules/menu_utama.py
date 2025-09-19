@@ -6,9 +6,9 @@ from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton, CallbackQ
 
 # import database
 from lootgames.modules import database as db
+from lootgames.modules import yp  # Modul untuk load_points()
 
 logger = logging.getLogger(__name__)
-
 OWNER_ID = 6395738130
 
 # ---------------- STATE TRANSFER ---------------- #
@@ -48,7 +48,7 @@ MENU_STRUCTURE["AAA"] = {
 }
 
 # ---------------- GENERATOR MENU B–L ---------------- #
-for letter in "BCDEFGHIJKL":
+for letter in "CDEFGHIJKL":
     key1 = letter
     key2 = f"{letter}{letter}"
     key3 = f"{letter}{letter}{letter}"
@@ -121,17 +121,29 @@ async def callback_handler(client: Client, callback_query: CallbackQuery):
     user_id = callback_query.from_user.id
 
     await callback_query.answer()  # jawaban awal supaya tombol tidak loading
-
-    # Delay 2 detik untuk mencegah flood
     await asyncio.sleep(2)
 
     if data == "TRANSFER_OK":
-        # Aktifkan mode input transfer untuk user
         TRANSFER_STATE[user_id] = True
         await callback_query.message.edit_text(
             "📥 Masukkan transfer dalam format:\n@username jumlah_umpan\nContoh: @axeliandrea 1",
             reply_markup=None
         )
+        return
+
+    # Tampilkan total point di menu BB
+    elif data == "BB":
+        points = yp.load_points()
+        logger.debug(f"[DEBUG] load_points BB: {points}")
+        if not points:
+            text = "📊 Total Chat Points masih kosong."
+        else:
+            text = "📊 Total Chat Points:\n\n"
+            for uid, pdata in points.items():
+                username = pdata.get("username", "Unknown")
+                point = pdata.get("points", 0)
+                text += f"- {username}: {point} pts\n"
+        await callback_query.message.edit_text(text, reply_markup=make_keyboard("BB", user_id))
         return
 
     elif data in MENU_STRUCTURE:
@@ -165,7 +177,6 @@ async def handle_transfer_message(client: Client, message: Message):
             await message.reply("Jumlah harus lebih dari 0.")
             return
 
-        # Ambil data penerima
         recipient_user = await client.get_users(username)
         recipient_id = recipient_user.id
 
@@ -175,7 +186,6 @@ async def handle_transfer_message(client: Client, message: Message):
         if total_umpan < amount:
             await message.reply("❌ Umpan tidak cukup!")
         else:
-            # Kurangi umpan A/B/C dari pengirim secara berurutan
             remaining = amount
             for jenis in ["A", "B", "C"]:
                 if sender_data["umpan"][jenis] >= remaining:
@@ -187,7 +197,6 @@ async def handle_transfer_message(client: Client, message: Message):
                     db.remove_umpan(user_id, jenis, sub)
                     remaining -= sub
 
-            # Tambah umpan ke penerima (default A)
             db.add_umpan(recipient_id, "A", amount)
             await message.reply(f"✅ Transfer berhasil! Anda transfer {amount} umpan ke {username}")
 
