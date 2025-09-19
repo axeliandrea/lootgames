@@ -26,7 +26,8 @@ def load_modules():
         importlib.import_module(f"lootgames.modules.{module_name}")
         logging.info(f"✅ Loaded module: {module_name}")
 
-# Fungsi yang dipanggil saat bot sudah jalan
+# Callback saat bot start
+@app.on_start()
 async def on_startup(client: Client):
     logging.info("🚀 LootGames Bot Starting...")
 
@@ -42,4 +43,4 @@ async def on_startup(client: Client):
 
 if __name__ == "__main__":
     load_modules()
-    app.run(on_startup)
+    app.run()
