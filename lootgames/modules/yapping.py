@@ -1,60 +1,82 @@
-# lootgames/lootgames/modules/yapping.py
+# lootgames/modules/yapping.py
 import json
 import os
-from pyrogram import filters
+from pyrogram import Client, filters
 from pyrogram.types import Message
 
-# ================= CONFIG ================= #
+GROUP_ID = -1002904817520  # Ganti sesuai grup target
 POINT_FILE = "lootgames/modules/yapping_point.json"
-GROUP_ID = -1002904817520  # ID grup target
 
-# ================= INIT DATA ================= #
+# Load atau buat data point
 if os.path.exists(POINT_FILE):
     with open(POINT_FILE, "r") as f:
         point_data = json.load(f)
 else:
     point_data = {}
 
-# ================= FUNGSI POINT ================= #
 def save_points():
-    """Simpan data point ke file JSON"""
     with open(POINT_FILE, "w") as f:
-        json.dump(point_data, f, indent=4)
+        json.dump(point_data, f, indent=2)
 
-def load_points():
-    """Mengembalikan seluruh data point"""
-    return point_data
-
-def get_point(user_id):
-    """Mengembalikan point user tertentu"""
-    return point_data.get(str(user_id), 0)
-
-# ================= REGISTER MODULE ================= #
-def register(app):
+def register(app: Client):
     @app.on_message(filters.chat(GROUP_ID) & filters.text & ~filters.private)
-    async def yapping_point(client, message: Message):
-        # Abaikan jika pesan tidak memiliki user
-        if not message.from_user:
-            print("[DEBUG] Pesan tanpa user, diabaikan")
+    async def yapping_point(client: Client, message: Message):
+        user = message.from_user
+        if not user:
             return
 
-        user_id = str(message.from_user.id)
-        text = message.text
+        text = message.text.strip()
+        if len(text) < 5:
+            return  # minimal 5 karakter
 
-        # Hitung semua huruf (unicode)
-        letters = [c for c in text if c.isalpha()]
-        print(f"[DEBUG] User: {message.from_user.first_name}, Text: '{text}', Letters Count: {len(letters)}")
-
-        # Minimal 5 huruf untuk dapat point
-        if len(letters) < 5:
-            print("[DEBUG] Kurang dari 5 huruf, tidak dapat point")
-            return
-
-        # Tambahkan point
+        user_id = str(user.id)
         if user_id not in point_data:
-            point_data[user_id] = 0
-        point_data[user_id] += 1
+            point_data[user_id] = {"name": user.first_name, "point": 0}
+
+        # Tambah point
+        point_data[user_id]["point"] += 1
         save_points()
 
-        # Log terminal
-        print(f"[YAPPING] {message.from_user.first_name} ({user_id}) mendapat 1 point. Total: {point_data[user_id]}")
+        print(f"[DEBUG] {user.first_name} ({user.id}) mengirim chat: '{text}' → total point: {point_data[user_id]['point']}")
+
+    @app.on_message(filters.command("point") & ~filters.private)
+    async def check_point(client: Client, message: Message):
+        args = message.text.split()
+        if len(args) == 1:
+            # Cek point sendiri
+            user_id = str(message.from_user.id)
+            pts = point_data.get(user_id, {"point":0})["point"]
+            await message.reply_text(f"Total Chat Pointmu: {pts}")
+        elif len(args) == 2:
+            # Cek point user lain @username
+            username = args[1].replace("@", "")
+            found = None
+            for uid, data in point_data.items():
+                if data.get("name") == username:
+                    found = data
+                    break
+            if found:
+                await message.reply_text(f"Total Chat Point {username}: {found['point']}")
+            else:
+                await message.reply_text("User tidak ditemukan.")
+
+    @app.on_message(filters.command("board") & ~filters.private)
+    async def leaderboard(client: Client, message: Message):
+        if not point_data:
+            await message.reply_text("Leaderboard masih kosong.")
+            return
+
+        sorted_board = sorted(point_data.items(), key=lambda x: x[1]["point"], reverse=True)
+        text = "🏆 Leaderboard Chat Points 🏆\n\n"
+        for i, (uid, data) in enumerate(sorted_board[:10], 1):
+            text += f"{i}. {data['name']} → {data['point']} point\n"
+        await message.reply_text(text)
+
+# Auto-register jika diimport
+from pyrogram import Client as _App
+try:
+    app  # Cek apakah variabel app ada
+except NameError:
+    pass
+else:
+    register(app)
