@@ -62,7 +62,8 @@ def load_points():
 def register(app: Client):
     print("[YAPPING] Registering handlers...")
 
-    @app.on_message(filters.chat(GROUP_ID) & filters.text & ~filters.private)
+    # ================= HANDLER CHAT POINT ================= #
+    @app.on_message(filters.text & ~filters.private)  # sementara untuk testing semua chat
     async def yapping_point(client: Client, message: Message):
         """Handler chat point utama"""
         try:
@@ -88,6 +89,7 @@ def register(app: Client):
             print(f"[YAPPING] Exception in yapping_point: {e}")
             traceback.print_exc()
 
+    # ================= COMMAND CHECK POINT ================= #
     @app.on_message(filters.command("point") & ~filters.private)
     async def check_point(client: Client, message: Message):
         """Cek point sendiri atau user lain"""
@@ -113,6 +115,7 @@ def register(app: Client):
             print(f"[YAPPING] Exception in check_point: {e}")
             traceback.print_exc()
 
+    # ================= COMMAND LEADERBOARD ================= #
     @app.on_message(filters.command("board") & ~filters.private)
     async def leaderboard(client: Client, message: Message):
         """Leaderboard top 10"""
