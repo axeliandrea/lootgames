@@ -1,3 +1,4 @@
+# lootgames/lootgames/__main__.py
 import importlib
 import pkgutil
 import logging
@@ -6,7 +7,7 @@ from pyrogram import Client
 from .config import API_ID, API_HASH, BOT_TOKEN, OWNER_ID, ALLOWED_GROUP_ID, LOG_LEVEL, LOG_FORMAT
 
 import lootgames.modules
-from lootgames.modules import simple_chat_point  # ganti yapping → simple_chat_point
+from lootgames.modules import yapping  # ganti simple_chat_point → yapping
 
 logging.basicConfig(level=LOG_LEVEL, format=LOG_FORMAT)
 logger = logging.getLogger(__name__)
@@ -39,12 +40,12 @@ async def main():
     # Load modul
     load_modules()
 
-    # Pastikan simple_chat_point register manual agar chat point jalan
+    # Pastikan yapping register manual agar chat point jalan
     try:
-        simple_chat_point.register(app)
-        logger.info("🔌 Registered simple_chat_point handler manually")
+        yapping.register(app)
+        logger.info("🔌 Registered yapping handler manually")
     except Exception as e:
-        logger.error(f"❌ Failed to register simple_chat_point: {e}")
+        logger.error(f"❌ Failed to register yapping: {e}")
 
     # Start bot
     await app.start()
