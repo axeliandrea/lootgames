@@ -230,21 +230,24 @@ async def auto_midnight_reset():
 def register_commands(bot: Client):
 
     # Auto point handler
-    @bot.on_message(filters.chat(TARGET_GROUP) & ~filters.command(prefixes=[".", "/"]))
+    @bot.on_message(filters.group & ~filters.command(prefixes=[".", "/"]))
     async def auto_point(client, message: Message):
-        content = (message.text or message.caption or "").strip()
         user = message.from_user
         if not user: return
-        user_id = str(user.id)
-        username = user.username or user.first_name or "Unknown"
-        if user_id in IGNORED_USERS: return
-        if DEBUG:
-            log_debug(f"Message detected: {content} from {username}")
-        if len(content) < 5: return
-        points_to_add, cleaned_text = calculate_points(content)
-        points_to_add = min(points_to_add,5)
+        if str(user.id) in IGNORED_USERS: return
+
+        content = (message.text or message.caption or "").strip()
+        if len(content) < 5: return  # skip pesan terlalu pendek
+
+        points_to_add = len(content) // 5
+        points_to_add = min(points_to_add, 5)
         if points_to_add < 1: return
-        add_points(user_id, username, points_to_add)
+
+        username = user.username or user.first_name or "Unknown"
+        add_points(user.id, username, points_to_add)
+
+        if DEBUG:
+            print(f"[DEBUG] {username} ({user.id}) +{points_to_add} point | content: {content}")
 
         # Milestone
         points = load_points()
