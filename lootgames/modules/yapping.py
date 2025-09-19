@@ -33,6 +33,7 @@ def get_point(user_id):
 def register(app):
     @app.on_message(filters.chat(GROUP_ID) & filters.text & ~filters.private)
     async def yapping_point(client, message: Message):
+        # Abaikan jika pesan tidak memiliki user
         if not message.from_user:
             print("[DEBUG] Pesan tanpa user, diabaikan")
             return
@@ -40,24 +41,20 @@ def register(app):
         user_id = str(message.from_user.id)
         text = message.text
 
-        # Ambil semua huruf unicode
+        # Hitung semua huruf (unicode)
         letters = [c for c in text if c.isalpha()]
-        print(f"[DEBUG] User: {message.from_user.first_name}, Text: '{text}', Letters: {letters}")
+        print(f"[DEBUG] User: {message.from_user.first_name}, Text: '{text}', Letters Count: {len(letters)}")
 
-        # Minimal 5 huruf
+        # Minimal 5 huruf untuk dapat point
         if len(letters) < 5:
             print("[DEBUG] Kurang dari 5 huruf, tidak dapat point")
             return
-
-        # ===== Jika mau periksa double huruf berurutan, aktifkan ini =====
-        # for i in range(len(letters)-1):
-        #     if letters[i].lower() == letters[i+1].lower():
-        #         print("[DEBUG] Double huruf berurutan, tidak dapat point")
-        #         return
 
         # Tambahkan point
         if user_id not in point_data:
             point_data[user_id] = 0
         point_data[user_id] += 1
         save_points()
+
+        # Log terminal
         print(f"[YAPPING] {message.from_user.first_name} ({user_id}) mendapat 1 point. Total: {point_data[user_id]}")
