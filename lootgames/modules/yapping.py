@@ -50,7 +50,8 @@ def save_json(file_path, data):
     os.makedirs(os.path.dirname(file_path), exist_ok=True)
     with open(file_path, "w") as f:
         json.dump(data, f, indent=2)
-    print(f"[DEBUG] Data disimpan ke {file_path}:", data)
+    if DEBUG:
+        print(f"[DEBUG] Data disimpan ke {file_path}: {data}")
 
 # ------------------------------- POINTS -------------------------------
 
@@ -72,13 +73,11 @@ def add_user_if_not_exist(points, user_id, username):
     user_id = str(user_id)
     if user_id not in points:
         points[user_id] = {"username": username, "points": 0, "level": 0, "last_milestone":0}
-        print(f"[DEBUG] User baru ditambahkan: {username} ({user_id})")
+        if DEBUG: print(f"[DEBUG] User baru ditambahkan: {username} ({user_id})")
     else:
         points[user_id]["username"] = username
-        if "level" not in points[user_id]:
-            points[user_id]["level"] = 0
-        if "last_milestone" not in points[user_id]:
-            points[user_id]["last_milestone"] = 0
+        points[user_id].setdefault("level", 0)
+        points[user_id].setdefault("last_milestone", 0)
 
 def add_points(user_id, username, amount=1):
     user_id = str(user_id)
@@ -231,7 +230,7 @@ async def auto_midnight_reset():
 def register_commands(bot: Client):
 
     # Auto point handler
-    @bot.on_message(filters.chat(TARGET_GROUP) & ~filters.command(["mypoint","resetchatpoint","scanpoint"], prefixes=[".", "/"]))
+    @bot.on_message(filters.chat(TARGET_GROUP) & ~filters.command(prefixes=[".", "/"]))
     async def auto_point(client, message: Message):
         content = (message.text or message.caption or "").strip()
         user = message.from_user
@@ -239,11 +238,14 @@ def register_commands(bot: Client):
         user_id = str(user.id)
         username = user.username or user.first_name or "Unknown"
         if user_id in IGNORED_USERS: return
+        if DEBUG:
+            log_debug(f"Message detected: {content} from {username}")
         if len(content) < 5: return
         points_to_add, cleaned_text = calculate_points(content)
         points_to_add = min(points_to_add,5)
         if points_to_add < 1: return
         add_points(user_id, username, points_to_add)
+
         # Milestone
         points = load_points()
         last_milestone = points[user_id].get("last_milestone",0)
@@ -255,6 +257,7 @@ def register_commands(bot: Client):
             try:
                 await message.reply(f"🎉 Congrats {username}! Reached {new_index*100} points 💗", quote=True)
             except: pass
+
         # Level up
         new_level = check_level_up(points[user_id])
         if new_level != -1:
