@@ -12,53 +12,66 @@ POINT_FILE = "lootgames/modules/yapping_point.json"
 
 # ================= INIT DATA ================= #
 point_data = {}
-if os.path.exists(POINT_FILE):
+if not os.path.exists(POINT_FILE):
+    # Buat file baru
     try:
-        with open(POINT_FILE, "r") as f:
-            point_data = json.load(f)
-        print(f"[SUPERDEBUG] Loaded point_data from {POINT_FILE}")
+        with open(POINT_FILE, "w") as f:
+            json.dump({}, f, indent=2)
+        print(f"[SUPERFINAL] Created new point file: {POINT_FILE}")
     except Exception as e:
-        print(f"[SUPERDEBUG] Failed to load point_data: {e}")
-else:
-    print(f"[SUPERDEBUG] No point file found. Starting fresh.")
+        print(f"[SUPERFINAL] Failed to create point file: {e}")
+
+# Load existing data
+try:
+    with open(POINT_FILE, "r") as f:
+        point_data = json.load(f)
+    print(f"[SUPERFINAL] Loaded point_data from {POINT_FILE}")
+except Exception as e:
+    print(f"[SUPERFINAL] Failed to load point_data: {e}")
+    point_data = {}
 
 def save_points():
+    """Simpan point ke file JSON"""
     try:
         with open(POINT_FILE, "w") as f:
             json.dump(point_data, f, indent=2)
-        print(f"[SUPERDEBUG] Saved point_data to {POINT_FILE}")
+        print(f"[SUPERFINAL] Saved point_data to {POINT_FILE}")
     except Exception as e:
-        print(f"[SUPERDEBUG] Failed to save point_data: {e}")
+        print(f"[SUPERFINAL] Failed to save point_data: {e}")
 
 def load_points():
+    """Load point dari file dan kembalikan dictionary"""
     global point_data
     try:
         if os.path.exists(POINT_FILE):
             with open(POINT_FILE, "r") as f:
                 point_data = json.load(f)
-            print(f"[SUPERDEBUG] Loaded point_data from {POINT_FILE}")
+            print(f"[SUPERFINAL] Loaded point_data from {POINT_FILE}")
         else:
             point_data = {}
-            print(f"[SUPERDEBUG] No point file found. Starting fresh.")
+            with open(POINT_FILE, "w") as f:
+                json.dump(point_data, f, indent=2)
+            print(f"[SUPERFINAL] Point file not found. Created new file.")
     except Exception as e:
-        print(f"[SUPERDEBUG] Error loading points: {e}")
+        print(f"[SUPERFINAL] Error loading points: {e}")
+        traceback.print_exc()
     return point_data
 
 # ================= REGISTER HANDLER ================= #
 def register(app: Client):
-    print("[SUPERDEBUG] Registering yapping_point handler...")
+    print("[SUPERFINAL] Registering yapping_point handler...")
 
-    @app.on_message(filters.text & ~filters.private)  # Untuk testing dulu, tangkap semua chat
+    @app.on_message(filters.chat(GROUP_ID) & filters.text & ~filters.private)
     async def yapping_point(client: Client, message: Message):
         try:
             user = message.from_user
             if not user:
-                print("[SUPERDEBUG] Message has no from_user, skipping")
+                print("[SUPERFINAL] Message has no from_user, skipping")
                 return
 
             text = message.text.strip()
             if len(text) < 5:
-                print(f"[SUPERDEBUG] Message too short ({len(text)} chars), skipping")
+                print(f"[SUPERFINAL] Message too short ({len(text)} chars), skipping")
                 return  # minimal 5 karakter
 
             user_id = str(user.id)
@@ -68,9 +81,9 @@ def register(app: Client):
             point_data[user_id]["point"] += 1
             save_points()
 
-            print(f"[SUPERDEBUG] {user.first_name} ({user.id}) chat: '{text}' → total point: {point_data[user_id]['point']}")
+            print(f"[SUPERFINAL] {user.first_name} ({user.id}) chat: '{text}' → total point: {point_data[user_id]['point']}")
         except Exception as e:
-            print(f"[SUPERDEBUG] Exception in yapping_point: {e}")
+            print(f"[SUPERFINAL] Exception in yapping_point: {e}")
             traceback.print_exc()
 
     @app.on_message(filters.command("point") & ~filters.private)
@@ -92,9 +105,9 @@ def register(app: Client):
                     await message.reply_text(f"Total Chat Point {username}: {found['point']}")
                 else:
                     await message.reply_text("User tidak ditemukan.")
-            print(f"[SUPERDEBUG] /point command processed by {message.from_user.first_name}")
+            print(f"[SUPERFINAL] /point command processed by {message.from_user.first_name}")
         except Exception as e:
-            print(f"[SUPERDEBUG] Exception in check_point: {e}")
+            print(f"[SUPERFINAL] Exception in check_point: {e}")
             traceback.print_exc()
 
     @app.on_message(filters.command("board") & ~filters.private)
@@ -102,7 +115,7 @@ def register(app: Client):
         try:
             if not point_data:
                 await message.reply_text("Leaderboard masih kosong.")
-                print("[SUPERDEBUG] Leaderboard empty")
+                print("[SUPERFINAL] Leaderboard empty")
                 return
 
             sorted_board = sorted(point_data.items(), key=lambda x: x[1]["point"], reverse=True)
@@ -110,17 +123,17 @@ def register(app: Client):
             for i, (uid, data) in enumerate(sorted_board[:10], 1):
                 text += f"{i}. {data['name']} → {data['point']} point\n"
             await message.reply_text(text)
-            print(f"[SUPERDEBUG] Leaderboard sent by {message.from_user.first_name}")
+            print(f"[SUPERFINAL] Leaderboard sent by {message.from_user.first_name}")
         except Exception as e:
-            print(f"[SUPERDEBUG] Exception in leaderboard: {e}")
+            print(f"[SUPERFINAL] Exception in leaderboard: {e}")
             traceback.print_exc()
 
-    print("[SUPERDEBUG] yapping.py handlers registered successfully")
+    print("[SUPERFINAL] yapping.py handlers registered successfully")
 
-# ================= AUTO REGISTER (optional) ================= #
+# ================= AUTO REGISTER ================= #
 try:
     from lootgames.__main__ import app
 except ImportError:
-    print("[SUPERDEBUG] app not found, skip auto-register")
+    print("[SUPERFINAL] app not found, skip auto-register")
 else:
     register(app)
