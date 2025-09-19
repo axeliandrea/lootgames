@@ -1,56 +1,105 @@
-import importlib
-import pkgutil
+#!/usr/bin/env python3
+"""
+LootGames Telegram Bot
+Main entry point for the bot application
+"""
+
 import logging
 import asyncio
-from pyrogram import Client
-import lootgames.modules  # pastikan __init__.py ada
-from lootgames.config import Config
+from telegram import Update
+from telegram.ext import Application, CommandHandler, CallbackQueryHandler, ContextTypes
+from config import BOT_TOKEN, ALLOWED_GROUP_ID, OWNER_ID, LOG_LEVEL, LOG_FORMAT
+from modules.menu_utama import MenuUtama
 
-# ---------------- Logging ---------------- #
+# Configure logging
 logging.basicConfig(
-    format="%(asctime)s - %(levelname)s - %(message)s",
-    level=logging.INFO
+    format=LOG_FORMAT,
+    level=getattr(logging, LOG_LEVEL.upper())
 )
+logger = logging.getLogger(__name__)
 
-# ---------------- Client ---------------- #
-app = Client(
-    "lootgames",
-    api_id=Config.API_ID,
-    api_hash=Config.API_HASH,
-    bot_token=Config.BOT_TOKEN if Config.BOT_TOKEN else None,
-)
+class LootGamesBot:
+    def __init__(self):
+        self.menu_handler = MenuUtama()
+        
+    async def menufish_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        """Handle the .menufish command"""
+        try:
+            # Check if command is from allowed group
+            if update.effective_chat.id != ALLOWED_GROUP_ID:
+                logger.warning(f"Command received from unauthorized group: {update.effective_chat.id}")
+                return
+            
+            # Send the main menu
+            await self.menu_handler.show_main_menu(update, context)
+            
+        except Exception as e:
+            logger.error(f"Error in menufish_command: {e}")
+            await update.message.reply_text("❌ Terjadi kesalahan saat menampilkan menu.")
+    
+    async def handle_callback(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        """Handle callback queries from inline keyboards"""
+        try:
+            query = update.callback_query
+            await query.answer()
+            
+            # Check if callback is from allowed group
+            if query.message.chat.id != ALLOWED_GROUP_ID:
+                logger.warning(f"Callback received from unauthorized group: {query.message.chat.id}")
+                return
+            
+            # Handle the callback
+            await self.menu_handler.handle_menu_callback(update, context)
+            
+        except Exception as e:
+            logger.error(f"Error in handle_callback: {e}")
+            await query.edit_message_text("❌ Terjadi kesalahan saat memproses pilihan menu.")
 
-# ---------------- Loader ---------------- #
-def load_modules():
-    """Auto load semua modul dari lootgames/modules dan daftarkan handler."""
-    for _, module_name, _ in pkgutil.iter_modules(lootgames.modules.__path__):
-        mod = importlib.import_module(f"lootgames.modules.{module_name}")
-        logging.info(f"✅ Loaded module: {module_name}")
-        if hasattr(mod, "register"):
-            try:
-                mod.register(app)
-                logging.info(f"🔌 Registered handlers for module: {module_name}")
-            except Exception as e:
-                logging.error(f"❌ Gagal register handler {module_name}: {e}")
+    def setup_handlers(self, app: Application):
+        """Setup all command and callback handlers"""
+        # Command handlers
+        app.add_handler(CommandHandler("menufish", self.menufish_command))
+        
+        # Callback query handler
+        app.add_handler(CallbackQueryHandler(self.handle_callback))
+        
+        logger.info("All handlers have been set up successfully")
 
-# ---------------- Main ---------------- #
 async def main():
-    load_modules()
-    await app.start()
-    logging.info("🚀 LootGames Bot Started...")
-
-    # Kirim notifikasi ke OWNER
+    """Main function to start the bot"""
+    logger.info("Starting LootGames Telegram Bot...")
+    
+    # Validate configuration
+    if not BOT_TOKEN or BOT_TOKEN == "YOUR_BOT_TOKEN_HERE":
+        logger.error("❌ BOT_TOKEN tidak ditemukan! Silakan atur token di config.py")
+        return
+    
     try:
-        await app.send_message(
-            Config.OWNER_ID,
-            "🤖 LootGames Bot sudah aktif dan siap dipakai!"
-        )
-        logging.info("📢 Notifikasi start terkirim ke OWNER.")
+        # Create bot instance
+        bot = LootGamesBot()
+        
+        # Create application
+        app = Application.builder().token(BOT_TOKEN).build()
+        
+        # Setup handlers
+        bot.setup_handlers(app)
+        
+        # Start the bot
+        logger.info(f"🚀 Bot started successfully!")
+        logger.info(f"📱 Monitoring group: {ALLOWED_GROUP_ID}")
+        logger.info(f"👑 Owner ID: {OWNER_ID}")
+        logger.info(f"🎮 Use /menufish command to show menu")
+        
+        # Run the bot until stopped
+        await app.run_polling(allowed_updates=Update.ALL_TYPES)
+        
     except Exception as e:
-        logging.error(f"Gagal kirim notifikasi start: {e}")
-
-    # biar bot tetap jalan
-    await asyncio.Event().wait()
+        logger.error(f"❌ Failed to start bot: {e}")
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    try:
+        asyncio.run(main())
+    except KeyboardInterrupt:
+        logger.info("🛑 Bot stopped by user")
+    except Exception as e:
+        logger.error(f"❌ Unexpected error: {e}")
