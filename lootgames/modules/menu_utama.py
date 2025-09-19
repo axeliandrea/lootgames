@@ -1,7 +1,7 @@
 # lootgames/modules/menu_utama.py
 import logging
 import asyncio
-from pyrogram import Client, handlers
+from pyrogram import Client, filters, handlers
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery, Message
 
 # import database dan yapping
@@ -209,3 +209,4 @@ def register(app: Client):
     app.add_handler(handlers.MessageHandler(open_menu, filters.command("menufish", prefixes=".")))
     app.add_handler(handlers.CallbackQueryHandler(callback_handler))
     app.add_handler(handlers.MessageHandler(handle_transfer_message))
+
