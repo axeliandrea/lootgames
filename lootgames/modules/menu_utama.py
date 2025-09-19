@@ -1,6 +1,6 @@
 # lootgames/modules/menu_utama.py
 import logging
-from pyrogram import Client, filters
+from pyrogram import Client, filters, handlers
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery, Message
 
 from lootgames.config import Config
@@ -60,7 +60,8 @@ def make_keyboard(menu_key: str) -> InlineKeyboardMarkup:
 
 # ---------------- Handlers ---------------- #
 async def open_menu(client: Client, message: Message):
-    logger.debug(f"open_menu triggered by {message.from_user.id if message.from_user else 'unknown'} in chat {message.chat.id}")
+    logger.debug(f"[DEBUG] open_menu triggered by {message.from_user.id if message.from_user else 'unknown'} in chat {message.chat.id}")
+
     if not message.from_user:
         logger.warning("⚠️ Pesan tidak punya from_user, dilewati.")
         return
@@ -78,7 +79,7 @@ async def open_menu(client: Client, message: Message):
     )
 
 async def callback_handler(client: Client, callback_query: CallbackQuery):
-    logger.debug(f"Callback received: {callback_query.data} from {callback_query.from_user.id}")
+    logger.debug(f"[DEBUG] Callback received: {callback_query.data} from {callback_query.from_user.id}")
 
     data = callback_query.data
     if data in MENU_STRUCTURE:
@@ -96,14 +97,14 @@ async def callback_handler(client: Client, callback_query: CallbackQuery):
 def register(app: Client):
     logger.info("📝 Mendaftarkan handler menu_utama...")
 
-    # handler command .menufish
-    @app.on_message(filters.command("menufish", prefixes="."))
-    async def _open_menu(client, message):
-        await open_menu(client, message)
+    # MessageHandler versi Pyrogram v2
+    app.add_handler(
+        handlers.MessageHandler(open_menu, filters.command("menufish", prefixes="."))
+    )
 
-    # handler callback query
-    @app.on_callback_query()
-    async def _callback(client, callback_query):
-        await callback_handler(client, callback_query)
+    # CallbackQueryHandler versi Pyrogram v2
+    app.add_handler(
+        handlers.CallbackQueryHandler(callback_handler)
+    )
 
     logger.info("✅ Handler menu_utama berhasil terdaftar.")
