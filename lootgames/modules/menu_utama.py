@@ -76,6 +76,25 @@ for letter in "BCDEFGHIJKL":
         ]
     }
 
+# ---------------- CUSTOM MENU B → BB → BBB ---------------- #
+MENU_STRUCTURE["B"] = {
+    "title": "📋 YAPPING",
+    "buttons": [("Total Point Chat", "BB"), ("⬅️ Kembali", "main")]
+}
+
+MENU_STRUCTURE["BB"] = {
+    "title": "📋 Total Point Chat",
+    "buttons": [
+        ("➡️ Next", "BBB"),
+        ("⬅️ Kembali", "B")
+    ]
+}
+
+MENU_STRUCTURE["BBB"] = {
+    "title": "📋 Leaderboard Yapping",
+    "buttons": [("⬅️ Kembali", "BB")]
+}
+
 # ---------------- KEYBOARD BUILDER ---------------- #
 def make_keyboard(menu_key: str, user_id=None) -> InlineKeyboardMarkup:
     buttons = []
@@ -183,3 +202,4 @@ def register(app: Client):
     app.add_handler(handlers.MessageHandler(open_menu, filters.command("menufish", prefixes=".")))
     app.add_handler(handlers.CallbackQueryHandler(callback_handler))
     app.add_handler(handlers.MessageHandler(handle_transfer_message))
+
