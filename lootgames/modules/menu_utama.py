@@ -37,7 +37,10 @@ MENU_STRUCTURE["A"] = {
 
 MENU_STRUCTURE["AA"] = {
     "title": "📋 Jumlah UMPAN",
-    "buttons": [("⬅️ Kembali", "A")]  # hapus "TRANSFER UMPAN" dari sini
+    "buttons": [
+        ("TRANSFER UMPAN", "AAA"),  # tombol untuk masuk transfer
+        ("⬅️ Kembali", "A")
+    ]
 }
 
 MENU_STRUCTURE["AAA"] = {
@@ -49,13 +52,12 @@ MENU_STRUCTURE["AAA"] = {
 def make_keyboard(menu_key: str, user_id=None) -> InlineKeyboardMarkup:
     buttons = []
     for text, callback in MENU_STRUCTURE[menu_key]["buttons"]:
-        # Hanya tampilkan jumlah UMPAN di title AA
+        # Tampilkan jumlah umpan di title AA
         if menu_key == "AA" and user_id is not None:
-            u = USER_DB.get(user_id, {}).get("umpan", 0)
-            title = f"📋 Jumlah UMPAN: {u}"
+            title = f"{text} ({USER_DB.get(user_id, {}).get('umpan', 0)})"
         else:
-            title = MENU_STRUCTURE[menu_key]["title"]
-        buttons.append([InlineKeyboardButton(text, callback_data=callback)])
+            title = text
+        buttons.append([InlineKeyboardButton(title, callback_data=callback)])
     return InlineKeyboardMarkup(buttons)
 
 # ---------------- GENERATOR MENU B–L ---------------- #
@@ -152,4 +154,5 @@ def register(app: Client):
     app.add_handler(handlers.MessageHandler(open_menu, filters.command("menufish", prefixes=".")))
     app.add_handler(handlers.CallbackQueryHandler(callback_handler))
     app.add_handler(handlers.MessageHandler(handle_transfer_message))
+
 
