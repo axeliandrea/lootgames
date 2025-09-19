@@ -23,45 +23,49 @@ app = Client(
 # ================= LOAD ALL MODULES ================= #
 def load_modules():
     for _, module_name, _ in pkgutil.iter_modules(lootgames.modules.__path__):
-        mod = importlib.import_module(f"lootgames.modules.{module_name}")
-        logger.info(f"✅ Loaded module: {module_name}")
-        # jika modul punya fungsi register, panggil register(app)
-        if hasattr(mod, "register"):
-            try:
+        try:
+            mod = importlib.import_module(f"lootgames.modules.{module_name}")
+            logger.info(f"✅ Loaded module: {module_name}")
+            # jika modul punya fungsi register, panggil register(app)
+            if hasattr(mod, "register"):
                 mod.register(app)
                 logger.info(f"🔌 Registered handlers for module: {module_name}")
-            except Exception as e:
-                logger.error(f"❌ Gagal register handler {module_name}: {e}")
+        except Exception as e:
+            logger.error(f"❌ Gagal load/register handler {module_name}: {e}")
 
 # ================= MAIN BOT START ================= #
 async def main():
     logger.info("Starting LootGames Telegram Bot...")
 
-    # load modul dulu
+    # Load modul
     load_modules()
 
-    # pastikan yapping juga register manual (jika belum otomatis)
+    # Pastikan yapping register manual agar chat point jalan
     try:
         yapping.register(app)
         logger.info("🔌 Registered yapping handler manually")
     except Exception as e:
         logger.error(f"❌ Failed to register yapping: {e}")
 
-    # start bot
+    # Start bot
     await app.start()
     logger.info("🚀 Bot started successfully!")
     logger.info(f"📱 Monitoring group: {ALLOWED_GROUP_ID}")
     logger.info(f"👑 Owner ID: {OWNER_ID}")
     logger.info("🎮 Use /menufish command to show menu")
 
-    # notif ke owner
+    # Kirim notif ke owner
     try:
         await app.send_message(OWNER_ID, "🤖 LootGames Bot sudah aktif dan siap dipakai!")
         logger.info("📢 Notifikasi start terkirim ke OWNER.")
     except Exception as e:
         logger.error(f"Gagal kirim notifikasi start: {e}")
 
-    await asyncio.Event().wait()  # biar bot tetap jalan
+    # ================= SUPERDEBUG ================= #
+    print("[SUPERDEBUG] Bot is running. Chat points should log in terminal on any message ≥5 chars.")
+
+    # Tetap jalan
+    await asyncio.Event().wait()
 
 if __name__ == "__main__":
     try:
