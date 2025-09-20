@@ -1,10 +1,11 @@
+# lootgames/modules/menu_utama.py
 import logging
 import asyncio
 from pyrogram import Client, filters, handlers
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery, Message
 
-from lootgames.modules import umpan  # database UMPAN
 from lootgames.modules import yapping
+from lootgames.modules import umpan  # database umpan
 
 logger = logging.getLogger(__name__)
 OWNER_ID = 6395738130
@@ -87,6 +88,7 @@ MENU_STRUCTURE["BBB"] = {
 def make_keyboard(menu_key: str, user_id=None, page: int = 0) -> InlineKeyboardMarkup:
     buttons = []
 
+    # Leaderboard pagination
     if menu_key == "BBB" and user_id is not None:
         points = yapping.load_points()
         sorted_points = sorted(points.items(), key=lambda x: x[1]["points"], reverse=True)
@@ -102,6 +104,7 @@ def make_keyboard(menu_key: str, user_id=None, page: int = 0) -> InlineKeyboardM
         buttons.append([InlineKeyboardButton("⬅️ Kembali", callback_data="BB")])
     else:
         for text, callback in MENU_STRUCTURE[menu_key]["buttons"]:
+            # Jumlah UMPAN
             if menu_key == "AA" and user_id is not None and text == "TRANSFER UMPAN":
                 total = umpan.total_umpan(user_id)
                 display_text = f"{text} ({total})"
@@ -146,23 +149,18 @@ async def callback_handler(client: Client, callback_query: CallbackQuery):
             "📥 Masukkan transfer dalam format:\n@username jumlah_umpan\nContoh: @axeliandrea 1",
             reply_markup=None
         )
+        logger.debug(f"[TRANSFER] User {user_id} masuk ke mode transfer")
         return
 
-    # Handle BB menu → show total point chat + UMPAN
+    # Handle BB menu → show total point chat
     elif data == "BB":
         points = yapping.load_points()
-        text = ""
         if not points:
-            text += "📊 Total Chat Points masih kosong.\n\n"
+            text = "📊 Total Chat Points masih kosong."
         else:
-            text += "📊 Total Chat Points:\n\n"
+            text = "📊 Total Chat Points:\n\n"
             for uid, pdata in points.items():
                 text += f"- {pdata.get('username','Unknown')} - {pdata.get('points',0)} pts | Level {pdata.get('level',0)} {yapping.get_badge(pdata.get('level',0))}\n"
-
-        # Tambahkan total UMPAN user
-        user_total_umpan = umpan.total_umpan(user_id)
-        text += f"\n📌 Total UMPAN Anda: {user_total_umpan}"
-
         await callback_query.message.edit_text(text, reply_markup=make_keyboard("BB", user_id))
         return
 
@@ -185,6 +183,7 @@ async def callback_handler(client: Client, callback_query: CallbackQuery):
         )
     else:
         await callback_query.answer("Menu tidak tersedia.", show_alert=True)
+        logger.error(f"❌ Callback {data} tidak dikenal!")
 
 # ---------------- HANDLE TRANSFER MESSAGE ---------------- #
 async def handle_transfer_message(client: Client, message: Message):
@@ -211,19 +210,20 @@ async def handle_transfer_message(client: Client, message: Message):
         recipient_user = await client.get_users(username)
         recipient_id = recipient_user.id
 
-        sender_total = umpan.total_umpan(user_id)
-        if sender_total < amount:
+        sender_data = umpan.get_user(user_id)
+        total_umpan = sum(sender_data["umpan"].values())
+
+        if total_umpan < amount:
             await message.reply("❌ Umpan tidak cukup!")
         else:
             remaining = amount
             for jenis in ["A", "B", "C"]:
-                user_data = umpan.get_user(user_id)
-                if user_data["umpan"][jenis] >= remaining:
+                if sender_data["umpan"][jenis] >= remaining:
                     umpan.remove_umpan(user_id, jenis, remaining)
                     remaining = 0
                     break
                 else:
-                    sub = user_data["umpan"][jenis]
+                    sub = sender_data["umpan"][jenis]
                     umpan.remove_umpan(user_id, jenis, sub)
                     remaining -= sub
 
@@ -235,6 +235,27 @@ async def handle_transfer_message(client: Client, message: Message):
     except Exception as e:
         await message.reply(f"❌ Error: {e}")
         TRANSFER_STATE[user_id] = False
+
+# ---------------- HANDLE COMMAND .TOPUP ---------------- #
+@Client.on_message(filters.command(["topup"]) & filters.private)
+async def handle_topup(client: Client, message: Message):
+    user_id = message.from_user.id
+    if len(message.command) != 3:
+        await message.reply("Format salah! Contoh: .topup umpan 99")
+        return
+
+    _, target, jumlah_str = message.command
+    if target.lower() != "umpan":
+        await message.reply("Hanya bisa topup: umpan")
+        return
+
+    try:
+        jumlah = int(jumlah_str)
+        umpan.topup_umpan(user_id, jumlah)
+        total = umpan.total_umpan(user_id)
+        await message.reply(f"✅ Topup berhasil! Anda mendapatkan {jumlah} umpan.\n📌 Total UMPAN Anda sekarang: {total}")
+    except Exception as e:
+        await message.reply(f"❌ Error topup: {e}")
 
 # ---------------- REGISTER ---------------- #
 def register(app: Client):
