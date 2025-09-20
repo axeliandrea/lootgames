@@ -73,6 +73,13 @@ async def open_menu(client: Client, message: Message):
     logger.debug(f"[MENU] .menufish dipanggil oleh {message.from_user.id}")
     await message.reply(MENU_STRUCTURE["main"]["title"], reply_markup=make_keyboard("main", message.from_user.id))
 
+async def open_menu_pm(client: Client, message: Message):
+    """Tampilkan menu utama di private chat bot"""
+    user_id = message.from_user.id
+    keyboard = make_keyboard("main", user_id)
+    await message.reply("📋 Menu Utama:", reply_markup=keyboard)
+    logger.debug(f"[PM MENU] User {user_id} membuka Menu Utama di PM bot")
+
 async def show_leaderboard(callback_query: CallbackQuery, user_id: int, page: int = 0):
     points = yapping.load_points()
     sorted_points = sorted(points.items(), key=lambda x: x[1]["points"], reverse=True)
@@ -168,8 +175,14 @@ async def handle_transfer_message(client: Client, message: Message):
 
 # ---------------- REGISTER ---------------- #
 def register(app: Client):
+    # group menu
     app.add_handler(handlers.MessageHandler(open_menu, filters.regex(r"^\.menufish$")))
+    # private menu
+    app.add_handler(handlers.MessageHandler(open_menu_pm, filters.private & filters.regex(r"^/menu$")))
+    # callbacks
     app.add_handler(handlers.CallbackQueryHandler(callback_handler))
+    # transfer
     app.add_handler(handlers.MessageHandler(handle_transfer_message, filters.text))
+    # topup umpan & db group
     umpan.register_topup(app)
     dbgroup.register(app)
