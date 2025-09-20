@@ -177,30 +177,39 @@ def register(app: Client):
         await message.reply(text)
 
     # .rpc @username <jumlah> → edit points (owner)
-    @app.on_message(filters.command(["rpc"]) & filters.private)
-    async def edit_point_handler(client, message: Message):
+    # .rpc @username <jumlah> → edit points (owner)
+    @app.on_message(filters.command("rpc", prefixes=".") & (filters.group | filters.private))
+    async def rpc_handler(client, message: Message):
         if message.from_user.id != OWNER_ID:
             await message.reply("❌ Hanya owner yang bisa mengedit point.")
             return
+
+        parts = message.text.strip().split()
+        if len(parts) != 3:
+            await message.reply("Format salah. Gunakan: `.rpc @username jumlah`")
+            return
+
+        username = parts[1].lstrip("@").lower()
         try:
-            parts = message.text.split()
-            if len(parts) != 3:
-                await message.reply("Format salah. Gunakan: `.rpc @username jumlah`")
-                return
-            username = parts[1].lstrip("@")
             jumlah = int(parts[2])
-            points = load_points()
-            target_id = None
-            for uid, data in points.items():
-                if data.get("username","").lower() == username.lower():
-                    target_id = uid
-                    break
-            if not target_id:
-                await message.reply(f"❌ User {username} tidak ditemukan.")
-                return
-            # Update point langsung ke database
-            points[target_id]["points"] = jumlah
-            save_points(points)
-            await message.reply(f"✅ Point {username} diubah menjadi {jumlah} dan tersimpan ke database.")
-        except Exception as e:
-            await message.reply(f"❌ Error: {e}")
+        except ValueError:
+            await message.reply("Jumlah harus berupa angka.")
+            return
+
+        points = load_points()
+        target_id = None
+        for uid, data in points.items():
+            if data.get("username", "").lower() == username:
+                target_id = uid
+                break
+
+        if not target_id:
+            await message.reply(f"❌ User {username} belum memiliki poin, pastikan user sudah chat sebelumnya.")
+            return
+
+    # Update point langsung
+    points[target_id]["points"] = jumlah
+    save_points(points)
+
+    await message.reply(f"✅ Point {username} diubah menjadi {jumlah} dan tersimpan ke database.")
+
