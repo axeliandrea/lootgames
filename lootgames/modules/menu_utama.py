@@ -12,7 +12,6 @@ OWNER_ID = 6395738130
 
 # ---------------- STATE ---------------- #
 TRANSFER_STATE = {}  # user_id: True jika menunggu input transfer
-LEADER_PAGE = {}    # user_id: page terakhir di leaderboard
 
 # ---------------- MAIN MENU ---------------- #
 MENU_STRUCTURE = {
@@ -72,17 +71,17 @@ for letter in "CDEFGHIJKL":
 # ---------------- CUSTOM MENU B → BB → BBB ---------------- #
 MENU_STRUCTURE["B"] = {
     "title": "📋 YAPPING",
-    "buttons": [("Total Point Chat", "BB"), ("Leaderboard", "BBB"), ("⬅️ Kembali", "main")]
+    "buttons": [("Total Point Chat", "BB"), ("⬅️ Kembali", "main")]
 }
 
 MENU_STRUCTURE["BB"] = {
     "title": "📋 Total Point Chat",
-    "buttons": [("⬅️ Kembali", "B")]
+    "buttons": [("➡️ Leaderboard", "BBB"), ("⬅️ Kembali", "B")]
 }
 
 MENU_STRUCTURE["BBB"] = {
     "title": "📋 Leaderboard Yapping",
-    "buttons": [("⬅️ Kembali", "B")]
+    "buttons": [("⬅️ Kembali", "BB")]
 }
 
 # ---------------- KEYBOARD BUILDER ---------------- #
@@ -101,7 +100,7 @@ def make_keyboard(menu_key: str, user_id=None, page: int = 0) -> InlineKeyboardM
             nav_buttons.append(InlineKeyboardButton("➡️ Next", callback_data=f"BBB_PAGE_{page+1}"))
         if nav_buttons:
             buttons.append(nav_buttons)
-        buttons.append([InlineKeyboardButton("⬅️ Kembali", callback_data="B")])
+        buttons.append([InlineKeyboardButton("⬅️ Kembali", callback_data="BB")])
     else:
         for text, callback in MENU_STRUCTURE[menu_key]["buttons"]:
             if menu_key == "AA" and user_id is not None and text == "TRANSFER UMPAN":
@@ -122,6 +121,19 @@ async def open_menu(client: Client, message: Message):
         reply_markup=make_keyboard("main", message.from_user.id)
     )
 
+async def show_leaderboard(callback_query: CallbackQuery, user_id: int, page: int = 0):
+    points = yapping.load_points()
+    sorted_points = sorted(points.items(), key=lambda x: x[1]["points"], reverse=True)
+    total_pages = (len(sorted_points) - 1) // 10
+    start = page * 10
+    end = start + 10
+
+    display_text = f"🏆 Leaderboard Yapping (Page {page+1}/{total_pages+1}) 🏆\n\n"
+    for i, (uid, pdata) in enumerate(sorted_points[start:end], start=start+1):
+        display_text += f"{i}. {pdata.get('username','Unknown')} - {pdata.get('points',0)} pts | Level {pdata.get('level',0)} {yapping.get_badge(pdata.get('level',0))}\n"
+
+    await callback_query.message.edit_text(display_text, reply_markup=make_keyboard("BBB", user_id, page))
+
 async def callback_handler(client: Client, callback_query: CallbackQuery):
     data = callback_query.data
     user_id = callback_query.from_user.id
@@ -129,7 +141,7 @@ async def callback_handler(client: Client, callback_query: CallbackQuery):
     await callback_query.answer()
     await asyncio.sleep(0.5)
 
-    # ---------------- Handle transfer ---------------- #
+    # Handle transfer
     if data == "TRANSFER_OK":
         TRANSFER_STATE[user_id] = True
         await callback_query.message.edit_text(
@@ -139,29 +151,30 @@ async def callback_handler(client: Client, callback_query: CallbackQuery):
         logger.debug(f"[TRANSFER] User {user_id} masuk ke mode transfer")
         return
 
-    # ---------------- Handle Total Point Chat ---------------- #
+    # Handle BB menu → show total point chat
     elif data == "BB":
         points = yapping.load_points()
         if not points:
-            display_text = "📊 Total Chat Points masih kosong."
+            text = "📊 Total Chat Points masih kosong."
         else:
-            display_text = "📊 Total Chat Points:\n\n"
-            for uid, pdata in sorted(points.items(), key=lambda x: x[1]["points"], reverse=True):
-                display_text += f"- {pdata.get('username','Unknown')} - {pdata.get('points',0)} pts | Level {pdata.get('level',0)} {yapping.get_badge(pdata.get('level',0))}\n"
-
-        await callback_query.message.edit_text(display_text, reply_markup=make_keyboard("BB", user_id))
+            text = "📊 Total Chat Points:\n\n"
+            for uid, pdata in points.items():
+                text += f"- {pdata.get('username','Unknown')} - {pdata.get('points',0)} pts | Level {pdata.get('level',0)} {yapping.get_badge(pdata.get('level',0))}\n"
+        await callback_query.message.edit_text(text, reply_markup=make_keyboard("BB", user_id))
         return
 
-    # ---------------- Handle leaderboard pagination ---------------- #
+    # Handle leaderboard page 0
     elif data == "BBB":
         await show_leaderboard(callback_query, user_id, page=0)
         return
+
+    # Handle leaderboard pagination
     elif data.startswith("BBB_PAGE_"):
         page = int(data.split("_")[-1])
         await show_leaderboard(callback_query, user_id, page)
         return
 
-    # ---------------- Default menu navigation ---------------- #
+    # Default menu navigation
     elif data in MENU_STRUCTURE:
         await callback_query.message.edit_text(
             MENU_STRUCTURE[data]["title"],
@@ -170,18 +183,6 @@ async def callback_handler(client: Client, callback_query: CallbackQuery):
     else:
         await callback_query.answer("Menu tidak tersedia.", show_alert=True)
         logger.error(f"❌ Callback {data} tidak dikenal!")
-
-# ---------------- Show Leaderboard ---------------- #
-async def show_leaderboard(callback_query: CallbackQuery, user_id: int, page: int):
-    points = yapping.load_points()
-    sorted_points = sorted(points.items(), key=lambda x: x[1]["points"], reverse=True)
-    start = page * 10
-    end = start + 10
-    display_text = "🏆 Leaderboard Yapping 🏆\n\n"
-    for i, (uid, pdata) in enumerate(sorted_points[start:end], start=start+1):
-        display_text += f"{i}. {pdata.get('username','Unknown')} - {pdata.get('points',0)} pts | Level {pdata.get('level',0)} {yaping.get_badge(pdata.get('level',0))}\n"
-
-    await callback_query.message.edit_text(display_text, reply_markup=make_keyboard("BBB", user_id, page))
 
 # ---------------- HANDLE TRANSFER MESSAGE ---------------- #
 async def handle_transfer_message(client: Client, message: Message):
