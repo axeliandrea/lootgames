@@ -167,7 +167,7 @@ async def callback_handler(client: Client, callback_query: CallbackQuery):
         return
 
     # --- TUKAR POINT (D3A) ---
-    if data == "D3A":
+    if data == "Point Yapping":
         points = yapping.load_points()
         pdata = points.get(user_id, {
             "username": callback_query.from_user.username or f"user{user_id}",
@@ -271,3 +271,4 @@ def register(app: Client):
     app.add_handler(CallbackQueryHandler(callback_handler))
     app.add_handler(MessageHandler(handle_transfer_message, filters.text))
     umpan.register_topup(app)
+
