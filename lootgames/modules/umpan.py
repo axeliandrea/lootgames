@@ -2,7 +2,7 @@
 import json
 import os
 from threading import Lock
-from pyrogram import Client, filters
+from pyrogram import Client, filters, handlers
 from pyrogram.types import Message
 
 UMPAN_FILE = "lootgames/modules/umpan_data.json"
