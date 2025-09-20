@@ -5,7 +5,7 @@ from pyrogram import Client, filters
 from pyrogram.handlers import MessageHandler
 from lootgames.modules import yapping, menu_utama
 from lootgames.modules import database_group as dbgroup
-from config import API_ID, API_HASH, BOT_TOKEN, OWNER_ID, ALLOWED_GROUP_ID, LOG_LEVEL, LOG_FORMAT
+from lootgames.config import API_ID, API_HASH, BOT_TOKEN, OWNER_ID, ALLOWED_GROUP_ID, LOG_LEVEL, LOG_FORMAT
 
 logging.basicConfig(level=LOG_LEVEL, format=LOG_FORMAT)
 logger = logging.getLogger(__name__)
@@ -76,3 +76,4 @@ if __name__ == "__main__":
         pass
 
     asyncio.run(main())
+
