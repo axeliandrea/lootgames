@@ -3,7 +3,7 @@ import asyncio
 from pyrogram import Client, handlers, filters
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery, Message
 
-from lootgames.modules import yapping, umpan
+from lootgames.modules import yapping, umpan, user_database  # import user_database
 
 logger = logging.getLogger(__name__)
 OWNER_ID = 6395738130
@@ -106,7 +106,7 @@ async def callback_handler(client: Client, callback_query: CallbackQuery):
             "🎉 Selamat anda sudah menjadi Player Loot!",
             reply_markup=make_keyboard("C", user_id)
         )
-        # TODO: simpan status user sebagai Player Loot di database
+        user_database.set_player_loot(user_id, True)  # simpan status di database
         return
     elif data == "REGISTER_NO":
         await callback_query.message.edit_text(
@@ -168,8 +168,8 @@ async def handle_transfer_message(client: Client, message: Message):
             await message.reply("Jumlah harus > 0.")
             return
 
-        # --- GLOBAL TRANSFER VIA database_group ---
-        recipient_id = dbgroup.get_user_id_by_username(username)
+        # --- Ambil recipient_id dari user_database ---
+        recipient_id = user_database.get_user_id_by_username(username)
         if recipient_id is None:
             await message.reply(f"❌ Username {username} tidak ada di database!")
             TRANSFER_STATE[user_id] = False
@@ -208,5 +208,5 @@ def register(app: Client):
     app.add_handler(handlers.CallbackQueryHandler(callback_handler))
     # transfer
     app.add_handler(handlers.MessageHandler(handle_transfer_message, filters.text))
-    # topup umpan & db group
+    # topup umpan & db user
     umpan.register_topup(app)
