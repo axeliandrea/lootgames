@@ -19,7 +19,8 @@ MENU_STRUCTURE = {
             ("UMPAN", "A"),
             ("YAPPING", "B"),
             ("REGISTER", "C"),
-            ("Menu D", "D"), ("Menu E", "E"), ("Menu F", "F"), ("Menu G", "G"),
+            ("Menu D", "D"),
+            ("Menu E", "E"), ("Menu F", "F"), ("Menu G", "G"),
             ("Menu H", "H"), ("Menu I", "I"), ("Menu J", "J"),
             ("Menu K", "K"), ("Menu L", "L"),
         ],
@@ -35,12 +36,32 @@ MENU_STRUCTURE["C"] = {"title": "📋 MENU REGISTER", "buttons": [("LANJUT", "CC
 MENU_STRUCTURE["CC"] = {"title": "📋 APAKAH KAMU YAKIN INGIN MENJADI PLAYER LOOT?", "buttons": [("PILIH OPSI", "CCC"), ("⬅️ Kembali", "C")]}
 MENU_STRUCTURE["CCC"] = {"title": "📋 PILIH OPSI:", "buttons": [("YA", "REGISTER_YES"), ("TIDAK", "REGISTER_NO")]}
 
-for letter in "DEFGHIJKL":
+# ---------------- MENU D REVISI ---------------- #
+MENU_STRUCTURE["D"] = {
+    "title": "📋 Menu D",
+    "buttons": [("D1", "D1"), ("D2", "D2"), ("D3", "D3"), ("⬅️ Kembali", "main")]
+}
+
+MENU_STRUCTURE["D1"] = {"title": "📋 Menu D1", "buttons": [("D1A", "D1A"), ("⬅️ Kembali", "D")]}
+MENU_STRUCTURE["D2"] = {"title": "📋 Menu D2", "buttons": [("D2A", "D2A"), ("⬅️ Kembali", "D")]}
+MENU_STRUCTURE["D3"] = {"title": "📋 Menu D3", "buttons": [("D3A", "D3A"), ("⬅️ Kembali", "D")]}
+
+MENU_STRUCTURE["D1A"] = {"title": "📋 Menu D1A", "buttons": [("D1B", "D1B"), ("⬅️ Kembali", "D1")]}
+MENU_STRUCTURE["D2A"] = {"title": "📋 Menu D2A", "buttons": [("D2B", "D2B"), ("⬅️ Kembali", "D2")]}
+MENU_STRUCTURE["D3A"] = {"title": "📋 Menu D3A", "buttons": [("D3B", "D3B"), ("⬅️ Kembali", "D3")]}
+
+MENU_STRUCTURE["D1B"] = {"title": "📋 Menu D1B (Tampilan Terakhir)", "buttons": [("⬅️ Kembali", "D1A")]}
+MENU_STRUCTURE["D2B"] = {"title": "📋 Menu D2B (Tampilan Terakhir)", "buttons": [("⬅️ Kembali", "D2A")]}
+MENU_STRUCTURE["D3B"] = {"title": "📋 Menu D3B (Tampilan Terakhir)", "buttons": [("⬅️ Kembali", "D3A")]}
+
+# ---------------- GENERIC MENU (E-L) ---------------- #
+for letter in "EFGHIJKL":
     key1, key2, key3 = letter, f"{letter}{letter}", f"{letter}{letter}{letter}"
     MENU_STRUCTURE[key1] = {"title": f"📋 Menu {key1}", "buttons": [(f"Menu {key2}", key2), ("⬅️ Kembali", "main")]}
     MENU_STRUCTURE[key2] = {"title": f"📋 Menu {key2}", "buttons": [(f"Menu {key3}", key3), ("⬅️ Kembali", key1)]}
     MENU_STRUCTURE[key3] = {"title": f"📋 Menu {key3} (Tampilan Terakhir)", "buttons": [("⬅️ Kembali", key2)]}
 
+# ---------------- MENU YAPPING ---------------- #
 MENU_STRUCTURE["B"] = {"title": "📋 YAPPING", "buttons": [("Total Point Chat", "BB"), ("⬅️ Kembali", "main")]}
 MENU_STRUCTURE["BB"] = {"title": "📋 Total Point Chat", "buttons": [("➡️ Leaderboard", "BBB"), ("⬅️ Kembali", "B")]}
 MENU_STRUCTURE["BBB"] = {"title": "📋 Leaderboard Yapping", "buttons": [("⬅️ Kembali", "BB")]}
@@ -96,30 +117,19 @@ async def callback_handler(client: Client, callback_query: CallbackQuery):
     if data == "REGISTER_YES":
         username = callback_query.from_user.username or f"user{user_id}"
         user_database.set_player_loot(user_id, True, username)
-
-        # Tombol Scan ID & USN muncul hanya setelah register sukses
         keyboard = InlineKeyboardMarkup([
             [InlineKeyboardButton("📋 Scan ID & USN", callback_data=f"SCAN_{user_id}")],
             [InlineKeyboardButton("⬅️ Kembali", callback_data="C")]
         ])
-
-        # Pesan register sukses dengan ID
         await callback_query.message.edit_text(
-            f"🎉 Selamat @{username}\n"
-            f"ID: {user_id}\n"
-            f"Anda sudah menjadi Player Loot!",
+            f"🎉 Selamat @{username}\nID: {user_id}\nAnda sudah menjadi Player Loot!",
             reply_markup=keyboard
         )
-
         try:
-            await client.send_message(
-                OWNER_ID,
-                f"📢 User baru Player Loot!\n👤 @{username}\n🆔 {user_id}"
-            )
+            await client.send_message(OWNER_ID, f"📢 User baru Player Loot!\n👤 @{username}\n🆔 {user_id}")
         except Exception as e:
             logger.error(f"Gagal kirim notif OWNER: {e}")
         return
-
     elif data == "REGISTER_NO":
         await callback_query.message.edit_text(MENU_STRUCTURE["C"]["title"], reply_markup=make_keyboard("C", user_id))
         return
@@ -131,7 +141,8 @@ async def callback_handler(client: Client, callback_query: CallbackQuery):
             user_data = user_database.get_user_data(scan_user_id)
             uname = user_data.get("username", "Unknown")
             await callback_query.message.edit_text(
-                f"🔍 Info User:\n\nUser ID: {scan_user_id}\nUsername: @{uname}",
+                f"🔍 Info User:\n\nUser ID:
+                                f"{scan_user_id}\nUsername: @{uname}",
                 reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("⬅️ Kembali", callback_data="C")]])
             )
         except Exception as e:
@@ -237,3 +248,4 @@ def register(app: Client):
     app.add_handler(handlers.CallbackQueryHandler(callback_handler))
     app.add_handler(handlers.MessageHandler(handle_transfer_message, filters.text))
     umpan.register_topup(app)
+
