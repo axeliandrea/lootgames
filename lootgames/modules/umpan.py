@@ -4,9 +4,9 @@ from threading import Lock
 from pyrogram import Client, filters, handlers
 from pyrogram.types import Message
 
+OWNER_ID = 6395738130
 UMPAN_FILE = "lootgames/modules/umpan_data.json"
 LOCK = Lock()
-OWNER_ID = 6395738130
 
 # ---------------- INIT DATABASE ---------------- #
 if not os.path.exists(UMPAN_FILE):
@@ -28,10 +28,7 @@ def init_user(user_id: int, username: str = None):
     db = load_db()
     str_id = str(user_id)
     if str_id not in db:
-        db[str_id] = {
-            "username": username or f"user_{user_id}",
-            "umpan": {"A": 0, "B": 0, "C": 0}
-        }
+        db[str_id] = {"username": username or f"user_{user_id}", "umpan": {"A": 0, "B": 0, "C": 0}}
         save_db(db)
 
 def get_user(user_id: int):
