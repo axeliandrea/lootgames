@@ -2,7 +2,8 @@ import json
 import os
 from pyrogram import Client, filters
 from pyrogram.handlers import MessageHandler
-from pyrogram.types import Message
+from pyrogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton
+from lootgames.modules import menu_utama  # import menu utama
 
 DB_FILE = "lootgames/modules/database_group.json"
 
@@ -38,11 +39,17 @@ def get_user_id_by_username(username: str):
 async def start_handler(client: Client, message: Message):
     user = message.from_user
     add_user(user.id, user.username)
-    await message.reply("Hi, salam kenal.. Bot sudah aktif ✅")
+
+    # tombol menu utama
+    keyboard = menu_utama.make_keyboard("main", user.id)
+
+    await message.reply(
+        "Hi, salam kenal.. Bot sudah aktif ✅",
+        reply_markup=keyboard
+    )
 
 # ---------------- REGISTER ---------------- #
 def register(app: Client):
-    # gunakan MessageHandler di Pyrogram v2+
     handler = MessageHandler(
         start_handler,
         filters=filters.private & filters.command("start")
