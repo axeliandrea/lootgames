@@ -1,11 +1,10 @@
-# lootgames/modules/menu_utama.py
 import logging
 import asyncio
 from pyrogram import Client, filters, handlers
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery, Message
 
 from lootgames.modules import yapping
-from lootgames.modules import umpan  # database umpan
+from lootgames.modules import umpan
 
 logger = logging.getLogger(__name__)
 OWNER_ID = 6395738130
@@ -211,9 +210,9 @@ async def handle_transfer_message(client: Client, message: Message):
         recipient_id = recipient_user.id
 
         sender_data = umpan.get_user(user_id)
-        total_umpan = sum(sender_data["umpan"].values())
+        total_umpan_user = sum(sender_data["umpan"].values())
 
-        if total_umpan < amount:
+        if total_umpan_user < amount:
             await message.reply("❌ Umpan tidak cukup!")
         else:
             remaining = amount
@@ -236,29 +235,9 @@ async def handle_transfer_message(client: Client, message: Message):
         await message.reply(f"❌ Error: {e}")
         TRANSFER_STATE[user_id] = False
 
-# ---------------- HANDLE COMMAND .TOPUP ---------------- #
-@Client.on_message(filters.command(["topup"]) & filters.private)
-async def handle_topup(client: Client, message: Message):
-    user_id = message.from_user.id
-    if len(message.command) != 3:
-        await message.reply("Format salah! Contoh: .topup umpan 99")
-        return
-
-    _, target, jumlah_str = message.command
-    if target.lower() != "umpan":
-        await message.reply("Hanya bisa topup: umpan")
-        return
-
-    try:
-        jumlah = int(jumlah_str)
-        umpan.topup_umpan(user_id, jumlah)
-        total = umpan.total_umpan(user_id)
-        await message.reply(f"✅ Topup berhasil! Anda mendapatkan {jumlah} umpan.\n📌 Total UMPAN Anda sekarang: {total}")
-    except Exception as e:
-        await message.reply(f"❌ Error topup: {e}")
-
 # ---------------- REGISTER ---------------- #
 def register(app: Client):
     app.add_handler(handlers.MessageHandler(open_menu, filters.regex(r"^\.menufish$")))
     app.add_handler(handlers.CallbackQueryHandler(callback_handler))
     app.add_handler(handlers.MessageHandler(handle_transfer_message, filters.text))
+    umpan.register_topup(app)  # Daftarkan command .topup umpan
