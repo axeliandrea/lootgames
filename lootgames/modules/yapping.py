@@ -155,14 +155,12 @@ def register(app: Client):
 
         # ---------------- Milestone ---------------- #
         last_milestone = user_data.get("last_milestone", 0)
-        milestones_to_announce = []
-        next_milestone = ((last_milestone // MILESTONE_INTERVAL) + 1) * MILESTONE_INTERVAL
+        last_index = last_milestone // MILESTONE_INTERVAL
+        current_index = new_total // MILESTONE_INTERVAL
 
-        while new_total >= next_milestone:
-            milestones_to_announce.append(next_milestone)
-            next_milestone += MILESTONE_INTERVAL
-
-        for milestone_value in milestones_to_announce:
+        # Kirim notif milestone untuk semua milestone yang terlewati
+        for idx in range(last_index + 1, current_index + 1):
+            milestone_value = idx * MILESTONE_INTERVAL
             try:
                 await message.reply(
                     f"```\n🎉 Congrats {username}! Reached {milestone_value:,} points 💗\n"
@@ -175,7 +173,10 @@ def register(app: Client):
                     log_debug(f"Milestone dikirim ke {username}: {milestone_value} points")
             except Exception as e:
                 log_debug(f"Gagal kirim milestone: {e}")
-            user_data["last_milestone"] = milestone_value
+
+        # Update last_milestone ke milestone terakhir
+        if current_index > last_index:
+            user_data["last_milestone"] = current_index * MILESTONE_INTERVAL
 
         save_points(points)
 
@@ -234,4 +235,3 @@ def register(app: Client):
         points[target_id]["points"] = jumlah
         save_points(points)
         await message.reply(f"✅ Point {username} diubah menjadi {jumlah} dan tersimpan ke database.")
-
