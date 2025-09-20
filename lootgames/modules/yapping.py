@@ -11,6 +11,7 @@ POINT_FILE = "storage/chat_points.json"
 DEBUG = True
 IGNORED_USERS = ["6946903915"]
 MILESTONE_INTERVAL = 100  # setiap 100 point
+MAX_POINT_PER_CHAT = 5  # maksimal point per chat per chat bubble
 
 # ================= UTILS ================= #
 def log_debug(msg: str):
@@ -23,7 +24,7 @@ def load_json(file_path):
             with open(file_path, "r") as f:
                 return json.load(f)
         except json.JSONDecodeError:
-            print(f"[DEBUG] JSON rusak: {file_path}, membuat ulang")
+            log_debug(f"JSON rusak: {file_path}, membuat ulang")
             return {}
     return {}
 
@@ -52,7 +53,12 @@ def add_user_if_not_exist(points, user_id, username):
         points[user_id].setdefault("level", 0)
         points[user_id].setdefault("last_milestone", 0)
 
-def add_points(points, user_id, username, amount=1):
+def calculate_points_from_text(text: str) -> int:
+    clean_text = re.sub(r"[^a-zA-Z]", "", text)
+    points = len(clean_text) // 5
+    return min(points, MAX_POINT_PER_CHAT)
+
+def add_points(points, user_id, username, amount):
     add_user_if_not_exist(points, user_id, username)
     points[str(user_id)]["points"] += amount
     if DEBUG:
@@ -99,8 +105,7 @@ def generate_leaderboard(points: dict, top=0) -> str:
     if not sorted_points: return "Leaderboard kosong"
     text = "🏆 Leaderboard 🏆\n\n"
     for i, (uid, data) in enumerate(sorted_points, start=1):
-        if top and i > top:
-            break
+        if top and i > top: break
         text += f"{i}. {data['username']} - {data['points']} pts | Level {data['level']} {get_badge(data['level'])}\n"
     return text
 
@@ -115,7 +120,6 @@ def register(app: Client):
         if not user: return
         user_id = str(user.id)
         if user_id in IGNORED_USERS: return
-
         text_raw = message.text or ""
         username = user.username or user.first_name or "Unknown"
 
@@ -130,12 +134,12 @@ def register(app: Client):
                 return
             return
 
-        # Hanya huruf alfabet
-        text = re.sub(r"[^a-zA-Z]", "", text_raw)
-        if len(text) < 5: return
+        # Hitung point dari huruf
+        points_value = calculate_points_from_text(text_raw)
+        if points_value < 1: return
 
         points = load_points()
-        add_points(points, user_id, username)
+        add_points(points, user_id, username, points_value)
         user_data = points[user_id]
         new_total = user_data["points"]
 
