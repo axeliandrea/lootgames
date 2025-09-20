@@ -1,6 +1,6 @@
 import logging
 import asyncio
-from pyrogram import Client, filters, handlers
+from pyrogram import Client, handlers, filters
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery, Message
 
 from lootgames.modules import yapping
@@ -87,36 +87,28 @@ MENU_STRUCTURE["BBB"] = {
 def make_keyboard(menu_key: str, user_id=None, page: int = 0) -> InlineKeyboardMarkup:
     buttons = []
 
-    # Leaderboard pagination
     if menu_key == "BBB" and user_id is not None:
         points = yapping.load_points()
         sorted_points = sorted(points.items(), key=lambda x: x[1]["points"], reverse=True)
         total_pages = (len(sorted_points) - 1) // 10
-
         nav_buttons = []
-        if page > 0:
-            nav_buttons.append(InlineKeyboardButton("⬅️ Prev", callback_data=f"BBB_PAGE_{page-1}"))
-        if page < total_pages:
-            nav_buttons.append(InlineKeyboardButton("➡️ Next", callback_data=f"BBB_PAGE_{page+1}"))
-        if nav_buttons:
-            buttons.append(nav_buttons)
+        if page > 0: nav_buttons.append(InlineKeyboardButton("⬅️ Prev", callback_data=f"BBB_PAGE_{page-1}"))
+        if page < total_pages: nav_buttons.append(InlineKeyboardButton("➡️ Next", callback_data=f"BBB_PAGE_{page+1}"))
+        if nav_buttons: buttons.append(nav_buttons)
         buttons.append([InlineKeyboardButton("⬅️ Kembali", callback_data="BB")])
     else:
         for text, callback in MENU_STRUCTURE[menu_key]["buttons"]:
-            # Update display Jumlah UMPAN
             if menu_key == "AA" and user_id is not None and text == "TRANSFER UMPAN":
                 total = umpan.total_umpan(user_id)
-                display_text = f"{text} ({total})"
-            else:
-                display_text = text
-            buttons.append([InlineKeyboardButton(display_text, callback_data=callback)])
+                text = f"{text} ({total})"
+            buttons.append([InlineKeyboardButton(text, callback_data=callback)])
 
     return InlineKeyboardMarkup(buttons)
 
 # ---------------- MENU HANDLERS ---------------- #
 async def open_menu(client: Client, message: Message):
     logger.debug(f"[MENU] .menufish dipanggil oleh {message.from_user.id}")
-    await message.reply_text(
+    await message.reply(
         MENU_STRUCTURE["main"]["title"],
         reply_markup=make_keyboard("main", message.from_user.id)
     )
@@ -127,59 +119,45 @@ async def show_leaderboard(callback_query: CallbackQuery, user_id: int, page: in
     total_pages = (len(sorted_points) - 1) // 10
     start = page * 10
     end = start + 10
-
-    display_text = f"🏆 Leaderboard Yapping (Page {page+1}/{total_pages+1}) 🏆\n\n"
+    text = f"🏆 Leaderboard Yapping (Page {page+1}/{total_pages+1}) 🏆\n\n"
     for i, (uid, pdata) in enumerate(sorted_points[start:end], start=start+1):
-        display_text += f"{i}. {pdata.get('username','Unknown')} - {pdata.get('points',0)} pts | Level {pdata.get('level',0)} {yapping.get_badge(pdata.get('level',0))}\n"
-
-    await callback_query.message.edit_text(display_text, reply_markup=make_keyboard("BBB", user_id, page))
+        text += f"{i}. {pdata.get('username','Unknown')} - {pdata.get('points',0)} pts | Level {pdata.get('level',0)} {yapping.get_badge(pdata.get('level',0))}\n"
+    await callback_query.message.edit_text(text, reply_markup=make_keyboard("BBB", user_id, page))
 
 async def callback_handler(client: Client, callback_query: CallbackQuery):
     data = callback_query.data
     user_id = callback_query.from_user.id
-
     await callback_query.answer()
-    await asyncio.sleep(0.5)
+    await asyncio.sleep(0.3)
 
-    # Handle transfer
     if data == "TRANSFER_OK":
         TRANSFER_STATE[user_id] = True
         await callback_query.message.edit_text(
-            "📥 Masukkan transfer dalam format:\n@username jumlah_umpan\nContoh: @axeliandrea 1",
+            "📥 Masukkan transfer format:\n@username jumlah_umpan\nContoh: @axeliandrea 1",
             reply_markup=None
         )
-        logger.debug(f"[TRANSFER] User {user_id} masuk ke mode transfer")
+        logger.debug(f"[TRANSFER] User {user_id} masuk mode transfer")
         return
 
-    # Handle BB menu → show total point chat
     elif data == "BB":
         points = yapping.load_points()
-        if not points:
-            text = "📊 Total Chat Points masih kosong."
-        else:
-            text = "📊 Total Chat Points:\n\n"
-            for uid, pdata in points.items():
-                text += f"- {pdata.get('username','Unknown')} - {pdata.get('points',0)} pts | Level {pdata.get('level',0)} {yapping.get_badge(pdata.get('level',0))}\n"
+        text = "📊 Total Chat Points:\n\n" if points else "📊 Total Chat Points kosong."
+        for uid, pdata in points.items():
+            text += f"- {pdata.get('username','Unknown')} - {pdata.get('points',0)} pts | Level {pdata.get('level',0)} {yapping.get_badge(pdata.get('level',0))}\n"
         await callback_query.message.edit_text(text, reply_markup=make_keyboard("BB", user_id))
         return
 
-    # Handle leaderboard page 0
     elif data == "BBB":
-        await show_leaderboard(callback_query, user_id, page=0)
+        await show_leaderboard(callback_query, user_id, 0)
         return
 
-    # Handle leaderboard pagination
     elif data.startswith("BBB_PAGE_"):
         page = int(data.split("_")[-1])
         await show_leaderboard(callback_query, user_id, page)
         return
 
-    # Default menu navigation
     elif data in MENU_STRUCTURE:
-        await callback_query.message.edit_text(
-            MENU_STRUCTURE[data]["title"],
-            reply_markup=make_keyboard(data, user_id)
-        )
+        await callback_query.message.edit_text(MENU_STRUCTURE[data]["title"], reply_markup=make_keyboard(data, user_id))
     else:
         await callback_query.answer("Menu tidak tersedia.", show_alert=True)
         logger.error(f"❌ Callback {data} tidak dikenal!")
@@ -187,42 +165,39 @@ async def callback_handler(client: Client, callback_query: CallbackQuery):
 # ---------------- HANDLE TRANSFER MESSAGE ---------------- #
 async def handle_transfer_message(client: Client, message: Message):
     user_id = message.from_user.id
-    if not TRANSFER_STATE.get(user_id):
-        return
-
+    if not TRANSFER_STATE.get(user_id): return
     try:
         parts = message.text.strip().split()
         if len(parts) != 2:
-            await message.reply("Format salah. Contoh: @axeliandrea 1")
+            await message.reply("Format salah. Contoh: @username 1")
             return
 
         username, amount = parts
         if not username.startswith("@"):
-            await message.reply("Username harus diawali '@'. Contoh: @axeliandrea")
+            await message.reply("Username harus diawali '@'.")
             return
-
         amount = int(amount)
         if amount <= 0:
-            await message.reply("Jumlah harus lebih dari 0.")
+            await message.reply("Jumlah harus > 0.")
             return
 
-        # Coba resolve username via Telegram
-        try:
-            recipient_user = await client.get_users(username)
-            recipient_id = recipient_user.id
-        except Exception:
-            await message.reply(f"❌ Username {username} tidak valid / tidak ditemukan di Telegram!")
+        recipient_id = None
+        for uid, data in umpan.all_users().items():
+            if data.get("username","").lower() == username[1:].lower():
+                recipient_id = int(uid)
+                break
+        if recipient_id is None:
+            await message.reply(f"❌ Username {username} tidak ada di database!")
             TRANSFER_STATE[user_id] = False
             return
 
         sender_data = umpan.get_user(user_id)
-        total_umpan_user = sum(sender_data["umpan"].values())
-
-        if total_umpan_user < amount:
+        total_sender = sum(sender_data["umpan"].values())
+        if total_sender < amount:
             await message.reply("❌ Umpan tidak cukup!")
         else:
             remaining = amount
-            for jenis in ["A", "B", "C"]:
+            for jenis in ["A","B","C"]:
                 if sender_data["umpan"][jenis] >= remaining:
                     umpan.remove_umpan(user_id, jenis, remaining)
                     remaining = 0
@@ -231,15 +206,10 @@ async def handle_transfer_message(client: Client, message: Message):
                     sub = sender_data["umpan"][jenis]
                     umpan.remove_umpan(user_id, jenis, sub)
                     remaining -= sub
-
             umpan.add_umpan(recipient_id, "A", amount)
-            await message.reply(
-                f"✅ Transfer berhasil! Anda transfer {amount} umpan ke {username}",
-                reply_markup=make_keyboard("main", user_id)
-            )
+            await message.reply(f"✅ Transfer {amount} umpan ke {username} berhasil!", reply_markup=make_keyboard("main", user_id))
 
         TRANSFER_STATE[user_id] = False
-
     except Exception as e:
         await message.reply(f"❌ Error: {e}")
         TRANSFER_STATE[user_id] = False
@@ -249,4 +219,4 @@ def register(app: Client):
     app.add_handler(handlers.MessageHandler(open_menu, filters.regex(r"^\.menufish$")))
     app.add_handler(handlers.CallbackQueryHandler(callback_handler))
     app.add_handler(handlers.MessageHandler(handle_transfer_message, filters.text))
-    umpan.register_topup(app)  # otomatis daftar .topup & .umpanku
+    umpan.register_topup(app)
