@@ -1,7 +1,7 @@
 import json
 import os
 from threading import Lock
-from pyrogram import Client, filters
+from pyrogram import Client, filters, handlers
 from pyrogram.types import Message
 
 UMPAN_FILE = "lootgames/modules/umpan_data.json"
@@ -28,10 +28,9 @@ def init_user(user_id: int, username: str = None):
     db = load_db()
     str_id = str(user_id)
     if str_id not in db:
-        default_umpan = {"A": 999, "B": 0, "C": 0} if user_id == OWNER_ID else {"A": 0, "B": 0, "C": 0}
         db[str_id] = {
             "username": username or f"user_{user_id}",
-            "umpan": default_umpan
+            "umpan": {"A": 0, "B": 0, "C": 0}
         }
         save_db(db)
 
@@ -74,13 +73,15 @@ def remove_umpan(user_id: int, jenis: str, jumlah: int):
     save_db(db)
 
 def total_umpan(user_id: int) -> int:
+    if user_id == OWNER_ID:
+        return 999
     user = get_user(user_id)
     return sum(user["umpan"].values())
 
 def all_users():
     return load_db()
 
-# ---------------- COMMANDS ---------------- #
+# ---------------- COMMAND TOPUP ---------------- #
 async def topup_umpan(client: Client, message: Message):
     try:
         parts = message.text.strip().split()
@@ -96,8 +97,8 @@ async def topup_umpan(client: Client, message: Message):
         user_id = message.from_user.id
         username = message.from_user.username or f"user_{user_id}"
         init_user(user_id, username)
-        add_umpan(user_id, "A", jumlah)
 
+        add_umpan(user_id, "A", jumlah)
         total = total_umpan(user_id)
         await message.reply(f"✅ Berhasil topup {jumlah} umpan! Total UMPAN sekarang: {total}")
 
@@ -106,14 +107,13 @@ async def topup_umpan(client: Client, message: Message):
     except Exception as e:
         await message.reply(f"❌ Terjadi error: {e}")
 
-async def umpanku(client: Client, message: Message):
+# ---------------- COMMAND CEK UMPAN ---------------- #
+async def check_umpanku(client: Client, message: Message):
     user_id = message.from_user.id
-    username = message.from_user.username or f"user_{user_id}"
-    init_user(user_id, username)
     total = total_umpan(user_id)
-    await message.reply(f"📊 UMPAN milik {username}: {total}")
+    await message.reply(f"🎣 Total UMPAN Anda: {total}")
 
 # ---------------- REGISTER ---------------- #
-def register_commands(app: Client):
-    app.add_handler(filters.regex(r"^\.topup\s+umpan\s+\d+$")(topup_umpan))
-    app.add_handler(filters.regex(r"^\.umpanku$")(umpanku))
+def register_topup(app: Client):
+    app.add_handler(handlers.MessageHandler(topup_umpan, filters.regex(r"^\.topup\s+umpan\s+\d+$")))
+    app.add_handler(handlers.MessageHandler(check_umpanku, filters.regex(r"^\.umpanku$")))
