@@ -117,6 +117,12 @@ def generate_leaderboard(points: dict, top=0) -> str:
 # ================= REGISTER HANDLER ================= #
 def register(app: Client):
 
+    # ---------------- auto point handler ---------------- #
+    @app.on_message(
+        filters.chat(TARGET_GROUP) &
+        ~filters.command(["mypoint", "resetchatpoint", "kepoin", "noyap", "scanpoint", "ya", "menufish"], prefixes=[".", "/"])
+    )
+
     # ---------------- CHAT POINT ---------------- #
     @app.on_message(filters.chat(TARGET_GROUP) & filters.text & ~filters.private)
     async def chat_point_handler(client: Client, message: Message):
