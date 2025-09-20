@@ -6,6 +6,7 @@ from pyrogram.types import Message
 
 UMPAN_FILE = "lootgames/modules/umpan_data.json"
 LOCK = Lock()
+OWNER_ID = 6395738130
 
 # ---------------- INIT DATABASE ---------------- #
 if not os.path.exists(UMPAN_FILE):
@@ -72,6 +73,8 @@ def remove_umpan(user_id: int, jenis: str, jumlah: int):
     save_db(db)
 
 def total_umpan(user_id: int) -> int:
+    if user_id == OWNER_ID:
+        return 999
     user = get_user(user_id)
     return sum(user["umpan"].values())
 
@@ -107,11 +110,28 @@ async def topup_umpan(client: Client, message: Message):
     except Exception as e:
         await message.reply(f"❌ Terjadi error: {e}")
 
+# ---------------- COMMAND CEK UMPAN ---------------- #
+async def cek_umpan(client: Client, message: Message):
+    user_id = message.from_user.id
+    username = message.from_user.username or f"user_{user_id}"
+    init_user(user_id, username)
+
+    total = total_umpan(user_id)
+    await message.reply(f"🎣 Total UMPAN Anda sekarang: {total}")
+
 # ---------------- REGISTER COMMAND ---------------- #
 def register_topup(app: Client):
+    # Command .topup umpan <jumlah>
     app.add_handler(
         handlers.MessageHandler(
             topup_umpan,
             filters.regex(r"^\.topup\s+umpan\s+\d+$")
+        )
+    )
+    # Command .umpanku untuk cek sisa umpan
+    app.add_handler(
+        handlers.MessageHandler(
+            cek_umpan,
+            filters.regex(r"^\.umpanku$")
         )
     )
