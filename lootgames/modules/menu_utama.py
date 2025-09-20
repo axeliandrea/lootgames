@@ -20,7 +20,7 @@ MENU_STRUCTURE = {
             ("UMPAN", "A"),
             ("YAPPING", "B"),
             ("REGISTER", "C"),
-            ("Menu D", "D"),
+            ("🛒STORE", "D"),
             ("Menu E", "E"), ("Menu F", "F"), ("Menu G", "G"),
             ("Menu H", "H"), ("Menu I", "I"), ("Menu J", "J"),
             ("Menu K", "K"), ("Menu L", "L"),
@@ -39,7 +39,7 @@ MENU_STRUCTURE["CCC"] = {"title": "📋 PILIH OPSI:", "buttons": [("YA", "REGIST
 
 # ---------------- MENU D REVISI ---------------- #
 MENU_STRUCTURE["D"] = {
-    "title": "📋 🛒STORE",
+    "title": "🛒STORE",
     "buttons": [("BUY UMPAN", "D1"), ("SELL IKAN", "D2"), ("TUKAR POINT", "D3"), ("⬅️ Kembali", "main")]
 }
 
@@ -251,5 +251,6 @@ def register(app: Client):
     app.add_handler(CallbackQueryHandler(callback_handler))
     app.add_handler(MessageHandler(handle_transfer_message, filters.text))
     umpan.register_topup(app)
+
 
 
