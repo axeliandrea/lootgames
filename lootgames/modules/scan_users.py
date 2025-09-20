@@ -17,7 +17,41 @@ app = Client(
     bot_token=BOT_TOKEN
 )
 
-# ================= HANDLER JOIN ================= #
+# ================= FUNCTION AUTO SCAN ================= #
+async def auto_scan_users():
+    """
+    Scan semua user yang pernah chat bot di private chat
+    dan pastikan ada di database global.
+    """
+    logger.info("🔍 Mulai auto-scan users yang pernah chat bot...")
+    try:
+        async for dialog in app.get_dialogs():
+            if dialog.chat.type == "private":
+                user = dialog.chat
+                user_id = user.id
+                username = user.username or user.first_name
+                full_name = f"{user.first_name or ''} {user.last_name or ''}".strip()
+                first_name = user.first_name or ""
+                last_name = user.last_name or ""
+
+                # tambahkan user ke database
+                db.add_user(user_id, username)
+                # simpan data lengkap ke database (optional tambahan)
+                data = db.load_db()
+                data[str(user_id)].update({
+                    "full_name": full_name,
+                    "first_name": first_name,
+                    "last_name": last_name,
+                    "username": username
+                })
+                db.save_db(data)
+
+                logger.info(f"✅ Auto-scan user: {user_id} | {full_name} | @{username}")
+    except Exception as e:
+        logger.error(f"❌ Gagal auto-scan users: {e}")
+
+# ================= HANDLER .JOIN ================= #
+@app.on_message(filters.private & filters.command("join", prefixes="."))
 async def join_handler(client: Client, message: Message):
     user = message.from_user
     user_id = user.id
@@ -28,9 +62,16 @@ async def join_handler(client: Client, message: Message):
 
     # masukkan ke database
     db.add_user(user_id, username)
+    data = db.load_db()
+    data[str(user_id)].update({
+        "full_name": full_name,
+        "first_name": first_name,
+        "last_name": last_name,
+        "username": username
+    })
+    db.save_db(data)
 
-    # log
-    logger.info(f"✅ User terdaftar via .join: {user_id} | {full_name} | {first_name} | {last_name}")
+    logger.info(f"✅ User terdaftar via .join: {user_id} | {full_name} | @{username}")
 
     # balas user
     await message.reply(
@@ -42,21 +83,16 @@ async def join_handler(client: Client, message: Message):
         f"Username: @{username}"
     )
 
-# ================= REGISTER HANDLER ================= #
-def register(app: Client):
-    app.add_handler(
-        app.add_handler(
-            filters=filters.private & filters.command("join", prefixes="."),
-            callback=join_handler
-        )
-    )
+# ================= RUN BOT ================= #
+async def main():
+    await app.start()
+    logger.info("🚀 Bot scan/join started!")
+    # Auto-scan seluruh user yang pernah chat
+    await auto_scan_users()
+    logger.info("🎯 Auto-scan selesai, bot siap menerima .join command")
+    await asyncio.Event().wait()  # biar bot tetap jalan
 
-# ================= RUN MANUAL ================= #
 if __name__ == "__main__":
     import nest_asyncio
     nest_asyncio.apply()
-    app.add_handler(
-        filters=filters.private & filters.command("join", prefixes="."),
-        callback=join_handler
-    )
-    asyncio.run(app.run())
+    asyncio.run(main())
