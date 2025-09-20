@@ -30,15 +30,32 @@ MENU_STRUCTURE = {
 }
 
 # ---------------- CUSTOM MENU ---------------- #
-MENU_STRUCTURE["A"] = {"title": "📋 Menu UMPAN", "buttons": [("Jumlah UMPAN", "AA"), ("⬅️ Kembali", "main")]}
-MENU_STRUCTURE["AA"] = {"title": "📋 Jumlah UMPAN", "buttons": [("TRANSFER UMPAN", "AAA"), ("⬅️ Kembali", "A")]}
-MENU_STRUCTURE["AAA"] = {"title": "📋 TRANSFER UMPAN KE", "buttons": [("Klik OK untuk transfer", "TRANSFER_OK"), ("⬅️ Kembali", "AA")]}
+# Menu UMPAN
+MENU_STRUCTURE["A"] = {"title": "📋 Menu UMPAN", "buttons": [
+    ("Jumlah UMPAN", "AA"),
+    ("⬅️ Kembali", "main")
+]}
+MENU_STRUCTURE["AA"] = {"title": "📋 Jumlah UMPAN", "buttons": [
+    ("TRANSFER UMPAN", "AAA"),
+    ("UMPAN RARE", "UMPN_RARE"),
+    ("UMPAN LEGENDARY", "UMPN_LEGENDARY"),
+    ("UMPAN MYTHIC", "UMPN_MYTHIC"),
+    ("⬅️ Kembali", "A")
+]}
+MENU_STRUCTURE["AAA"] = {"title": "📋 TRANSFER UMPAN KE", "buttons": [
+    ("Klik OK untuk transfer", "TRANSFER_OK"),
+    ("⬅️ Kembali", "AA")
+]}
+MENU_STRUCTURE["UMPN_RARE"] = {"title": "📋 Jumlah UMPAN RARE", "buttons": [("⬅️ Kembali", "AA")]}
+MENU_STRUCTURE["UMPN_LEGENDARY"] = {"title": "📋 Jumlah UMPAN LEGENDARY", "buttons": [("⬅️ Kembali", "AA")]}
+MENU_STRUCTURE["UMPN_MYTHIC"] = {"title": "📋 Jumlah UMPAN MYTHIC", "buttons": [("⬅️ Kembali", "AA")]}
 
+# Menu REGISTER
 MENU_STRUCTURE["C"] = {"title": "📋 MENU REGISTER", "buttons": [("LANJUT", "CC"), ("⬅️ Kembali", "main")]}
 MENU_STRUCTURE["CC"] = {"title": "📋 APAKAH KAMU YAKIN INGIN MENJADI PLAYER LOOT?", "buttons": [("PILIH OPSI", "CCC"), ("⬅️ Kembali", "C")]}
 MENU_STRUCTURE["CCC"] = {"title": "📋 PILIH OPSI:", "buttons": [("YA", "REGISTER_YES"), ("TIDAK", "REGISTER_NO")]}
 
-# ---------------- MENU D (STORE) ---------------- #
+# Menu STORE
 MENU_STRUCTURE["D"] = {"title": "🛒STORE", "buttons": [("BUY UMPAN", "D1"), ("SELL IKAN", "D2"), ("TUKAR POINT", "D3"), ("⬅️ Kembali", "main")]}
 MENU_STRUCTURE["D1"] = {"title": "📋 BUY UMPAN", "buttons": [("D1A", "D1A"), ("⬅️ Kembali", "D")]}
 MENU_STRUCTURE["D2"] = {"title": "📋 SELL IKAN", "buttons": [("D2A", "D2A"), ("⬅️ Kembali", "D")]}
@@ -50,14 +67,14 @@ MENU_STRUCTURE["D2A"] = {"title": "📋 Menu D2A", "buttons": [("D2B", "D2B"), (
 MENU_STRUCTURE["D1B"] = {"title": "📋 Menu D1B (Tampilan Terakhir)", "buttons": [("⬅️ Kembali", "D1")]}
 MENU_STRUCTURE["D2B"] = {"title": "📋 Menu D2B (Tampilan Terakhir)", "buttons": [("⬅️ Kembali", "D2A")]}
 
-# ---------------- GENERIC MENU (E-L) ---------------- #
+# GENERIC MENU (E-L)
 for letter in "EFGHIJKL":
     key1, key2, key3 = letter, f"{letter}{letter}", f"{letter}{letter}{letter}"
     MENU_STRUCTURE[key1] = {"title": f"📋 Menu {key1}", "buttons": [(f"Menu {key2}", key2), ("⬅️ Kembali", "main")]}
     MENU_STRUCTURE[key2] = {"title": f"📋 Menu {key2}", "buttons": [(f"Menu {key3}", key3), ("⬅️ Kembali", key1)]}
     MENU_STRUCTURE[key3] = {"title": f"📋 Menu {key3} (Tampilan Terakhir)", "buttons": [("⬅️ Kembali", key2)]}
 
-# ---------------- MENU YAPPING ---------------- #
+# Menu YAPPING
 MENU_STRUCTURE["B"] = {"title": "📋 YAPPING", "buttons": [("Poin Pribadi", "BB"), ("➡️ Leaderboard", "BBB"), ("⬅️ Kembali", "main")]}
 MENU_STRUCTURE["BB"] = {"title": "📋 Poin Pribadi", "buttons": [("⬅️ Kembali", "B")]}
 MENU_STRUCTURE["BBB"] = {"title": "📋 Leaderboard Yapping", "buttons": [("⬅️ Kembali", "B")]}
@@ -79,10 +96,17 @@ def make_keyboard(menu_key: str, user_id=None, page: int = 0) -> InlineKeyboardM
         buttons.append([InlineKeyboardButton("⬅️ Kembali", callback_data="B")])
     elif menu_key == "AA" and user_id is not None:
         buttons = []
+        user_umpan = umpan.get_user(user_id)
         for text, callback in MENU_STRUCTURE[menu_key]["buttons"]:
             if text.startswith("TRANSFER UMPAN"):
-                total = umpan.total_umpan(user_id)
+                total = sum(user_umpan.values())
                 text = f"{text} ({total})"
+            elif text.startswith("UMPAN RARE"):
+                text = f"{text} ({user_umpan.get('B',0)})"
+            elif text.startswith("UMPAN LEGENDARY"):
+                text = f"{text} ({user_umpan.get('C',0)})"
+            elif text.startswith("UMPAN MYTHIC"):
+                text = f"{text} ({user_umpan.get('D',0)})"
             buttons.append([InlineKeyboardButton(text, callback_data=callback)])
     elif menu_key == "D3A" and user_id is not None:
         user_points = yapping.load_points().get(str(user_id), {}).get("points", 0)
@@ -198,6 +222,21 @@ async def callback_handler(client: Client, callback_query: CallbackQuery):
         TUKAR_POINT_STATE.pop(user_id, None)
         return
 
+    # --- DETAIL UMPAN RARE / LEGENDARY / MYTHIC ---
+    if data in ["UMPN_RARE", "UMPN_LEGENDARY", "UMPN_MYTHIC"]:
+        user_umpan = umpan.get_user(user_id)
+        if data == "UMPN_RARE":
+            count = user_umpan.get("B",0)
+            text = f"📊 Jumlah UMPAN RARE Anda: {count}"
+        elif data == "UMPN_LEGENDARY":
+            count = user_umpan.get("C",0)
+            text = f"📊 Jumlah UMPAN LEGENDARY Anda: {count}"
+        else:  # UMPN_MYTHIC
+            count = user_umpan.get("D",0)
+            text = f"📊 Jumlah UMPAN MYTHIC Anda: {count}"
+        await callback_query.message.edit_text(text, reply_markup=make_keyboard(data, user_id))
+        return
+
     # --- GENERIC MENU NAVIGATION ---
     if data in MENU_STRUCTURE:
         await callback_query.message.edit_text(MENU_STRUCTURE[data]["title"], reply_markup=make_keyboard(data, user_id))
@@ -235,18 +274,18 @@ async def handle_transfer_message(client: Client, message: Message):
                 logger.debug(f"[TRANSFER] OWNER {user_id} → {recipient_id} ({amount} umpan)")
                 return
             sender_data = umpan.get_user(user_id)
-            total_sender = sum(sender_data["umpan"].values())
+            total_sender = sum(sender_data.values())
             if total_sender < amount:
                 await message.reply("❌ Umpan tidak cukup!")
             else:
                 remaining = amount
                 for jenis in ["A","B","C"]:
-                    if sender_data["umpan"][jenis] >= remaining:
+                    if sender_data.get(jenis,0) >= remaining:
                         umpan.remove_umpan(user_id, jenis, remaining)
                         remaining = 0
                         break
                     else:
-                        sub = sender_data["umpan"][jenis]
+                        sub = sender_data.get(jenis,0)
                         umpan.remove_umpan(user_id, jenis, sub)
                         remaining -= sub
                 umpan.add_umpan(recipient_id, "A", amount)
