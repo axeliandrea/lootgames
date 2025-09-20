@@ -40,18 +40,18 @@ MENU_STRUCTURE["CCC"] = {"title": "📋 PILIH OPSI:", "buttons": [("YA", "REGIST
 # ---------------- MENU D REVISI ---------------- #
 MENU_STRUCTURE["D"] = {
     "title": "📋 Menu D",
-    "buttons": [("D1", "D1"), ("D2", "D2"), ("D3", "D3"), ("⬅️ Kembali", "main")]
+    "buttons": [("BUY UMPAN", "D1"), ("SELL IKAN", "D2"), ("TUKAR POINT", "D3"), ("⬅️ Kembali", "main")]
 }
 
-MENU_STRUCTURE["D1"] = {"title": "📋 Menu D1", "buttons": [("D1A", "D1A"), ("⬅️ Kembali", "D")]}
-MENU_STRUCTURE["D2"] = {"title": "📋 Menu D2", "buttons": [("D2A", "D2A"), ("⬅️ Kembali", "D")]}
-MENU_STRUCTURE["D3"] = {"title": "📋 Menu D3", "buttons": [("D3A", "D3A"), ("⬅️ Kembali", "D")]}
+MENU_STRUCTURE["D1"] = {"title": "📋 BUY UMPAN", "buttons": [("D1A", "D1A"), ("⬅️ Kembali", "D")]}
+MENU_STRUCTURE["D2"] = {"title": "📋 SELL IKAN", "buttons": [("D2A", "D2A"), ("⬅️ Kembali", "D")]}
+MENU_STRUCTURE["D3"] = {"title": "📋 TUKAR POINT", "buttons": [("D3A", "D3A"), ("⬅️ Kembali", "D")]}
 
 MENU_STRUCTURE["D1A"] = {"title": "📋 Menu D1A", "buttons": [("D1B", "D1B"), ("⬅️ Kembali", "D1")]}
 MENU_STRUCTURE["D2A"] = {"title": "📋 Menu D2A", "buttons": [("D2B", "D2B"), ("⬅️ Kembali", "D2")]}
 MENU_STRUCTURE["D3A"] = {"title": "📋 Menu D3A", "buttons": [("D3B", "D3B"), ("⬅️ Kembali", "D3")]}
 
-MENU_STRUCTURE["D1B"] = {"title": "📋 Menu D1B (Tampilan Terakhir)", "buttons": [("⬅️ Kembali", "D1A")]}
+MENU_STRUCTURE["D1B"] = {"title": "📋 Menu D1B (Tampilan Terakhir)", "buttons": [("⬅️ Kembali", "D1")]}
 MENU_STRUCTURE["D2B"] = {"title": "📋 Menu D2B (Tampilan Terakhir)", "buttons": [("⬅️ Kembali", "D2A")]}
 MENU_STRUCTURE["D3B"] = {"title": "📋 Menu D3B (Tampilan Terakhir)", "buttons": [("⬅️ Kembali", "D3A")]}
 
@@ -251,3 +251,4 @@ def register(app: Client):
     app.add_handler(CallbackQueryHandler(callback_handler))
     app.add_handler(MessageHandler(handle_transfer_message, filters.text))
     umpan.register_topup(app)
+
