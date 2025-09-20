@@ -45,7 +45,7 @@ MENU_STRUCTURE["D"] = {
 
 MENU_STRUCTURE["D1"] = {"title": "📋 BUY UMPAN", "buttons": [("D1A", "D1A"), ("⬅️ Kembali", "D")]}
 MENU_STRUCTURE["D2"] = {"title": "📋 SELL IKAN", "buttons": [("D2A", "D2A"), ("⬅️ Kembali", "D")]}
-MENU_STRUCTURE["D3"] = {"title": "📋 TUKAR POINT", "buttons": [("D3A_EXCHANGE", "D3A_EXCHANGE"), ("⬅️ Kembali", "D")]}
+MENU_STRUCTURE["D3"] = {"title": "📋 TUKAR POINT", "buttons": [("D3A", "D3A"), ("⬅️ Kembali", "D")]}
 
 MENU_STRUCTURE["D1A"] = {"title": "📋 Menu D1A", "buttons": [("D1B", "D1B"), ("⬅️ Kembali", "D1")]}
 MENU_STRUCTURE["D2A"] = {"title": "📋 Menu D2A", "buttons": [("D2B", "D2B"), ("⬅️ Kembali", "D2")]}
@@ -111,52 +111,11 @@ async def show_leaderboard(callback_query: CallbackQuery, user_id: int, page: in
         text += f"{i}. {pdata.get('username','Unknown')} - {pdata.get('points',0)} pts | Level {pdata.get('level',0)} {yapping.get_badge(pdata.get('level',0))}\n"
     await callback_query.message.edit_text(text, reply_markup=make_keyboard("BBB", user_id, page))
 
-# ---------------- D3A_EXCHANGE INTERAKTIF ---------------- #
-async def show_exchange_options(callback_query: CallbackQuery, user_id: int):
-    points = yapping.load_points()
-    user_data = points.get(user_id, {"points": 0, "username": callback_query.from_user.username or "Unknown"})
-    total_points = user_data["points"]
-    max_umpan = total_points // 100
-    if max_umpan == 0:
-        await callback_query.message.edit_text("❌ Point chat tidak cukup untuk tukar!", reply_markup=make_keyboard("D3A", user_id))
-        return
-
-    buttons = []
-    for i in range(1, max_umpan + 1):
-        buttons.append([InlineKeyboardButton(f"{i} Umpan ({i*100} pts)", callback_data=f"D3_TRADE_{i}")])
-    buttons.append([InlineKeyboardButton("⬅️ Kembali", callback_data="D3A")])
-    await callback_query.message.edit_text(
-        f"💱 Pilih jumlah umpan yang ingin ditukar:\nTotal Point Chat: {total_points}",
-        reply_markup=InlineKeyboardMarkup(buttons)
-    )
-
-async def handle_exchange_choice(callback_query: CallbackQuery, user_id: int):
-    data = callback_query.data
-    if not data.startswith("D3_TRADE_"):
-        return
-    jumlah_umpan = int(data.split("_")[-1])
-    points = yapping.load_points()
-    user_data = points.get(user_id, {"points": 0, "username": callback_query.from_user.username or "Unknown"})
-    cost = jumlah_umpan * 100
-    if user_data["points"] < cost:
-        await callback_query.answer("❌ Point chat tidak cukup!", show_alert=True)
-        return
-
-    # Update point & umpan
-    user_data["points"] -= cost
-    yapping.update_user_points(user_id, user_data["points"])
-    umpan.add_umpan(user_id, "A", jumlah_umpan)
-
-    await callback_query.message.edit_text(
-        f"✅ Tukar berhasil!\nUmpan bertambah: {jumlah_umpan}\nSisa Point Chat: {user_data['points']}",
-        reply_markup=make_keyboard("D3A", user_id)
-    )
-
 # ---------------- CALLBACK HANDLER ---------------- #
 async def callback_handler(client: Client, callback_query: CallbackQuery):
     data, user_id = callback_query.data, callback_query.from_user.id
     await callback_query.answer()
-    await asyncio.sleep(0.2)
+    await asyncio.sleep(0.3)
 
     # --- REGISTER ---
     if data == "REGISTER_YES":
@@ -218,14 +177,6 @@ async def callback_handler(client: Client, callback_query: CallbackQuery):
     elif data.startswith("BBB_PAGE_"):
         page = int(data.split("_")[-1])
         await show_leaderboard(callback_query, user_id, page)
-        return
-
-    # --- D3A_EXCHANGE ---
-    if data == "D3A_EXCHANGE":
-        await show_exchange_options(callback_query, user_id)
-        return
-    elif data.startswith("D3_TRADE_"):
-        await handle_exchange_choice(callback_query, user_id)
         return
 
     # --- GENERIC MENU NAVIGATION ---
