@@ -1,3 +1,5 @@
+import os
+import json
 import logging
 from pyrogram import Client, filters
 from pyrogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery
@@ -6,6 +8,44 @@ from lootgames.modules import menu_utama
 
 # ---------------- LOGGER ---------------- #
 logger = logging.getLogger(__name__)
+
+# ---------------- USER DATABASE ---------------- #
+USER_DB_FILE = "storage/users.json"
+
+def load_users():
+    if os.path.exists(USER_DB_FILE):
+        with open(USER_DB_FILE, "r") as f:
+            return json.load(f)
+    return {}
+
+def save_users(data):
+    os.makedirs("storage", exist_ok=True)
+    with open(USER_DB_FILE, "w") as f:
+        json.dump(data, f, indent=2)
+
+def add_or_update_user(user_id: int, first_name: str, last_name: str, username: str):
+    """
+    Simpan atau update data user ke database
+    """
+    data = load_users()
+    data[str(user_id)] = {
+        "first_name": first_name,
+        "last_name": last_name,
+        "username": username
+    }
+    save_users(data)
+    logger.debug(f"[DB] Update user {user_id} -> {username}")
+
+def get_user_id_by_username(username: str):
+    """
+    Cari user_id berdasarkan username (tanpa @, case-insensitive).
+    """
+    username = username.lstrip("@").lower()
+    data = load_users()
+    for uid, info in data.items():
+        if info.get("username", "").lower() == username:
+            return int(uid)
+    return None
 
 # ---------------- KEYBOARD ---------------- #
 def main_menu_keyboard(user_id: int = None):
@@ -32,12 +72,13 @@ async def start_handler(client: Client, message: Message):
     Handler untuk /start di private chat
     """
     user = message.from_user
+    add_or_update_user(user.id, user.first_name, user.last_name or "", user.username or "")
     keyboard = main_menu_keyboard(user.id)
     await message.reply_text(
         f"Halo {user.first_name} 👋\nSelamat datang di LootGames!",
         reply_markup=keyboard
     )
-    logger.info(f"[START] User {user.id} menjalankan /start")
+    logger.info(f"[START] User {user.id} ({user.username}) menjalankan /start")
 
 # ---------------- JOIN CALLBACK ---------------- #
 async def join_callback(client: Client, callback_query: CallbackQuery):
@@ -45,6 +86,7 @@ async def join_callback(client: Client, callback_query: CallbackQuery):
     Callback tombol JOIN
     """
     user = callback_query.from_user
+    add_or_update_user(user.id, user.first_name, user.last_name or "", user.username or "")
     await callback_query.answer("Terima kasih sudah bergabung! 🎉", show_alert=True)
     logger.info(f"[JOIN] User {user.id} menekan tombol JOIN")
 
