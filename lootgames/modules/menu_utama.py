@@ -37,20 +37,14 @@ MENU_STRUCTURE["C"] = {"title": "📋 MENU REGISTER", "buttons": [("LANJUT", "CC
 MENU_STRUCTURE["CC"] = {"title": "📋 APAKAH KAMU YAKIN INGIN MENJADI PLAYER LOOT?", "buttons": [("PILIH OPSI", "CCC"), ("⬅️ Kembali", "C")]}
 MENU_STRUCTURE["CCC"] = {"title": "📋 PILIH OPSI:", "buttons": [("YA", "REGISTER_YES"), ("TIDAK", "REGISTER_NO")]}
 
-# ---------------- MENU D REVISI ---------------- #
-MENU_STRUCTURE["D"] = {
-    "title": "🛒STORE",
-    "buttons": [("BUY UMPAN", "D1"), ("SELL IKAN", "D2"), ("TUKAR POINT", "D3"), ("⬅️ Kembali", "main")]
-}
-
+# ---------------- MENU D ---------------- #
+MENU_STRUCTURE["D"] = {"title": "🛒STORE", "buttons": [("BUY UMPAN", "D1"), ("SELL IKAN", "D2"), ("TUKAR POINT", "D3"), ("⬅️ Kembali", "main")]}
 MENU_STRUCTURE["D1"] = {"title": "📋 BUY UMPAN", "buttons": [("D1A", "D1A"), ("⬅️ Kembali", "D")]}
 MENU_STRUCTURE["D2"] = {"title": "📋 SELL IKAN", "buttons": [("D2A", "D2A"), ("⬅️ Kembali", "D")]}
 MENU_STRUCTURE["D3"] = {"title": "📋 TUKAR POINT", "buttons": [("D3A", "D3A"), ("⬅️ Kembali", "D")]}
-
 MENU_STRUCTURE["D1A"] = {"title": "📋 Menu D1A", "buttons": [("D1B", "D1B"), ("⬅️ Kembali", "D1")]}
 MENU_STRUCTURE["D2A"] = {"title": "📋 Menu D2A", "buttons": [("D2B", "D2B"), ("⬅️ Kembali", "D2")]}
 MENU_STRUCTURE["D3A"] = {"title": "📋 Menu D3A", "buttons": [("D3B", "D3B"), ("⬅️ Kembali", "D3")]}
-
 MENU_STRUCTURE["D1B"] = {"title": "📋 Menu D1B (Tampilan Terakhir)", "buttons": [("⬅️ Kembali", "D1")]}
 MENU_STRUCTURE["D2B"] = {"title": "📋 Menu D2B (Tampilan Terakhir)", "buttons": [("⬅️ Kembali", "D2A")]}
 MENU_STRUCTURE["D3B"] = {"title": "📋 Menu D3B (Tampilan Terakhir)", "buttons": [("⬅️ Kembali", "D3A")]}
@@ -63,9 +57,9 @@ for letter in "EFGHIJKL":
     MENU_STRUCTURE[key3] = {"title": f"📋 Menu {key3} (Tampilan Terakhir)", "buttons": [("⬅️ Kembali", key2)]}
 
 # ---------------- MENU YAPPING ---------------- #
-MENU_STRUCTURE["B"] = {"title": "📋 YAPPING", "buttons": [("Total Point Chat", "BB"), ("⬅️ Kembali", "main")]}
-MENU_STRUCTURE["BB"] = {"title": "📋 Total Point Chat", "buttons": [("➡️ Leaderboard", "BBB"), ("⬅️ Kembali", "B")]}
-MENU_STRUCTURE["BBB"] = {"title": "📋 Leaderboard Yapping", "buttons": [("⬅️ Kembali", "BB")]}
+MENU_STRUCTURE["B"] = {"title": "📋 YAPPING", "buttons": [("Poin Pribadi", "BB"), ("➡️ Leaderboard", "BBB"), ("⬅️ Kembali", "main")]}
+MENU_STRUCTURE["BB"] = {"title": "📋 Poin Pribadi", "buttons": [("⬅️ Kembali", "B")]}
+MENU_STRUCTURE["BBB"] = {"title": "📋 Leaderboard Yapping", "buttons": [("⬅️ Kembali", "B")]}
 
 # ---------------- KEYBOARD ---------------- #
 def make_keyboard(menu_key: str, user_id=None, page: int = 0) -> InlineKeyboardMarkup:
@@ -81,7 +75,7 @@ def make_keyboard(menu_key: str, user_id=None, page: int = 0) -> InlineKeyboardM
             nav_buttons.append(InlineKeyboardButton("➡️ Next", callback_data=f"BBB_PAGE_{page+1}"))
         if nav_buttons:
             buttons.append(nav_buttons)
-        buttons.append([InlineKeyboardButton("⬅️ Kembali", callback_data="BB")])
+        buttons.append([InlineKeyboardButton("⬅️ Kembali", callback_data="B")])
     else:
         for text, callback in MENU_STRUCTURE[menu_key]["buttons"]:
             if menu_key == "AA" and user_id is not None and text.startswith("TRANSFER UMPAN"):
@@ -115,7 +109,7 @@ async def show_leaderboard(callback_query: CallbackQuery, user_id: int, page: in
 async def callback_handler(client: Client, callback_query: CallbackQuery):
     data, user_id = callback_query.data, callback_query.from_user.id
     await callback_query.answer()
-    await asyncio.sleep(0.3)
+    await asyncio.sleep(0.2)
 
     # --- REGISTER ---
     if data == "REGISTER_YES":
@@ -163,14 +157,19 @@ async def callback_handler(client: Client, callback_query: CallbackQuery):
         logger.debug(f"[TRANSFER] User {user_id} masuk mode transfer")
         return
 
-    # --- LEADERBOARD ---
+    # --- POIN PRIBADI ---
     if data == "BB":
         points = yapping.load_points()
-        text = "📊 Total Chat Points:\n\n" if points else "📊 Total Chat Points kosong."
-        for uid, pdata in points.items():
-            text += f"- {pdata.get('username','Unknown')} - {pdata.get('points',0)} pts | Level {pdata.get('level',0)} {yapping.get_badge(pdata.get('level',0))}\n"
+        user_data = points.get(str(user_id))
+        if not user_data:
+            text = "📊 Anda belum memiliki poin chat."
+        else:
+            text = f"📊 Poin Pribadi:\n\n"
+            text += f"- {user_data.get('username','Unknown')} - {user_data.get('points',0)} pts | Level {user_data.get('level',0)} {yapping.get_badge(user_data.get('level',0))}"
         await callback_query.message.edit_text(text, reply_markup=make_keyboard("BB", user_id))
         return
+
+    # --- LEADERBOARD ---
     elif data == "BBB":
         await show_leaderboard(callback_query, user_id, 0)
         return
