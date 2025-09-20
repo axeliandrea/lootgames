@@ -4,7 +4,6 @@ from pyrogram import Client, handlers, filters
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery, Message
 
 from lootgames.modules import yapping, umpan
-from lootgames.modules import database_group as dbgroup
 
 logger = logging.getLogger(__name__)
 OWNER_ID = 6395738130
@@ -186,3 +185,4 @@ def register(app: Client):
     # topup umpan & db group
     umpan.register_topup(app)
     dbgroup.register(app)
+
