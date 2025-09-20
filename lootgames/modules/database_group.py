@@ -3,6 +3,7 @@ import os
 import logging
 from pyrogram import Client, filters
 from pyrogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton
+from pyrogram.handlers import MessageHandler
 
 logger = logging.getLogger(__name__)
 
@@ -60,7 +61,5 @@ def register(app: Client):
     Register handler untuk private chat bot
     """
     app.add_handler(
-        app.add_handler(
-            handlers.MessageHandler(start_handler, filters.private & filters.command("start"))
-        )
+        MessageHandler(start_handler, filters.private & filters.command("start"))
     )
