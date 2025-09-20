@@ -206,8 +206,22 @@ async def handle_transfer_message(client: Client, message: Message):
             await message.reply("Jumlah harus lebih dari 0.")
             return
 
-        recipient_user = await client.get_users(username)
-        recipient_id = recipient_user.id
+        recipient_id = None
+        # Coba resolve username via Telegram
+        try:
+            recipient_user = await client.get_users(username)
+            recipient_id = recipient_user.id
+        except Exception:
+            # Fallback: cek database
+            all_users = umpan.all_users()
+            for uid, data in all_users.items():
+                if data.get("username") == username[1:]:  # hapus '@'
+                    recipient_id = int(uid)
+                    break
+            if recipient_id is None:
+                await message.reply(f"❌ Username {username} tidak valid dan tidak ditemukan di database!")
+                TRANSFER_STATE[user_id] = False
+                return
 
         sender_data = umpan.get_user(user_id)
         total_umpan_user = sum(sender_data["umpan"].values())
@@ -237,7 +251,9 @@ async def handle_transfer_message(client: Client, message: Message):
 
 # ---------------- REGISTER ---------------- #
 def register(app: Client):
+    # Menu interaktif
     app.add_handler(handlers.MessageHandler(open_menu, filters.regex(r"^\.menufish$")))
     app.add_handler(handlers.CallbackQueryHandler(callback_handler))
     app.add_handler(handlers.MessageHandler(handle_transfer_message, filters.text))
+    # TOPUP & UMPANKU
     umpan.register_topup(app)  # otomatis daftar .topup & .umpanku
