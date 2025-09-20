@@ -1,4 +1,4 @@
-# lootgames/modules/yapping.py 1
+# lootgames/modules/yapping.py
 import os, re, json
 from datetime import datetime
 from pyrogram import Client, filters
@@ -109,17 +109,27 @@ def generate_leaderboard(points: dict, top=0) -> str:
 def register(app: Client):
 
     # ---------------- CHAT POINT ---------------- #
+    EXCLUDED_COMMANDS = [".topup", ".menufish", ".umpanku"]
+
     @app.on_message(filters.chat(TARGET_GROUP) & filters.text & ~filters.private)
     async def chat_point_handler(client: Client, message: Message):
         user = message.from_user
         if not user: return
         if str(user.id) in IGNORED_USERS: return
 
-        # Abaikan command
-        if message.text.startswith(("/", ".", "!", "#")): return
+        text_raw = message.text or ""
+
+        # Abaikan semua command
+        if text_raw.startswith(("/", ".", "!", "#")):
+            # kecuali command tertentu
+            if any(text_raw.lower().startswith(cmd) for cmd in EXCLUDED_COMMANDS):
+                if DEBUG:
+                    log_debug(f"Command dikecualikan dari chat point: {text_raw}")
+                return
+            return
 
         # Hanya hitung huruf alfabet
-        text = re.sub(r"[^a-zA-Z]", "", message.text or "")
+        text = re.sub(r"[^a-zA-Z]", "", text_raw)
         if len(text) < 5: return  # minimal 5 huruf = 1 point
 
         username = user.username or user.first_name or "Unknown"
