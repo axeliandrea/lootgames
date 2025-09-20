@@ -110,9 +110,16 @@ def register(app: Client):
     @app.on_message(filters.chat(TARGET_GROUP) & filters.text & ~filters.private)
     async def chat_point_handler(client: Client, message: Message):
         user = message.from_user
-        if not user: return
-        if str(user.id) in IGNORED_USERS: return
+        if not user:
+            return
+        if str(user.id) in IGNORED_USERS:
+            return
 
+        # 🚫 Abaikan kalau text mulai dengan prefix command
+        if message.text.startswith(("/", ".", "!", "#")):
+            return
+
+        # Hanya hitung huruf alfabet
         text = re.sub(r"[^a-zA-Z]", "", message.text or "")
         if len(text) < 5:  # 5 huruf = 1 point
             return
@@ -120,12 +127,15 @@ def register(app: Client):
         username = user.username or user.first_name or "Unknown"
         add_points(user.id, username)
 
-        # Level up
+        # Level up check
         points = load_points()
         new_level = check_level_up(points[str(user.id)])
         if new_level != -1:
             save_points(points)
-            await message.reply(f"🎉 Selamat {username}, naik level {new_level}! {get_badge(new_level)}", quote=True)
+            await message.reply(
+                f"🎉 Selamat {username}, naik level {new_level}! {get_badge(new_level)}",
+                quote=True
+            )
 
     # /mypoint
     @app.on_message(filters.command(["mypoint", f"mypoint@{BOT_USERNAME}"]) & (filters.group | filters.private))
