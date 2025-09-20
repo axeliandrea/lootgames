@@ -2,7 +2,7 @@
 import os, re, json
 from datetime import datetime
 from pyrogram import Client, filters
-from pyrogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton
+from pyrogram.types import Message
 
 # ================= CONFIG ================= #
 OWNER_ID = 6395738130
@@ -32,7 +32,7 @@ def save_json(file_path, data):
     with open(file_path, "w") as f:
         json.dump(data, f, indent=2)
     if DEBUG:
-        print(f"[DEBUG] Data disimpan ke {file_path}")
+        log_debug(f"Data disimpan ke {file_path}")
 
 # ================= POINTS ================= #
 def load_points() -> dict:
@@ -58,6 +58,15 @@ def add_points(user_id, username, amount=1):
     points[str(user_id)]["points"] += amount
     log_debug(f"{username} ({user_id}) +{amount} point | total: {points[str(user_id)]['points']}")
     save_points(points)
+
+def edit_points(user_id, amount):
+    points = load_points()
+    user_id = str(user_id)
+    if user_id not in points:
+        return False
+    points[user_id]["points"] = amount
+    save_points(points)
+    return True
 
 # ================= LEVEL & BADGE ================= #
 LEVEL_EXP = {}
@@ -95,34 +104,32 @@ def get_badge(level: int) -> str:
     else: return "🏆 MAX VIP"
 
 # ================= LEADERBOARD ================= #
-def generate_leaderboard(points: dict) -> str:
+def generate_leaderboard(points: dict, top=0) -> str:
     sorted_points = sorted(points.items(), key=lambda x: x[1].get("points",0), reverse=True)
     if not sorted_points: return "Leaderboard kosong"
     text = "🏆 Leaderboard 🏆\n\n"
     for i, (uid, data) in enumerate(sorted_points, start=1):
+        if top and i > top:
+            break
         text += f"{i}. {data['username']} - {data['points']} pts | Level {data['level']} {get_badge(data['level'])}\n"
     return text
 
 # ================= REGISTER HANDLER ================= #
 def register(app: Client):
 
-    # Chat point
+    # ---------------- CHAT POINT ---------------- #
     @app.on_message(filters.chat(TARGET_GROUP) & filters.text & ~filters.private)
     async def chat_point_handler(client: Client, message: Message):
         user = message.from_user
-        if not user:
-            return
-        if str(user.id) in IGNORED_USERS:
-            return
+        if not user: return
+        if str(user.id) in IGNORED_USERS: return
 
-        # 🚫 Abaikan kalau text mulai dengan prefix command
-        if message.text.startswith(("/", ".", "!", "#")):
-            return
+        # Abaikan text command
+        if message.text.startswith(("/", ".", "!", "#")): return
 
         # Hanya hitung huruf alfabet
         text = re.sub(r"[^a-zA-Z]", "", message.text or "")
-        if len(text) < 5:  # 5 huruf = 1 point
-            return
+        if len(text) < 5: return  # minimal 5 huruf = 1 point
 
         username = user.username or user.first_name or "Unknown"
         add_points(user.id, username)
@@ -137,8 +144,9 @@ def register(app: Client):
                 quote=True
             )
 
-    # /mypoint
-    @app.on_message(filters.command(["mypoint", f"mypoint@{BOT_USERNAME}"]) & (filters.group | filters.private))
+    # ---------------- COMMANDS PREFIX TITIK ---------------- #
+    # .mypoint
+    @app.on_message(filters.command(["mypoint"]) & (filters.group | filters.private))
     async def mypoint_handler(client, message: Message):
         user_id = str(message.from_user.id)
         points = load_points()
@@ -148,14 +156,43 @@ def register(app: Client):
             data = points[user_id]
             await message.reply(f"💠 {data['username']} - {data['points']} pts | Level {data['level']} {get_badge(data['level'])}")
 
-    # /board
-    @app.on_message(filters.command(["board", f"board@{BOT_USERNAME}"]) & (filters.group | filters.private))
+    # .board
+    @app.on_message(filters.command(["board"]) & (filters.group | filters.private))
     async def board_handler(client, message: Message):
         points = load_points()
         text = generate_leaderboard(points)
         await message.reply(text)
 
-    # /menufish
-    @app.on_message(filters.command(["menufish", f"menufish@{BOT_USERNAME}"]) & (filters.group | filters.private))
-    async def menu_handler(client, message: Message):
-        await message.reply("🎮 Menu Fish:\n1. Option A\n2. Option B\n3. Option C")
+    # .rank5 → Top 5
+    @app.on_message(filters.command(["rank5"]) & (filters.group | filters.private))
+    async def rank5_handler(client, message: Message):
+        points = load_points()
+        text = generate_leaderboard(points, top=5)
+        await message.reply(text)
+
+    # .ep @username <jumlah> → edit points (owner)
+    @app.on_message(filters.command(["ep"]) & filters.private)
+    async def edit_point_handler(client, message: Message):
+        if message.from_user.id != OWNER_ID:
+            await message.reply("❌ Hanya owner yang bisa mengedit point.")
+            return
+        try:
+            parts = message.text.split()
+            if len(parts) != 3:
+                await message.reply("Format salah. Gunakan: `.ep @username jumlah`")
+                return
+            username = parts[1].lstrip("@")
+            jumlah = int(parts[2])
+            points = load_points()
+            target_id = None
+            for uid, data in points.items():
+                if data.get("username","").lower() == username.lower():
+                    target_id = uid
+                    break
+            if not target_id:
+                await message.reply(f"❌ User {username} tidak ditemukan.")
+                return
+            edit_points(target_id, jumlah)
+            await message.reply(f"✅ Point {username} diubah menjadi {jumlah}")
+        except Exception as e:
+            await message.reply(f"❌ Error: {e}")
