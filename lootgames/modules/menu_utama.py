@@ -12,6 +12,12 @@ OWNER_ID = 6395738130
 # ---------------- STATE ---------------- #
 TRANSFER_STATE = {}  # user_id: True jika menunggu input transfer
 
+# ---------------- HELPER ---------------- #
+def get_user_point_text(user_id):
+    points = yapping.load_points()
+    user_data = points.get(int(user_id), {"points": 0, "username": "Unknown"})
+    return f"Total Point Chat ({user_data.get('points',0)})"
+
 # ---------------- MAIN MENU ---------------- #
 MENU_STRUCTURE = {
     "main": {
@@ -40,12 +46,17 @@ MENU_STRUCTURE["CCC"] = {"title": "📋 PILIH OPSI:", "buttons": [("YA", "REGIST
 # ---------------- MENU D REVISI ---------------- #
 MENU_STRUCTURE["D"] = {
     "title": "🛒STORE",
-    "buttons": [("BUY UMPAN", "D1"), ("SELL IKAN", "D2"), ("TUKAR POINT", "D3"), ("⬅️ Kembali", "main")]
+    "buttons": [
+        ("BUY UMPAN", "D1"),
+        ("SELL IKAN", "D2"),
+        (get_user_point_text, "D3"),  # langsung load point user
+        ("⬅️ Kembali", "main")
+    ]
 }
 
 MENU_STRUCTURE["D1"] = {"title": "📋 BUY UMPAN", "buttons": [("D1A", "D1A"), ("⬅️ Kembali", "D")]}
 MENU_STRUCTURE["D2"] = {"title": "📋 SELL IKAN", "buttons": [("D2A", "D2A"), ("⬅️ Kembali", "D")]}
-MENU_STRUCTURE["D3"] = {"title": "📋 TUKAR POINT", "buttons": [("D3A", "D3A"), ("⬅️ Kembali", "D")]}
+MENU_STRUCTURE["D3"] = {"title": "📋 TUKAR POINT", "buttons": [("Total Point Chat", "D3A"), ("⬅️ Kembali", "D")]}
 
 MENU_STRUCTURE["D1A"] = {"title": "📋 Menu D1A", "buttons": [("D1B", "D1B"), ("⬅️ Kembali", "D1")]}
 MENU_STRUCTURE["D2A"] = {"title": "📋 Menu D2A", "buttons": [("D2B", "D2B"), ("⬅️ Kembali", "D2")]}
@@ -84,6 +95,10 @@ def make_keyboard(menu_key: str, user_id=None, page: int = 0) -> InlineKeyboardM
         buttons.append([InlineKeyboardButton("⬅️ Kembali", callback_data="BB")])
     else:
         for text, callback in MENU_STRUCTURE[menu_key]["buttons"]:
+            # jika text adalah function → evaluasi untuk user_id
+            if callable(text) and user_id:
+                text = text(user_id)
+            # tombol transfer umpan
             if menu_key == "AA" and user_id is not None and text.startswith("TRANSFER UMPAN"):
                 total = umpan.total_umpan(user_id)
                 text = f"{text} ({total})"
