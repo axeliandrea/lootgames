@@ -45,15 +45,23 @@ MENU_STRUCTURE["D"] = {
 
 MENU_STRUCTURE["D1"] = {"title": "📋 BUY UMPAN", "buttons": [("D1A", "D1A"), ("⬅️ Kembali", "D")]}
 MENU_STRUCTURE["D2"] = {"title": "📋 SELL IKAN", "buttons": [("D2A", "D2A"), ("⬅️ Kembali", "D")]}
+# Menu D3 sekarang mengarah ke D3A
 MENU_STRUCTURE["D3"] = {"title": "📋 TUKAR POINT", "buttons": [("D3A", "D3A"), ("⬅️ Kembali", "D")]}
+
+# Menu D3A dengan 3 tombol: Total Point, Tukar Umpan, Back
+MENU_STRUCTURE["D3A"] = {
+    "title": "📋 TUKAR POINT",
+    "buttons": [
+        ("Total Point Chat", "D3A_POINTS"),
+        ("Tukar Umpan", "D3A_EXCHANGE"),
+        ("⬅️ Kembali", "D3")
+    ]
+}
 
 MENU_STRUCTURE["D1A"] = {"title": "📋 Menu D1A", "buttons": [("D1B", "D1B"), ("⬅️ Kembali", "D1")]}
 MENU_STRUCTURE["D2A"] = {"title": "📋 Menu D2A", "buttons": [("D2B", "D2B"), ("⬅️ Kembali", "D2")]}
-MENU_STRUCTURE["D3A"] = {"title": "📋 Menu D3A", "buttons": [("D3B", "D3B"), ("⬅️ Kembali", "D3")]}
-
 MENU_STRUCTURE["D1B"] = {"title": "📋 Menu D1B (Tampilan Terakhir)", "buttons": [("⬅️ Kembali", "D1")]}
 MENU_STRUCTURE["D2B"] = {"title": "📋 Menu D2B (Tampilan Terakhir)", "buttons": [("⬅️ Kembali", "D2A")]}
-MENU_STRUCTURE["D3B"] = {"title": "📋 Menu D3B (Tampilan Terakhir)", "buttons": [("⬅️ Kembali", "D3A")]}
 
 # ---------------- GENERIC MENU (E-L) ---------------- #
 for letter in "EFGHIJKL":
@@ -70,6 +78,7 @@ MENU_STRUCTURE["BBB"] = {"title": "📋 Leaderboard Yapping", "buttons": [("⬅�
 # ---------------- KEYBOARD ---------------- #
 def make_keyboard(menu_key: str, user_id=None, page: int = 0) -> InlineKeyboardMarkup:
     buttons = []
+    # Tombol leaderboard dengan paging
     if menu_key == "BBB" and user_id is not None:
         points = yapping.load_points()
         sorted_points = sorted(points.items(), key=lambda x: x[1]["points"], reverse=True)
@@ -84,9 +93,15 @@ def make_keyboard(menu_key: str, user_id=None, page: int = 0) -> InlineKeyboardM
         buttons.append([InlineKeyboardButton("⬅️ Kembali", callback_data="BB")])
     else:
         for text, callback in MENU_STRUCTURE[menu_key]["buttons"]:
+            # Tombol jumlah UMPAN realtime
             if menu_key == "AA" and user_id is not None and text.startswith("TRANSFER UMPAN"):
                 total = umpan.total_umpan(user_id)
                 text = f"{text} ({total})"
+            # Tombol total point realtime di D3A
+            if menu_key == "D3A" and user_id is not None and text == "Total Point Chat":
+                points = yapping.load_points()
+                user_points = points.get(user_id, {"points": 0})["points"]
+                text = f"Total Point Chat ({user_points})"
             buttons.append([InlineKeyboardButton(text, callback_data=callback)])
     return InlineKeyboardMarkup(buttons)
 
@@ -146,7 +161,7 @@ async def callback_handler(client: Client, callback_query: CallbackQuery):
             uname = user_data.get("username", "Unknown")
             await callback_query.message.edit_text(
                 f"🔍 Info User:\n\nUser ID: {scan_user_id}\nUsername: @{uname}",
-                reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("⬅️ Kembali", callback_data="C")]])
+                reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("⬅️ Kembali", callback_data="C")]] )
             )
         except Exception as e:
             await callback_query.answer("❌ Error saat scan user.", show_alert=True)
@@ -161,6 +176,22 @@ async def callback_handler(client: Client, callback_query: CallbackQuery):
             reply_markup=None
         )
         logger.debug(f"[TRANSFER] User {user_id} masuk mode transfer")
+        return
+
+    # --- D3A POINTS & EXCHANGE ---
+    if data == "D3A_POINTS":
+        points = yapping.load_points()
+        user_data = points.get(user_id, {"points": 0, "level": 0, "username": callback_query.from_user.username or "Unknown"})
+        text = (
+            f"📊 Total Point Chat Kamu:\n\n"
+            f"Username: @{user_data['username']}\n"
+            f"Points: {user_data['points']} pts\n"
+            f"Level: {user_data['level']} {yapping.get_badge(user_data['level'])}"
+        )
+        await callback_query.message.edit_text(text, reply_markup=make_keyboard("D3A", user_id))
+        return
+    elif data == "D3A_EXCHANGE":
+        await callback_query.message.edit_text("💱 Fitur Tukar Umpan aktif! (implementasi nanti)", reply_markup=make_keyboard("D3A", user_id))
         return
 
     # --- LEADERBOARD ---
@@ -251,6 +282,3 @@ def register(app: Client):
     app.add_handler(CallbackQueryHandler(callback_handler))
     app.add_handler(MessageHandler(handle_transfer_message, filters.text))
     umpan.register_topup(app)
-
-
-
