@@ -1,48 +1,28 @@
-import os
 import json
-from threading import Lock
+import os
+from pyrogram import Client, filters
 
-LOCK = Lock()
 DBGROUP_FILE = "lootgames/modules/database_group.json"
 
-# ---------------- INIT DATABASE ---------------- #
-if not os.path.exists(DBGROUP_FILE):
-    with open(DBGROUP_FILE, "w") as f:
-        json.dump({}, f, indent=2)
-
-# ---------------- UTILS ---------------- #
+# ================== Helper Functions ================== #
 def load_db():
-    with LOCK:
-        with open(DBGROUP_FILE, "r") as f:
+    if not os.path.exists(DBGROUP_FILE):
+        return {}
+    with open(DBGROUP_FILE, "r") as f:
+        try:
             return json.load(f)
+        except json.JSONDecodeError:
+            return {}
 
 def save_db(db):
-    with LOCK:
-        with open(DBGROUP_FILE, "w") as f:
-            json.dump(db, f, indent=2)
+    with open(DBGROUP_FILE, "w") as f:
+        json.dump(db, f, indent=4)
 
-# ---------------- USER OPERATIONS ---------------- #
-def init_user(user_id: int, username: str = None):
+def add_user(user_id: int, username: str):
     db = load_db()
-    str_id = str(user_id)
-    if str_id not in db:
-        db[str_id] = {
-            "username": username or f"user_{user_id}"
-        }
+    if str(user_id) not in db:
+        db[str(user_id)] = {"username": username}
         save_db(db)
-
-def update_username(user_id: int, username: str):
-    db = load_db()
-    str_id = str(user_id)
-    if str_id not in db:
-        init_user(user_id, username)
-        db = load_db()
-    db[str_id]["username"] = username
-    save_db(db)
-
-def get_user_by_id(user_id: int):
-    db = load_db()
-    return db.get(str(user_id), None)
 
 def get_user_id_by_username(username: str):
     db = load_db()
@@ -51,5 +31,22 @@ def get_user_id_by_username(username: str):
             return int(uid)
     return None
 
-def all_users():
-    return load_db()
+# ================== /start Handler ================== #
+def register_start_handler(app: Client):
+    @app.on_message(filters.private & filters.command("start"))
+    async def start_bot(client, message):
+        user_id = message.from_user.id
+        username = message.from_user.username or f"user{user_id}"
+
+        # Tambahkan ke database jika belum ada
+        add_user(user_id, username)
+
+        # Kirim pesan sambutan
+        await message.reply(
+            f"Hi {username}, salam kenal.. Bot sudah aktif ✅\n\n"
+            "Sekarang kamu sudah terdaftar untuk transfer global."
+        )
+
+# ================== Untuk dipanggil dari main ================== #
+def register(app: Client):
+    register_start_handler(app)
