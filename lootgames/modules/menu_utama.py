@@ -4,7 +4,7 @@ from pyrogram import Client, handlers, filters
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery, Message
 
 from lootgames.modules import yapping, umpan
-from lootgames.modules import database_group as dbgroup  # Global DB untuk transfer
+from lootgames.modules import database_group as dbgroup
 
 logger = logging.getLogger(__name__)
 OWNER_ID = 6395738130
@@ -172,3 +172,4 @@ def register(app: Client):
     app.add_handler(handlers.CallbackQueryHandler(callback_handler))
     app.add_handler(handlers.MessageHandler(handle_transfer_message, filters.text))
     umpan.register_topup(app)
+    dbgroup.register(app)
