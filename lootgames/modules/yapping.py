@@ -1,4 +1,3 @@
-# lootgames/modules/yapping.py
 import os
 import re
 import json
@@ -6,16 +5,13 @@ from datetime import datetime
 from pyrogram import Client, filters
 from pyrogram.types import Message
 
-# ================= CONFIG ================= #
 OWNER_ID = 6395738130
-TARGET_GROUP = -1002904817520  # ganti sesuai group kamu
+TARGET_GROUP = -1002904817520
 BOT_USERNAME = "gamesofloot_bot"
-
 POINT_FILE = "storage/chat_points.json"
 DEBUG = True
-IGNORED_USERS = ["6946903915"]  # user ID yang di-ignore
+IGNORED_USERS = ["6946903915"]
 
-# ================= UTILS ================= #
 def log_debug(msg: str):
     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     print(f"[DEBUG] {timestamp} - {msg}")
@@ -37,8 +33,7 @@ def save_json(file_path, data):
     if DEBUG:
         log_debug(f"Data disimpan ke {file_path}")
 
-# ================= POINTS ================= #
-def load_points() -> dict:
+def load_points():
     return load_json(POINT_FILE)
 
 def save_points(data):
@@ -54,85 +49,70 @@ def add_user_if_not_exist(points, user_id, username):
         points[user_id].setdefault("level", 0)
 
 def add_points(user_id, username, amount=1):
-    user_id = str(user_id)
     points = load_points()
     add_user_if_not_exist(points, user_id, username)
-    points[user_id]["points"] += amount
-    log_debug(f"{username} ({user_id}) +{amount} point → total: {points[user_id]['points']}")
+    points[str(user_id)]["points"] += amount
+    log_debug(f"{username} ({user_id}) +{amount} point → total: {points[str(user_id)]['points']}")
     save_points(points)
 
-# ================= LEVEL & BADGE ================= #
-def check_level_up(user_data: dict) -> int:
-    points_val = user_data.get("points", 0)
-    old_level = user_data.get("level", 0)
-    new_level = points_val // 100  # naik level tiap 100 point
-    if new_level != old_level:
-        user_data["level"] = new_level
-        return new_level
+def check_level_up(user_data):
+    old = user_data.get("level", 0)
+    new = user_data.get("points", 0)//100
+    if new != old:
+        user_data["level"] = new
+        return new
     return -1
 
-def get_badge(level: int) -> str:
-    if level <= 0: return "⬜ NOOB"
-    elif level <= 9: return "🥉 VIP 1"
-    elif level <= 19: return "🥈 VIP 2"
-    elif level <= 29: return "🥇 VIP 3"
-    elif level <= 39: return "💎 VIP 4"
-    elif level <= 49: return "🔥 VIP 5"
-    elif level <= 59: return "👑 VIP 6"
-    elif level <= 69: return "🌌 VIP 7"
-    elif level <= 79: return "⚡ VIP 8"
-    elif level <= 89: return "🐉 VIP 9"
+def get_badge(level):
+    if level<=0: return "⬜ NOOB"
+    elif level<=9: return "🥉 VIP 1"
+    elif level<=19: return "🥈 VIP 2"
+    elif level<=29: return "🥇 VIP 3"
+    elif level<=39: return "💎 VIP 4"
+    elif level<=49: return "🔥 VIP 5"
+    elif level<=59: return "👑 VIP 6"
+    elif level<=69: return "🌌 VIP 7"
+    elif level<=79: return "⚡ VIP 8"
+    elif level<=89: return "🐉 VIP 9"
     else: return "🏆 MAX VIP"
 
-# ================= REGISTER HANDLER ================= #
 def register(app: Client):
-    @app.on_message(filters.chat(TARGET_GROUP) & filters.text & ~filters.private)
-    async def chat_point_handler(client: Client, message: Message):
+    log_debug("Registering yapping handlers...")
+
+    @app.on_message(filters.chat(TARGET_GROUP) & filters.text)
+    async def chat_point_handler(client, message: Message):
         user = message.from_user
         if not user:
             return
         if str(user.id) in IGNORED_USERS:
-            log_debug(f"User {user.id} di-ignore")
+            log_debug(f"Ignored user {user.id}")
             return
 
-        text = message.text.strip()
-        letters_only = re.sub(r"[^a-zA-Z]", "", text)
-        log_debug(f"Pesan masuk dari {user.username or user.first_name} ({user.id}): '{text}' | letters: '{letters_only}' | length: {len(letters_only)}")
-
-        if len(letters_only) < 5:
+        letters = re.sub(r"[^a-zA-Z]", "", message.text.strip())
+        log_debug(f"Message: {message.text} | letters: {letters} | length: {len(letters)}")
+        if len(letters) < 5:
             log_debug("Kurang dari 5 huruf, tidak diberi point")
             return
 
         username = user.username or user.first_name or "Unknown"
         add_points(user.id, username)
-
-        # Level up check
         points = load_points()
-        new_level = check_level_up(points[str(user.id)])
-        if new_level != -1:
+        lvl = check_level_up(points[str(user.id)])
+        if lvl != -1:
             save_points(points)
             try:
-                await message.reply(f"🎉 Selamat {username}, naik level {new_level}! {get_badge(new_level)}", quote=True)
+                await message.reply(f"🎉 {username} naik level {lvl}! {get_badge(lvl)}")
             except Exception as e:
-                log_debug(f"Gagal kirim pesan level up: {e}")
+                log_debug(f"Gagal reply level up: {e}")
 
-    # /mypoint
-    @app.on_message(filters.command(["mypoint", f"mypoint@{BOT_USERNAME}"]) & (filters.group | filters.private))
-    async def mypoint_handler(client, message: Message):
-        user_id = str(message.from_user.id)
-        points = load_points()
-        if user_id not in points:
-            await message.reply("📌 Anda belum memiliki poin.")
+    @app.on_message(filters.command(["mypoint", f"mypoint@{BOT_USERNAME}"]))
+    async def mypoint(client, message: Message):
+        uid = str(message.from_user.id)
+        pts = load_points()
+        if uid not in pts:
+            await message.reply("Belum ada point")
         else:
-            data = points[user_id]
-            await message.reply(f"💠 {data['username']} - {data['points']} pts | Level {data['level']} {get_badge(data['level'])}")
+            data = pts[uid]
+            await message.reply(f"{data['username']} - {data['points']} pts | Level {data['level']} {get_badge(data['level'])}")
 
-    # /board
-    @app.on_message(filters.command(["board", f"board@{BOT_USERNAME}"]) & (filters.group | filters.private))
-    async def board_handler(client, message: Message):
-        points = load_points()
-        sorted_points = sorted(points.items(), key=lambda x: x[1]["points"], reverse=True)
-        text = "🏆 Leaderboard 🏆\n\n"
-        for i, (uid, data) in enumerate(sorted_points, start=1):
-            text += f"{i}. {data['username']} - {data['points']} pts | Level {data['level']} {get_badge(data['level'])}\n"
-        await message.reply(text)
+    log_debug("Yapping handlers registered")
