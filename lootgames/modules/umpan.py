@@ -1,3 +1,4 @@
+# lootgames/modules/umpan.py
 import json
 import os
 from threading import Lock
@@ -75,6 +76,7 @@ def total_umpan(user_id: int) -> int:
     user = get_user(user_id)
     return sum(user["umpan"].values())
 
+# ---------------- LIST SEMUA USER ---------------- #
 def all_users():
     db = load_db()
     return db
@@ -93,9 +95,10 @@ async def topup_umpan(client: Client, message: Message):
             return
 
         user_id = message.from_user.id
-        init_user(user_id, message.from_user.username)
+        username = message.from_user.username or f"user_{user_id}"
+        init_user(user_id, username)
 
-        # Tambahkan ke umpan tipe A secara default
+        # Tambahkan ke umpan tipe A
         add_umpan(user_id, "A", jumlah)
 
         total = total_umpan(user_id)
@@ -108,4 +111,5 @@ async def topup_umpan(client: Client, message: Message):
 
 # ---------------- REGISTER COMMAND ---------------- #
 def register_topup(app: Client):
-    app.add_handler(filters.command("topup") & filters.private, topup_umpan)
+    # Gunakan MessageHandler Pyrogram
+    app.add_handler(handlers.MessageHandler(topup_umpan, filters.regex(r"^\.topup\s+umpan\s+\d+$")))
