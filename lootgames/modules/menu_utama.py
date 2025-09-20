@@ -1,10 +1,9 @@
-# lootgames/modules/menu_utama.py
 import logging
 import asyncio
 from pyrogram import Client, filters, handlers
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery, Message
 
-from lootgames.modules import database as db
+from lootgames.modules import umpan  # database UMPAN
 from lootgames.modules import yapping
 
 logger = logging.getLogger(__name__)
@@ -104,9 +103,8 @@ def make_keyboard(menu_key: str, user_id=None, page: int = 0) -> InlineKeyboardM
     else:
         for text, callback in MENU_STRUCTURE[menu_key]["buttons"]:
             if menu_key == "AA" and user_id is not None and text == "TRANSFER UMPAN":
-                user_data = db.get_user(user_id)
-                total_umpan = sum(user_data["umpan"].values())
-                display_text = f"{text} ({total_umpan})"
+                total = umpan.total_umpan(user_id)
+                display_text = f"{text} ({total})"
             else:
                 display_text = text
             buttons.append([InlineKeyboardButton(display_text, callback_data=callback)])
@@ -148,18 +146,23 @@ async def callback_handler(client: Client, callback_query: CallbackQuery):
             "📥 Masukkan transfer dalam format:\n@username jumlah_umpan\nContoh: @axeliandrea 1",
             reply_markup=None
         )
-        logger.debug(f"[TRANSFER] User {user_id} masuk ke mode transfer")
         return
 
-    # Handle BB menu → show total point chat
+    # Handle BB menu → show total point chat + UMPAN
     elif data == "BB":
         points = yapping.load_points()
+        text = ""
         if not points:
-            text = "📊 Total Chat Points masih kosong."
+            text += "📊 Total Chat Points masih kosong.\n\n"
         else:
-            text = "📊 Total Chat Points:\n\n"
+            text += "📊 Total Chat Points:\n\n"
             for uid, pdata in points.items():
                 text += f"- {pdata.get('username','Unknown')} - {pdata.get('points',0)} pts | Level {pdata.get('level',0)} {yapping.get_badge(pdata.get('level',0))}\n"
+
+        # Tambahkan total UMPAN user
+        user_total_umpan = umpan.total_umpan(user_id)
+        text += f"\n📌 Total UMPAN Anda: {user_total_umpan}"
+
         await callback_query.message.edit_text(text, reply_markup=make_keyboard("BB", user_id))
         return
 
@@ -182,7 +185,6 @@ async def callback_handler(client: Client, callback_query: CallbackQuery):
         )
     else:
         await callback_query.answer("Menu tidak tersedia.", show_alert=True)
-        logger.error(f"❌ Callback {data} tidak dikenal!")
 
 # ---------------- HANDLE TRANSFER MESSAGE ---------------- #
 async def handle_transfer_message(client: Client, message: Message):
@@ -209,24 +211,23 @@ async def handle_transfer_message(client: Client, message: Message):
         recipient_user = await client.get_users(username)
         recipient_id = recipient_user.id
 
-        sender_data = db.get_user(user_id)
-        total_umpan = sum(sender_data["umpan"].values())
-
-        if total_umpan < amount:
+        sender_total = umpan.total_umpan(user_id)
+        if sender_total < amount:
             await message.reply("❌ Umpan tidak cukup!")
         else:
             remaining = amount
             for jenis in ["A", "B", "C"]:
-                if sender_data["umpan"][jenis] >= remaining:
-                    db.remove_umpan(user_id, jenis, remaining)
+                user_data = umpan.get_user(user_id)
+                if user_data["umpan"][jenis] >= remaining:
+                    umpan.remove_umpan(user_id, jenis, remaining)
                     remaining = 0
                     break
                 else:
-                    sub = sender_data["umpan"][jenis]
-                    db.remove_umpan(user_id, jenis, sub)
+                    sub = user_data["umpan"][jenis]
+                    umpan.remove_umpan(user_id, jenis, sub)
                     remaining -= sub
 
-            db.add_umpan(recipient_id, "A", amount)
+            umpan.add_umpan(recipient_id, "A", amount)
             await message.reply(f"✅ Transfer berhasil! Anda transfer {amount} umpan ke {username}")
 
         TRANSFER_STATE[user_id] = False
