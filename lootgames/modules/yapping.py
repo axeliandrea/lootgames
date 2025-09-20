@@ -153,12 +153,16 @@ def register(app: Client):
                 quote=True
             )
 
-        # Cek milestone per 100 point
+        # ---------------- Milestone ---------------- #
         last_milestone = user_data.get("last_milestone", 0)
-        last_index = last_milestone // MILESTONE_INTERVAL
-        new_index = new_total // MILESTONE_INTERVAL
-        if new_index > last_index and new_index > 0:
-            milestone_value = new_index * MILESTONE_INTERVAL
+        milestones_to_announce = []
+        next_milestone = ((last_milestone // MILESTONE_INTERVAL) + 1) * MILESTONE_INTERVAL
+
+        while new_total >= next_milestone:
+            milestones_to_announce.append(next_milestone)
+            next_milestone += MILESTONE_INTERVAL
+
+        for milestone_value in milestones_to_announce:
             try:
                 await message.reply(
                     f"```\n🎉 Congrats {username}! Reached {milestone_value:,} points 💗\n"
@@ -167,6 +171,8 @@ def register(app: Client):
                     f"```",
                     quote=True
                 )
+                if DEBUG:
+                    log_debug(f"Milestone dikirim ke {username}: {milestone_value} points")
             except Exception as e:
                 log_debug(f"Gagal kirim milestone: {e}")
             user_data["last_milestone"] = milestone_value
@@ -229,34 +235,3 @@ def register(app: Client):
         save_points(points)
         await message.reply(f"✅ Point {username} diubah menjadi {jumlah} dan tersimpan ke database.")
 
-    # ---------------- BACKGROUND MILESTONE REFRESH ---------------- #
-    async def milestone_refresh_task():
-        await app.wait_until_ready()
-        while True:
-            try:
-                points = load_points()
-                for user_id, user_data in points.items():
-                    total = user_data.get("points", 0)
-                    last_milestone = user_data.get("last_milestone", 0)
-                    last_index = last_milestone // MILESTONE_INTERVAL
-                    new_index = total // MILESTONE_INTERVAL
-                    if new_index > last_index and new_index > 0:
-                        milestone_value = new_index * MILESTONE_INTERVAL
-                        user_data["last_milestone"] = milestone_value
-                        try:
-                            await app.send_message(
-                                TARGET_GROUP,
-                                f"```\n🎉 Congrats {user_data['username']}! Reached {milestone_value:,} points 💗\n"
-                                f"⭐ Total poin sekarang: {total:,}\n"
-                                f"💠 Level: {user_data.get('level',0)} {get_badge(user_data.get('level',0))}\n"
-                                f"```"
-                            )
-                        except Exception as e:
-                            log_debug(f"Gagal kirim milestone otomatis: {e}")
-                save_points(points)
-            except Exception as e:
-                log_debug(f"Error milestone refresh task: {e}")
-            await asyncio.sleep(30)
-
-    # ---------------- START BACKGROUND TASK ---------------- #
-    app.loop.create_task(milestone_refresh_task())
