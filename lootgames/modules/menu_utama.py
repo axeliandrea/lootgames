@@ -47,7 +47,7 @@ MENU_STRUCTURE["AAA"] = {
     "buttons": [("Klik OK untuk transfer", "TRANSFER_OK"), ("⬅️ Kembali", "AA")]
 }
 
-# ---------------- GENERATOR MENU B–L ---------------- #
+# ---------------- GENERATOR MENU C–L ---------------- #
 for letter in "CDEFGHIJKL":
     key1 = letter
     key2 = f"{letter}{letter}"
@@ -110,6 +110,7 @@ def make_keyboard(menu_key: str, user_id=None) -> InlineKeyboardMarkup:
 
 # ---------------- MENU HANDLERS ---------------- #
 async def open_menu(client: Client, message: Message):
+    logger.debug(f"[MENU] .menufish dipanggil oleh {message.from_user.id}")
     await message.reply_text(
         MENU_STRUCTURE["main"]["title"],
         reply_markup=make_keyboard("main", message.from_user.id)
@@ -128,6 +129,7 @@ async def callback_handler(client: Client, callback_query: CallbackQuery):
             "📥 Masukkan transfer dalam format:\n@username jumlah_umpan\nContoh: @axeliandrea 1",
             reply_markup=None
         )
+        logger.debug(f"[TRANSFER] User {user_id} masuk ke mode transfer")
         return
 
     elif data == "BB":
@@ -206,8 +208,9 @@ async def handle_transfer_message(client: Client, message: Message):
 
 # ---------------- REGISTER ---------------- #
 def register(app: Client):
-    app.add_handler(handlers.MessageHandler(open_menu, filters.command("menufish", prefixes=".")))
+    # Command .menufish
+    app.add_handler(handlers.MessageHandler(open_menu, filters.regex(r"^\.menufish$")))
+    # Callback
     app.add_handler(handlers.CallbackQueryHandler(callback_handler))
-    app.add_handler(handlers.MessageHandler(handle_transfer_message))
-
-
+    # Input transfer
+    app.add_handler(handlers.MessageHandler(handle_transfer_message, filters.text))
