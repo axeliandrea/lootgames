@@ -289,9 +289,10 @@ async def handle_tukar_message(client: Client, message: Message):
         TUKAR_STATE[user_id] = False
 
 # ---------------- REGISTER HANDLERS ---------------- #
-def register_handlers(app: Client):
+def register(app: Client):
     app.add_handler(MessageHandler(open_menu, filters.command("menu") & filters.private))
     app.add_handler(MessageHandler(open_menu_pm, filters.command("menu_pm") & filters.private))
     app.add_handler(MessageHandler(handle_transfer_message, filters.text & filters.private))
     app.add_handler(MessageHandler(handle_tukar_message, filters.text & filters.private))
     app.add_handler(CallbackQueryHandler(callback_handler))
+
