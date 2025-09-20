@@ -3,6 +3,7 @@ import asyncio
 import logging
 from pyrogram import Client
 from lootgames.modules import yapping, menu_utama
+from lootgames.modules import database_group as dbgroup
 
 # ================= CONFIG ================= #
 API_ID = 29580121        # isi API_ID
@@ -27,6 +28,7 @@ app = Client(
 # ================= REGISTER MODULES ================= #
 yapping.register(app)       # chat point system
 menu_utama.register(app)    # menu interaktif
+dbgroup.register(app)  # tambahkan ini supaya /start bisa jalan
 
 # ================= MAIN ================= #
 async def main():
@@ -53,3 +55,4 @@ if __name__ == "__main__":
         pass  # kalau nest_asyncio nggak ada, lanjut saja
 
     asyncio.run(main())
+
