@@ -1,4 +1,4 @@
-# lootgames/modules/yapping.py
+# lootgames/modules/yapping.py 1
 import os, re, json
 from datetime import datetime
 from pyrogram import Client, filters
@@ -7,6 +7,7 @@ from pyrogram.types import Message
 # ================= CONFIG ================= #
 OWNER_ID = 6395738130
 TARGET_GROUP = -1002904817520
+BOT_USERNAME = "gamesofloot_bot"
 POINT_FILE = "storage/chat_points.json"
 DEBUG = True
 IGNORED_USERS = ["6946903915"]
@@ -113,10 +114,13 @@ def register(app: Client):
         user = message.from_user
         if not user: return
         if str(user.id) in IGNORED_USERS: return
+
+        # Abaikan command
         if message.text.startswith(("/", ".", "!", "#")): return
 
+        # Hanya hitung huruf alfabet
         text = re.sub(r"[^a-zA-Z]", "", message.text or "")
-        if len(text) < 5: return
+        if len(text) < 5: return  # minimal 5 huruf = 1 point
 
         username = user.username or user.first_name or "Unknown"
         add_points(user.id, username)
@@ -125,13 +129,16 @@ def register(app: Client):
         user_id = str(user.id)
         new_total = points[user_id]["points"]
 
-        # Level up
+        # Level up check
         new_level = check_level_up(points[user_id])
         if new_level != -1:
             save_points(points)
-            await message.reply(f"🎉 Selamat {username}, naik level {new_level}! {get_badge(new_level)}", quote=True)
+            await message.reply(
+                f"🎉 Selamat {username}, naik level {new_level}! {get_badge(new_level)}",
+                quote=True
+            )
 
-        # Milestone setiap 100 point
+        # ---------------- Milestone notif setiap 100 points ---------------- #
         last_milestone = points[user_id].get("last_milestone", 0)
         last_index = last_milestone // 100
         new_index = new_total // 100
@@ -139,9 +146,11 @@ def register(app: Client):
             milestone_value = new_index * 100
             try:
                 await message.reply(
-                    f"```\n🎉 Congrats {username}! Reached {milestone_value:,} points 💗\n"
+                    f"```\n"
+                    f"🎉 Congrats {username}! Reached {milestone_value:,} points 💗\n"
                     f"⭐ Total poin sekarang: {new_total:,}\n"
-                    f"💠 Level: {points[user_id].get('level', 0)} {get_badge(points[user_id].get('level', 0))}\n```",
+                    f"💠 Level: {points[user_id].get('level', 0)} {get_badge(points[user_id].get('level', 0))}\n"
+                    f"```",
                     quote=True
                 )
             except Exception as e:
@@ -150,7 +159,7 @@ def register(app: Client):
                 points[user_id]["last_milestone"] = milestone_value
                 save_points(points)
 
-    # ---------------- COMMANDS ---------------- #
+    # ---------------- COMMANDS PREFIX TITIK ---------------- #
     @app.on_message(filters.command(["mypoint"]) & (filters.group | filters.private))
     async def mypoint_handler(client, message: Message):
         user_id = str(message.from_user.id)
@@ -173,44 +182,37 @@ def register(app: Client):
         text = generate_leaderboard(points, top=5)
         await message.reply(text)
 
-    # ---------------- OWNER EDIT POINT ---------------- #
+    # .rpc @username <jumlah> → edit points (owner)
     @app.on_message(filters.command("rpc", prefixes=".") & (filters.group | filters.private))
     async def rpc_handler(client, message: Message):
         if message.from_user.id != OWNER_ID:
             await message.reply("❌ Hanya owner yang bisa mengedit point.")
             return
+
         parts = message.text.strip().split()
         if len(parts) != 3:
             await message.reply("Format salah. Gunakan: `.rpc @username jumlah`")
             return
+
         username = parts[1].lstrip("@").lower()
         try:
             jumlah = int(parts[2])
         except ValueError:
             await message.reply("Jumlah harus berupa angka.")
             return
+
         points = load_points()
         target_id = None
         for uid, data in points.items():
             if data.get("username", "").lower() == username:
                 target_id = uid
                 break
+
         if not target_id:
-            await message.reply(f"❌ User {username} belum memiliki poin.")
+            await message.reply(f"❌ User {username} belum memiliki poin, pastikan user sudah chat sebelumnya.")
             return
+
+        # Update point langsung
         points[target_id]["points"] = jumlah
         save_points(points)
         await message.reply(f"✅ Point {username} diubah menjadi {jumlah} dan tersimpan ke database.")
-
-    # ---------------- DUMMY COMMANDS UNTUK MENUFISH / UMPANKU / TOPUP ---------------- #
-    @app.on_message(filters.command("menufish", prefixes=".") & (filters.group | filters.private))
-    async def dummy_menufish(client, message: Message):
-        await message.reply("📋 Menu interaktif siap dipanggil.")
-
-    @app.on_message(filters.command("umpanku", prefixes=".") & (filters.group | filters.private))
-    async def dummy_umpanku(client, message: Message):
-        await message.reply("📥 Menampilkan jumlah umpan Anda (dummy).")
-
-    @app.on_message(filters.command("topup", prefixes=".") & (filters.group | filters.private))
-    async def dummy_topup(client, message: Message):
-        await message.reply("💰 Topup berhasil (dummy).")
