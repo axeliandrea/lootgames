@@ -1,3 +1,4 @@
+# lootgames/__main__.py
 import asyncio
 import logging
 from pyrogram import Client
@@ -5,9 +6,9 @@ from lootgames.modules import yapping, menu_utama
 from lootgames.modules import database_group as dbgroup
 
 # ================= CONFIG ================= #
-API_ID = 29580121      # isi API_ID
-API_HASH = "fff375a88f6546f0da2df781ca7725df"  # isi API_HASH
-BOT_TOKEN = "7660904765:AAFQuSU8ShpXAzqYqAhBojjGLf7U03ityck" # isi BOT_TOKEN
+API_ID = sensor # isi API_ID
+API_HASH = "sensor"     # isi API_HASH
+BOT_TOKEN = "sensor"    # isi BOT_TOKEN
 OWNER_ID = 6395738130
 ALLOWED_GROUP_ID = -1002904817520
 LOG_LEVEL = logging.INFO
@@ -27,7 +28,7 @@ app = Client(
 # ================= REGISTER MODULES ================= #
 yapping.register(app)       # chat point system
 menu_utama.register(app)    # menu interaktif
-dbgroup.register(app)       # start handler aktif
+dbgroup.register(app)  # tambahkan ini supaya /start bisa jalan
 
 # ================= MAIN ================= #
 async def main():
@@ -42,7 +43,7 @@ async def main():
     except Exception as e:
         logger.error(f"Gagal kirim notifikasi start: {e}")
 
-    # bot tetap jalan
+    # biar bot tetap jalan
     await asyncio.Event().wait()
 
 # ================= RUN ================= #
@@ -51,8 +52,6 @@ if __name__ == "__main__":
         import nest_asyncio
         nest_asyncio.apply()
     except ImportError:
-        pass
+        pass  # kalau nest_asyncio nggak ada, lanjut saja
 
     asyncio.run(main())
-
-
