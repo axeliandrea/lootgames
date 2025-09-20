@@ -7,7 +7,6 @@ from pyrogram.types import Message
 # ================= CONFIG ================= #
 OWNER_ID = 6395738130
 TARGET_GROUP = -1002904817520
-BOT_USERNAME = "gamesofloot_bot"
 POINT_FILE = "storage/chat_points.json"
 DEBUG = True
 IGNORED_USERS = ["6946903915"]
@@ -117,30 +116,23 @@ def generate_leaderboard(points: dict, top=0) -> str:
 # ================= REGISTER HANDLER ================= #
 def register(app: Client):
 
-    # ---------------- auto point handler ---------------- #
-    @app.on_message(
-        filters.chat(TARGET_GROUP) &
-        ~filters.command(["mypoint", "resetchatpoint", "kepoin", "noyap", "scanpoint", "ya", "menufish", "rpc"], prefixes=[".", "/"])
-    )
-
     # ---------------- CHAT POINT ---------------- #
     @app.on_message(filters.chat(TARGET_GROUP) & filters.text & ~filters.private)
     async def chat_point_handler(client: Client, message: Message):
         user = message.from_user
-        if not user: return
-        if str(user.id) in IGNORED_USERS: return
+        if not user or str(user.id) in IGNORED_USERS:
+            return
 
-        # Abaikan text command
-        if message.text.startswith(("/", ".", "!", "#")): return
+        if message.text.startswith((".", "/", "!", "#")):
+            return
 
-        # Hanya hitung huruf alfabet
         text = re.sub(r"[^a-zA-Z]", "", message.text or "")
-        if len(text) < 5: return  # minimal 5 huruf = 1 point
+        if len(text) < 5:
+            return
 
         username = user.username or user.first_name or "Unknown"
         add_points(user.id, username)
 
-        # Level up check
         points = load_points()
         new_level = check_level_up(points[str(user.id)])
         if new_level != -1:
@@ -150,9 +142,8 @@ def register(app: Client):
                 quote=True
             )
 
-    # ================= COMMANDS PREFIX TITIK ================= #
-    # .mypoint
-    @app.on_message(filters.command(["mypoint"]) & (filters.group | filters.private))
+    # ---------------- COMMANDS PREFIX TITIK ---------------- #
+    @app.on_message(filters.command("mypoint", prefixes=".") & (filters.group | filters.private))
     async def mypoint_handler(client, message: Message):
         user_id = str(message.from_user.id)
         points = load_points()
@@ -162,22 +153,17 @@ def register(app: Client):
             data = points[user_id]
             await message.reply(f"💠 {data['username']} - {data['points']} pts | Level {data['level']} {get_badge(data['level'])}")
 
-    # .board
-    @app.on_message(filters.command(["board"]) & (filters.group | filters.private))
+    @app.on_message(filters.command("board", prefixes=".") & (filters.group | filters.private))
     async def board_handler(client, message: Message):
         points = load_points()
-        text = generate_leaderboard(points)
-        await message.reply(text)
+        await message.reply(generate_leaderboard(points))
 
-    # .rank5 → Top 5
-    @app.on_message(filters.command(["rank5"]) & (filters.group | filters.private))
+    @app.on_message(filters.command("rank5", prefixes=".") & (filters.group | filters.private))
     async def rank5_handler(client, message: Message):
         points = load_points()
-        text = generate_leaderboard(points, top=5)
-        await message.reply(text)
+        await message.reply(generate_leaderboard(points, top=5))
 
-    # .rpc @username <jumlah> → edit points (owner)
-    # .rpc @username <jumlah> → edit points (owner)
+    # ---------------- .rpc @username <jumlah> ---------------- #
     @app.on_message(filters.command("rpc", prefixes=".") & (filters.group | filters.private))
     async def rpc_handler(client, message: Message):
         if message.from_user.id != OWNER_ID:
@@ -207,9 +193,7 @@ def register(app: Client):
             await message.reply(f"❌ User {username} belum memiliki poin, pastikan user sudah chat sebelumnya.")
             return
 
-    # Update point langsung
-    points[target_id]["points"] = jumlah
-    save_points(points)
+        points[target_id]["points"] = jumlah
+        save_points(points)
 
-    await message.reply(f"✅ Point {username} diubah menjadi {jumlah} dan tersimpan ke database.")
-
+        await message.reply(f"✅ Point {username} diubah menjadi {jumlah} dan tersimpan ke database.")
