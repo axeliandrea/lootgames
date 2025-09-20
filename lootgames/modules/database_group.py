@@ -1,3 +1,13 @@
+import json
+import os
+import logging
+from pyrogram import Client, filters
+from pyrogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery
+from pyrogram.handlers import MessageHandler, CallbackQueryHandler
+from lootgames.modules import menu_utama
+from lootgames.config import OWNER_ID
+
+
 # ---------------- KEYBOARD ---------------- #
 def main_menu_keyboard(user_id: int = None):
     """
