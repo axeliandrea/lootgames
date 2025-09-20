@@ -19,7 +19,7 @@ app = Client(
 
 # ================= REGISTER MODULES ================= #
 yapping.register(app)
-menu_utama.register_handlers(app)
+menu_utama.register(app)
 user_database.register(app)  # Modul baru untuk .join/.update
 
 # ================= MAIN ================= #
