@@ -1,6 +1,6 @@
 import logging
 import asyncio
-from pyrogram import Client, filters, handlers
+from pyrogram import Client, filters
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery, Message
 
 from lootgames.modules import yapping
@@ -27,7 +27,7 @@ MENU_STRUCTURE = {
     }
 }
 
-# ---------------- CUSTOM MENU A → AA → AAA ---------------- #
+# ---------------- MENU UMPAN ---------------- #
 MENU_STRUCTURE["A"] = {
     "title": "📋 Menu UMPAN",
     "buttons": [("Jumlah UMPAN", "AA"), ("⬅️ Kembali", "main")]
@@ -67,7 +67,7 @@ for letter in "CDEFGHIJKL":
         "buttons": [("⬅️ Kembali", key2)]
     }
 
-# ---------------- CUSTOM MENU B → BB → BBB ---------------- #
+# ---------------- MENU YAPPING ---------------- #
 MENU_STRUCTURE["B"] = {
     "title": "📋 YAPPING",
     "buttons": [("Total Point Chat", "BB"), ("⬅️ Kembali", "main")]
@@ -139,9 +139,8 @@ async def callback_handler(client: Client, callback_query: CallbackQuery):
     user_id = callback_query.from_user.id
 
     await callback_query.answer()
-    await asyncio.sleep(0.5)
+    await asyncio.sleep(0.2)
 
-    # Handle transfer
     if data == "TRANSFER_OK":
         TRANSFER_STATE[user_id] = True
         await callback_query.message.edit_text(
@@ -151,30 +150,23 @@ async def callback_handler(client: Client, callback_query: CallbackQuery):
         logger.debug(f"[TRANSFER] User {user_id} masuk ke mode transfer")
         return
 
-    # Handle BB menu → show total point chat
     elif data == "BB":
         points = yapping.load_points()
-        if not points:
-            text = "📊 Total Chat Points masih kosong."
-        else:
-            text = "📊 Total Chat Points:\n\n"
-            for uid, pdata in points.items():
-                text += f"- {pdata.get('username','Unknown')} - {pdata.get('points',0)} pts | Level {pdata.get('level',0)} {yapping.get_badge(pdata.get('level',0))}\n"
+        text = "📊 Total Chat Points:\n\n" if points else "📊 Total Chat Points masih kosong."
+        for uid, pdata in points.items():
+            text += f"- {pdata.get('username','Unknown')} - {pdata.get('points',0)} pts | Level {pdata.get('level',0)} {yapping.get_badge(pdata.get('level',0))}\n"
         await callback_query.message.edit_text(text, reply_markup=make_keyboard("BB", user_id))
         return
 
-    # Handle leaderboard page 0
     elif data == "BBB":
         await show_leaderboard(callback_query, user_id, page=0)
         return
 
-    # Handle leaderboard pagination
     elif data.startswith("BBB_PAGE_"):
         page = int(data.split("_")[-1])
         await show_leaderboard(callback_query, user_id, page)
         return
 
-    # Default menu navigation
     elif data in MENU_STRUCTURE:
         await callback_query.message.edit_text(
             MENU_STRUCTURE[data]["title"],
@@ -184,7 +176,7 @@ async def callback_handler(client: Client, callback_query: CallbackQuery):
         await callback_query.answer("Menu tidak tersedia.", show_alert=True)
         logger.error(f"❌ Callback {data} tidak dikenal!")
 
-# ---------------- HANDLE TRANSFER MESSAGE ---------------- #
+# ---------------- HANDLE TRANSFER ---------------- #
 async def handle_transfer_message(client: Client, message: Message):
     user_id = message.from_user.id
     if not TRANSFER_STATE.get(user_id):
@@ -235,9 +227,9 @@ async def handle_transfer_message(client: Client, message: Message):
         await message.reply(f"❌ Error: {e}")
         TRANSFER_STATE[user_id] = False
 
-# ---------------- REGISTER ---------------- #
+# ---------------- REGISTER HANDLERS ---------------- #
 def register(app: Client):
-    app.add_handler(handlers.MessageHandler(open_menu, filters.regex(r"^\.menufish$")))
-    app.add_handler(handlers.CallbackQueryHandler(callback_handler))
-    app.add_handler(handlers.MessageHandler(handle_transfer_message, filters.text))
-    umpan.register_commands(app)  # Pastikan ini memanggil fungsi register_commands terbaru
+    app.add_handler(filters.regex(r"^\.menufish$")(open_menu))
+    app.add_handler(filters.text & ~filters.command(handle_transfer_message))
+    app.add_handler(filters.callback_query(callback_handler))
+    umpan.register_commands(app)
