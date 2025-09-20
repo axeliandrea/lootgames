@@ -240,4 +240,4 @@ def register(app: Client):
     app.add_handler(handlers.MessageHandler(open_menu, filters.regex(r"^\.menufish$")))
     app.add_handler(handlers.CallbackQueryHandler(callback_handler))
     app.add_handler(handlers.MessageHandler(handle_transfer_message, filters.text))
-    umpan.register_topup(app)
+    umpan.register_commands(app)  # Pastikan ini memanggil fungsi register_commands terbaru
