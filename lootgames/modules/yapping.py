@@ -1,5 +1,5 @@
 # lootgames/modules/yapping.py
-import os, re, json, asyncio
+import os, re, json
 from datetime import datetime
 from pyrogram import Client, filters
 from pyrogram.types import Message
@@ -7,7 +7,6 @@ from pyrogram.types import Message
 # ================= CONFIG ================= #
 OWNER_ID = 6395738130
 TARGET_GROUP = -1002904817520
-BOT_USERNAME = "gamesofloot_bot"
 POINT_FILE = "storage/chat_points.json"
 DEBUG = True
 IGNORED_USERS = ["6946903915"]
@@ -135,29 +134,17 @@ def register(app: Client):
         add_points(points, user.id, username)
 
         user_id = str(user.id)
-        new_total = points[user_id]["points"]
-
-        # Level-up
-        new_level = check_level_up(points[user_id])
-        if new_level != -1:
-            if DEBUG:
-                log_debug(f"{username} naik level ke {new_level}")
-            try:
-                notif = await message.reply(
-                    f"🎉 Selamat {username}, naik level {new_level}! {get_badge(new_level)}",
-                    quote=True
-                )
-            except Exception as e:
-                log_debug(f"Gagal kirim level-up notif: {e}")
+        user_data = points[user_id]
+        new_total = user_data["points"]
 
         # Milestone setiap 100 points
-        last_milestone = points[user_id].get("last_milestone", 0)
+        last_milestone = user_data.get("last_milestone", 0)
         last_index = last_milestone // 100
         new_index = new_total // 100
         if new_index > last_index and new_index > 0:
             milestone_value = new_index * 100
-            points[user_id]["last_milestone"] = milestone_value
-            save_points(points)
+            user_data["last_milestone"] = milestone_value  # update dulu
+            save_points(points)  # simpan supaya tidak hilang
             if DEBUG:
                 log_debug(f"{username} mencapai milestone {milestone_value}")
             try:
@@ -165,14 +152,27 @@ def register(app: Client):
                     f"```\n"
                     f"🎉 Congrats {username}! Reached {milestone_value:,} points 💗\n"
                     f"⭐ Total poin sekarang: {new_total:,}\n"
-                    f"💠 Level: {points[user_id].get('level', 0)} {get_badge(points[user_id].get('level', 0))}\n"
+                    f"💠 Level: {user_data.get('level', 0)} {get_badge(user_data.get('level', 0))}\n"
                     f"```",
                     quote=True
                 )
             except Exception as e:
                 log_debug(f"Gagal kirim milestone: {e}")
 
-        # Simpan semua update terakhir
+        # Level-up
+        new_level = check_level_up(user_data)
+        if new_level != -1:
+            if DEBUG:
+                log_debug(f"{username} naik level ke {new_level}")
+            try:
+                await message.reply(
+                    f"🎉 Selamat {username}, naik level {new_level}! {get_badge(new_level)}",
+                    quote=True
+                )
+            except Exception as e:
+                log_debug(f"Gagal kirim level-up notif: {e}")
+
+        # Simpan update akhir
         save_points(points)
 
     # ---------------- COMMANDS ---------------- #
@@ -184,7 +184,9 @@ def register(app: Client):
             await message.reply("📌 Anda belum memiliki poin.")
         else:
             data = points[user_id]
-            await message.reply(f"💠 {data['username']} - {data['points']} pts | Level {data['level']} {get_badge(data['level'])}")
+            await message.reply(
+                f"💠 {data['username']} - {data['points']} pts | Level {data['level']} {get_badge(data['level'])}"
+            )
 
     @app.on_message(filters.command(["board"]) & (filters.group | filters.private))
     async def board_handler(client, message: Message):
