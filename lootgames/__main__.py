@@ -1,11 +1,11 @@
-import asyncio
-import logging
+# lootgames/lootgames/__main__.py
+import asyncio, logging
 from pyrogram import Client
-from lootgames.modules import yapping
+from lootgames.modules import menu_utama, yapping
 
-API_ID = 29580121      # ganti dengan API_ID kamu
-API_HASH = "fff375a88f6546f0da2df781ca7725df"  # ganti dengan API_HASH kamu
-BOT_TOKEN = "7660904765:AAFQuSU8ShpXAzqYqAhBojjGLf7U03ityck" # ganti dengan token botmu
+API_ID = 29580121     # isi API_ID
+API_HASH = "fff375a88f6546f0da2df781ca7725df"  # isi API_HASH
+BOT_TOKEN = "7660904765:AAFQuSU8ShpXAzqYqAhBojjGLf7U03ityck" # isi BOT_TOKEN
 OWNER_ID = 6395738130
 ALLOWED_GROUP_ID = -1002904817520
 LOG_LEVEL = logging.INFO
@@ -16,16 +16,16 @@ logger = logging.getLogger(__name__)
 
 app = Client("lootgames", api_id=API_ID, api_hash=API_HASH, bot_token=BOT_TOKEN)
 
-# Register yapping manually
-yapping.register(app)
+# Register modules
+yapping.register(app)       # chat point
+menu_utama.register(app)    # menu interaktif
 
 async def main():
     await app.start()
     logger.info("🚀 Bot started!")
-    await asyncio.Event().wait()
+    logger.info(f"📱 Monitoring group: {ALLOWED_GROUP_ID}")
+    logger.info(f"👑 Owner ID: {OWNER_ID}")
 
-if __name__ == "__main__":
-    import nest_asyncio
-    nest_asyncio.apply()
-    asyncio.run(main())
-
+    try:
+        await app.send_message(OWNER_ID, "🤖 LootGames Bot sudah aktif dan siap dipakai!")
+        logger.info("📢 Notifikasi start terkirim ke OWNER.")
