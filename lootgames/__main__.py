@@ -29,3 +29,11 @@ async def main():
     try:
         await app.send_message(OWNER_ID, "🤖 LootGames Bot sudah aktif dan siap dipakai!")
         logger.info("📢 Notifikasi start terkirim ke OWNER.")
+
+if __name__ == "__main__":
+    try:
+        import nest_asyncio
+        nest_asyncio.apply()
+    except ImportError:
+        pass  # kalau nest_asyncio nggak ada, lanjut saja
+    asyncio.run(main())
