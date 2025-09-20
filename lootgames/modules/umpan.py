@@ -1,0 +1,79 @@
+import json
+import os
+from threading import Lock
+
+UMPAN_FILE = "lootgames/modules/umpan_data.json"
+LOCK = Lock()
+
+# ---------------- INIT DATABASE ---------------- #
+if not os.path.exists(UMPAN_FILE):
+    with open(UMPAN_FILE, "w") as f:
+        json.dump({}, f)
+
+def load_db():
+    with LOCK:
+        with open(UMPAN_FILE, "r") as f:
+            return json.load(f)
+
+def save_db(db):
+    with LOCK:
+        with open(UMPAN_FILE, "w") as f:
+            json.dump(db, f, indent=4)
+
+# ---------------- USER DATA ---------------- #
+def init_user(user_id: int, username: str = None):
+    db = load_db()
+    str_id = str(user_id)
+    if str_id not in db:
+        db[str_id] = {
+            "username": username or f"user_{user_id}",
+            "umpan": {"A": 0, "B": 0, "C": 0}
+        }
+        save_db(db)
+
+def get_user(user_id: int):
+    db = load_db()
+    str_id = str(user_id)
+    if str_id not in db:
+        init_user(user_id)
+        db = load_db()
+    return db[str_id]
+
+def update_username(user_id: int, username: str):
+    db = load_db()
+    str_id = str(user_id)
+    if str_id not in db:
+        init_user(user_id, username)
+        db = load_db()
+    db[str_id]["username"] = username
+    save_db(db)
+
+# ---------------- UMPAN OPERATIONS ---------------- #
+def add_umpan(user_id: int, jenis: str, jumlah: int):
+    if jenis not in ["A", "B", "C"]:
+        raise ValueError("Jenis umpan harus A, B, atau C")
+    user = get_user(user_id)
+    user["umpan"][jenis] += jumlah
+    db = load_db()
+    db[str(user_id)] = user
+    save_db(db)
+
+def remove_umpan(user_id: int, jenis: str, jumlah: int):
+    if jenis not in ["A", "B", "C"]:
+        raise ValueError("Jenis umpan harus A, B, atau C")
+    user = get_user(user_id)
+    if user["umpan"][jenis] < jumlah:
+        raise ValueError(f"Umpan {jenis} tidak cukup")
+    user["umpan"][jenis] -= jumlah
+    db = load_db()
+    db[str(user_id)] = user
+    save_db(db)
+
+def total_umpan(user_id: int) -> int:
+    user = get_user(user_id)
+    return sum(user["umpan"].values())
+
+# ---------------- LIST SEMUA USER ---------------- #
+def all_users():
+    db = load_db()
+    return db
