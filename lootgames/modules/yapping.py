@@ -235,3 +235,44 @@ def register(app: Client):
         points[target_id]["points"] = jumlah
         save_points(points)
         await message.reply(f"✅ Point {username} diubah menjadi {jumlah} dan tersimpan ke database.")
+
+    # ---------------- BACKGROUND MILESTONE REFRESH ---------------- #
+    async def milestone_refresh_task():
+        await app.wait_until_ready()
+        while True:
+            try:
+                points = load_points()
+                for user_id, user_data in points.items():
+                    total = user_data.get("points", 0)
+                    last_milestone = user_data.get("last_milestone", 0)
+                    last_index = last_milestone // MILESTONE_INTERVAL
+                    current_index = total // MILESTONE_INTERVAL
+
+                    # Kirim notif untuk milestone yang terlewati
+                    for idx in range(last_index + 1, current_index + 1):
+                        milestone_value = idx * MILESTONE_INTERVAL
+                        try:
+                            await app.send_message(
+                                TARGET_GROUP,
+                                f"```\n🎉 Congrats {user_data['username']}! Reached {milestone_value:,} points 💗\n"
+                                f"⭐ Total poin sekarang: {total:,}\n"
+                                f"💠 Level: {user_data.get('level',0)} {get_badge(user_data.get('level',0))}\n"
+                                f"```"
+                            )
+                            if DEBUG:
+                                log_debug(f"Milestone otomatis dikirim ke {user_data['username']}: {milestone_value} points")
+                        except Exception as e:
+                            log_debug(f"Gagal kirim milestone otomatis: {e}")
+                    
+                    # Update last_milestone ke milestone terakhir
+                    if current_index > last_index:
+                        user_data["last_milestone"] = current_index * MILESTONE_INTERVAL
+
+                save_points(points)
+            except Exception as e:
+                log_debug(f"Error milestone refresh task: {e}")
+
+            await asyncio.sleep(30)  # cek setiap 30 detik
+
+    # ---------------- START BACKGROUND TASK ---------------- #
+    app.loop.create_task(milestone_refresh_task())
