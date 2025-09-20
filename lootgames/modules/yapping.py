@@ -120,7 +120,7 @@ def register(app: Client):
     # ---------------- auto point handler ---------------- #
     @app.on_message(
         filters.chat(TARGET_GROUP) &
-        ~filters.command(["mypoint", "resetchatpoint", "kepoin", "noyap", "scanpoint", "ya", "menufish"], prefixes=[".", "/"])
+        ~filters.command(["mypoint", "resetchatpoint", "kepoin", "noyap", "scanpoint", "ya", "menufish", "rpc"], prefixes=[".", "/"])
     )
 
     # ---------------- CHAT POINT ---------------- #
