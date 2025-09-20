@@ -103,7 +103,7 @@ def make_keyboard(menu_key: str, user_id=None, page: int = 0) -> InlineKeyboardM
         buttons.append([InlineKeyboardButton("⬅️ Kembali", callback_data="BB")])
     else:
         for text, callback in MENU_STRUCTURE[menu_key]["buttons"]:
-            # Jumlah UMPAN
+            # Update display Jumlah UMPAN
             if menu_key == "AA" and user_id is not None and text == "TRANSFER UMPAN":
                 total = umpan.total_umpan(user_id)
                 display_text = f"{text} ({total})"
@@ -241,4 +241,3 @@ def register(app: Client):
     app.add_handler(handlers.CallbackQueryHandler(callback_handler))
     app.add_handler(handlers.MessageHandler(handle_transfer_message, filters.text))
     umpan.register_topup(app)
-
