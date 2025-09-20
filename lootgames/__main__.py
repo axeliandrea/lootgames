@@ -28,7 +28,7 @@ dbgroup.register(app)
 # ================= PRIVATE /START ================= #
 async def private_start_handler(client, message):
     if message.chat.type != "private":
-        return  # pastikan hanya jalan di private
+        return
 
     user = message.from_user
     user_id = user.id
@@ -36,14 +36,12 @@ async def private_start_handler(client, message):
     last_name = user.last_name or ""
     username = user.username or first_name
 
-    # update user di db
     try:
         dbgroup.add_or_update_user(user_id, first_name, last_name, username)
         logger.info(f"User terupdate/baru ditambahkan: {user_id} ({username})")
     except Exception as e:
         logger.error(f"Gagal menambahkan user ke database: {e}")
 
-    # keyboard menu utama
     keyboard = InlineKeyboardMarkup([
         [InlineKeyboardButton("🎮 Main", callback_data="menu_main")],
         [InlineKeyboardButton("📊 Poin Saya", callback_data="menu_point")],
@@ -59,8 +57,34 @@ async def private_start_handler(client, message):
         reply_markup=keyboard
     )
 
-# register handler /start di private chat
 app.add_handler(MessageHandler(private_start_handler, filters.private & filters.command("start")))
+
+# ================= PRIVATE .JOIN ================= #
+async def private_join_handler(client, message):
+    if message.chat.type != "private":
+        return
+
+    user = message.from_user
+    user_id = user.id
+    first_name = user.first_name
+    last_name = user.last_name or ""
+    username = user.username or first_name
+
+    try:
+        dbgroup.add_or_update_user(user_id, first_name, last_name, username)
+        await message.reply_text("🎉 Selamat, kamu adalah **player Loot** sekarang ✅")
+        logger.info(f"Player JOIN lewat .join: {user_id} | {username}")
+
+        # notifikasi ke OWNER
+        await client.send_message(
+            OWNER_ID,
+            f"📥 Player JOIN (.join):\nID: {user_id}\nNama: {first_name} {last_name}\nUsername: @{username}"
+        )
+    except Exception as e:
+        await message.reply_text("❌ Gagal JOIN, coba lagi nanti.")
+        logger.error(f"Gagal .join user: {e}")
+
+app.add_handler(MessageHandler(private_join_handler, filters.private & filters.command("join", prefixes=".")))
 
 # ================= CALLBACK JOIN ================= #
 async def join_handler(client, callback_query):
@@ -73,12 +97,11 @@ async def join_handler(client, callback_query):
     try:
         dbgroup.add_or_update_user(user_id, first_name, last_name, username)
         await callback_query.answer("✅ Kamu berhasil JOIN dan data diperbarui!")
-        logger.info(f"User JOIN: {user_id} | {username} | {first_name} {last_name}")
+        logger.info(f"User JOIN (button): {user_id} | {username}")
 
-        # notifikasi ke OWNER
         await client.send_message(
             OWNER_ID,
-            f"📥 User JOIN:\nID: {user_id}\nNama: {first_name} {last_name}\nUsername: @{username}"
+            f"📥 User JOIN (button):\nID: {user_id}\nNama: {first_name} {last_name}\nUsername: @{username}"
         )
     except Exception as e:
         await callback_query.answer("❌ Gagal JOIN, coba lagi nanti.")
@@ -120,7 +143,6 @@ async def menu_handler(client, callback_query):
         )
 
     elif data == "back_main":
-        # panggil ulang menu utama
         await private_start_handler(client, callback_query.message)
 
 app.add_handler(CallbackQueryHandler(menu_handler))
