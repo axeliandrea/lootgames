@@ -6,7 +6,7 @@ from pyrogram.types import Message
 
 UMPAN_FILE = "lootgames/modules/umpan_data.json"
 LOCK = Lock()
-OWNER_ID = 6395738130
+OWNER_ID = 6395738130  # Owner otomatis punya 999 umpan
 
 # ---------------- INIT DATABASE ---------------- #
 if not os.path.exists(UMPAN_FILE):
@@ -35,6 +35,9 @@ def init_user(user_id: int, username: str = None):
         save_db(db)
 
 def get_user(user_id: int):
+    if user_id == OWNER_ID:
+        # Owner selalu punya 999 umpan total
+        return {"username": "OWNER", "umpan": {"A": 999, "B": 0, "C": 0}}
     db = load_db()
     str_id = str(user_id)
     if str_id not in db:
@@ -42,19 +45,11 @@ def get_user(user_id: int):
         db = load_db()
     return db[str_id]
 
-def update_username(user_id: int, username: str):
-    db = load_db()
-    str_id = str(user_id)
-    if str_id not in db:
-        init_user(user_id, username)
-        db = load_db()
-    db[str_id]["username"] = username
-    save_db(db)
-
-# ---------------- UMPAN OPERATIONS ---------------- #
 def add_umpan(user_id: int, jenis: str, jumlah: int):
     if jenis not in ["A", "B", "C"]:
         raise ValueError("Jenis umpan harus A, B, atau C")
+    if user_id == OWNER_ID:
+        return  # Owner tidak perlu ditambah
     user = get_user(user_id)
     user["umpan"][jenis] += jumlah
     db = load_db()
@@ -64,6 +59,8 @@ def add_umpan(user_id: int, jenis: str, jumlah: int):
 def remove_umpan(user_id: int, jenis: str, jumlah: int):
     if jenis not in ["A", "B", "C"]:
         raise ValueError("Jenis umpan harus A, B, atau C")
+    if user_id == OWNER_ID:
+        return  # Owner tidak berkurang
     user = get_user(user_id)
     if user["umpan"][jenis] < jumlah:
         raise ValueError(f"Umpan {jenis} tidak cukup")
@@ -73,55 +70,44 @@ def remove_umpan(user_id: int, jenis: str, jumlah: int):
     save_db(db)
 
 def total_umpan(user_id: int) -> int:
-    if user_id == OWNER_ID:
-        return 999
     user = get_user(user_id)
     return sum(user["umpan"].values())
 
+def all_users():
+    return load_db()
+
 # ---------------- COMMAND TOPUP ---------------- #
-async def topup_umpan(client: Client, message: Message):
-    try:
-        parts = message.text.strip().split()
-        if len(parts) != 3 or parts[1].lower() != "umpan":
-            await message.reply_text("Format salah. Gunakan: .topup umpan <jumlah>")
-            return
+def register_commands(app: Client):
 
-        jumlah = int(parts[2])
-        if jumlah <= 0:
-            await message.reply_text("Jumlah umpan harus lebih dari 0.")
-            return
+    @app.on_message(filters.command("topup", prefixes=".") & filters.private)
+    async def topup_umpan_handler(client: Client, message: Message):
+        try:
+            parts = message.text.strip().split()
+            if len(parts) != 3 or parts[1].lower() != "umpan":
+                await message.reply("Format salah. Gunakan: .topup umpan <jumlah>")
+                return
+            jumlah = int(parts[2])
+            if jumlah <= 0:
+                await message.reply("Jumlah umpan harus lebih dari 0.")
+                return
 
+            user_id = message.from_user.id
+            username = message.from_user.username or f"user_{user_id}"
+            init_user(user_id, username)
+            add_umpan(user_id, "A", jumlah)
+            total = total_umpan(user_id)
+            await message.reply(f"✅ Berhasil topup {jumlah} umpan! Total UMPAN sekarang: {total}")
+
+        except ValueError:
+            await message.reply("Jumlah umpan harus berupa angka!")
+        except Exception as e:
+            await message.reply(f"❌ Terjadi error: {e}")
+
+    # Command .umpanku untuk cek sisa umpan
+    @app.on_message(filters.command("umpanku", prefixes=".") & filters.private)
+    async def cek_umpan(client: Client, message: Message):
         user_id = message.from_user.id
         username = message.from_user.username or f"user_{user_id}"
         init_user(user_id, username)
-
-        add_umpan(user_id, "A", jumlah)
         total = total_umpan(user_id)
-        await message.reply_text(f"✅ Berhasil topup {jumlah} umpan! Total UMPAN sekarang: {total}")
-
-    except ValueError:
-        await message.reply_text("Jumlah umpan harus berupa angka!")
-    except Exception as e:
-        await message.reply_text(f"❌ Terjadi error: {e}")
-
-# ---------------- COMMAND CEK UMPAN ---------------- #
-async def cek_umpan(client: Client, message: Message):
-    user_id = message.from_user.id
-    username = message.from_user.username or f"user_{user_id}"
-    init_user(user_id, username)
-
-    total = total_umpan(user_id)
-    await message.reply_text(f"🎣 Total UMPAN Anda sekarang: {total}")
-
-# ---------------- REGISTER COMMAND ---------------- #
-def register_topup(app: Client):
-    # .topup umpan <jumlah>
-    app.add_handler(
-        filters.command("topup", prefixes=".") & filters.private,
-        topup_umpan
-    )
-    # .umpanku
-    app.add_handler(
-        filters.command("umpanku", prefixes=".") & filters.private,
-        cek_umpan
-    )
+        await message.reply(f"📊 Total UMPAN kamu: {total}")
