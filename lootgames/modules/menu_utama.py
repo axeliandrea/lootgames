@@ -4,15 +4,15 @@ import asyncio
 from pyrogram import Client, filters, handlers
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery, Message
 
-# import database dan yapping
 from lootgames.modules import database as db
 from lootgames.modules import yapping
 
 logger = logging.getLogger(__name__)
 OWNER_ID = 6395738130
 
-# ---------------- STATE TRANSFER ---------------- #
+# ---------------- STATE ---------------- #
 TRANSFER_STATE = {}  # user_id: True jika menunggu input transfer
+LEADER_PAGE = {}    # user_id: page terakhir di leaderboard
 
 # ---------------- MAIN MENU ---------------- #
 MENU_STRUCTURE = {
@@ -20,7 +20,8 @@ MENU_STRUCTURE = {
         "title": "📋 [Menu Utama]",
         "buttons": [
             ("UMPAN", "A"),
-            ("YAPPING", "B"), ("Menu C", "C"), ("Menu D", "D"),
+            ("YAPPING", "B"),
+            ("Menu C", "C"), ("Menu D", "D"),
             ("Menu E", "E"), ("Menu F", "F"), ("Menu G", "G"),
             ("Menu H", "H"), ("Menu I", "I"), ("Menu J", "J"),
             ("Menu K", "K"), ("Menu L", "L"),
@@ -55,25 +56,17 @@ for letter in "CDEFGHIJKL":
 
     MENU_STRUCTURE[key1] = {
         "title": f"📋 Menu {key1}",
-        "buttons": [
-            (f"Menu {key2}", key2),
-            ("⬅️ Kembali", "main")
-        ]
+        "buttons": [(f"Menu {key2}", key2), ("⬅️ Kembali", "main")]
     }
 
     MENU_STRUCTURE[key2] = {
         "title": f"📋 Menu {key2}",
-        "buttons": [
-            (f"Menu {key3}", key3),
-            ("⬅️ Kembali", key1)
-        ]
+        "buttons": [(f"Menu {key3}", key3), ("⬅️ Kembali", key1)]
     }
 
     MENU_STRUCTURE[key3] = {
         "title": f"📋 Menu {key3} (Tampilan Terakhir)",
-        "buttons": [
-            ("⬅️ Kembali", key2)
-        ]
+        "buttons": [("⬅️ Kembali", key2)]
     }
 
 # ---------------- CUSTOM MENU B → BB → BBB ---------------- #
@@ -90,23 +83,39 @@ MENU_STRUCTURE["BB"] = {
     ]
 }
 
+# Tombol leaderboard diganti dengan pagination handled secara dinamis
 MENU_STRUCTURE["BBB"] = {
     "title": "📋 Leaderboard Yapping",
-    "buttons": [("⬅️ Kembali", "BB")]
+    "buttons": [
+        ("⬅️ Kembali", "BB")
+    ]
 }
 
 # ---------------- KEYBOARD BUILDER ---------------- #
-def make_keyboard(menu_key: str, user_id=None) -> InlineKeyboardMarkup:
+def make_keyboard(menu_key: str, user_id=None, page: int = 0) -> InlineKeyboardMarkup:
     buttons = []
-    for text, callback in MENU_STRUCTURE[menu_key]["buttons"]:
-        # Tambahkan total umpan di menu AA
-        if menu_key == "AA" and user_id is not None and text == "TRANSFER UMPAN":
-            user_data = db.get_user(user_id)
-            total_umpan = sum(user_data["umpan"].values())
-            display_text = f"{text} ({total_umpan})"
-        else:
-            display_text = text
-        buttons.append([InlineKeyboardButton(display_text, callback_data=callback)])
+
+    if menu_key == "BBB" and user_id is not None:
+        # Tombol prev / next untuk leaderboard
+        points = yapping.load_points()
+        sorted_points = sorted(points.items(), key=lambda x: x[1]["points"], reverse=True)
+        total_pages = (len(sorted_points) - 1) // 10
+
+        if page > 0:
+            buttons.append([InlineKeyboardButton("⬅️ Prev", callback_data=f"BBB_PAGE_{page-1}")])
+        if page < total_pages:
+            buttons.append([InlineKeyboardButton("➡️ Next", callback_data=f"BBB_PAGE_{page+1}")])
+        buttons.append([InlineKeyboardButton("⬅️ Kembali", callback_data="BB")])
+    else:
+        for text, callback in MENU_STRUCTURE[menu_key]["buttons"]:
+            if menu_key == "AA" and user_id is not None and text == "TRANSFER UMPAN":
+                user_data = db.get_user(user_id)
+                total_umpan = sum(user_data["umpan"].values())
+                display_text = f"{text} ({total_umpan})"
+            else:
+                display_text = text
+            buttons.append([InlineKeyboardButton(display_text, callback_data=callback)])
+
     return InlineKeyboardMarkup(buttons)
 
 # ---------------- MENU HANDLERS ---------------- #
@@ -124,7 +133,7 @@ async def callback_handler(client: Client, callback_query: CallbackQuery):
     await callback_query.answer()
     await asyncio.sleep(0.5)
 
-    # ---------------- TRANSFER ---------------- #
+    # Handle transfer
     if data == "TRANSFER_OK":
         TRANSFER_STATE[user_id] = True
         await callback_query.message.edit_text(
@@ -134,34 +143,30 @@ async def callback_handler(client: Client, callback_query: CallbackQuery):
         logger.debug(f"[TRANSFER] User {user_id} masuk ke mode transfer")
         return
 
-    # ---------------- MENU YAPPING ---------------- #
+    # Handle BB menu
     elif data == "BB":
         points = yapping.load_points()
-        logger.debug(f"[DEBUG] load_points BB: {points}")
-        if not points:
-            text = "📊 Total Chat Points masih kosong."
-        else:
-            text = "📊 Total Chat Points:\n\n"
-            for uid, pdata in points.items():
-                username = pdata.get("username", "Unknown")
-                point = pdata.get("points", 0)
-                level = pdata.get("level", 0)
-                badge = yapping.get_badge(level)
-                text += f"- {username}: {point} pts | Level {level} {badge}\n"
+        text = "📊 Total Chat Points:\n\n" if points else "📊 Total Chat Points masih kosong."
+        for uid, pdata in points.items():
+            text += f"- {pdata.get('username', 'Unknown')}: {pdata.get('points',0)} pts\n"
         await callback_query.message.edit_text(text, reply_markup=make_keyboard("BB", user_id))
         return
 
-    elif data == "BBB":
-        # Ambil leaderboard top 5 dari yapping
+    # Handle leaderboard paginated
+    elif data.startswith("BBB_PAGE_"):
+        page = int(data.split("_")[-1])
         points = yapping.load_points()
-        if not points:
-            text = "📊 Leaderboard Chat Points masih kosong."
-        else:
-            text = yaping.generate_leaderboard(points, top=5)  # Top 5
-        await callback_query.message.edit_text(text, reply_markup=make_keyboard("BBB", user_id))
+        sorted_points = sorted(points.items(), key=lambda x: x[1]["points"], reverse=True)
+        start = page * 10
+        end = start + 10
+        display_text = "🏆 Leaderboard Yapping 🏆\n\n"
+        for i, (uid, pdata) in enumerate(sorted_points[start:end], start=start+1):
+            display_text += f"{i}. {pdata.get('username','Unknown')} - {pdata.get('points',0)} pts | Level {pdata.get('level',0)} {yapping.get_badge(pdata.get('level',0))}\n"
+
+        await callback_query.message.edit_text(display_text, reply_markup=make_keyboard("BBB", user_id, page))
         return
 
-    # ---------------- MENU NAVIGATION ---------------- #
+    # Default menu navigation
     elif data in MENU_STRUCTURE:
         await callback_query.message.edit_text(
             MENU_STRUCTURE[data]["title"],
@@ -224,9 +229,6 @@ async def handle_transfer_message(client: Client, message: Message):
 
 # ---------------- REGISTER ---------------- #
 def register(app: Client):
-    # Command .menufish
     app.add_handler(handlers.MessageHandler(open_menu, filters.regex(r"^\.menufish$")))
-    # Callback
     app.add_handler(handlers.CallbackQueryHandler(callback_handler))
-    # Input transfer
     app.add_handler(handlers.MessageHandler(handle_transfer_message, filters.text))
