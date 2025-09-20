@@ -107,15 +107,19 @@ def generate_leaderboard(points: dict, top=0) -> str:
 def register(app: Client):
     EXCLUDED_COMMANDS = [".topup", ".menufish", ".umpanku"]
 
+    # ---------------- CHAT POINT HANDLER ---------------- #
     @app.on_message(filters.chat(TARGET_GROUP) & filters.text & ~filters.private)
     async def chat_point_handler(client: Client, message: Message):
         user = message.from_user
         if not user: return
-        if str(user.id) in IGNORED_USERS: return
+        user_id = str(user.id)
+        if user_id in IGNORED_USERS: return
 
         text_raw = message.text or ""
+        username = user.username or user.first_name or "Unknown"
+
         if DEBUG:
-            log_debug(f"Pesan masuk dari {user.username or user.first_name}: {text_raw}")
+            log_debug(f"Pesan masuk dari {username}: {text_raw}")
 
         # Abaikan semua command kecuali EXCLUDED_COMMANDS
         if text_raw.startswith(("/", ".", "!", "#")):
@@ -129,13 +133,21 @@ def register(app: Client):
         text = re.sub(r"[^a-zA-Z]", "", text_raw)
         if len(text) < 5: return  # minimal 5 huruf = 1 point
 
-        username = user.username or user.first_name or "Unknown"
         points = load_points()
-        add_points(points, user.id, username)
+        add_points(points, user_id, username)
 
-        user_id = str(user.id)
         user_data = points[user_id]
         new_total = user_data["points"]
+
+        # Level up
+        new_level = check_level_up(user_data)
+        if new_level != -1:
+            if DEBUG:
+                log_debug(f"{username} naik level ke {new_level}")
+            await message.reply(
+                f"🎉 Selamat {username}, naik level {new_level}! {get_badge(new_level)}",
+                quote=True
+            )
 
         # Milestone setiap 100 points
         last_milestone = user_data.get("last_milestone", 0)
@@ -143,8 +155,7 @@ def register(app: Client):
         new_index = new_total // 100
         if new_index > last_index and new_index > 0:
             milestone_value = new_index * 100
-            user_data["last_milestone"] = milestone_value  # update dulu
-            save_points(points)  # simpan supaya tidak hilang
+            user_data["last_milestone"] = milestone_value
             if DEBUG:
                 log_debug(f"{username} mencapai milestone {milestone_value}")
             try:
@@ -159,20 +170,6 @@ def register(app: Client):
             except Exception as e:
                 log_debug(f"Gagal kirim milestone: {e}")
 
-        # Level-up
-        new_level = check_level_up(user_data)
-        if new_level != -1:
-            if DEBUG:
-                log_debug(f"{username} naik level ke {new_level}")
-            try:
-                await message.reply(
-                    f"🎉 Selamat {username}, naik level {new_level}! {get_badge(new_level)}",
-                    quote=True
-                )
-            except Exception as e:
-                log_debug(f"Gagal kirim level-up notif: {e}")
-
-        # Simpan update akhir
         save_points(points)
 
     # ---------------- COMMANDS ---------------- #
@@ -182,11 +179,9 @@ def register(app: Client):
         points = load_points()
         if user_id not in points:
             await message.reply("📌 Anda belum memiliki poin.")
-        else:
-            data = points[user_id]
-            await message.reply(
-                f"💠 {data['username']} - {data['points']} pts | Level {data['level']} {get_badge(data['level'])}"
-            )
+            return
+        data = points[user_id]
+        await message.reply(f"💠 {data['username']} - {data['points']} pts | Level {data['level']} {get_badge(data['level'])}")
 
     @app.on_message(filters.command(["board"]) & (filters.group | filters.private))
     async def board_handler(client, message: Message):
@@ -200,6 +195,7 @@ def register(app: Client):
         text = generate_leaderboard(points, top=5)
         await message.reply(text)
 
+    # ---------------- .rpc → edit points (owner) ---------------- #
     @app.on_message(filters.command("rpc", prefixes=".") & (filters.group | filters.private))
     async def rpc_handler(client, message: Message):
         if message.from_user.id != OWNER_ID:
@@ -211,7 +207,7 @@ def register(app: Client):
             await message.reply("Format salah. Gunakan: `.rpc @username jumlah`")
             return
 
-        username = parts[1].lstrip("@").lower()
+        username_input = parts[1].lstrip("@").lower()
         try:
             jumlah = int(parts[2])
         except ValueError:
@@ -221,14 +217,47 @@ def register(app: Client):
         points = load_points()
         target_id = None
         for uid, data in points.items():
-            if data.get("username", "").lower() == username:
+            if data.get("username", "").lower() == username_input:
                 target_id = uid
                 break
 
         if not target_id:
-            await message.reply(f"❌ User {username} belum memiliki poin, pastikan user sudah chat sebelumnya.")
+            await message.reply(f"❌ User {username_input} belum memiliki poin, pastikan user sudah chat sebelumnya.")
             return
 
-        points[target_id]["points"] = jumlah
+        # Update point
+        user_data = points[target_id]
+        user_data["points"] = jumlah
+
+        # Cek milestone setelah rpc
+        last_milestone = user_data.get("last_milestone", 0)
+        last_index = last_milestone // 100
+        new_index = jumlah // 100
+        if new_index > last_index and new_index > 0:
+            milestone_value = new_index * 100
+            user_data["last_milestone"] = milestone_value
+            try:
+                await message.reply(
+                    f"```\n"
+                    f"🎉 Congrats {user_data['username']}! Reached {milestone_value:,} points 💗\n"
+                    f"⭐ Total poin sekarang: {jumlah:,}\n"
+                    f"💠 Level: {user_data.get('level', 0)} {get_badge(user_data.get('level', 0))}\n"
+                    f"```",
+                    quote=True
+                )
+            except Exception as e:
+                log_debug(f"Gagal kirim milestone setelah rpc: {e}")
+
+        # Cek level setelah rpc
+        new_level = check_level_up(user_data)
+        if new_level != -1:
+            try:
+                await message.reply(
+                    f"🎉 Selamat {user_data['username']}, naik level {new_level}! {get_badge(new_level)}",
+                    quote=True
+                )
+            except Exception as e:
+                log_debug(f"Gagal kirim level up notif setelah rpc: {e}")
+
         save_points(points)
-        await message.reply(f"✅ Point {username} diubah menjadi {jumlah} dan tersimpan ke database.")
+        await message.reply(f"✅ Point {user_data['username']} diubah menjadi {jumlah} dan tersimpan ke database.")
