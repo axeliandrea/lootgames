@@ -288,8 +288,11 @@ async def handle_tukar_message(client: Client, message: Message):
         await message.reply(f"❌ Terjadi error: {e}")
         TUKAR_STATE[user_id] = False
 
-# ---------------- REGISTER HANDLERS ---------------- #
-def register_handlers(app: Client):
+# ---------------- REGISTER ---------------- #
+def register(app: Client):
+    from pyrogram.handlers import MessageHandler, CallbackQueryHandler
+
+    # Daftarkan semua handler
     app.add_handler(MessageHandler(open_menu, filters.command("menu") & filters.private))
     app.add_handler(MessageHandler(open_menu_pm, filters.command("menu_pm") & filters.private))
     app.add_handler(MessageHandler(handle_transfer_message, filters.text & filters.private))
