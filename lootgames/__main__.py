@@ -3,9 +3,9 @@ import logging
 from pyrogram import Client
 from lootgames.modules import yapping
 
-API_ID = 123456      # ganti dengan API_ID kamu
-API_HASH = "xxxxxx"  # ganti dengan API_HASH kamu
-BOT_TOKEN = "xxxxxx" # ganti dengan token botmu
+API_ID = 29580121      # ganti dengan API_ID kamu
+API_HASH = "fff375a88f6546f0da2df781ca7725df"  # ganti dengan API_HASH kamu
+BOT_TOKEN = "7660904765:AAFQuSU8ShpXAzqYqAhBojjGLf7U03ityck" # ganti dengan token botmu
 OWNER_ID = 6395738130
 ALLOWED_GROUP_ID = -1002904817520
 LOG_LEVEL = logging.INFO
@@ -28,3 +28,4 @@ if __name__ == "__main__":
     import nest_asyncio
     nest_asyncio.apply()
     asyncio.run(main())
+
