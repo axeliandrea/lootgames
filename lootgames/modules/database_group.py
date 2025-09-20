@@ -7,6 +7,8 @@ from pyrogram.handlers import MessageHandler, CallbackQueryHandler
 from lootgames.modules import menu_utama
 from lootgames.config import OWNER_ID
 
+# ---------------- LOGGER ---------------- #
+logger = logging.getLogger(__name__)
 
 # ---------------- KEYBOARD ---------------- #
 def main_menu_keyboard(user_id: int = None):
@@ -22,8 +24,30 @@ def main_menu_keyboard(user_id: int = None):
 
     return keyboard
 
+# ---------------- START HANDLER ---------------- #
+async def start_handler(client: Client, message: Message):
+    """
+    Handler untuk /start di private chat
+    """
+    user = message.from_user
+    keyboard = main_menu_keyboard(user.id)
+    await message.reply_text(
+        f"Halo {user.first_name} 👋\nSelamat datang di LootGames!",
+        reply_markup=keyboard
+    )
+    logger.info(f"[START] User {user.id} menjalankan /start")
+
+# ---------------- JOIN CALLBACK ---------------- #
+async def join_callback(client: Client, callback_query: CallbackQuery):
+    """
+    Callback tombol JOIN
+    """
+    user = callback_query.from_user
+    await callback_query.answer("Terima kasih sudah bergabung! 🎉", show_alert=True)
+    logger.info(f"[JOIN] User {user.id} menekan tombol JOIN")
+
 # ---------------- CALLBACK MENU ---------------- #
-async def menu_callback(client: Client, callback_query):
+async def menu_callback(client: Client, callback_query: CallbackQuery):
     user = callback_query.from_user
     await callback_query.answer()  # jawab callback agar loading hilang
 
@@ -40,7 +64,7 @@ async def menu_callback(client: Client, callback_query):
     logger.info(f"[MENU] User {user.id} membuka menu utama")
 
 # ---------------- CALLBACK BACK MAIN ---------------- #
-async def back_main_callback(client: Client, callback_query):
+async def back_main_callback(client: Client, callback_query: CallbackQuery):
     user = callback_query.from_user
     keyboard = main_menu_keyboard(user.id)
     await callback_query.message.edit_text(
