@@ -3,7 +3,7 @@ import asyncio
 from pyrogram import Client, handlers, filters
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery, Message
 
-from lootgames.modules import yapping, umpan, user_database  # import user_database
+from lootgames.modules import yapping, umpan, user_database
 
 logger = logging.getLogger(__name__)
 OWNER_ID = 6395738130
@@ -18,7 +18,7 @@ MENU_STRUCTURE = {
         "buttons": [
             ("UMPAN", "A"),
             ("YAPPING", "B"),
-            ("REGISTER", "C"),  # Menu C diubah menjadi REGISTER
+            ("REGISTER", "C"),
             ("Menu D", "D"),
             ("Menu E", "E"), ("Menu F", "F"), ("Menu G", "G"),
             ("Menu H", "H"), ("Menu I", "I"), ("Menu J", "J"),
@@ -102,12 +102,27 @@ async def callback_handler(client: Client, callback_query: CallbackQuery):
 
     # --- REGISTER YA/TIDAK ---
     if data == "REGISTER_YES":
+        username = callback_query.from_user.username or f"user{user_id}"
+        user_database.set_player_loot(user_id, True, username)
+
+        # tampilkan pesan selamat tanpa tombol LANJUT
         await callback_query.message.edit_text(
-            "🎉 Selamat anda sudah menjadi Player Loot!",
-            reply_markup=make_keyboard("C", user_id)
+            f"🎉 Selamat {username}, anda sudah menjadi Player Loot!",
+            reply_markup=make_keyboard("C", user_id)  # tombol hanya kembali
         )
-        user_database.set_player_loot(user_id, True)  # simpan status di database
+
+        # kirim notifikasi ke OWNER
+        try:
+            await client.send_message(
+                OWNER_ID,
+                f"📢 User baru telah mendaftar Player Loot!\n\n"
+                f"👤 Username: @{username}\n"
+                f"🆔 User ID: {user_id}"
+            )
+        except Exception as e:
+            logger.error(f"Gagal kirim notifikasi ke OWNER: {e}")
         return
+
     elif data == "REGISTER_NO":
         await callback_query.message.edit_text(
             MENU_STRUCTURE["C"]["title"],
@@ -151,7 +166,7 @@ async def callback_handler(client: Client, callback_query: CallbackQuery):
 # ---------------- HANDLE TRANSFER MESSAGE ---------------- #
 async def handle_transfer_message(client: Client, message: Message):
     user_id = message.from_user.id
-    if not TRANSFER_STATE.get(user_id): 
+    if not TRANSFER_STATE.get(user_id):
         return
     try:
         parts = message.text.strip().split()
@@ -181,7 +196,7 @@ async def handle_transfer_message(client: Client, message: Message):
             await message.reply("❌ Umpan tidak cukup!")
         else:
             remaining = amount
-            for jenis in ["A","B","C"]:
+            for jenis in ["A", "B", "C"]:
                 if sender_data["umpan"][jenis] >= remaining:
                     umpan.remove_umpan(user_id, jenis, remaining)
                     remaining = 0
