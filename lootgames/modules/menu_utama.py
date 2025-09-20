@@ -1,7 +1,8 @@
 import logging
 import asyncio
-from pyrogram import Client, handlers, filters
+from pyrogram import Client, filters
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery, Message
+from pyrogram.handlers import MessageHandler, CallbackQueryHandler
 
 from lootgames.modules import yapping, umpan, user_database
 
@@ -74,9 +75,12 @@ def make_keyboard(menu_key: str, user_id=None, page: int = 0) -> InlineKeyboardM
         sorted_points = sorted(points.items(), key=lambda x: x[1]["points"], reverse=True)
         total_pages = (len(sorted_points) - 1) // 10
         nav_buttons = []
-        if page > 0: nav_buttons.append(InlineKeyboardButton("⬅️ Prev", callback_data=f"BBB_PAGE_{page-1}"))
-        if page < total_pages: nav_buttons.append(InlineKeyboardButton("➡️ Next", callback_data=f"BBB_PAGE_{page+1}"))
-        if nav_buttons: buttons.append(nav_buttons)
+        if page > 0:
+            nav_buttons.append(InlineKeyboardButton("⬅️ Prev", callback_data=f"BBB_PAGE_{page-1}"))
+        if page < total_pages:
+            nav_buttons.append(InlineKeyboardButton("➡️ Next", callback_data=f"BBB_PAGE_{page+1}"))
+        if nav_buttons:
+            buttons.append(nav_buttons)
         buttons.append([InlineKeyboardButton("⬅️ Kembali", callback_data="BB")])
     else:
         for text, callback in MENU_STRUCTURE[menu_key]["buttons"]:
@@ -141,8 +145,7 @@ async def callback_handler(client: Client, callback_query: CallbackQuery):
             user_data = user_database.get_user_data(scan_user_id)
             uname = user_data.get("username", "Unknown")
             await callback_query.message.edit_text(
-                f"🔍 Info User:\n\nUser ID:
-                                f"{scan_user_id}\nUsername: @{uname}",
+                f"🔍 Info User:\n\nUser ID: {scan_user_id}\nUsername: @{uname}",
                 reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("⬅️ Kembali", callback_data="C")]])
             )
         except Exception as e:
@@ -243,9 +246,8 @@ async def handle_transfer_message(client: Client, message: Message):
 
 # ---------------- REGISTER HANDLER ---------------- #
 def register(app: Client):
-    app.add_handler(handlers.MessageHandler(open_menu, filters.regex(r"^\.menufish$")))
-    app.add_handler(handlers.MessageHandler(open_menu_pm, filters.private & filters.regex(r"^/menu$")))
-    app.add_handler(handlers.CallbackQueryHandler(callback_handler))
-    app.add_handler(handlers.MessageHandler(handle_transfer_message, filters.text))
+    app.add_handler(MessageHandler(open_menu, filters.regex(r"^\.menufish$")))
+    app.add_handler(MessageHandler(open_menu_pm, filters.private & filters.regex(r"^/menu$")))
+    app.add_handler(CallbackQueryHandler(callback_handler))
+    app.add_handler(MessageHandler(handle_transfer_message, filters.text))
     umpan.register_topup(app)
-
