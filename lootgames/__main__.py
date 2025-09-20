@@ -10,19 +10,6 @@ from config import API_ID, API_HASH, BOT_TOKEN, OWNER_ID, ALLOWED_GROUP_ID, LOG_
 logging.basicConfig(level=LOG_LEVEL, format=LOG_FORMAT)
 logger = logging.getLogger(__name__)
 
-# ================= CONFIG ================= #
-API_ID = 29580121  # isi API_ID
-API_HASH = "fff375a88f6546f0da2df781ca7725df"  # isi API_HASH
-BOT_TOKEN = "7660904765:AAFQuSU8ShpXAzqYqAhBojjGLf7U03ityck"  # isi BOT_TOKEN
-OWNER_ID = 6395738130
-ALLOWED_GROUP_ID = -1002904817520
-
-LOG_LEVEL = logging.DEBUG   # DEBUG supaya semua log masuk
-LOG_FORMAT = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-
-logging.basicConfig(level=LOG_LEVEL, format=LOG_FORMAT)
-logger = logging.getLogger(__name__)
-
 # ================= CLIENT ================= #
 app = Client(
     "lootgames",
