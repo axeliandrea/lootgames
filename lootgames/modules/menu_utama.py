@@ -184,5 +184,3 @@ def register(app: Client):
     app.add_handler(handlers.MessageHandler(handle_transfer_message, filters.text))
     # topup umpan & db group
     umpan.register_topup(app)
-    dbgroup.register(app)
-
