@@ -75,7 +75,6 @@ def total_umpan(user_id: int) -> int:
     user = get_user(user_id)
     return sum(user["umpan"].values())
 
-# ---------------- LIST SEMUA USER ---------------- #
 def all_users():
     db = load_db()
     return db
