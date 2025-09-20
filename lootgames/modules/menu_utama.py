@@ -77,18 +77,12 @@ MENU_STRUCTURE["B"] = {
 
 MENU_STRUCTURE["BB"] = {
     "title": "📋 Total Point Chat",
-    "buttons": [
-        ("➡️ Next", "BBB"),
-        ("⬅️ Kembali", "B")
-    ]
+    "buttons": [("➡️ Next", "BBB"), ("⬅️ Kembali", "B")]
 }
 
-# Tombol leaderboard diganti dengan pagination handled secara dinamis
 MENU_STRUCTURE["BBB"] = {
     "title": "📋 Leaderboard Yapping",
-    "buttons": [
-        ("⬅️ Kembali", "BB")
-    ]
+    "buttons": [("⬅️ Kembali", "BB")]
 }
 
 # ---------------- KEYBOARD BUILDER ---------------- #
@@ -100,10 +94,13 @@ def make_keyboard(menu_key: str, user_id=None, page: int = 0) -> InlineKeyboardM
         sorted_points = sorted(points.items(), key=lambda x: x[1]["points"], reverse=True)
         total_pages = (len(sorted_points) - 1) // 10
 
+        nav_buttons = []
         if page > 0:
-            buttons.append([InlineKeyboardButton("⬅️ Prev", callback_data=f"BBB_PAGE_{page-1}")])
+            nav_buttons.append(InlineKeyboardButton("⬅️ Prev", callback_data=f"BBB_PAGE_{page-1}"))
         if page < total_pages:
-            buttons.append([InlineKeyboardButton("➡️ Next", callback_data=f"BBB_PAGE_{page+1}")])
+            nav_buttons.append(InlineKeyboardButton("➡️ Next", callback_data=f"BBB_PAGE_{page+1}"))
+        if nav_buttons:
+            buttons.append(nav_buttons)
         buttons.append([InlineKeyboardButton("⬅️ Kembali", callback_data="BB")])
     else:
         for text, callback in MENU_STRUCTURE[menu_key]["buttons"]:
@@ -118,12 +115,19 @@ def make_keyboard(menu_key: str, user_id=None, page: int = 0) -> InlineKeyboardM
     return InlineKeyboardMarkup(buttons)
 
 # ---------------- MENU HANDLERS ---------------- #
+async def open_menu(client: Client, message: Message):
+    logger.debug(f"[MENU] .menufish dipanggil oleh {message.from_user.id}")
+    await message.reply_text(
+        MENU_STRUCTURE["main"]["title"],
+        reply_markup=make_keyboard("main", message.from_user.id)
+    )
+
 async def callback_handler(client: Client, callback_query: CallbackQuery):
     data = callback_query.data
     user_id = callback_query.from_user.id
 
     await callback_query.answer()
-    await asyncio.sleep(2)
+    await asyncio.sleep(0.5)
 
     # Handle transfer
     if data == "TRANSFER_OK":
@@ -135,7 +139,7 @@ async def callback_handler(client: Client, callback_query: CallbackQuery):
         logger.debug(f"[TRANSFER] User {user_id} masuk ke mode transfer")
         return
 
-    # Handle BB menu → langsung open page 0 leaderboard
+    # Handle BB menu → langsung open leaderboard page 0
     elif data == "BB":
         points = yapping.load_points()
         sorted_points = sorted(points.items(), key=lambda x: x[1]["points"], reverse=True)
@@ -148,7 +152,7 @@ async def callback_handler(client: Client, callback_query: CallbackQuery):
         await callback_query.message.edit_text(display_text, reply_markup=make_keyboard("BBB", user_id, page=0))
         return
 
-    # Handle leaderboard paginated
+    # Handle leaderboard pagination
     elif data.startswith("BBB_PAGE_"):
         page = int(data.split("_")[-1])
         points = yapping.load_points()
@@ -157,7 +161,7 @@ async def callback_handler(client: Client, callback_query: CallbackQuery):
         end = start + 10
         display_text = "🏆 Leaderboard Yapping 🏆\n\n"
         for i, (uid, pdata) in enumerate(sorted_points[start:end], start=start+1):
-            display_text += f"{i}. {pdata.get('username','Unknown')} - {pdata.get('points',0)} pts | Level {pdata.get('level',0)} {yaping.get_badge(pdata.get('level',0))}\n"
+            display_text += f"{i}. {pdata.get('username','Unknown')} - {pdata.get('points',0)} pts | Level {pdata.get('level',0)} {yapping.get_badge(pdata.get('level',0))}\n"
 
         await callback_query.message.edit_text(display_text, reply_markup=make_keyboard("BBB", user_id, page))
         return
@@ -171,7 +175,6 @@ async def callback_handler(client: Client, callback_query: CallbackQuery):
     else:
         await callback_query.answer("Menu tidak tersedia.", show_alert=True)
         logger.error(f"❌ Callback {data} tidak dikenal!")
-
 
 # ---------------- HANDLE TRANSFER MESSAGE ---------------- #
 async def handle_transfer_message(client: Client, message: Message):
@@ -229,4 +232,3 @@ def register(app: Client):
     app.add_handler(handlers.MessageHandler(open_menu, filters.regex(r"^\.menufish$")))
     app.add_handler(handlers.CallbackQueryHandler(callback_handler))
     app.add_handler(handlers.MessageHandler(handle_transfer_message, filters.text))
-
