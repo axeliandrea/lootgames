@@ -31,7 +31,7 @@ MENU_STRUCTURE["A"] = {"title": "📋 Menu UMPAN", "buttons": [("Jumlah UMPAN", 
 MENU_STRUCTURE["AA"] = {"title": "📋 Jumlah UMPAN", "buttons": [("TRANSFER UMPAN", "AAA"), ("⬅️ Kembali", "A")]}
 MENU_STRUCTURE["AAA"] = {"title": "📋 TRANSFER UMPAN KE", "buttons": [("Klik OK untuk transfer", "TRANSFER_OK"), ("⬅️ Kembali", "AA")]}
 
-MENU_STRUCTURE["C"] = {"title": "📋 MENU REGISTER", "buttons": [("LANJUT", "CC"), ("⬅️ Kembali", "main")]}
+MENU_STRUCTURE["C"] = {"title": "📋 MENU REGISTER", "buttons": [("📋 Scan ID & USN", "SCAN_ME"), ("⬅️ Kembali", "main")]}
 MENU_STRUCTURE["CC"] = {"title": "📋 APAKAH KAMU YAKIN INGIN MENJADI PLAYER LOOT?", "buttons": [("PILIH OPSI", "CCC"), ("⬅️ Kembali", "C")]}
 MENU_STRUCTURE["CCC"] = {"title": "📋 PILIH OPSI:", "buttons": [("YA", "REGISTER_YES"), ("TIDAK", "REGISTER_NO")]}
 
@@ -92,10 +92,16 @@ async def callback_handler(client: Client, callback_query: CallbackQuery):
     await callback_query.answer()
     await asyncio.sleep(0.3)
 
+    # --- REGISTER ---
     if data == "REGISTER_YES":
         username = callback_query.from_user.username or f"user{user_id}"
         user_database.set_player_loot(user_id, True, username)
-        await callback_query.message.edit_text(f"🎉 Selamat {username}, anda sudah menjadi Player Loot!", reply_markup=make_keyboard("C", user_id))
+        # Tombol Scan ID & USN
+        keyboard = InlineKeyboardMarkup([
+            [InlineKeyboardButton("📋 Scan ID & USN", callback_data=f"SCAN_{user_id}")],
+            [InlineKeyboardButton("⬅️ Kembali", callback_data="C")]
+        ])
+        await callback_query.message.edit_text(f"🎉 Selamat {username}, anda sudah menjadi Player Loot!", reply_markup=keyboard)
         try:
             await client.send_message(OWNER_ID, f"📢 User baru Player Loot!\n👤 @{username}\n🆔 {user_id}")
         except Exception as e:
@@ -105,6 +111,18 @@ async def callback_handler(client: Client, callback_query: CallbackQuery):
         await callback_query.message.edit_text(MENU_STRUCTURE["C"]["title"], reply_markup=make_keyboard("C", user_id))
         return
 
+    # --- SCAN ID & USN ---
+    elif data.startswith("SCAN_"):
+        scan_user_id = int(data.split("_")[1])
+        user_data = user_database.get_user_data(scan_user_id)
+        uname = user_data.get("username", "Unknown")
+        await callback_query.message.edit_text(
+            f"🔍 Info User:\n\nUser ID: {scan_user_id}\nUsername: @{uname}",
+            reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("⬅️ Kembali", callback_data="C")]])
+        )
+        return
+
+    # --- TRANSFER ---
     if data == "TRANSFER_OK":
         TRANSFER_STATE[user_id] = True
         await callback_query.message.edit_text(
@@ -114,6 +132,7 @@ async def callback_handler(client: Client, callback_query: CallbackQuery):
         logger.debug(f"[TRANSFER] User {user_id} masuk mode transfer")
         return
 
+    # --- LEADERBOARD ---
     if data == "BB":
         points = yapping.load_points()
         text = "📊 Total Chat Points:\n\n" if points else "📊 Total Chat Points kosong."
@@ -129,6 +148,7 @@ async def callback_handler(client: Client, callback_query: CallbackQuery):
         await show_leaderboard(callback_query, user_id, page)
         return
 
+    # --- GENERIC MENU NAVIGATION ---
     if data in MENU_STRUCTURE:
         await callback_query.message.edit_text(MENU_STRUCTURE[data]["title"], reply_markup=make_keyboard(data, user_id))
     else:
