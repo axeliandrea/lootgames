@@ -1,7 +1,7 @@
 import json
 import os
 from threading import Lock
-from pyrogram import Client, filters, handlers
+from pyrogram import Client, filters
 from pyrogram.types import Message
 
 UMPAN_FILE = "lootgames/modules/umpan_data.json"
@@ -78,37 +78,31 @@ def total_umpan(user_id: int) -> int:
     user = get_user(user_id)
     return sum(user["umpan"].values())
 
-# ---------------- LIST SEMUA USER ---------------- #
-def all_users():
-    return load_db()
-
 # ---------------- COMMAND TOPUP ---------------- #
 async def topup_umpan(client: Client, message: Message):
     try:
         parts = message.text.strip().split()
         if len(parts) != 3 or parts[1].lower() != "umpan":
-            await message.reply("Format salah. Gunakan: .topup umpan <jumlah>")
+            await message.reply_text("Format salah. Gunakan: .topup umpan <jumlah>")
             return
 
         jumlah = int(parts[2])
         if jumlah <= 0:
-            await message.reply("Jumlah umpan harus lebih dari 0.")
+            await message.reply_text("Jumlah umpan harus lebih dari 0.")
             return
 
         user_id = message.from_user.id
         username = message.from_user.username or f"user_{user_id}"
         init_user(user_id, username)
 
-        # Tambahkan ke umpan tipe A
         add_umpan(user_id, "A", jumlah)
-
         total = total_umpan(user_id)
-        await message.reply(f"✅ Berhasil topup {jumlah} umpan! Total UMPAN sekarang: {total}")
+        await message.reply_text(f"✅ Berhasil topup {jumlah} umpan! Total UMPAN sekarang: {total}")
 
     except ValueError:
-        await message.reply("Jumlah umpan harus berupa angka!")
+        await message.reply_text("Jumlah umpan harus berupa angka!")
     except Exception as e:
-        await message.reply(f"❌ Terjadi error: {e}")
+        await message.reply_text(f"❌ Terjadi error: {e}")
 
 # ---------------- COMMAND CEK UMPAN ---------------- #
 async def cek_umpan(client: Client, message: Message):
@@ -117,21 +111,17 @@ async def cek_umpan(client: Client, message: Message):
     init_user(user_id, username)
 
     total = total_umpan(user_id)
-    await message.reply(f"🎣 Total UMPAN Anda sekarang: {total}")
+    await message.reply_text(f"🎣 Total UMPAN Anda sekarang: {total}")
 
 # ---------------- REGISTER COMMAND ---------------- #
 def register_topup(app: Client):
-    # Command .topup umpan <jumlah>
+    # .topup umpan <jumlah>
     app.add_handler(
-        handlers.MessageHandler(
-            topup_umpan,
-            filters.regex(r"^\.topup\s+umpan\s+\d+$")
-        )
+        filters.command("topup", prefixes=".") & filters.private,
+        topup_umpan
     )
-    # Command .umpanku untuk cek sisa umpan
+    # .umpanku
     app.add_handler(
-        handlers.MessageHandler(
-            cek_umpan,
-            filters.regex(r"^\.umpanku$")
-        )
+        filters.command("umpanku", prefixes=".") & filters.private,
+        cek_umpan
     )
