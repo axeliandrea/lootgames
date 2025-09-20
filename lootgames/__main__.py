@@ -40,13 +40,19 @@ async def private_start_handler(client, message):
     except Exception as e:
         logger.error(f"Gagal menambahkan user ke database: {e}")
 
-    # buat keyboard menu utama + tombol JOIN
-    keyboard = menu_utama.make_keyboard("main", user_id)
-    join_button = InlineKeyboardButton("JOIN", callback_data="join")
-    keyboard.inline_keyboard.append([join_button])
+    # ==================== MENU BUTTON ==================== #
+    keyboard = InlineKeyboardMarkup([
+        [InlineKeyboardButton("🎮 Main", callback_data="menu_main")],
+        [InlineKeyboardButton("📊 Poin Saya", callback_data="menu_point")],
+        [InlineKeyboardButton("👥 Leaderboard", callback_data="menu_leaderboard")],
+        [InlineKeyboardButton("ℹ️ Info", callback_data="menu_info")],
+        [InlineKeyboardButton("✅ JOIN", callback_data="join")]
+    ])
 
     await message.reply(
-        f"Bot sudah aktif ✅\nSalam kenal, **{username}** 👋",
+        f"👋 Hai **{username}**!\n\n"
+        "Selamat datang di **LootGames Bot** 🎮\n\n"
+        "Silakan pilih menu di bawah ini:",
         reply_markup=keyboard
     )
 
@@ -84,6 +90,53 @@ async def join_handler(client, callback_query):
 app.add_handler(
     CallbackQueryHandler(join_handler, filters=filters.create(lambda _, __, query: query.data == "join"))
 )
+
+# ================= CALLBACK MENU ================= #
+async def menu_handler(client, callback_query):
+    data = callback_query.data
+    user = callback_query.from_user
+
+    if data == "menu_main":
+        await callback_query.message.edit_text(
+            "🎮 **Menu Main**\n\n"
+            "Fitur permainan akan ditampilkan di sini.",
+            reply_markup=InlineKeyboardMarkup([
+                [InlineKeyboardButton("⬅️ Back", callback_data="back_main")]
+            ])
+        )
+
+    elif data == "menu_point":
+        poin = menu_utama.get_user_point(user.id)  # fungsi dari modul menu_utama
+        await callback_query.message.edit_text(
+            f"📊 **Poin Kamu:** {poin}",
+            reply_markup=InlineKeyboardMarkup([
+                [InlineKeyboardButton("⬅️ Back", callback_data="back_main")]
+            ])
+        )
+
+    elif data == "menu_leaderboard":
+        board = menu_utama.get_leaderboard()  # fungsi dari modul menu_utama
+        await callback_query.message.edit_text(
+            f"👥 **Leaderboard:**\n\n{board}",
+            reply_markup=InlineKeyboardMarkup([
+                [InlineKeyboardButton("⬅️ Back", callback_data="back_main")]
+            ])
+        )
+
+    elif data == "menu_info":
+        await callback_query.message.edit_text(
+            "ℹ️ **Info Bot LootGames**\n\n"
+            "Bot ini dibuat untuk game dan sistem poin seru di grup.",
+            reply_markup=InlineKeyboardMarkup([
+                [InlineKeyboardButton("⬅️ Back", callback_data="back_main")]
+            ])
+        )
+
+    elif data == "back_main":
+        # kembali ke menu utama
+        await private_start_handler(client, callback_query.message)
+
+app.add_handler(CallbackQueryHandler(menu_handler))
 
 # ================= MAIN ================= #
 async def main():
