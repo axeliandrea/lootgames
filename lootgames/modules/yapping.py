@@ -1,5 +1,5 @@
 # lootgames/modules/yapping.py
-import os, re, json
+import os, re, json, asyncio
 from datetime import datetime
 from pyrogram import Client, filters
 from pyrogram.types import Message
@@ -10,6 +10,7 @@ TARGET_GROUP = -1002904817520
 POINT_FILE = "storage/chat_points.json"
 DEBUG = True
 IGNORED_USERS = ["6946903915"]
+MILESTONE_INTERVAL = 100  # setiap 100 point
 
 # ================= UTILS ================= #
 def log_debug(msg: str):
@@ -121,7 +122,7 @@ def register(app: Client):
         if DEBUG:
             log_debug(f"Pesan masuk dari {username}: {text_raw}")
 
-        # Abaikan semua command kecuali EXCLUDED_COMMANDS
+        # Abaikan command kecuali EXCLUDED_COMMANDS
         if text_raw.startswith(("/", ".", "!", "#")):
             if any(text_raw.lower().startswith(cmd) for cmd in EXCLUDED_COMMANDS):
                 if DEBUG:
@@ -131,11 +132,10 @@ def register(app: Client):
 
         # Hanya huruf alfabet
         text = re.sub(r"[^a-zA-Z]", "", text_raw)
-        if len(text) < 5: return  # minimal 5 huruf = 1 point
+        if len(text) < 5: return
 
         points = load_points()
         add_points(points, user_id, username)
-
         user_data = points[user_id]
         new_total = user_data["points"]
 
@@ -149,26 +149,23 @@ def register(app: Client):
                 quote=True
             )
 
-        # Milestone setiap 100 points
+        # Cek milestone per 100 point
         last_milestone = user_data.get("last_milestone", 0)
-        last_index = last_milestone // 100
-        new_index = new_total // 100
+        last_index = last_milestone // MILESTONE_INTERVAL
+        new_index = new_total // MILESTONE_INTERVAL
         if new_index > last_index and new_index > 0:
-            milestone_value = new_index * 100
-            user_data["last_milestone"] = milestone_value
-            if DEBUG:
-                log_debug(f"{username} mencapai milestone {milestone_value}")
+            milestone_value = new_index * MILESTONE_INTERVAL
             try:
                 await message.reply(
-                    f"```\n"
-                    f"🎉 Congrats {username}! Reached {milestone_value:,} points 💗\n"
+                    f"```\n🎉 Congrats {username}! Reached {milestone_value:,} points 💗\n"
                     f"⭐ Total poin sekarang: {new_total:,}\n"
-                    f"💠 Level: {user_data.get('level', 0)} {get_badge(user_data.get('level', 0))}\n"
+                    f"💠 Level: {user_data.get('level',0)} {get_badge(user_data.get('level',0))}\n"
                     f"```",
                     quote=True
                 )
             except Exception as e:
                 log_debug(f"Gagal kirim milestone: {e}")
+            user_data["last_milestone"] = milestone_value
 
         save_points(points)
 
@@ -179,9 +176,9 @@ def register(app: Client):
         points = load_points()
         if user_id not in points:
             await message.reply("📌 Anda belum memiliki poin.")
-            return
-        data = points[user_id]
-        await message.reply(f"💠 {data['username']} - {data['points']} pts | Level {data['level']} {get_badge(data['level'])}")
+        else:
+            data = points[user_id]
+            await message.reply(f"💠 {data['username']} - {data['points']} pts | Level {data['level']} {get_badge(data['level'])}")
 
     @app.on_message(filters.command(["board"]) & (filters.group | filters.private))
     async def board_handler(client, message: Message):
@@ -195,7 +192,6 @@ def register(app: Client):
         text = generate_leaderboard(points, top=5)
         await message.reply(text)
 
-    # ---------------- .rpc → edit points (owner) ---------------- #
     @app.on_message(filters.command("rpc", prefixes=".") & (filters.group | filters.private))
     async def rpc_handler(client, message: Message):
         if message.from_user.id != OWNER_ID:
@@ -207,7 +203,7 @@ def register(app: Client):
             await message.reply("Format salah. Gunakan: `.rpc @username jumlah`")
             return
 
-        username_input = parts[1].lstrip("@").lower()
+        username = parts[1].lstrip("@").lower()
         try:
             jumlah = int(parts[2])
         except ValueError:
@@ -217,47 +213,46 @@ def register(app: Client):
         points = load_points()
         target_id = None
         for uid, data in points.items():
-            if data.get("username", "").lower() == username_input:
+            if data.get("username", "").lower() == username:
                 target_id = uid
                 break
 
         if not target_id:
-            await message.reply(f"❌ User {username_input} belum memiliki poin, pastikan user sudah chat sebelumnya.")
+            await message.reply(f"❌ User {username} belum memiliki poin, pastikan user sudah chat sebelumnya.")
             return
 
-        # Update point
-        user_data = points[target_id]
-        user_data["points"] = jumlah
-
-        # Cek milestone setelah rpc
-        last_milestone = user_data.get("last_milestone", 0)
-        last_index = last_milestone // 100
-        new_index = jumlah // 100
-        if new_index > last_index and new_index > 0:
-            milestone_value = new_index * 100
-            user_data["last_milestone"] = milestone_value
-            try:
-                await message.reply(
-                    f"```\n"
-                    f"🎉 Congrats {user_data['username']}! Reached {milestone_value:,} points 💗\n"
-                    f"⭐ Total poin sekarang: {jumlah:,}\n"
-                    f"💠 Level: {user_data.get('level', 0)} {get_badge(user_data.get('level', 0))}\n"
-                    f"```",
-                    quote=True
-                )
-            except Exception as e:
-                log_debug(f"Gagal kirim milestone setelah rpc: {e}")
-
-        # Cek level setelah rpc
-        new_level = check_level_up(user_data)
-        if new_level != -1:
-            try:
-                await message.reply(
-                    f"🎉 Selamat {user_data['username']}, naik level {new_level}! {get_badge(new_level)}",
-                    quote=True
-                )
-            except Exception as e:
-                log_debug(f"Gagal kirim level up notif setelah rpc: {e}")
-
+        points[target_id]["points"] = jumlah
         save_points(points)
-        await message.reply(f"✅ Point {user_data['username']} diubah menjadi {jumlah} dan tersimpan ke database.")
+        await message.reply(f"✅ Point {username} diubah menjadi {jumlah} dan tersimpan ke database.")
+
+    # ---------------- BACKGROUND MILESTONE REFRESH ---------------- #
+    async def milestone_refresh_task():
+        await app.wait_until_ready()
+        while True:
+            try:
+                points = load_points()
+                for user_id, user_data in points.items():
+                    total = user_data.get("points", 0)
+                    last_milestone = user_data.get("last_milestone", 0)
+                    last_index = last_milestone // MILESTONE_INTERVAL
+                    new_index = total // MILESTONE_INTERVAL
+                    if new_index > last_index and new_index > 0:
+                        milestone_value = new_index * MILESTONE_INTERVAL
+                        user_data["last_milestone"] = milestone_value
+                        try:
+                            await app.send_message(
+                                TARGET_GROUP,
+                                f"```\n🎉 Congrats {user_data['username']}! Reached {milestone_value:,} points 💗\n"
+                                f"⭐ Total poin sekarang: {total:,}\n"
+                                f"💠 Level: {user_data.get('level',0)} {get_badge(user_data.get('level',0))}\n"
+                                f"```"
+                            )
+                        except Exception as e:
+                            log_debug(f"Gagal kirim milestone otomatis: {e}")
+                save_points(points)
+            except Exception as e:
+                log_debug(f"Error milestone refresh task: {e}")
+            await asyncio.sleep(30)
+
+    # ---------------- START BACKGROUND TASK ---------------- #
+    app.loop.create_task(milestone_refresh_task())
