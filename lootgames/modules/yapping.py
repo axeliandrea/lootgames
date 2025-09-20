@@ -7,6 +7,7 @@ from pyrogram.types import Message
 # ================= CONFIG ================= #
 OWNER_ID = 6395738130
 TARGET_GROUP = -1002904817520
+BOT_USERNAME = "gamesofloot_bot"
 POINT_FILE = "storage/chat_points.json"
 DEBUG = True
 IGNORED_USERS = ["6946903915"]
@@ -57,15 +58,6 @@ def add_points(user_id, username, amount=1):
     points[str(user_id)]["points"] += amount
     log_debug(f"{username} ({user_id}) +{amount} point | total: {points[str(user_id)]['points']}")
     save_points(points)
-
-def edit_points(user_id, amount):
-    points = load_points()
-    user_id = str(user_id)
-    if user_id not in points:
-        return False
-    points[user_id]["points"] = amount
-    save_points(points)
-    return True
 
 # ================= LEVEL & BADGE ================= #
 LEVEL_EXP = {}
@@ -120,21 +112,25 @@ def register(app: Client):
     @app.on_message(filters.chat(TARGET_GROUP) & filters.text & ~filters.private)
     async def chat_point_handler(client: Client, message: Message):
         user = message.from_user
-        if not user or str(user.id) in IGNORED_USERS:
-            return
+        if not user: return
+        if str(user.id) in IGNORED_USERS: return
 
-        if message.text.startswith((".", "/", "!", "#")):
-            return
+        # Abaikan command
+        if message.text.startswith(("/", ".", "!", "#")): return
 
+        # Hanya hitung huruf alfabet
         text = re.sub(r"[^a-zA-Z]", "", message.text or "")
-        if len(text) < 5:
-            return
+        if len(text) < 5: return  # minimal 5 huruf = 1 point
 
         username = user.username or user.first_name or "Unknown"
         add_points(user.id, username)
 
         points = load_points()
-        new_level = check_level_up(points[str(user.id)])
+        user_id = str(user.id)
+        new_total = points[user_id]["points"]
+
+        # Level up check
+        new_level = check_level_up(points[user_id])
         if new_level != -1:
             save_points(points)
             await message.reply(
@@ -142,8 +138,29 @@ def register(app: Client):
                 quote=True
             )
 
+        # ---------------- Milestone notif setiap 100 points ---------------- #
+        last_milestone = points[user_id].get("last_milestone", 0)
+        last_index = last_milestone // 100
+        new_index = new_total // 100
+        if new_index > last_index and new_index > 0:
+            milestone_value = new_index * 100
+            try:
+                await message.reply(
+                    f"```\n"
+                    f"🎉 Congrats {username}! Reached {milestone_value:,} points 💗\n"
+                    f"⭐ Total poin sekarang: {new_total:,}\n"
+                    f"💠 Level: {points[user_id].get('level', 0)} {get_badge(points[user_id].get('level', 0))}\n"
+                    f"```",
+                    quote=True
+                )
+            except Exception as e:
+                log_debug(f"Gagal kirim milestone message: {e}")
+            finally:
+                points[user_id]["last_milestone"] = milestone_value
+                save_points(points)
+
     # ---------------- COMMANDS PREFIX TITIK ---------------- #
-    @app.on_message(filters.command("mypoint", prefixes=".") & (filters.group | filters.private))
+    @app.on_message(filters.command(["mypoint"]) & (filters.group | filters.private))
     async def mypoint_handler(client, message: Message):
         user_id = str(message.from_user.id)
         points = load_points()
@@ -153,17 +170,19 @@ def register(app: Client):
             data = points[user_id]
             await message.reply(f"💠 {data['username']} - {data['points']} pts | Level {data['level']} {get_badge(data['level'])}")
 
-    @app.on_message(filters.command("board", prefixes=".") & (filters.group | filters.private))
+    @app.on_message(filters.command(["board"]) & (filters.group | filters.private))
     async def board_handler(client, message: Message):
         points = load_points()
-        await message.reply(generate_leaderboard(points))
+        text = generate_leaderboard(points)
+        await message.reply(text)
 
-    @app.on_message(filters.command("rank5", prefixes=".") & (filters.group | filters.private))
+    @app.on_message(filters.command(["rank5"]) & (filters.group | filters.private))
     async def rank5_handler(client, message: Message):
         points = load_points()
-        await message.reply(generate_leaderboard(points, top=5))
+        text = generate_leaderboard(points, top=5)
+        await message.reply(text)
 
-    # ---------------- .rpc @username <jumlah> ---------------- #
+    # .rpc @username <jumlah> → edit points (owner)
     @app.on_message(filters.command("rpc", prefixes=".") & (filters.group | filters.private))
     async def rpc_handler(client, message: Message):
         if message.from_user.id != OWNER_ID:
@@ -193,7 +212,7 @@ def register(app: Client):
             await message.reply(f"❌ User {username} belum memiliki poin, pastikan user sudah chat sebelumnya.")
             return
 
+        # Update point langsung
         points[target_id]["points"] = jumlah
         save_points(points)
-
         await message.reply(f"✅ Point {username} diubah menjadi {jumlah} dan tersimpan ke database.")
