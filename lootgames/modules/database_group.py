@@ -1,6 +1,7 @@
 import json
 import os
 from pyrogram import Client, filters
+from pyrogram.handlers import MessageHandler
 from pyrogram.types import Message
 
 DB_FILE = "lootgames/modules/database_group.json"
@@ -41,8 +42,9 @@ async def start_handler(client: Client, message: Message):
 
 # ---------------- REGISTER ---------------- #
 def register(app: Client):
-    # filter: private chat + /start command
-    app.add_handler(
-        filters=filters.private & filters.command("start"),
-        callback=start_handler
+    # gunakan MessageHandler di Pyrogram v2+
+    handler = MessageHandler(
+        start_handler,
+        filters=filters.private & filters.command("start")
     )
+    app.add_handler(handler)
