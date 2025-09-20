@@ -52,7 +52,7 @@ for letter in "CDEFGHIJKL":
     key1 = letter
     key2 = f"{letter}{letter}"
     key3 = f"{letter}{letter}{letter}"
-    
+
     MENU_STRUCTURE[key1] = {
         "title": f"📋 Menu {key1}",
         "buttons": [
@@ -60,7 +60,7 @@ for letter in "CDEFGHIJKL":
             ("⬅️ Kembali", "main")
         ]
     }
-    
+
     MENU_STRUCTURE[key2] = {
         "title": f"📋 Menu {key2}",
         "buttons": [
@@ -68,7 +68,7 @@ for letter in "CDEFGHIJKL":
             ("⬅️ Kembali", key1)
         ]
     }
-    
+
     MENU_STRUCTURE[key3] = {
         "title": f"📋 Menu {key3} (Tampilan Terakhir)",
         "buttons": [
@@ -99,6 +99,7 @@ MENU_STRUCTURE["BBB"] = {
 def make_keyboard(menu_key: str, user_id=None) -> InlineKeyboardMarkup:
     buttons = []
     for text, callback in MENU_STRUCTURE[menu_key]["buttons"]:
+        # Tambahkan total umpan di menu AA
         if menu_key == "AA" and user_id is not None and text == "TRANSFER UMPAN":
             user_data = db.get_user(user_id)
             total_umpan = sum(user_data["umpan"].values())
@@ -121,8 +122,9 @@ async def callback_handler(client: Client, callback_query: CallbackQuery):
     user_id = callback_query.from_user.id
 
     await callback_query.answer()
-    await asyncio.sleep(1)
+    await asyncio.sleep(0.5)
 
+    # ---------------- TRANSFER ---------------- #
     if data == "TRANSFER_OK":
         TRANSFER_STATE[user_id] = True
         await callback_query.message.edit_text(
@@ -132,6 +134,7 @@ async def callback_handler(client: Client, callback_query: CallbackQuery):
         logger.debug(f"[TRANSFER] User {user_id} masuk ke mode transfer")
         return
 
+    # ---------------- MENU YAPPING ---------------- #
     elif data == "BB":
         points = yapping.load_points()
         logger.debug(f"[DEBUG] load_points BB: {points}")
@@ -142,10 +145,23 @@ async def callback_handler(client: Client, callback_query: CallbackQuery):
             for uid, pdata in points.items():
                 username = pdata.get("username", "Unknown")
                 point = pdata.get("points", 0)
-                text += f"- {username}: {point} pts\n"
+                level = pdata.get("level", 0)
+                badge = yapping.get_badge(level)
+                text += f"- {username}: {point} pts | Level {level} {badge}\n"
         await callback_query.message.edit_text(text, reply_markup=make_keyboard("BB", user_id))
         return
 
+    elif data == "BBB":
+        # Ambil leaderboard top 5 dari yapping
+        points = yapping.load_points()
+        if not points:
+            text = "📊 Leaderboard Chat Points masih kosong."
+        else:
+            text = yaping.generate_leaderboard(points, top=5)  # Top 5
+        await callback_query.message.edit_text(text, reply_markup=make_keyboard("BBB", user_id))
+        return
+
+    # ---------------- MENU NAVIGATION ---------------- #
     elif data in MENU_STRUCTURE:
         await callback_query.message.edit_text(
             MENU_STRUCTURE[data]["title"],
@@ -214,4 +230,3 @@ def register(app: Client):
     app.add_handler(handlers.CallbackQueryHandler(callback_handler))
     # Input transfer
     app.add_handler(handlers.MessageHandler(handle_transfer_message, filters.text))
-
