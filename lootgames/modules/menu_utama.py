@@ -29,19 +29,21 @@ MENU_STRUCTURE = {
 }
 
 # ---------------- CUSTOM MENU ---------------- #
+# UMPAN
 MENU_STRUCTURE["A"] = {"title": "📋 Menu UMPAN", "buttons": [("Jumlah UMPAN", "AA"), ("⬅️ Kembali", "main")]}
 MENU_STRUCTURE["AA"] = {"title": "📋 Jumlah UMPAN", "buttons": [("TRANSFER UMPAN", "AAA"), ("⬅️ Kembali", "A")]}
 MENU_STRUCTURE["AAA"] = {"title": "📋 TRANSFER UMPAN KE", "buttons": [("Klik OK untuk transfer", "TRANSFER_OK"), ("⬅️ Kembali", "AA")]}
 
+# REGISTER
 MENU_STRUCTURE["C"] = {"title": "📋 MENU REGISTER", "buttons": [("LANJUT", "CC"), ("⬅️ Kembali", "main")]}
 MENU_STRUCTURE["CC"] = {"title": "📋 APAKAH KAMU YAKIN INGIN MENJADI PLAYER LOOT?", "buttons": [("PILIH OPSI", "CCC"), ("⬅️ Kembali", "C")]}
 MENU_STRUCTURE["CCC"] = {"title": "📋 PILIH OPSI:", "buttons": [("YA", "REGISTER_YES"), ("TIDAK", "REGISTER_NO")]}
 
-# ---------------- MENU D ---------------- #
+# STORE
 MENU_STRUCTURE["D"] = {"title": "🛒STORE", "buttons": [("BUY UMPAN", "D1"), ("SELL IKAN", "D2"), ("TUKAR POINT", "D3"), ("⬅️ Kembali", "main")]}
 MENU_STRUCTURE["D1"] = {"title": "📋 BUY UMPAN", "buttons": [("D1A", "D1A"), ("⬅️ Kembali", "D")]}
 MENU_STRUCTURE["D2"] = {"title": "📋 SELL IKAN", "buttons": [("D2A", "D2A"), ("⬅️ Kembali", "D")]}
-MENU_STRUCTURE["D3"] = {"title": "📋 TUKAR POINT", "buttons": [("D3A", "D3A"), ("⬅️ Kembali", "D")]}
+MENU_STRUCTURE["D3"] = {"title": "📋 TUKAR POINT", "buttons": [("My Point", "D3_MYPOINT"), ("⬅️ Kembali", "D")]}
 MENU_STRUCTURE["D1A"] = {"title": "📋 Menu D1A", "buttons": [("D1B", "D1B"), ("⬅️ Kembali", "D1")]}
 MENU_STRUCTURE["D2A"] = {"title": "📋 Menu D2A", "buttons": [("D2B", "D2B"), ("⬅️ Kembali", "D2")]}
 MENU_STRUCTURE["D3A"] = {"title": "📋 Menu D3A", "buttons": [("D3B", "D3B"), ("⬅️ Kembali", "D3")]}
@@ -49,14 +51,14 @@ MENU_STRUCTURE["D1B"] = {"title": "📋 Menu D1B (Tampilan Terakhir)", "buttons"
 MENU_STRUCTURE["D2B"] = {"title": "📋 Menu D2B (Tampilan Terakhir)", "buttons": [("⬅️ Kembali", "D2A")]}
 MENU_STRUCTURE["D3B"] = {"title": "📋 Menu D3B (Tampilan Terakhir)", "buttons": [("⬅️ Kembali", "D3A")]}
 
-# ---------------- GENERIC MENU (E-L) ---------------- #
+# GENERIC MENU E-L
 for letter in "EFGHIJKL":
     key1, key2, key3 = letter, f"{letter}{letter}", f"{letter}{letter}{letter}"
     MENU_STRUCTURE[key1] = {"title": f"📋 Menu {key1}", "buttons": [(f"Menu {key2}", key2), ("⬅️ Kembali", "main")]}
     MENU_STRUCTURE[key2] = {"title": f"📋 Menu {key2}", "buttons": [(f"Menu {key3}", key3), ("⬅️ Kembali", key1)]}
     MENU_STRUCTURE[key3] = {"title": f"📋 Menu {key3} (Tampilan Terakhir)", "buttons": [("⬅️ Kembali", key2)]}
 
-# ---------------- MENU YAPPING ---------------- #
+# YAPPING
 MENU_STRUCTURE["B"] = {"title": "📋 YAPPING", "buttons": [("Poin Pribadi", "BB"), ("➡️ Leaderboard", "BBB"), ("⬅️ Kembali", "main")]}
 MENU_STRUCTURE["BB"] = {"title": "📋 Poin Pribadi", "buttons": [("⬅️ Kembali", "B")]}
 MENU_STRUCTURE["BBB"] = {"title": "📋 Leaderboard Yapping", "buttons": [("⬅️ Kembali", "B")]}
@@ -164,9 +166,21 @@ async def callback_handler(client: Client, callback_query: CallbackQuery):
         if not user_data:
             text = "📊 Anda belum memiliki poin chat."
         else:
-            text = f"📊 Poin Pribadi:\n\n"
-            text += f"- {user_data.get('username','Unknown')} - {user_data.get('points',0)} pts | Level {user_data.get('level',0)} {yapping.get_badge(user_data.get('level',0))}"
+            uname = user_data.get("username", "Unknown")
+            text = f"📊 Poin Pribadi:\n\n- @{uname} - {user_data.get('points',0)} pts | Level {user_data.get('level',0)} {yapping.get_badge(user_data.get('level',0))}"
         await callback_query.message.edit_text(text, reply_markup=make_keyboard("BB", user_id))
+        return
+
+    # --- TUKAR POINT: My Point ---
+    if data == "D3_MYPOINT":
+        points = yapping.load_points()
+        user_data = points.get(str(user_id))
+        if not user_data:
+            text = "📊 My Point : Anda belum memiliki poin chat."
+        else:
+            uname = user_data.get("username", "Unknown")
+            text = f"📊 My Point : @{uname} - {user_data.get('points',0)} pts | Level {user_data.get('level',0)} {yapping.get_badge(user_data.get('level',0))}"
+        await callback_query.message.edit_text(text, reply_markup=make_keyboard("D3", user_id))
         return
 
     # --- LEADERBOARD ---
@@ -211,7 +225,7 @@ async def handle_transfer_message(client: Client, message: Message):
             TRANSFER_STATE[user_id] = False
             return
 
-        # --- OWNER TRANSFER ---
+        # OWNER TRANSFER
         if user_id == OWNER_ID:
             umpan.add_umpan(recipient_id, "A", amount)
             await message.reply(f"✅ Transfer {amount} umpan ke {username} berhasil! (Owner unlimited)", reply_markup=make_keyboard("main", user_id))
@@ -219,7 +233,7 @@ async def handle_transfer_message(client: Client, message: Message):
             logger.debug(f"[TRANSFER] OWNER {user_id} → {recipient_id} ({amount} umpan)")
             return
 
-        # --- USER NORMAL ---
+        # USER NORMAL
         sender_data = umpan.get_user(user_id)
         total_sender = sum(sender_data["umpan"].values())
         if total_sender < amount:
