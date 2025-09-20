@@ -1,11 +1,8 @@
 # lootgames/__main__.py
 import asyncio
 import logging
-from pyrogram import Client, filters
-from pyrogram.handlers import MessageHandler, CallbackQueryHandler
-from pyrogram.types import InlineKeyboardButton, InlineKeyboardMarkup
-from lootgames.modules import yapping, menu_utama
-from lootgames.modules import database_group as dbgroup
+from pyrogram import Client
+from lootgames.modules import yapping, menu_utama, user_database, database_group as dbgroup
 from lootgames.config import API_ID, API_HASH, BOT_TOKEN, OWNER_ID, ALLOWED_GROUP_ID, LOG_LEVEL, LOG_FORMAT
 
 # ================= LOGGING ================= #
@@ -24,11 +21,12 @@ app = Client(
 yapping.register(app)
 menu_utama.register(app)
 dbgroup.register(app)
+user_database.register(app)  # Modul baru untuk .join/.update user
 
 # ================= MAIN ================= #
 async def main():
     await app.start()
-    logger.info("🚀 Bot started!")
+    logger.info("🚀 LootGames Bot started!")
     logger.info(f"📱 Monitoring group: {ALLOWED_GROUP_ID}")
     logger.info(f"👑 Owner ID: {OWNER_ID}")
 
@@ -38,6 +36,7 @@ async def main():
     except Exception as e:
         logger.error(f"Gagal kirim notifikasi start: {e}")
 
+    # Bot akan terus berjalan
     await asyncio.Event().wait()
 
 if __name__ == "__main__":
