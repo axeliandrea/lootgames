@@ -150,7 +150,7 @@ def register(app: Client):
                 quote=True
             )
 
-    # ---------------- COMMANDS PREFIX TITIK ---------------- #
+    # ================= COMMANDS PREFIX TITIK ================= #
     # .mypoint
     @app.on_message(filters.command(["mypoint"]) & (filters.group | filters.private))
     async def mypoint_handler(client, message: Message):
@@ -176,8 +176,8 @@ def register(app: Client):
         text = generate_leaderboard(points, top=5)
         await message.reply(text)
 
-    # .ep @username <jumlah> → edit points (owner)
-    @app.on_message(filters.command(["ep"]) & filters.private)
+    # .rpc @username <jumlah> → edit points (owner)
+    @app.on_message(filters.command(["rpc"]) & filters.private)
     async def edit_point_handler(client, message: Message):
         if message.from_user.id != OWNER_ID:
             await message.reply("❌ Hanya owner yang bisa mengedit point.")
@@ -185,7 +185,7 @@ def register(app: Client):
         try:
             parts = message.text.split()
             if len(parts) != 3:
-                await message.reply("Format salah. Gunakan: `.ep @username jumlah`")
+                await message.reply("Format salah. Gunakan: `.rpc @username jumlah`")
                 return
             username = parts[1].lstrip("@")
             jumlah = int(parts[2])
@@ -198,7 +198,9 @@ def register(app: Client):
             if not target_id:
                 await message.reply(f"❌ User {username} tidak ditemukan.")
                 return
-            edit_points(target_id, jumlah)
-            await message.reply(f"✅ Point {username} diubah menjadi {jumlah}")
+            # Update point langsung ke database
+            points[target_id]["points"] = jumlah
+            save_points(points)
+            await message.reply(f"✅ Point {username} diubah menjadi {jumlah} dan tersimpan ke database.")
         except Exception as e:
             await message.reply(f"❌ Error: {e}")
