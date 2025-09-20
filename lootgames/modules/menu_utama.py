@@ -1,3 +1,4 @@
+# lootgames/modules/menu_utama.py
 import logging
 import asyncio
 from pyrogram import Client, filters
@@ -11,6 +12,7 @@ OWNER_ID = 6395738130
 
 # ---------------- STATE ---------------- #
 TRANSFER_STATE = {}  # user_id: True jika menunggu input transfer
+TUKAR_STATE = {}     # user_id: True jika menunggu input tukar umpan
 
 # ---------------- MAIN MENU ---------------- #
 MENU_STRUCTURE = {
@@ -29,17 +31,14 @@ MENU_STRUCTURE = {
 }
 
 # ---------------- CUSTOM MENU ---------------- #
-# UMPAN
 MENU_STRUCTURE["A"] = {"title": "📋 Menu UMPAN", "buttons": [("Jumlah UMPAN", "AA"), ("⬅️ Kembali", "main")]}
 MENU_STRUCTURE["AA"] = {"title": "📋 Jumlah UMPAN", "buttons": [("TRANSFER UMPAN", "AAA"), ("⬅️ Kembali", "A")]}
 MENU_STRUCTURE["AAA"] = {"title": "📋 TRANSFER UMPAN KE", "buttons": [("Klik OK untuk transfer", "TRANSFER_OK"), ("⬅️ Kembali", "AA")]}
 
-# REGISTER
 MENU_STRUCTURE["C"] = {"title": "📋 MENU REGISTER", "buttons": [("LANJUT", "CC"), ("⬅️ Kembali", "main")]}
 MENU_STRUCTURE["CC"] = {"title": "📋 APAKAH KAMU YAKIN INGIN MENJADI PLAYER LOOT?", "buttons": [("PILIH OPSI", "CCC"), ("⬅️ Kembali", "C")]}
 MENU_STRUCTURE["CCC"] = {"title": "📋 PILIH OPSI:", "buttons": [("YA", "REGISTER_YES"), ("TIDAK", "REGISTER_NO")]}
 
-# STORE
 MENU_STRUCTURE["D"] = {"title": "🛒STORE", "buttons": [("BUY UMPAN", "D1"), ("SELL IKAN", "D2"), ("TUKAR POINT", "D3"), ("⬅️ Kembali", "main")]}
 MENU_STRUCTURE["D1"] = {"title": "📋 BUY UMPAN", "buttons": [("D1A", "D1A"), ("⬅️ Kembali", "D")]}
 MENU_STRUCTURE["D2"] = {"title": "📋 SELL IKAN", "buttons": [("D2A", "D2A"), ("⬅️ Kembali", "D")]}
@@ -51,14 +50,14 @@ MENU_STRUCTURE["D1B"] = {"title": "📋 Menu D1B (Tampilan Terakhir)", "buttons"
 MENU_STRUCTURE["D2B"] = {"title": "📋 Menu D2B (Tampilan Terakhir)", "buttons": [("⬅️ Kembali", "D2A")]}
 MENU_STRUCTURE["D3B"] = {"title": "📋 Menu D3B (Tampilan Terakhir)", "buttons": [("⬅️ Kembali", "D3A")]}
 
-# GENERIC MENU E-L
+# ---------------- GENERIC MENU (E-L) ---------------- #
 for letter in "EFGHIJKL":
     key1, key2, key3 = letter, f"{letter}{letter}", f"{letter}{letter}{letter}"
     MENU_STRUCTURE[key1] = {"title": f"📋 Menu {key1}", "buttons": [(f"Menu {key2}", key2), ("⬅️ Kembali", "main")]}
     MENU_STRUCTURE[key2] = {"title": f"📋 Menu {key2}", "buttons": [(f"Menu {key3}", key3), ("⬅️ Kembali", key1)]}
     MENU_STRUCTURE[key3] = {"title": f"📋 Menu {key3} (Tampilan Terakhir)", "buttons": [("⬅️ Kembali", key2)]}
 
-# YAPPING
+# ---------------- MENU YAPPING ---------------- #
 MENU_STRUCTURE["B"] = {"title": "📋 YAPPING", "buttons": [("Poin Pribadi", "BB"), ("➡️ Leaderboard", "BBB"), ("⬅️ Kembali", "main")]}
 MENU_STRUCTURE["BB"] = {"title": "📋 Poin Pribadi", "buttons": [("⬅️ Kembali", "B")]}
 MENU_STRUCTURE["BBB"] = {"title": "📋 Leaderboard Yapping", "buttons": [("⬅️ Kembali", "B")]}
@@ -88,14 +87,12 @@ def make_keyboard(menu_key: str, user_id=None, page: int = 0) -> InlineKeyboardM
 
 # ---------------- MENU HANDLERS ---------------- #
 async def open_menu(client: Client, message: Message):
-    logger.debug(f"[MENU] .menufish dipanggil oleh {message.from_user.id}")
     await message.reply(MENU_STRUCTURE["main"]["title"], reply_markup=make_keyboard("main", message.from_user.id))
 
 async def open_menu_pm(client: Client, message: Message):
     user_id = message.from_user.id
     keyboard = make_keyboard("main", user_id)
     await message.reply("📋 Menu Utama:", reply_markup=keyboard)
-    logger.debug(f"[PM MENU] User {user_id} membuka Menu Utama di PM bot")
 
 async def show_leaderboard(callback_query: CallbackQuery, user_id: int, page: int = 0):
     points = yapping.load_points()
@@ -111,7 +108,7 @@ async def show_leaderboard(callback_query: CallbackQuery, user_id: int, page: in
 async def callback_handler(client: Client, callback_query: CallbackQuery):
     data, user_id = callback_query.data, callback_query.from_user.id
     await callback_query.answer()
-    await asyncio.sleep(0.2)
+    await asyncio.sleep(0.1)
 
     # --- REGISTER ---
     if data == "REGISTER_YES":
@@ -121,14 +118,14 @@ async def callback_handler(client: Client, callback_query: CallbackQuery):
             [InlineKeyboardButton("📋 Scan ID & USN", callback_data=f"SCAN_{user_id}")],
             [InlineKeyboardButton("⬅️ Kembali", callback_data="C")]
         ])
-        await callback_query.message.edit_text(
-            f"🎉 Selamat @{username}\nID: {user_id}\nAnda sudah menjadi Player Loot!",
-            reply_markup=keyboard
-        )
         try:
+            await callback_query.message.edit_text(
+                f"🎉 Selamat @{username}\nID: {user_id}\nAnda sudah menjadi Player Loot!",
+                reply_markup=keyboard
+            )
             await client.send_message(OWNER_ID, f"📢 User baru Player Loot!\n👤 @{username}\n🆔 {user_id}")
         except Exception as e:
-            logger.error(f"Gagal kirim notif OWNER: {e}")
+            await callback_query.answer(f"❌ Gagal edit pesan: {e}", show_alert=True)
         return
     elif data == "REGISTER_NO":
         await callback_query.message.edit_text(MENU_STRUCTURE["C"]["title"], reply_markup=make_keyboard("C", user_id))
@@ -145,8 +142,7 @@ async def callback_handler(client: Client, callback_query: CallbackQuery):
                 reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("⬅️ Kembali", callback_data="C")]])
             )
         except Exception as e:
-            await callback_query.answer("❌ Error saat scan user.", show_alert=True)
-            logger.error(f"SCAN ERROR: {e}")
+            await callback_query.answer(f"❌ Error saat scan user: {e}", show_alert=True)
         return
 
     # --- TRANSFER ---
@@ -156,7 +152,6 @@ async def callback_handler(client: Client, callback_query: CallbackQuery):
             "📥 Masukkan transfer format:\n@username jumlah_umpan\nContoh: @axeliandrea 1",
             reply_markup=None
         )
-        logger.debug(f"[TRANSFER] User {user_id} masuk mode transfer")
         return
 
     # --- POIN PRIBADI ---
@@ -166,21 +161,9 @@ async def callback_handler(client: Client, callback_query: CallbackQuery):
         if not user_data:
             text = "📊 Anda belum memiliki poin chat."
         else:
-            uname = user_data.get("username", "Unknown")
-            text = f"📊 Poin Pribadi:\n\n- @{uname} - {user_data.get('points',0)} pts | Level {user_data.get('level',0)} {yapping.get_badge(user_data.get('level',0))}"
-        await callback_query.message.edit_text(text, reply_markup=make_keyboard("BB", user_id))
-        return
-
-    # --- TUKAR POINT: My Point ---
-    if data == "D3_MYPOINT":
-        points = yapping.load_points()
-        user_data = points.get(str(user_id))
-        if not user_data:
-            text = "📊 My Point : Anda belum memiliki poin chat."
-        else:
-            uname = user_data.get("username", "Unknown")
-            text = f"📊 My Point : @{uname} - {user_data.get('points',0)} pts | Level {user_data.get('level',0)} {yapping.get_badge(user_data.get('level',0))}"
-        await callback_query.message.edit_text(text, reply_markup=make_keyboard("D3", user_id))
+            text = f"📊 Poin Pribadi:\n\n- {user_data.get('username','Unknown')} - {user_data.get('points',0)} pts | Level {user_data.get('level',0)} {yapping.get_badge(user_data.get('level',0))}"
+        if text != callback_query.message.text:
+            await callback_query.message.edit_text(text, reply_markup=make_keyboard("BB", user_id))
         return
 
     # --- LEADERBOARD ---
@@ -192,12 +175,37 @@ async def callback_handler(client: Client, callback_query: CallbackQuery):
         await show_leaderboard(callback_query, user_id, page)
         return
 
+    # --- TUKAR POINT → My Point ---
+    if data == "D3_MYPOINT":
+        points = yapping.load_points()
+        user_data = points.get(str(user_id))
+        if not user_data:
+            text = "📊 My Point : Anda belum memiliki poin chat."
+        else:
+            uname = user_data.get("username", "Unknown")
+            text = f"📊 My Point : @{uname} - {user_data.get('points',0)} pts | Level {user_data.get('level',0)} {yapping.get_badge(user_data.get('level',0))}"
+        if text != callback_query.message.text:
+            await callback_query.message.edit_text(text, reply_markup=InlineKeyboardMarkup([
+                [InlineKeyboardButton("⬅️ Kembali", callback_data="D3")],
+                [InlineKeyboardButton("Tukar Umpan", callback_data="D3_TUKAR")]
+            ]))
+        return
+
+    # --- TUKAR POINT → Tukar Umpan ---
+    if data == "D3_TUKAR":
+        TUKAR_STATE[user_id] = True
+        await callback_query.message.edit_text(
+            "📥 Masukkan jumlah umpan yang ingin ditukar (1 umpan = 100 poin chat):",
+            reply_markup=None
+        )
+        return
+
     # --- GENERIC MENU NAVIGATION ---
     if data in MENU_STRUCTURE:
-        await callback_query.message.edit_text(MENU_STRUCTURE[data]["title"], reply_markup=make_keyboard(data, user_id))
+        if data != callback_query.message.text:  # prevent MESSAGE_NOT_MODIFIED
+            await callback_query.message.edit_text(MENU_STRUCTURE[data]["title"], reply_markup=make_keyboard(data, user_id))
     else:
         await callback_query.answer("Menu tidak tersedia.", show_alert=True)
-        logger.error(f"❌ Callback {data} tidak dikenal!")
 
 # ---------------- HANDLE TRANSFER MESSAGE ---------------- #
 async def handle_transfer_message(client: Client, message: Message):
@@ -227,40 +235,63 @@ async def handle_transfer_message(client: Client, message: Message):
 
         # OWNER TRANSFER
         if user_id == OWNER_ID:
-            umpan.add_umpan(recipient_id, "A", amount)
-            await message.reply(f"✅ Transfer {amount} umpan ke {username} berhasil! (Owner unlimited)", reply_markup=make_keyboard("main", user_id))
+            umpan.add_umpan(recipient_id, amount)
+            await message.reply(f"✅ Transfer {amount} umpan ke {username} berhasil!")
             TRANSFER_STATE[user_id] = False
-            logger.debug(f"[TRANSFER] OWNER {user_id} → {recipient_id} ({amount} umpan)")
             return
 
-        # USER NORMAL
-        sender_data = umpan.get_user(user_id)
-        total_sender = sum(sender_data["umpan"].values())
-        if total_sender < amount:
-            await message.reply("❌ Umpan tidak cukup!")
-        else:
-            remaining = amount
-            for jenis in ["A","B","C"]:
-                if sender_data["umpan"][jenis] >= remaining:
-                    umpan.remove_umpan(user_id, jenis, remaining)
-                    remaining = 0
-                    break
-                else:
-                    sub = sender_data["umpan"][jenis]
-                    umpan.remove_umpan(user_id, jenis, sub)
-                    remaining -= sub
-            umpan.add_umpan(recipient_id, "A", amount)
-            await message.reply(f"✅ Transfer {amount} umpan ke {username} berhasil!", reply_markup=make_keyboard("main", user_id))
+        # USER TRANSFER
+        sender_total = umpan.total_umpan(user_id)
+        if sender_total < amount:
+            await message.reply(f"❌ Umpan tidak cukup! Anda memiliki {sender_total} umpan.")
+            TRANSFER_STATE[user_id] = False
+            return
 
+        # Proses transfer
+        umpan.add_umpan(recipient_id, amount)
+        umpan.add_umpan(user_id, -amount)
+        await message.reply(f"✅ Transfer {amount} umpan ke {username} berhasil!")
         TRANSFER_STATE[user_id] = False
     except Exception as e:
-        await message.reply(f"❌ Error: {e}")
+        await message.reply(f"❌ Terjadi error saat transfer: {e}")
         TRANSFER_STATE[user_id] = False
 
-# ---------------- REGISTER HANDLER ---------------- #
-def register(app: Client):
-    app.add_handler(MessageHandler(open_menu, filters.regex(r"^\.menufish$")))
-    app.add_handler(MessageHandler(open_menu_pm, filters.private & filters.regex(r"^/menu$")))
+# ---------------- HANDLE TUKAR MESSAGE ---------------- #
+async def handle_tukar_message(client: Client, message: Message):
+    user_id = message.from_user.id
+    if not TUKAR_STATE.get(user_id):
+        return
+    try:
+        amount = int(message.text.strip())
+        if amount <= 0:
+            await message.reply("Jumlah umpan harus > 0.")
+            return
+
+        points_data = yapping.load_points()
+        user_data = points_data.get(str(user_id), {"points":0})
+        required_points = amount * 100
+        if user_data["points"] < required_points:
+            await message.reply(f"❌ Poin tidak cukup. Anda memiliki {user_data['points']} pts, membutuhkan {required_points} pts.")
+            return
+
+        # Proses tukar
+        umpan.add_umpan(user_id, amount)
+        user_data["points"] -= required_points
+        points_data[str(user_id)] = user_data
+        yapping.save_points(points_data)
+
+        await message.reply(f"✅ Tukar {required_points} poin menjadi {amount} umpan berhasil!")
+        TUKAR_STATE[user_id] = False
+    except ValueError:
+        await message.reply("Format salah. Masukkan jumlah angka umpan yang ingin ditukar.")
+    except Exception as e:
+        await message.reply(f"❌ Terjadi error: {e}")
+        TUKAR_STATE[user_id] = False
+
+# ---------------- REGISTER HANDLERS ---------------- #
+def register_handlers(app: Client):
+    app.add_handler(MessageHandler(open_menu, filters.command("menu") & filters.private))
+    app.add_handler(MessageHandler(open_menu_pm, filters.command("menu_pm") & filters.private))
+    app.add_handler(MessageHandler(handle_transfer_message, filters.text & filters.private))
+    app.add_handler(MessageHandler(handle_tukar_message, filters.text & filters.private))
     app.add_handler(CallbackQueryHandler(callback_handler))
-    app.add_handler(MessageHandler(handle_transfer_message, filters.text))
-    umpan.register_topup(app)
