@@ -2,7 +2,7 @@
 import asyncio
 import logging
 from pyrogram import Client
-from lootgames.modules import yapping, menu_utama, user_database, database_group as dbgroup
+from lootgames.modules import yapping, menu_utama, user_database
 from lootgames.config import API_ID, API_HASH, BOT_TOKEN, OWNER_ID, ALLOWED_GROUP_ID, LOG_LEVEL, LOG_FORMAT
 
 # ================= LOGGING ================= #
@@ -20,8 +20,7 @@ app = Client(
 # ================= REGISTER MODULES ================= #
 yapping.register(app)
 menu_utama.register(app)
-dbgroup.register(app)
-user_database.register(app)  # Modul baru untuk .join/.update user
+user_database.register(app)  # Modul baru untuk .join/.update
 
 # ================= MAIN ================= #
 async def main():
