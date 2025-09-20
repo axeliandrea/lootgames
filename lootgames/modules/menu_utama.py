@@ -18,7 +18,8 @@ MENU_STRUCTURE = {
         "buttons": [
             ("UMPAN", "A"),
             ("YAPPING", "B"),
-            ("Menu C", "C"), ("Menu D", "D"),
+            ("REGISTER", "C"),  # Menu C diubah menjadi REGISTER
+            ("Menu D", "D"),
             ("Menu E", "E"), ("Menu F", "F"), ("Menu G", "G"),
             ("Menu H", "H"), ("Menu I", "I"), ("Menu J", "J"),
             ("Menu K", "K"), ("Menu L", "L"),
@@ -31,8 +32,13 @@ MENU_STRUCTURE["A"] = {"title": "📋 Menu UMPAN", "buttons": [("Jumlah UMPAN", 
 MENU_STRUCTURE["AA"] = {"title": "📋 Jumlah UMPAN", "buttons": [("TRANSFER UMPAN", "AAA"), ("⬅️ Kembali", "A")]}
 MENU_STRUCTURE["AAA"] = {"title": "📋 TRANSFER UMPAN KE", "buttons": [("Klik OK untuk transfer", "TRANSFER_OK"), ("⬅️ Kembali", "AA")]}
 
-# ---------------- GENERATOR MENU C–L ---------------- #
-for letter in "CDEFGHIJKL":
+# ---------------- CUSTOM MENU REGISTER (C → CC → CCC) ---------------- #
+MENU_STRUCTURE["C"] = {"title": "📋 MENU REGISTER", "buttons": [("LANJUT", "CC"), ("⬅️ Kembali", "main")]}
+MENU_STRUCTURE["CC"] = {"title": "📋 APAKAH KAMU YAKIN INGIN MENJADI PLAYER LOOT?", "buttons": [("PILIH OPSI", "CCC"), ("⬅️ Kembali", "C")]}
+MENU_STRUCTURE["CCC"] = {"title": "📋 PILIH OPSI:", "buttons": [("YA", "REGISTER_YES"), ("TIDAK", "REGISTER_NO")]}
+
+# ---------------- GENERATOR MENU D–L ---------------- #
+for letter in "DEFGHIJKL":
     key1, key2, key3 = letter, f"{letter}{letter}", f"{letter}{letter}{letter}"
     MENU_STRUCTURE[key1] = {"title": f"📋 Menu {key1}", "buttons": [(f"Menu {key2}", key2), ("⬅️ Kembali", "main")]}
     MENU_STRUCTURE[key2] = {"title": f"📋 Menu {key2}", "buttons": [(f"Menu {key3}", key3), ("⬅️ Kembali", key1)]}
@@ -60,7 +66,7 @@ def make_keyboard(menu_key: str, user_id=None, page: int = 0) -> InlineKeyboardM
         buttons.append([InlineKeyboardButton("⬅️ Kembali", callback_data="BB")])
     else:
         for text, callback in MENU_STRUCTURE[menu_key]["buttons"]:
-            if menu_key == "AA" and user_id is not None and text == "TRANSFER UMPAN":
+            if menu_key == "AA" and user_id is not None and text.startswith("TRANSFER UMPAN"):
                 total = umpan.total_umpan(user_id)
                 text = f"{text} ({total})"
             buttons.append([InlineKeyboardButton(text, callback_data=callback)])
@@ -73,7 +79,6 @@ async def open_menu(client: Client, message: Message):
     await message.reply(MENU_STRUCTURE["main"]["title"], reply_markup=make_keyboard("main", message.from_user.id))
 
 async def open_menu_pm(client: Client, message: Message):
-    """Tampilkan menu utama di private chat bot"""
     user_id = message.from_user.id
     keyboard = make_keyboard("main", user_id)
     await message.reply("📋 Menu Utama:", reply_markup=keyboard)
@@ -89,11 +94,28 @@ async def show_leaderboard(callback_query: CallbackQuery, user_id: int, page: in
         text += f"{i}. {pdata.get('username','Unknown')} - {pdata.get('points',0)} pts | Level {pdata.get('level',0)} {yapping.get_badge(pdata.get('level',0))}\n"
     await callback_query.message.edit_text(text, reply_markup=make_keyboard("BBB", user_id, page))
 
+# ---------------- CALLBACK HANDLER ---------------- #
 async def callback_handler(client: Client, callback_query: CallbackQuery):
     data, user_id = callback_query.data, callback_query.from_user.id
     await callback_query.answer()
     await asyncio.sleep(0.3)
 
+    # --- REGISTER YA/TIDAK ---
+    if data == "REGISTER_YES":
+        await callback_query.message.edit_text(
+            "🎉 Selamat anda sudah menjadi Player Loot!",
+            reply_markup=make_keyboard("C", user_id)
+        )
+        # TODO: simpan status user sebagai Player Loot di database
+        return
+    elif data == "REGISTER_NO":
+        await callback_query.message.edit_text(
+            MENU_STRUCTURE["C"]["title"],
+            reply_markup=make_keyboard("C", user_id)
+        )
+        return
+
+    # --- TRANSFER UMPAN ---
     if data == "TRANSFER_OK":
         TRANSFER_STATE[user_id] = True
         await callback_query.message.edit_text(
@@ -102,6 +124,8 @@ async def callback_handler(client: Client, callback_query: CallbackQuery):
         )
         logger.debug(f"[TRANSFER] User {user_id} masuk mode transfer")
         return
+
+    # --- YAPPING MENU ---
     elif data == "BB":
         points = yapping.load_points()
         text = "📊 Total Chat Points:\n\n" if points else "📊 Total Chat Points kosong."
@@ -116,6 +140,8 @@ async def callback_handler(client: Client, callback_query: CallbackQuery):
         page = int(data.split("_")[-1])
         await show_leaderboard(callback_query, user_id, page)
         return
+
+    # --- MENU LAINNYA ---
     elif data in MENU_STRUCTURE:
         await callback_query.message.edit_text(MENU_STRUCTURE[data]["title"], reply_markup=make_keyboard(data, user_id))
     else:
