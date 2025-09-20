@@ -1,32 +1,30 @@
-import asyncio, importlib, pkgutil, logging
+import asyncio
+import logging
 from pyrogram import Client
-from .config import API_ID, API_HASH, BOT_TOKEN, OWNER_ID, ALLOWED_GROUP_ID
-import lootgames.modules
+from lootgames.modules import yapping
 
-logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+API_ID = 123456      # ganti dengan API_ID kamu
+API_HASH = "xxxxxx"  # ganti dengan API_HASH kamu
+BOT_TOKEN = "xxxxxx" # ganti dengan token botmu
+OWNER_ID = 6395738130
+ALLOWED_GROUP_ID = -1002904817520
+LOG_LEVEL = logging.INFO
+LOG_FORMAT = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+
+logging.basicConfig(level=LOG_LEVEL, format=LOG_FORMAT)
 logger = logging.getLogger(__name__)
 
 app = Client("lootgames", api_id=API_ID, api_hash=API_HASH, bot_token=BOT_TOKEN)
 
-def load_modules():
-    for _, module_name, _ in pkgutil.iter_modules(lootgames.modules.__path__):
-        mod = importlib.import_module(f"lootgames.modules.{module_name}")
-        logger.info(f"Loaded module: {module_name}")
-        if hasattr(mod, "register"):
-            try:
-                mod.register(app)
-                logger.info(f"Handlers registered for: {module_name}")
-            except Exception as e:
-                logger.error(f"Gagal register handler {module_name}: {e}")
+# Register yapping manually
+yapping.register(app)
 
 async def main():
-    logger.info("Starting LootGames bot...")
-    load_modules()
     await app.start()
-    logger.info(f"Bot started. Monitoring group: {ALLOWED_GROUP_ID}")
-    await asyncio.Event().wait()  # keep running
+    logger.info("🚀 Bot started!")
+    await asyncio.Event().wait()
 
-if __name__=="__main__":
+if __name__ == "__main__":
     import nest_asyncio
     nest_asyncio.apply()
     asyncio.run(main())
