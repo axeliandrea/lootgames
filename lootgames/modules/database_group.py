@@ -1,11 +1,8 @@
-import json
-import os
 import logging
 from pyrogram import Client, filters
 from pyrogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery
 from pyrogram.handlers import MessageHandler, CallbackQueryHandler
 from lootgames.modules import menu_utama
-from lootgames.config import OWNER_ID
 
 # ---------------- LOGGER ---------------- #
 logger = logging.getLogger(__name__)
@@ -15,7 +12,12 @@ def main_menu_keyboard(user_id: int = None):
     """
     Keyboard utama untuk private chat
     """
-    keyboard = menu_utama.make_keyboard("main", user_id)
+    try:
+        base_keyboard = menu_utama.make_keyboard("main", user_id)
+        keyboard = InlineKeyboardMarkup(base_keyboard.inline_keyboard.copy())
+    except Exception:
+        # fallback kalau make_keyboard tidak ada/bermasalah
+        keyboard = InlineKeyboardMarkup([])
 
     # tombol tambahan
     join_button = InlineKeyboardButton("JOIN", callback_data="join")
