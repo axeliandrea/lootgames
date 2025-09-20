@@ -1,7 +1,7 @@
 import json
 import os
 from threading import Lock
-from pyrogram import Client, filters, handlers
+from pyrogram import Client, filters
 from pyrogram.types import Message
 
 UMPAN_FILE = "lootgames/modules/umpan_data.json"
@@ -77,11 +77,10 @@ def total_umpan(user_id: int) -> int:
     user = get_user(user_id)
     return sum(user["umpan"].values())
 
-# ---------------- LIST SEMUA USER ---------------- #
 def all_users():
     return load_db()
 
-# ---------------- COMMAND TOPUP ---------------- #
+# ---------------- COMMANDS ---------------- #
 async def topup_umpan(client: Client, message: Message):
     try:
         parts = message.text.strip().split()
@@ -97,9 +96,8 @@ async def topup_umpan(client: Client, message: Message):
         user_id = message.from_user.id
         username = message.from_user.username or f"user_{user_id}"
         init_user(user_id, username)
-
-        # Tambahkan ke umpan tipe A
         add_umpan(user_id, "A", jumlah)
+
         total = total_umpan(user_id)
         await message.reply(f"✅ Berhasil topup {jumlah} umpan! Total UMPAN sekarang: {total}")
 
@@ -108,7 +106,6 @@ async def topup_umpan(client: Client, message: Message):
     except Exception as e:
         await message.reply(f"❌ Terjadi error: {e}")
 
-# ---------------- COMMAND CEK UMPAN ---------------- #
 async def umpanku(client: Client, message: Message):
     user_id = message.from_user.id
     username = message.from_user.username or f"user_{user_id}"
@@ -118,15 +115,5 @@ async def umpanku(client: Client, message: Message):
 
 # ---------------- REGISTER ---------------- #
 def register_commands(app: Client):
-    app.add_handler(
-        handlers.MessageHandler(
-            topup_umpan,
-            filters.regex(r"^\.topup\s+umpan\s+\d+$")
-        )
-    )
-    app.add_handler(
-        handlers.MessageHandler(
-            umpanku,
-            filters.regex(r"^\.umpanku$")
-        )
-    )
+    app.add_handler(filters.regex(r"^\.topup\s+umpan\s+\d+$")(topup_umpan))
+    app.add_handler(filters.regex(r"^\.umpanku$")(umpanku))
