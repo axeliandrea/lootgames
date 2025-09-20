@@ -12,6 +12,7 @@ DEBUG = True
 IGNORED_USERS = ["6946903915"]
 MILESTONE_INTERVAL = 100  # setiap 100 point
 MAX_POINT_PER_CHAT = 5  # maksimal point per chat per chat bubble
+BACKGROUND_DELAY = 1  # detik delay per milestone message
 
 # ================= UTILS ================= #
 def log_debug(msg: str):
@@ -155,11 +156,10 @@ def register(app: Client):
 
         # ---------------- Milestone ---------------- #
         last_milestone = user_data.get("last_milestone", 0)
-        last_index = last_milestone // MILESTONE_INTERVAL
-        current_index = new_total // MILESTONE_INTERVAL
+        milestones_passed = new_total // MILESTONE_INTERVAL
+        last_passed = last_milestone // MILESTONE_INTERVAL
 
-        # Kirim notif milestone untuk semua milestone yang terlewati
-        for idx in range(last_index + 1, current_index + 1):
+        for idx in range(last_passed + 1, milestones_passed + 1):
             milestone_value = idx * MILESTONE_INTERVAL
             try:
                 await message.reply(
@@ -174,9 +174,9 @@ def register(app: Client):
             except Exception as e:
                 log_debug(f"Gagal kirim milestone: {e}")
 
-        # Update last_milestone ke milestone terakhir
-        if current_index > last_index:
-            user_data["last_milestone"] = current_index * MILESTONE_INTERVAL
+        # Update last_milestone
+        if milestones_passed > last_passed:
+            user_data["last_milestone"] = milestones_passed * MILESTONE_INTERVAL
 
         save_points(points)
 
@@ -245,11 +245,10 @@ def register(app: Client):
                 for user_id, user_data in points.items():
                     total = user_data.get("points", 0)
                     last_milestone = user_data.get("last_milestone", 0)
-                    last_index = last_milestone // MILESTONE_INTERVAL
-                    current_index = total // MILESTONE_INTERVAL
+                    milestones_passed = total // MILESTONE_INTERVAL
+                    last_passed = last_milestone // MILESTONE_INTERVAL
 
-                    # Kirim notif untuk milestone yang terlewati
-                    for idx in range(last_index + 1, current_index + 1):
+                    for idx in range(last_passed + 1, milestones_passed + 1):
                         milestone_value = idx * MILESTONE_INTERVAL
                         try:
                             await app.send_message(
@@ -263,16 +262,15 @@ def register(app: Client):
                                 log_debug(f"Milestone otomatis dikirim ke {user_data['username']}: {milestone_value} points")
                         except Exception as e:
                             log_debug(f"Gagal kirim milestone otomatis: {e}")
-                    
-                    # Update last_milestone ke milestone terakhir
-                    if current_index > last_index:
-                        user_data["last_milestone"] = current_index * MILESTONE_INTERVAL
+                        await asyncio.sleep(BACKGROUND_DELAY)
+
+                    if milestones_passed > last_passed:
+                        user_data["last_milestone"] = milestones_passed * MILESTONE_INTERVAL
 
                 save_points(points)
             except Exception as e:
                 log_debug(f"Error milestone refresh task: {e}")
 
-            await asyncio.sleep(30)  # cek setiap 30 detik
+            await asyncio.sleep(30)
 
-    # ---------------- START BACKGROUND TASK ---------------- #
     app.loop.create_task(milestone_refresh_task())
