@@ -1,5 +1,5 @@
 # lootgames/modules/yapping.py
-import os, re, json
+import os, re, json, asyncio
 from datetime import datetime
 from pyrogram import Client, filters
 from pyrogram.types import Message
@@ -142,10 +142,13 @@ def register(app: Client):
         if new_level != -1:
             if DEBUG:
                 log_debug(f"{username} naik level ke {new_level}")
-            await message.reply(
-                f"🎉 Selamat {username}, naik level {new_level}! {get_badge(new_level)}",
-                quote=True
-            )
+            try:
+                notif = await message.reply(
+                    f"🎉 Selamat {username}, naik level {new_level}! {get_badge(new_level)}",
+                    quote=True
+                )
+            except Exception as e:
+                log_debug(f"Gagal kirim level-up notif: {e}")
 
         # Milestone setiap 100 points
         last_milestone = points[user_id].get("last_milestone", 0)
@@ -153,6 +156,8 @@ def register(app: Client):
         new_index = new_total // 100
         if new_index > last_index and new_index > 0:
             milestone_value = new_index * 100
+            points[user_id]["last_milestone"] = milestone_value
+            save_points(points)
             if DEBUG:
                 log_debug(f"{username} mencapai milestone {milestone_value}")
             try:
@@ -166,9 +171,8 @@ def register(app: Client):
                 )
             except Exception as e:
                 log_debug(f"Gagal kirim milestone: {e}")
-            points[user_id]["last_milestone"] = milestone_value
 
-        # Simpan semua update
+        # Simpan semua update terakhir
         save_points(points)
 
     # ---------------- COMMANDS ---------------- #
