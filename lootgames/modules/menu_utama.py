@@ -214,3 +214,4 @@ def register(app: Client):
     app.add_handler(handlers.CallbackQueryHandler(callback_handler))
     # Input transfer
     app.add_handler(handlers.MessageHandler(handle_transfer_message, filters.text))
+
