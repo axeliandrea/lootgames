@@ -45,20 +45,15 @@ MENU_STRUCTURE["D"] = {
 
 MENU_STRUCTURE["D1"] = {"title": "📋 BUY UMPAN", "buttons": [("D1A", "D1A"), ("⬅️ Kembali", "D")]}
 MENU_STRUCTURE["D2"] = {"title": "📋 SELL IKAN", "buttons": [("D2A", "D2A"), ("⬅️ Kembali", "D")]}
-# Menu D3 sekarang langsung menampilkan point realtime
 MENU_STRUCTURE["D3"] = {"title": "📋 TUKAR POINT", "buttons": [("D3A", "D3A"), ("⬅️ Kembali", "D")]}
-MENU_STRUCTURE["D3A"] = {
-    "title": "📋 TUKAR POINT",
-    "buttons": [
-        ("Tukar Umpan", "D3A_EXCHANGE"),
-        ("⬅️ Kembali", "D3")
-    ]
-}
 
 MENU_STRUCTURE["D1A"] = {"title": "📋 Menu D1A", "buttons": [("D1B", "D1B"), ("⬅️ Kembali", "D1")]}
 MENU_STRUCTURE["D2A"] = {"title": "📋 Menu D2A", "buttons": [("D2B", "D2B"), ("⬅️ Kembali", "D2")]}
+MENU_STRUCTURE["D3A"] = {"title": "📋 Menu D3A", "buttons": [("D3B", "D3B"), ("⬅️ Kembali", "D3")]}
+
 MENU_STRUCTURE["D1B"] = {"title": "📋 Menu D1B (Tampilan Terakhir)", "buttons": [("⬅️ Kembali", "D1")]}
 MENU_STRUCTURE["D2B"] = {"title": "📋 Menu D2B (Tampilan Terakhir)", "buttons": [("⬅️ Kembali", "D2A")]}
+MENU_STRUCTURE["D3B"] = {"title": "📋 Menu D3B (Tampilan Terakhir)", "buttons": [("⬅️ Kembali", "D3A")]}
 
 # ---------------- GENERIC MENU (E-L) ---------------- #
 for letter in "EFGHIJKL":
@@ -75,7 +70,6 @@ MENU_STRUCTURE["BBB"] = {"title": "📋 Leaderboard Yapping", "buttons": [("⬅�
 # ---------------- KEYBOARD ---------------- #
 def make_keyboard(menu_key: str, user_id=None, page: int = 0) -> InlineKeyboardMarkup:
     buttons = []
-    # Tombol leaderboard dengan paging
     if menu_key == "BBB" and user_id is not None:
         points = yapping.load_points()
         sorted_points = sorted(points.items(), key=lambda x: x[1]["points"], reverse=True)
@@ -90,7 +84,6 @@ def make_keyboard(menu_key: str, user_id=None, page: int = 0) -> InlineKeyboardM
         buttons.append([InlineKeyboardButton("⬅️ Kembali", callback_data="BB")])
     else:
         for text, callback in MENU_STRUCTURE[menu_key]["buttons"]:
-            # Tombol jumlah UMPAN realtime
             if menu_key == "AA" and user_id is not None and text.startswith("TRANSFER UMPAN"):
                 total = umpan.total_umpan(user_id)
                 text = f"{text} ({total})"
@@ -153,7 +146,7 @@ async def callback_handler(client: Client, callback_query: CallbackQuery):
             uname = user_data.get("username", "Unknown")
             await callback_query.message.edit_text(
                 f"🔍 Info User:\n\nUser ID: {scan_user_id}\nUsername: @{uname}",
-                reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("⬅️ Kembali", callback_data="C")]] )
+                reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("⬅️ Kembali", callback_data="C")]])
             )
         except Exception as e:
             await callback_query.answer("❌ Error saat scan user.", show_alert=True)
@@ -170,31 +163,12 @@ async def callback_handler(client: Client, callback_query: CallbackQuery):
         logger.debug(f"[TRANSFER] User {user_id} masuk mode transfer")
         return
 
-    # --- D3A POINTS & EXCHANGE ---
-    if data == "D3A":
-        points = yapping.load_points()
-        user_data = points.get(user_id, {"points": 0, "level": 0, "username": callback_query.from_user.username or "Unknown"})
-        text = (
-            f"🎉 Congrats @{user_data['username']}!\n"
-            f"⭐ Total poin sekarang: {user_data['points']}\n"
-            f"💠 Level: {user_data['level']} {yaping.get_badge(user_data['level'])}"
-        )
-        keyboard = InlineKeyboardMarkup([
-            [InlineKeyboardButton("💱 Tukar Umpan", callback_data="D3A_EXCHANGE")],
-            [InlineKeyboardButton("⬅️ Kembali", callback_data="D")]
-        ])
-        await callback_query.message.edit_text(text, reply_markup=keyboard)
-        return
-    elif data == "D3A_EXCHANGE":
-        await callback_query.message.edit_text("💱 Fitur Tukar Umpan aktif! (implementasi nanti)", reply_markup=make_keyboard("D3A", user_id))
-        return
-
     # --- LEADERBOARD ---
     if data == "BB":
         points = yapping.load_points()
         text = "📊 Total Chat Points:\n\n" if points else "📊 Total Chat Points kosong."
         for uid, pdata in points.items():
-            text += f"- {pdata.get('username','Unknown')} - {pdata.get('points',0)} pts | Level {pdata.get('level',0)} {yaping.get_badge(pdata.get('level',0))}\n"
+            text += f"- {pdata.get('username','Unknown')} - {pdata.get('points',0)} pts | Level {pdata.get('level',0)} {yapping.get_badge(pdata.get('level',0))}\n"
         await callback_query.message.edit_text(text, reply_markup=make_keyboard("BB", user_id))
         return
     elif data == "BBB":
