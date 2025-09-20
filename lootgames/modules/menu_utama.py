@@ -47,15 +47,14 @@ MENU_STRUCTURE["D1"] = {"title": "📋 BUY UMPAN", "buttons": [("D1A", "D1A"), (
 MENU_STRUCTURE["D2"] = {"title": "📋 SELL IKAN", "buttons": [("D2A", "D2A"), ("⬅️ Kembali", "D")]}
 MENU_STRUCTURE["D3"] = {"title": "📋 TUKAR POINT", "buttons": [("D3A", "D3A"), ("⬅️ Kembali", "D")]}
 
-# D3A akan menampilkan total Yapping Points
-MENU_STRUCTURE["D3A"] = {"title": "📊 Total Chat Points", "buttons": [("⬅️ Kembali", "D3")]}
+# Tombol D3A sekarang hanya "⬅️ Kembali", kontennya di callback handler
+MENU_STRUCTURE["D3A"] = {"title": "📋 Menu D3A", "buttons": [("⬅️ Kembali", "D3")]}
 
 MENU_STRUCTURE["D1A"] = {"title": "📋 Menu D1A", "buttons": [("D1B", "D1B"), ("⬅️ Kembali", "D1")]}
 MENU_STRUCTURE["D2A"] = {"title": "📋 Menu D2A", "buttons": [("D2B", "D2B"), ("⬅️ Kembali", "D2")]}
-MENU_STRUCTURE["D3B"] = {"title": "📋 Menu D3B (Tampilan Terakhir)", "buttons": [("⬅️ Kembali", "D3A")]}
-
 MENU_STRUCTURE["D1B"] = {"title": "📋 Menu D1B (Tampilan Terakhir)", "buttons": [("⬅️ Kembali", "D1")]}
 MENU_STRUCTURE["D2B"] = {"title": "📋 Menu D2B (Tampilan Terakhir)", "buttons": [("⬅️ Kembali", "D2A")]}
+MENU_STRUCTURE["D3B"] = {"title": "📋 Menu D3B (Tampilan Terakhir)", "buttons": [("⬅️ Kembali", "D3A")]}
 
 # ---------------- GENERIC MENU (E-L) ---------------- #
 for letter in "EFGHIJKL":
@@ -72,6 +71,7 @@ MENU_STRUCTURE["BBB"] = {"title": "📋 Leaderboard Yapping", "buttons": [("⬅�
 # ---------------- KEYBOARD ---------------- #
 def make_keyboard(menu_key: str, user_id=None, page: int = 0) -> InlineKeyboardMarkup:
     buttons = []
+
     if menu_key == "BBB" and user_id is not None:
         points = yapping.load_points()
         sorted_points = sorted(points.items(), key=lambda x: x[1]["points"], reverse=True)
@@ -86,6 +86,7 @@ def make_keyboard(menu_key: str, user_id=None, page: int = 0) -> InlineKeyboardM
         buttons.append([InlineKeyboardButton("⬅️ Kembali", callback_data="BB")])
     else:
         for text, callback in MENU_STRUCTURE[menu_key]["buttons"]:
+            # Tampilkan total umpan user
             if menu_key == "AA" and user_id is not None and text.startswith("TRANSFER UMPAN"):
                 total = umpan.total_umpan(user_id)
                 text = f"{text} ({total})"
@@ -165,6 +166,23 @@ async def callback_handler(client: Client, callback_query: CallbackQuery):
         logger.debug(f"[TRANSFER] User {user_id} masuk mode transfer")
         return
 
+    # --- TUKAR POINT (D3A) ---
+    if data == "D3A":
+        points = yapping.load_points()
+        pdata = points.get(user_id, {
+            "username": callback_query.from_user.username or f"user{user_id}",
+            "points": 0,
+            "level": 0
+        })
+        text = (
+            f"📊 Point Chat Pribadi:\n\n"
+            f"👤 @{pdata.get('username')}\n"
+            f"💎 Points: {pdata.get('points',0)} pts\n"
+            f"🏅 Level: {pdata.get('level',0)} {yapping.get_badge(pdata.get('level',0))}"
+        )
+        await callback_query.message.edit_text(text, reply_markup=make_keyboard("D3A", user_id))
+        return
+
     # --- LEADERBOARD ---
     if data == "BB":
         points = yapping.load_points()
@@ -179,18 +197,6 @@ async def callback_handler(client: Client, callback_query: CallbackQuery):
     elif data.startswith("BBB_PAGE_"):
         page = int(data.split("_")[-1])
         await show_leaderboard(callback_query, user_id, page)
-        return
-
-    # --- TUKAR POINT D3A MENAMPILKAN SEMUA POINT ---
-    if data == "D3A":
-        points = yapping.load_points()
-        if not points:
-            text = "📊 Total Chat Points kosong."
-        else:
-            text = "📊 Total Chat Points:\n\n"
-            for uid, pdata in points.items():
-                text += f"- {pdata.get('username','Unknown')} - {pdata.get('points',0)} pts | Level {pdata.get('level',0)} {yapping.get_badge(pdata.get('level',0))}\n"
-        await callback_query.message.edit_text(text, reply_markup=make_keyboard("D3A", user_id))
         return
 
     # --- GENERIC MENU NAVIGATION ---
