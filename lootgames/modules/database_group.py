@@ -2,6 +2,7 @@ import json
 import os
 from pyrogram import Client, filters
 from pyrogram.types import Message
+from pyrogram.handlers import MessageHandler
 import logging
 
 logger = logging.getLogger(__name__)
@@ -44,10 +45,9 @@ async def start_handler(client: Client, message: Message):
     user = message.from_user
     if not user:
         return
-
     add_user(user.id, user.username or f"user{user.id}")
     await message.reply(f"Hi @{user.username or 'User'}, salam kenal.. Bot sudah aktif ✅")
 
 # ==================== REGISTER ==================== #
 def register(app: Client):
-    app.add_handler(app.add_handler(filters.private & filters.command("start"), start_handler))
+    app.add_handler(MessageHandler(start_handler, filters.private & filters.command("start")))
