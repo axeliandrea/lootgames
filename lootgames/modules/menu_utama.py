@@ -293,7 +293,6 @@ async def handle_transfer_message(client: Client, message: Message):
             if user_data.get("points",0) < jumlah_umpan*100:
                 await message.reply("❌ Point chat tidak cukup.")
                 return
-            TUKAR_POINT_STATE[user_id]["jumlah
             TUKAR_POINT_STATE[user_id]["jumlah_umpan"] = jumlah_umpan
             TUKAR_POINT_STATE[user_id]["step"] = 2
             keyboard = InlineKeyboardMarkup([
@@ -318,3 +317,4 @@ def register(app: Client):
     # Callback query
     app.add_handler(CallbackQueryHandler(callback_handler))
     logger.info("[MENU] Handler menu_utama terdaftar.")
+
