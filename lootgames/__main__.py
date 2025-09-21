@@ -2,7 +2,7 @@
 import asyncio
 import logging
 from pyrogram import Client
-from lootgames.modules import yapping, menu_utama, user_database
+from lootgames.modules import yapping, menu_utama, user_database, autorespon  # <-- tambahkan autorespon
 from lootgames.config import API_ID, API_HASH, BOT_TOKEN, OWNER_ID, ALLOWED_GROUP_ID, LOG_LEVEL, LOG_FORMAT
 
 # ================= LOGGING ================= #
@@ -47,4 +47,3 @@ if __name__ == "__main__":
         pass
 
     asyncio.run(main())
-
