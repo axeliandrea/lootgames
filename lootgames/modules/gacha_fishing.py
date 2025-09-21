@@ -3,7 +3,6 @@ import random
 import asyncio
 import logging
 from pyrogram import Client
-from lootgames.modules.fishing_helper import send_single_emoji, FISHING_EMOJI
 from lootgames.modules import aquarium
 
 logger = logging.getLogger(__name__)
@@ -28,21 +27,37 @@ BUFF_RATE = {
 }
 
 # ---------------- FISHING FUNCTION ---------------- #
-async def fishing_loot(client: Client, target_chat: int, username: str, user_id: int, umpan_type: str = "COMMON"):
+async def fishing_loot(
+    client: Client,
+    target_chat: int | None,
+    username: str,
+    user_id: int,
+    umpan_type: str = "COMMON",
+    *,
+    return_loot: bool = False
+):
     """
     Menentukan loot fishing dan menyimpan ke database aquarium.py
+    Jika return_loot=True, hanya mengembalikan loot, tidak kirim ke chat.
     """
     buff = BUFF_RATE.get(umpan_type, 0)
     loot_item = roll_loot(buff)
     
     logger.info(f"[FISHING] {username} ({user_id}) memancing dengan {umpan_type}, mendapatkan: {loot_item}")
     
-    try:
-        await asyncio.sleep(2)  # delay animasi
-        await send_single_emoji(client, target_chat, FISHING_EMOJI, f" @{username} mendapatkan {loot_item}!")
-        aquarium.add_fish(user_id, loot_item, 1)
-    except Exception as e:
-        logger.error(f"Error fishing loot untuk {username}: {e}")
+    # Simpan ke database aquarium
+    aquarium.add_fish(user_id, loot_item, 1)
+
+    # Kirim ke chat jika target_chat diberikan
+    if target_chat is not None:
+        try:
+            await asyncio.sleep(2)  # delay animasi
+            await client.send_message(target_chat, f"🎣 @{username} mendapatkan {loot_item}!")
+        except Exception as e:
+            logger.error(f"Error kirim loot ke chat {target_chat}: {e}")
+    
+    if return_loot:
+        return loot_item
 
 # ---------------- HELPERS ---------------- #
 def roll_loot(buff: int) -> str:
