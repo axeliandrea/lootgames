@@ -26,8 +26,9 @@ def setup(client):
     """Pasang auto-respon emoji premium ke client aktif"""
 
     @client.on_message(filters.group & filters.text, group=2)
-    async def auto_reply_premium(message: Message):
+    async def auto_reply_premium(_, message: Message):  # <- tambahkan _ untuk client
         text = message.text.lower().strip()
+        logger.debug(f"Pesan masuk dari {message.from_user.username or message.from_user.id}: {text}")
 
         # Cek kata kasar exact match atau kata fun substring
         if text in EXACT_TRIGGERS or any(f in text for f in FUN_TRIGGERS):
