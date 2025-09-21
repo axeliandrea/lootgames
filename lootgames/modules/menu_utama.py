@@ -10,7 +10,7 @@ from lootgames.modules import yapping, umpan, user_database
 
 logger = logging.getLogger(__name__)
 OWNER_ID = 6395738130
-TARGET_GROUP = -1002904817520  # ganti sesuai group supergroup bot
+TARGET_GROUP = -1002904817520  # ganti sesuai supergroup bot
 
 # ---------------- STATE ---------------- #
 TRANSFER_STATE = {}       # user_id: {"jenis": "A/B/C/D"}
@@ -181,6 +181,7 @@ async def send_single_emoji(client: Client, chat_id: int, emoji: dict, text: str
 # ---------------- CALLBACK HANDLER ---------------- #
 async def callback_handler(client: Client, callback_query: CallbackQuery):
     data, user_id = callback_query.data, callback_query.from_user.id
+    logger.info(f"[DEBUG] callback received -> user_id: {user_id}, data: {data}")
     await callback_query.answer()
     await asyncio.sleep(0.1)
 
@@ -206,6 +207,20 @@ async def callback_handler(client: Client, callback_query: CallbackQuery):
             await asyncio.sleep(10)
             await send_single_emoji(client, TARGET_GROUP, CATCH_EMOJI, f" @{username} berhasil mendapatkan ikan!", reply_to=msg.id if msg else None)
         asyncio.create_task(delayed())
+        return
+
+    # --- LEADERBOARD PAGE NAV ---
+    if data.startswith("BBB_PAGE_"):
+        page = int(data.replace("BBB_PAGE_",""))
+        await show_leaderboard(callback_query, user_id, page)
+        return
+
+    # --- GENERIC MENU NAVIGATION ---
+    if data in MENU_STRUCTURE:
+        await callback_query.message.edit_text(
+            MENU_STRUCTURE[data]["title"],
+            reply_markup=make_keyboard(data, user_id)
+        )
         return
 
 # ---------------- HANDLE TRANSFER & TUKAR MESSAGE ---------------- #
