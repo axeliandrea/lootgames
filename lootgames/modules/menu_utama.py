@@ -134,6 +134,90 @@ def make_keyboard(menu_key: str, user_id=None, page: int = 0) -> InlineKeyboardM
             buttons.append([InlineKeyboardButton(text, callback_data=callback)])
     return InlineKeyboardMarkup(buttons)
 
+# ---------------- OPEN MENU ---------------- #
+async def open_menu(client: Client, message: Message):
+    await message.reply(
+        MENU_STRUCTURE["main"]["title"],
+        reply_markup=make_keyboard("main", message.from_user.id)
+    )
+
+async def open_menu_pm(client: Client, message: Message):
+    await message.reply(
+        MENU_STRUCTURE["main"]["title"],
+        reply_markup=make_keyboard("main", message.from_user.id)
+    )
+
+# ---------------- HANDLE TRANSFER & TUKAR ---------------- #
+async def handle_transfer_message(client: Client, message: Message):
+    user_id = message.from_user.id
+    username_sender = message.from_user.username or f"user{user_id}"
+
+    # --- TRANSFER UMPAN ---
+    if TRANSFER_STATE.get(user_id):
+        try:
+            jenis = TRANSFER_STATE[user_id]["jenis"]
+            parts = message.text.strip().split()
+            if len(parts)!=2:
+                await message.reply("Format salah. Contoh: @username 1")
+                return
+            username, amount = parts
+            if not username.startswith("@"):
+                await message.reply("Username harus diawali '@'.")
+                return
+            amount = int(amount)
+            if amount <= 0:
+                await message.reply("Jumlah harus > 0.")
+                return
+            recipient_id = user_database.get_user_id_by_username(username)
+            if recipient_id is None:
+                await message.reply(f"❌ Username {username} tidak ada di database!")
+                TRANSFER_STATE.pop(user_id,None)
+                return
+            if user_id == OWNER_ID:
+                umpan.add_umpan(recipient_id, jenis, amount)
+            else:
+                sender_data = umpan.get_user(user_id)
+                if sender_data[jenis]["umpan"]<amount:
+                    await message.reply("❌ Umpan tidak cukup!")
+                    return
+                umpan.remove_umpan(user_id, jenis, amount)
+                umpan.add_umpan(recipient_id, jenis, amount)
+            await message.reply(f"✅ Transfer {amount} umpan ke {username} berhasil!", reply_markup=make_keyboard("main", user_id))
+            try:
+                await client.send_message(recipient_id, f"🎁 Kamu mendapatkan {amount} umpan dari (@{username_sender})")
+            except Exception as e:
+                logger.error(f"Gagal kirim notif ke penerima {recipient_id}: {e}")
+            TRANSFER_STATE.pop(user_id,None)
+        except Exception as e:
+            await message.reply(f"❌ Error: {e}")
+            TRANSFER_STATE.pop(user_id,None)
+        return
+
+    # --- TUKAR POINT CHAT KE UMPAN ---
+    if TUKAR_POINT_STATE.get(user_id):
+        step = TUKAR_POINT_STATE[user_id].get("step",0)
+        if step!=1: return
+        try:
+            jumlah_umpan = int(message.text.strip())
+            if jumlah_umpan<=0:
+                await message.reply("Jumlah umpan harus > 0.")
+                return
+            points_data = yapping.load_points()
+            user_data = points_data.get(str(user_id),{})
+            if user_data.get("points",0)<jumlah_umpan*100:
+                await message.reply(f"❌ Point chat tidak cukup. Anda memiliki {user_data.get('points',0)} pts, tapi butuh {jumlah_umpan*100} pts.")
+                return
+            TUKAR_POINT_STATE[user_id]["jumlah_umpan"] = jumlah_umpan
+            TUKAR_POINT_STATE[user_id]["step"] = 2
+            keyboard = InlineKeyboardMarkup([
+                [InlineKeyboardButton("✅ YA", callback_data="TUKAR_CONFIRM")],
+                [InlineKeyboardButton("❌ Batal", callback_data="D3A")]
+            ])
+            await message.reply(f"📊 Anda yakin ingin menukar {jumlah_umpan} umpan?\n(100 chat points = 1 umpan)", reply_markup=keyboard)
+        except ValueError:
+            await message.reply("Format salah. Masukkan angka jumlah umpan.")
+        return
+
 # ---------------- CALLBACK HANDLER ---------------- #
 async def callback_handler(client: Client, callback_query: CallbackQuery):
     data,user_id = callback_query.data, callback_query.from_user.id
@@ -191,5 +275,3 @@ def register(app: Client):
     app.add_handler(MessageHandler(handle_transfer_message, filters.text & filters.private))
     app.add_handler(CallbackQueryHandler(callback_handler))
     logger.info("[MENU] Handler menu_utama terdaftar.")
-
-# (open_menu, open_menu_pm, handle_transfer_message, dll tetap sama seperti versi sebelumnya)
