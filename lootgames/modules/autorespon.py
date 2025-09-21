@@ -10,6 +10,7 @@ Auto respon dengan emoji premium 🤩 atau 🖕
 Trigger: 
 - Kata kasar (exact match): 'fuck', 'kontol', 'anjing'
 - Kata fun (substring match): 'fish', 'fisher', 'lucky'
+Debug mode aktif: semua pesan masuk akan dicetak di console.
 """
 
 logger = logging.getLogger(__name__)
@@ -22,16 +23,32 @@ EXACT_TRIGGERS = ["fuck", "kontol", "anjing"]
 # Kata fun substring match
 FUN_TRIGGERS = ["fish", "fisher", "lucky"]
 
-def setup(client):
+def setup(client, debug: bool = True):
     """Pasang auto-respon emoji premium ke client aktif"""
-
+    
     @client.on_message(filters.group & filters.text, group=2)
-    async def auto_reply_premium(_, message: Message):  # <- tambahkan _ untuk client
+    async def auto_reply_premium(_, message: Message):
         text = message.text.lower().strip()
-        logger.debug(f"Pesan masuk dari {message.from_user.username or message.from_user.id}: {text}")
+        
+        if debug:
+            logger.debug(f"[DEBUG] Pesan masuk dari {message.from_user.username or message.from_user.id}: {text}")
+        
+        matched_trigger = None
 
-        # Cek kata kasar exact match atau kata fun substring
-        if text in EXACT_TRIGGERS or any(f in text for f in FUN_TRIGGERS):
+        # Cek kata kasar exact match
+        if text in EXACT_TRIGGERS:
+            matched_trigger = text
+        # Cek kata fun substring
+        else:
+            for f in FUN_TRIGGERS:
+                if f in text:
+                    matched_trigger = f
+                    break
+
+        if matched_trigger:
+            if debug:
+                logger.debug(f"[DEBUG] Trigger cocok: {matched_trigger}")
+
             dummy_char = "⬛"
             entities = [
                 MessageEntity(
