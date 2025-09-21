@@ -29,10 +29,10 @@ MENU_STRUCTURE = {
     },
     # UMPAN MENU
     "A": {"title":"📋 Menu UMPAN","buttons":[
-        ("UMPAN COMMON 🐛","AA_COMMON"),
-        ("UMPAN RARE 🐌","AA_RARE"),
-        ("UMPAN LEGENDARY 🧇","AA_LEGEND"),
-        ("UMPAN MYTHIC 🐟","AA_MYTHIC"),
+        ("COMMON 🐛","AA_COMMON"),
+        ("RARE 🐌","AA_RARE"),
+        ("LEGENDARY 🧇","AA_LEGEND"),
+        ("MYTHIC 🐟","AA_MYTHIC"),
         ("⬅️ Kembali","main")
     ]},
     "AA_COMMON": {"title":"📋 TRANSFER UMPAN KE (Common)","buttons":[("Klik OK untuk transfer","TRANSFER_COMMON_OK"),("⬅️ Kembali","A")]},
@@ -312,4 +312,5 @@ def register(app: Client):
     app.add_handler(MessageHandler(handle_transfer_message, filters.text & filters.private))
     app.add_handler(CallbackQueryHandler(callback_handler))
     logger.info("[MENU] Handler menu_utama terdaftar.")
+
 
