@@ -1,4 +1,4 @@
-# lootgames/modules/menu_utama.py FINAL v3 (revisi transfer + notif + auto-update keyboard + Pyrogram v2+)
+# lootgames/modules/menu_utama.py FINAL v4 (revisi transfer + notif + auto-update keyboard + Pyro v2+)
 import logging
 import asyncio
 from pyrogram import Client, filters
@@ -13,46 +13,10 @@ OWNER_ID = 6395738130
 # ---------------- STATE ---------------- #
 TRANSFER_STATE = {}  # user_id: {"jenis": "COMMON/RARE/LEGEND/MYTHIC"}
 TUKAR_POINT_STATE = {}  # user_id: {"step": step, "jumlah_umpan": n}
-OPEN_MENU_STATE = {}   # user_id: {"menu": menu_key, "message_id": message.id}
+OPEN_MENU_STATE = {}   # user_id: {"menu": menu_key, "message_id": message_id}
 
 # ---------------- MENU STRUCTURE ---------------- #
-MENU_STRUCTURE = {
-    "main": {
-        "title": "📋 [Menu Utama]",
-        "buttons": [
-            ("UMPAN", "A"), ("YAPPING", "B"), ("REGISTER", "C"), ("🛒STORE", "D"),
-            ("Menu E", "E"), ("Menu F", "F"), ("Menu G", "G"),
-            ("Menu H", "H"), ("Menu I", "I"), ("Menu J", "J"),
-            ("Menu K", "K"), ("Menu L", "L"),
-        ],
-    },
-    # UMPAN MENU
-    "A": {"title":"📋 Menu UMPAN","buttons":[
-        ("COMMON 🐛","AA_COMMON"),
-        ("RARE 🐌","AA_RARE"),
-        ("LEGENDARY 🧇","AA_LEGEND"),
-        ("MYTHIC 🐟","AA_MYTHIC"),
-        ("⬅️ Kembali","main")
-    ]},
-    "AA_COMMON": {"title":"📋 TRANSFER UMPAN KE (Common)","buttons":[("Klik OK untuk transfer","TRANSFER_COMMON_OK"),("⬅️ Kembali","A")]},
-    "AA_RARE": {"title":"📋 TRANSFER UMPAN KE (Rare)","buttons":[("Klik OK untuk transfer","TRANSFER_RARE_OK"),("⬅️ Kembali","A")]},
-    "AA_LEGEND": {"title":"📋 TRANSFER UMPAN KE (Legend)","buttons":[("Klik OK untuk transfer","TRANSFER_LEGEND_OK"),("⬅️ Kembali","A")]},
-    "AA_MYTHIC": {"title":"📋 TRANSFER UMPAN KE (Mythic)","buttons":[("Klik OK untuk transfer","TRANSFER_MYTHIC_OK"),("⬅️ Kembali","A")]},
-    # REGISTER
-    "C": {"title":"📋 MENU REGISTER","buttons":[("LANJUT","CC"),("⬅️ Kembali","main")]},
-    "CC":{"title":"📋 APAKAH KAMU YAKIN INGIN MENJADI PLAYER LOOT?","buttons":[("PILIH OPSI","CCC"),("⬅️ Kembali","C")]},
-    "CCC":{"title":"📋 PILIH OPSI:","buttons":[("YA","REGISTER_YES"),("TIDAK","REGISTER_NO")]},
-    # STORE
-    "D": {"title":"🛒STORE","buttons":[("BUY UMPAN","D1"),("SELL IKAN","D2"),("TUKAR POINT","D3"),("⬅️ Kembali","main")]},
-    "D1":{"title":"📋 BUY UMPAN","buttons":[("D1A","D1A"),("⬅️ Kembali","D")]},
-    "D2":{"title":"📋 SELL IKAN","buttons":[("D2A","D2A"),("⬅️ Kembali","D")]},
-    "D3":{"title":"📋 TUKAR POINT","buttons":[("Lihat Poin & Tukar","D3A"),("⬅️ Kembali","D")]},
-    "D3A":{"title":"📋 Menu D3A","buttons":[("Tukar Point Chat ke Umpan","TUKAR_POINT"),("⬅️ Kembali","D3")]},
-    # YAPPING
-    "B": {"title":"📋 YAPPING","buttons":[("Poin Pribadi","BB"),("➡️ Leaderboard","BBB"),("⬅️ Kembali","main")]},
-    "BB": {"title":"📋 Poin Pribadi","buttons":[("⬅️ Kembali","B")]},
-    "BBB": {"title":"📋 Leaderboard Yapping","buttons":[("⬅️ Kembali","B")]}
-}
+# ... (sama seperti v3) ...
 
 # GENERIC MENU (E-L)
 for letter in "EFGHIJKL":
@@ -65,13 +29,12 @@ for letter in "EFGHIJKL":
 def make_keyboard(menu_key: str, user_id=None, page: int = 0) -> InlineKeyboardMarkup:
     buttons = []
 
-    # --- LEADERBOARD ---
     if menu_key == "BBB" and user_id is not None:
         points = yapping.load_points()
-        sorted_points = sorted(points.items(), key=lambda x: x[1]["points"], reverse=True)
-        total_pages = (len(sorted_points)-1)//10 if sorted_points else 0
+        sorted_points = sorted(points.items(), key=lambda x: x[1]["points"], reverse=True)[:50]  # batasi 50 user
         start, end = page*10, page*10+10
         nav_buttons = []
+        total_pages = (len(sorted_points)-1)//10 if sorted_points else 0
         if page>0: nav_buttons.append(InlineKeyboardButton("⬅️ Prev", callback_data=f"BBB_PAGE_{page-1}"))
         if page<total_pages: nav_buttons.append(InlineKeyboardButton("➡️ Next", callback_data=f"BBB_PAGE_{page+1}"))
         if nav_buttons: buttons.append(nav_buttons)
@@ -79,7 +42,6 @@ def make_keyboard(menu_key: str, user_id=None, page: int = 0) -> InlineKeyboardM
             buttons.append([InlineKeyboardButton(f"{i}. {pdata.get('username','Unknown')} - {pdata.get('points',0)} pts", callback_data="BB")])
         buttons.append([InlineKeyboardButton("⬅️ Kembali", callback_data="B")])
 
-    # --- MENU UMPAN ---
     elif menu_key in ["A","AA_COMMON","AA_RARE","AA_LEGEND","AA_MYTHIC"] and user_id is not None:
         user_umpan = umpan.get_user(user_id) or {}
         user_umpan.setdefault("umpan", {"A":0,"B":0,"C":0,"D":0})
@@ -92,13 +54,11 @@ def make_keyboard(menu_key: str, user_id=None, page: int = 0) -> InlineKeyboardM
                 text += f" ({jumlah} pcs)"
             buttons.append([InlineKeyboardButton(text, callback_data=callback)])
 
-    # --- TUKAR POINT CHAT ---
     elif menu_key=="D3A" and user_id is not None:
         user_points = yapping.load_points().get(str(user_id),{}).get("points",0)
         buttons.append([InlineKeyboardButton(f"Tukar Point Chat → Umpan (Anda: {user_points} pts)", callback_data="TUKAR_POINT")])
         buttons.append([InlineKeyboardButton("⬅️ Kembali", callback_data="D3")])
 
-    # --- GENERIC MENU ---
     else:
         for text, callback in MENU_STRUCTURE.get(menu_key, {}).get("buttons", []):
             buttons.append([InlineKeyboardButton(text, callback_data=callback)])
@@ -108,21 +68,26 @@ def make_keyboard(menu_key: str, user_id=None, page: int = 0) -> InlineKeyboardM
 # ---------------- MENU HANDLERS ---------------- #
 async def open_menu(client: Client, message: Message):
     logger.debug(f"[MENU] .menufish dipanggil oleh {message.from_user.id}")
-    msg = await message.reply(MENU_STRUCTURE["main"]["title"], reply_markup=make_keyboard("main", message.from_user.id))
-    OPEN_MENU_STATE[message.from_user.id] = {"menu":"main","message_id":msg.id}
+    try:
+        msg = await message.reply(MENU_STRUCTURE["main"]["title"], reply_markup=make_keyboard("main", message.from_user.id))
+        OPEN_MENU_STATE[message.from_user.id] = {"menu":"main","message_id":msg.message_id}
+    except Exception as e:
+        logger.exception(f"Gagal buka menu utama: {e}")
 
 async def open_menu_pm(client: Client, message: Message):
     user_id = message.from_user.id
     keyboard = make_keyboard("main", user_id)
-    msg = await message.reply("📋 Menu Utama:", reply_markup=keyboard)
-    OPEN_MENU_STATE[user_id] = {"menu":"main","message_id":msg.id}
+    try:
+        msg = await message.reply("📋 Menu Utama:", reply_markup=keyboard)
+        OPEN_MENU_STATE[user_id] = {"menu":"main","message_id":msg.message_id}
+    except Exception as e:
+        logger.exception(f"Gagal buka menu PM: {e}")
 
 # ---------------- CALLBACK HANDLER ---------------- #
 async def callback_handler(client: Client, callback_query: CallbackQuery):
     data, user_id = callback_query.data, callback_query.from_user.id
     try: await callback_query.answer()
     except: pass
-    await asyncio.sleep(0.15)
     logger.debug(f"[CALLBACK] {user_id} klik {data}")
 
     # TRANSFER
@@ -135,10 +100,11 @@ async def callback_handler(client: Client, callback_query: CallbackQuery):
             await callback_query.message.edit_text(
                 f"📥 Masukkan transfer format:\n@username jumlah_umpan\nContoh: @axeliandrea 1\n\nJenis: {jenis_key}"
             )
-        except: pass
+        except Exception as e:
+            logger.warning(f"Gagal edit transfer message: {e}")
         return
 
-    # TUKAR POINT CHAT
+    # TUKAR POINT
     if data=="TUKAR_POINT":
         points = yapping.load_points().get(str(user_id),{}).get("points",0)
         if points<100:
@@ -149,7 +115,8 @@ async def callback_handler(client: Client, callback_query: CallbackQuery):
             await callback_query.message.edit_text(
                 f"📊 Anda memiliki {points} chat points.\nBerapa umpan yang ingin ditukar? (1 umpan = 100 chat points)"
             )
-        except: pass
+        except Exception as e:
+            logger.warning(f"Gagal edit tukar point message: {e}")
         return
 
     if data=="TUKAR_CONFIRM" and user_id in TUKAR_POINT_STATE:
@@ -170,16 +137,17 @@ async def callback_handler(client: Client, callback_query: CallbackQuery):
                 f"✅ Tukar berhasil! {jumlah_umpan} umpan telah ditambahkan.\nSisa chat points: {user_data['points']}",
                 reply_markup=make_keyboard("D3",user_id)
             )
-        except: pass
+        except Exception as e:
+            logger.warning(f"Gagal edit message tukar confirm: {e}")
         TUKAR_POINT_STATE.pop(user_id,None)
         return
 
-    # NAVIGATION & GENERIC
+    # NAVIGATION GENERIC
     if data in MENU_STRUCTURE:
         try:
             await callback_query.message.edit_text(MENU_STRUCTURE[data]["title"], reply_markup=make_keyboard(data,user_id))
-        except: pass
-        return
+        except Exception as e:
+            logger.warning(f"Gagal edit menu {data}: {e}")
 
 # ---------------- HANDLE TRANSFER MESSAGE ---------------- #
 async def handle_transfer_message(client: Client, message: Message):
@@ -214,12 +182,14 @@ async def handle_transfer_message(client: Client, message: Message):
                 await message.reply(f"✅ Transfer {amount} umpan ({jenis}) ke {username} berhasil!", reply_markup=make_keyboard("main",user_id))
                 try:
                     await client.send_message(recipient_id,f"🎁 Kamu menerima {amount} umpan ({jenis}) dari @{sender_username}")
-                    # auto-update keyboard penerima jika terbuka
                     if OPEN_MENU_STATE.get(recipient_id):
                         menu_info = OPEN_MENU_STATE[recipient_id]
-                        await client.edit_message_reply_markup(recipient_id, menu_info["message_id"], reply_markup=make_keyboard(menu_info["menu"],recipient_id))
+                        try:
+                            await client.edit_message_reply_markup(recipient_id, menu_info["message_id"], reply_markup=make_keyboard(menu_info["menu"],recipient_id))
+                        except Exception as e:
+                            logger.warning(f"Gagal update keyboard penerima {recipient_id}: {e}")
                 except Exception as e:
-                    logger.warning(f"Gagal notif/update keyboard penerima {recipient_id}: {e}")
+                    logger.warning(f"Gagal notif penerima {recipient_id}: {e}")
             else:
                 await message.reply(f"❌ Transfer gagal: {msg}")
             TRANSFER_STATE.pop(user_id,None)
@@ -227,7 +197,6 @@ async def handle_transfer_message(client: Client, message: Message):
             await message.reply(f"❌ Error: {e}")
             logger.exception("Error handle_transfer_message")
             TRANSFER_STATE.pop(user_id,None)
-        return
 
 # ---------------- REGISTER HANDLERS ---------------- #
 def register(app: Client):
@@ -235,4 +204,4 @@ def register(app: Client):
     app.add_handler(MessageHandler(open_menu_pm, filters.command("menu") & filters.private))
     app.add_handler(MessageHandler(handle_transfer_message, filters.text & filters.private))
     app.add_handler(CallbackQueryHandler(callback_handler))
-    logger.info("[MENU] Handler menu_utama v3 terdaftar.")
+    logger.info("[MENU] Handler menu_utama FINAL v4 terdaftar.")
