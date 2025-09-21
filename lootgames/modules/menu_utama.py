@@ -318,5 +318,3 @@ def register(app: Client):
     # Callback query
     app.add_handler(CallbackQueryHandler(callback_handler))
     logger.info("[MENU] Handler menu_utama terdaftar.")
-
-
