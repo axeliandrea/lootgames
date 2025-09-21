@@ -1,4 +1,4 @@
-# lootgames/modules/menu_utama.py FINAL REVISI
+# lootgames/modules/menu_utama.py FINAL FULL
 import logging
 import asyncio
 from pyrogram import Client, filters
@@ -53,7 +53,7 @@ MENU_STRUCTURE = {
     # YAPPING
     "B": {"title":"📋 YAPPING","buttons":[("Poin Pribadi","BB"),("➡️ Leaderboard","BBB"),("⬅️ Kembali","main")]},
     "BB": {"title":"📋 Poin Pribadi","buttons":[("⬅️ Kembali","B")]},
-    "BBB": {"title":"📋 Leaderboard Yapping","buttons":[("⬅️ Kembali","B")]}
+    "BBB": {"title":"📋 Leaderboard Yapping","buttons":[("⬅️ Kembali","B"])}
 }
 
 # GENERIC MENU (E-L)
@@ -67,7 +67,7 @@ for letter in "EFGHIJKL":
 def make_keyboard(menu_key: str, user_id=None, page: int = 0) -> InlineKeyboardMarkup:
     buttons = []
 
-    # --- LEADERBOARD ---
+    # --- LEADERBOARD --- #
     if menu_key == "BBB" and user_id is not None:
         points = yapping.load_points()
         sorted_points = sorted(points.items(), key=lambda x: x[1]["points"], reverse=True)
@@ -81,7 +81,7 @@ def make_keyboard(menu_key: str, user_id=None, page: int = 0) -> InlineKeyboardM
             buttons.append(nav_buttons)
         buttons.append([InlineKeyboardButton("⬅️ Kembali", callback_data="B")])
 
-    # --- MENU UMPAN ---
+    # --- MENU UMPAN --- #
     elif menu_key in ["A","AA_COMMON","AA_RARE","AA_LEGEND","AA_MYTHIC"] and user_id is not None:
         user_umpan = umpan.get_user(user_id)
         type_map = {"AA_COMMON":"A","AA_RARE":"B","AA_LEGEND":"C","AA_MYTHIC":"D"}
@@ -94,13 +94,13 @@ def make_keyboard(menu_key: str, user_id=None, page: int = 0) -> InlineKeyboardM
                 text += f" ({jumlah} pcs)"
             buttons.append([InlineKeyboardButton(text, callback_data=callback)])
 
-    # --- TUKAR POINT CHAT ---
+    # --- TUKAR POINT CHAT --- #
     elif menu_key == "D3A" and user_id is not None:
         user_points = yapping.load_points().get(str(user_id), {}).get("points", 0)
         buttons.append([InlineKeyboardButton(f"Tukar Point Chat → Umpan (Anda: {user_points} pts)", callback_data="TUKAR_POINT")])
         buttons.append([InlineKeyboardButton("⬅️ Kembali", callback_data="D3")])
 
-    # --- GENERIC MENU ---
+    # --- GENERIC MENU --- #
     else:
         for text, callback in MENU_STRUCTURE.get(menu_key, {}).get("buttons", []):
             buttons.append([InlineKeyboardButton(text, callback_data=callback)])
@@ -124,7 +124,7 @@ async def callback_handler(client: Client, callback_query: CallbackQuery):
     await callback_query.answer()
     await asyncio.sleep(0.2)
 
-    # --- TRANSFER UMPAN ---
+    # --- TRANSFER UMPAN --- #
     if data.startswith("TRANSFER_"):
         jenis_map = {"COMMON":"A","RARE":"B","LEGEND":"C","MYTHIC":"D"}
         jenis_key = data.replace("TRANSFER_", "").replace("_OK", "").upper()
@@ -134,10 +134,42 @@ async def callback_handler(client: Client, callback_query: CallbackQuery):
             f"📥 Masukkan transfer format:\n@username jumlah_umpan\nContoh: @axeliandrea 1\n\nJenis: {jenis_key}",
             reply_markup=None
         )
-        logger.debug(f"[TRANSFER] User {user_id} masuk mode transfer jenis {jenis_key}")
         return
 
-    # --- REGISTER ---
+    # --- TUKAR POINT CHAT --- #
+    if data == "TUKAR_POINT":
+        user_points = yapping.load_points().get(str(user_id), {}).get("points", 0)
+        if user_points < 100:
+            await callback_query.answer("❌ Point chat minimal 100 untuk 1 umpan.", show_alert=True)
+            return
+        TUKAR_POINT_STATE[user_id] = {"step": 1, "jumlah_umpan": 0}
+        await callback_query.message.edit_text(
+            f"📊 Anda memiliki {user_points} chat points.\nBerapa umpan yang ingin ditukar? (1 umpan = 100 chat points)"
+        )
+        return
+
+    # --- KONFIRMASI TUKAR --- #
+    if data == "TUKAR_CONFIRM" and user_id in TUKAR_POINT_STATE:
+        jumlah_umpan = TUKAR_POINT_STATE[user_id]["jumlah_umpan"]
+        points_data = yapping.load_points()
+        user_data = points_data.get(str(user_id), {})
+        total_points_needed = jumlah_umpan * 100
+        if user_data.get("points", 0) < total_points_needed:
+            await callback_query.answer("❌ Point chat tidak cukup.", show_alert=True)
+            TUKAR_POINT_STATE.pop(user_id, None)
+            return
+        user_data["points"] -= total_points_needed
+        points_data[str(user_id)] = user_data
+        yapping.save_points(points_data)
+        umpan.add_umpan(user_id, "A", jumlah_umpan)
+        await callback_query.message.edit_text(
+            f"✅ Tukar berhasil! {jumlah_umpan} umpan telah ditambahkan.\nSisa chat points: {user_data['points']}",
+            reply_markup=make_keyboard("D3", user_id)
+        )
+        TUKAR_POINT_STATE.pop(user_id, None)
+        return
+
+    # --- REGISTER --- #
     if data == "REGISTER_YES":
         username = callback_query.from_user.username or f"user{user_id}"
         user_database.set_player_loot(user_id, True, username)
@@ -156,7 +188,7 @@ async def callback_handler(client: Client, callback_query: CallbackQuery):
         await callback_query.message.edit_text(MENU_STRUCTURE["C"]["title"], reply_markup=make_keyboard("C", user_id))
         return
 
-    # --- GENERIC MENU NAVIGATION ---
+    # --- GENERIC MENU NAVIGATION --- #
     if data in MENU_STRUCTURE:
         await callback_query.message.edit_text(MENU_STRUCTURE[data]["title"], reply_markup=make_keyboard(data, user_id))
     else:
@@ -168,7 +200,7 @@ async def handle_transfer_message(client: Client, message: Message):
     user_id = message.from_user.id
     sender_username = message.from_user.username or f"user{user_id}"
 
-    # --- TRANSFER UMPAN ---
+    # --- TRANSFER UMPAN --- #
     if TRANSFER_STATE.get(user_id):
         try:
             jenis = TRANSFER_STATE[user_id]["jenis"]
@@ -211,10 +243,33 @@ async def handle_transfer_message(client: Client, message: Message):
             TRANSFER_STATE.pop(user_id, None)
         return
 
+    # --- INPUT JUMLAH TUKAR POINT --- #
+    if TUKAR_POINT_STATE.get(user_id) and TUKAR_POINT_STATE[user_id]["step"] == 1:
+        try:
+            jumlah_umpan = int(message.text.strip())
+            if jumlah_umpan <= 0:
+                await message.reply("Jumlah umpan harus > 0.")
+                return
+            points_data = yapping.load_points()
+            user_data = points_data.get(str(user_id), {})
+            if user_data.get("points", 0) < jumlah_umpan * 100:
+                await message.reply("❌ Point chat tidak cukup.")
+                return
+            TUKAR_POINT_STATE[user_id]["jumlah_umpan"] = jumlah_umpan
+            TUKAR_POINT_STATE[user_id]["step"] = 2
+            keyboard = InlineKeyboardMarkup([
+                [InlineKeyboardButton("✅ YA", callback_data="TUKAR_CONFIRM")],
+                [InlineKeyboardButton("❌ Batal", callback_data="D3A")]
+            ])
+            await message.reply(f"Anda yakin ingin menukar {jumlah_umpan} umpan?\n(100 chat points = 1 umpan)", reply_markup=keyboard)
+        except:
+            await message.reply("Format salah. Masukkan angka jumlah umpan.")
+        return
+
 # ---------------- REGISTER HANDLERS ---------------- #
 def register(app: Client):
     app.add_handler(MessageHandler(open_menu, filters.regex(r"^\.menufish$") & filters.private))
     app.add_handler(MessageHandler(open_menu_pm, filters.command("menu") & filters.private))
     app.add_handler(MessageHandler(handle_transfer_message, filters.text & filters.private))
     app.add_handler(CallbackQueryHandler(callback_handler))
-    logger.info("[MENU] Handler menu_utama terdaftar.")
+    logger.info("[MENU] Handler menu_utama FULL terdaftar.")
