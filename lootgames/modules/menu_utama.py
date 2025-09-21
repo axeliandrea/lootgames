@@ -13,7 +13,7 @@ OWNER_ID = 6395738130
 TRANSFER_STATE = {}  # user_id: {"jenis": "COMMON/RARE/LEGEND/MYTHIC"}
 TUKAR_POINT_STATE = {}  # user_id: {"step": step, "jumlah_umpan": n}
 
-# ---------------- MAIN MENU ---------------- #
+# ---------------- MENU STRUCTURE ---------------- #
 MENU_STRUCTURE = {
     "main": {
         "title": "📋 [Menu Utama]",
@@ -26,49 +26,41 @@ MENU_STRUCTURE = {
             ("Menu H", "H"), ("Menu I", "I"), ("Menu J", "J"),
             ("Menu K", "K"), ("Menu L", "L"),
         ],
-    }
+    },
+    # UMPAN MENU
+    "A": {"title":"📋 Menu UMPAN","buttons":[
+        ("UMPAN COMMON 🐛","AA_COMMON"),
+        ("UMPAN RARE 🐌","AA_RARE"),
+        ("UMPAN LEGENDARY 🧇","AA_LEGEND"),
+        ("UMPAN MYTHIC 🐟","AA_MYTHIC"),
+        ("⬅️ Kembali","main")
+    ]},
+    "AA_COMMON": {"title":"📋 TRANSFER UMPAN KE (Common)","buttons":[("Klik OK untuk transfer","TRANSFER_COMMON_OK"),("⬅️ Kembali","A")]},
+    "AA_RARE": {"title":"📋 TRANSFER UMPAN KE (Rare)","buttons":[("Klik OK untuk transfer","TRANSFER_RARE_OK"),("⬅️ Kembali","A")]},
+    "AA_LEGEND": {"title":"📋 TRANSFER UMPAN KE (Legend)","buttons":[("Klik OK untuk transfer","TRANSFER_LEGEND_OK"),("⬅️ Kembali","A")]},
+    "AA_MYTHIC": {"title":"📋 TRANSFER UMPAN KE (Mythic)","buttons":[("Klik OK untuk transfer","TRANSFER_MYTHIC_OK"),("⬅️ Kembali","A")]},
+    # REGISTER
+    "C": {"title":"📋 MENU REGISTER","buttons":[("LANJUT","CC"),("⬅️ Kembali","main")]},
+    "CC":{"title":"📋 APAKAH KAMU YAKIN INGIN MENJADI PLAYER LOOT?","buttons":[("PILIH OPSI","CCC"),("⬅️ Kembali","C")]},
+    "CCC":{"title":"📋 PILIH OPSI:","buttons":[("YA","REGISTER_YES"),("TIDAK","REGISTER_NO")]},
+    # STORE
+    "D": {"title":"🛒STORE","buttons":[("BUY UMPAN","D1"),("SELL IKAN","D2"),("TUKAR POINT","D3"),("⬅️ Kembali","main")]},
+    "D1":{"title":"📋 BUY UMPAN","buttons":[("D1A","D1A"),("⬅️ Kembali","D")]},
+    "D2":{"title":"📋 SELL IKAN","buttons":[("D2A","D2A"),("⬅️ Kembali","D")]},
+    "D3":{"title":"📋 TUKAR POINT","buttons":[("Lihat Poin & Tukar","D3A"),("⬅️ Kembali","D")]},
+    "D3A":{"title":"📋 Menu D3A","buttons":[("Tukar Point Chat ke Umpan","TUKAR_POINT"),("⬅️ Kembali","D3")]},
+    # YAPPING
+    "B": {"title":"📋 YAPPING","buttons":[("Poin Pribadi","BB"),("➡️ Leaderboard","BBB"),("⬅️ Kembali","main")]},
+    "BB": {"title":"📋 Poin Pribadi","buttons":[("⬅️ Kembali","B")]},
+    "BBB": {"title":"📋 Leaderboard Yapping","buttons":[("⬅️ Kembali","B")]}
 }
 
-# ---------------- CUSTOM MENU ---------------- #
-MENU_STRUCTURE["A"] = {
-    "title": "📋 Menu UMPAN",
-    "buttons": [
-        ("UMPAN COMMON 🐛", "AA_COMMON"),
-        ("UMPAN RARE 🐌", "AA_RARE"),
-        ("UMPAN LEGENDARY 🧇", "AA_LEGEND"),
-        ("UMPAN MYTHIC 🐟", "AA_MYTHIC"),
-        ("⬅️ Kembali", "main")
-    ]
-}
-
-MENU_STRUCTURE["AA_COMMON"] = {"title": "📋 TRANSFER UMPAN KE (Common)", "buttons": [("Klik OK untuk transfer", "TRANSFER_COMMON_OK"), ("⬅️ Kembali", "A")]}
-MENU_STRUCTURE["AA_RARE"]   = {"title": "📋 TRANSFER UMPAN KE (Rare)",   "buttons": [("Klik OK untuk transfer", "TRANSFER_RARE_OK"),   ("⬅️ Kembali", "A")]}
-MENU_STRUCTURE["AA_LEGEND"] = {"title": "📋 TRANSFER UMPAN KE (Legend)", "buttons": [("Klik OK untuk transfer", "TRANSFER_LEGEND_OK"), ("⬅️ Kembali", "A")]}
-MENU_STRUCTURE["AA_MYTHIC"] = {"title": "📋 TRANSFER UMPAN KE (Mythic)", "buttons": [("Klik OK untuk transfer", "TRANSFER_MYTHIC_OK"), ("⬅️ Kembali", "A")]}
-
-# ---------------- REGISTER MENU ---------------- #
-MENU_STRUCTURE["C"] = {"title": "📋 MENU REGISTER", "buttons": [("LANJUT", "CC"), ("⬅️ Kembali", "main")]}
-MENU_STRUCTURE["CC"] = {"title": "📋 APAKAH KAMU YAKIN INGIN MENJADI PLAYER LOOT?", "buttons": [("PILIH OPSI", "CCC"), ("⬅️ Kembali", "C")]}
-MENU_STRUCTURE["CCC"] = {"title": "📋 PILIH OPSI:", "buttons": [("YA", "REGISTER_YES"), ("TIDAK", "REGISTER_NO")]}
-
-# ---------------- STORE MENU ---------------- #
-MENU_STRUCTURE["D"] = {"title": "🛒STORE", "buttons": [("BUY UMPAN", "D1"), ("SELL IKAN", "D2"), ("TUKAR POINT", "D3"), ("⬅️ Kembali", "main")]}
-MENU_STRUCTURE["D1"] = {"title": "📋 BUY UMPAN", "buttons": [("D1A", "D1A"), ("⬅️ Kembali", "D")]}
-MENU_STRUCTURE["D2"] = {"title": "📋 SELL IKAN", "buttons": [("D2A", "D2A"), ("⬅️ Kembali", "D")]}
-MENU_STRUCTURE["D3"] = {"title": "📋 TUKAR POINT", "buttons": [("Lihat Poin & Tukar", "D3A"), ("⬅️ Kembali", "D")]}
-MENU_STRUCTURE["D3A"] = {"title": "📋 Menu D3A", "buttons": [("Tukar Point Chat ke Umpan", "TUKAR_POINT"), ("⬅️ Kembali", "D3")]}
-
-# ---------------- GENERIC MENU (E-L) ---------------- #
+# GENERIC MENU (E-L)
 for letter in "EFGHIJKL":
     key1, key2, key3 = letter, f"{letter}{letter}", f"{letter}{letter}{letter}"
     MENU_STRUCTURE[key1] = {"title": f"📋 Menu {key1}", "buttons": [(f"Menu {key2}", key2), ("⬅️ Kembali", "main")]}
     MENU_STRUCTURE[key2] = {"title": f"📋 Menu {key2}", "buttons": [(f"Menu {key3}", key3), ("⬅️ Kembali", key1)]}
     MENU_STRUCTURE[key3] = {"title": f"📋 Menu {key3} (Tampilan Terakhir)", "buttons": [("⬅️ Kembali", key2)]}
-
-# ---------------- MENU YAPPING ---------------- #
-MENU_STRUCTURE["B"] = {"title": "📋 YAPPING", "buttons": [("Poin Pribadi", "BB"), ("➡️ Leaderboard", "BBB"), ("⬅️ Kembali", "main")]}
-MENU_STRUCTURE["BB"] = {"title": "📋 Poin Pribadi", "buttons": [("⬅️ Kembali", "B")]}
-MENU_STRUCTURE["BBB"] = {"title": "📋 Leaderboard Yapping", "buttons": [("⬅️ Kembali", "B")]}
 
 # ---------------- KEYBOARD BUILDER ---------------- #
 def make_keyboard(menu_key: str, user_id=None, page: int = 0) -> InlineKeyboardMarkup:
@@ -90,12 +82,13 @@ def make_keyboard(menu_key: str, user_id=None, page: int = 0) -> InlineKeyboardM
 
     # --- MENU UMPAN ---
     elif menu_key in ["A","AA_COMMON","AA_RARE","AA_LEGEND","AA_MYTHIC"] and user_id is not None:
-        user_umpan = umpan.get_user(user_id)
+        user_umpan = umpan.get_user(user_id) or {}
+        user_umpan.setdefault("umpan", {"A":0,"B":0,"C":0,"D":0})
         type_map = {"AA_COMMON":"A","AA_RARE":"B","AA_LEGEND":"C","AA_MYTHIC":"D"}
         for text, callback in MENU_STRUCTURE.get(menu_key, {}).get("buttons", []):
             if callback in type_map:
                 tkey = type_map[callback]
-                jumlah = user_umpan["umpan"].get(tkey, 0)
+                jumlah = user_umpan["umpan"].get(tkey,0)
                 if user_id == OWNER_ID:
                     jumlah = 999
                 text += f" ({jumlah} pcs)"
@@ -231,7 +224,7 @@ async def callback_handler(client: Client, callback_query: CallbackQuery):
             return
         user_data["points"] -= total_points
         points_data[str(user_id)] = user_data
-        yaping.save_points(points_data)
+        yapping.save_points(points_data)
         umpan.add_umpan(user_id, "A", jumlah_umpan)
         await callback_query.message.edit_text(
             f"✅ Tukar berhasil! {jumlah_umpan} umpan telah ditambahkan.\nSisa chat points: {user_data['points']}",
@@ -309,18 +302,13 @@ async def handle_transfer_message(client: Client, message: Message):
             ])
             await message.reply(f"Anda yakin ingin menukar {jumlah_umpan} umpan?\n(100 chat points = 1 umpan)", reply_markup=keyboard)
         except:
-            await message.reply("Format salah. Masukkan angka jumlah umpan yang ingin ditukar.")
+            await message.reply("Format salah. Masukkan angka jumlah umpan.")
+        return
 
-# ---------------- REGISTER HANDLER ---------------- #
+# ---------------- REGISTER HANDLERS ---------------- #
 def register(app: Client):
-    """
-    Pastikan fungsi ini dipanggil dari main bot (mis. register(app))
-    """
-    app.add_handler(MessageHandler(open_menu, filters.regex(r"^\.menufish$")))
-    app.add_handler(MessageHandler(open_menu_pm, filters.private & filters.regex(r"^/menu$")))
+    app.add_handler(MessageHandler(open_menu, filters.command("menufish") & filters.private))
+    app.add_handler(MessageHandler(open_menu_pm, filters.command("menu") & filters.private))
+    app.add_handler(MessageHandler(handle_transfer_message, filters.text & filters.private))
     app.add_handler(CallbackQueryHandler(callback_handler))
-    app.add_handler(MessageHandler(handle_transfer_message, filters.text))
-    try:
-        umpan.register_topup(app)
-    except Exception as e:
-        logger.debug(f"umpan.register_topup gagal: {e}")
+    logger.info("[MENU] Handler menu_utama terdaftar.")
