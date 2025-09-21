@@ -1,4 +1,4 @@
-# lootgames/modules/menu_utama.py FINAL v4 (revisi transfer + notif + auto-update keyboard + Pyro v2+)
+# lootgames/modules/menu_utama.py FINAL v5 (FULL FIX)
 import logging
 import asyncio
 from pyrogram import Client, filters
@@ -16,9 +16,41 @@ TUKAR_POINT_STATE = {}  # user_id: {"step": step, "jumlah_umpan": n}
 OPEN_MENU_STATE = {}   # user_id: {"menu": menu_key, "message_id": message_id}
 
 # ---------------- MENU STRUCTURE ---------------- #
-# ... (sama seperti v3) ...
+MENU_STRUCTURE = {
+    "main": {
+        "title": "📋 [Menu Utama]",
+        "buttons": [
+            ("UMPAN", "A"), ("YAPPING", "B"), ("REGISTER", "C"), ("🛒STORE", "D"),
+            ("Menu E", "E"), ("Menu F", "F"), ("Menu G", "G"),
+            ("Menu H", "H"), ("Menu I", "I"), ("Menu J", "J"),
+            ("Menu K", "K"), ("Menu L", "L"),
+        ],
+    },
+    "A": {"title":"📋 Menu UMPAN","buttons":[
+        ("COMMON 🐛","AA_COMMON"),
+        ("RARE 🐌","AA_RARE"),
+        ("LEGENDARY 🧇","AA_LEGEND"),
+        ("MYTHIC 🐟","AA_MYTHIC"),
+        ("⬅️ Kembali","main")
+    ]},
+    "AA_COMMON": {"title":"📋 TRANSFER UMPAN KE (Common)","buttons":[("Klik OK untuk transfer","TRANSFER_COMMON_OK"),("⬅️ Kembali","A")]},
+    "AA_RARE": {"title":"📋 TRANSFER UMPAN KE (Rare)","buttons":[("Klik OK untuk transfer","TRANSFER_RARE_OK"),("⬅️ Kembali","A")]},
+    "AA_LEGEND": {"title":"📋 TRANSFER UMPAN KE (Legend)","buttons":[("Klik OK untuk transfer","TRANSFER_LEGEND_OK"),("⬅️ Kembali","A")]},
+    "AA_MYTHIC": {"title":"📋 TRANSFER UMPAN KE (Mythic)","buttons":[("Klik OK untuk transfer","TRANSFER_MYTHIC_OK"),("⬅️ Kembali","A")]},
+    "B": {"title":"📋 YAPPING","buttons":[("Poin Pribadi","BB"),("➡️ Leaderboard","BBB"),("⬅️ Kembali","main")]},
+    "BB": {"title":"📋 Poin Pribadi","buttons":[("⬅️ Kembali","B")]},
+    "BBB": {"title":"📋 Leaderboard Yapping","buttons":[("⬅️ Kembali","B")]},
+    "C": {"title":"📋 MENU REGISTER","buttons":[("LANJUT","CC"),("⬅️ Kembali","main")]},
+    "CC":{"title":"📋 APAKAH KAMU YAKIN INGIN MENJADI PLAYER LOOT?","buttons":[("PILIH OPSI","CCC"),("⬅️ Kembali","C")]},
+    "CCC":{"title":"📋 PILIH OPSI:","buttons":[("YA","REGISTER_YES"),("TIDAK","REGISTER_NO")]},
+    "D": {"title":"🛒STORE","buttons":[("BUY UMPAN","D1"),("SELL IKAN","D2"),("TUKAR POINT","D3"),("⬅️ Kembali","main")]},
+    "D1":{"title":"📋 BUY UMPAN","buttons":[("D1A","D1A"),("⬅️ Kembali","D")]},
+    "D2":{"title":"📋 SELL IKAN","buttons":[("D2A","D2A"),("⬅️ Kembali","D")]},
+    "D3":{"title":"📋 TUKAR POINT","buttons":[("Lihat Poin & Tukar","D3A"),("⬅️ Kembali","D")]},
+    "D3A":{"title":"📋 Menu D3A","buttons":[("Tukar Point Chat ke Umpan","TUKAR_POINT"),("⬅️ Kembali","D3")]}
+}
 
-# GENERIC MENU (E-L)
+# ---------------- GENERIC MENU (E-L) ---------------- #
 for letter in "EFGHIJKL":
     key1, key2, key3 = letter, f"{letter}{letter}", f"{letter}{letter}{letter}"
     MENU_STRUCTURE[key1] = {"title": f"📋 Menu {key1}", "buttons": [(f"Menu {key2}", key2), ("⬅️ Kembali", "main")]}
@@ -29,24 +61,26 @@ for letter in "EFGHIJKL":
 def make_keyboard(menu_key: str, user_id=None, page: int = 0) -> InlineKeyboardMarkup:
     buttons = []
 
-    if menu_key == "BBB" and user_id is not None:
+    # Leaderboard
+    if menu_key=="BBB" and user_id is not None:
         points = yapping.load_points()
-        sorted_points = sorted(points.items(), key=lambda x: x[1]["points"], reverse=True)[:50]  # batasi 50 user
+        sorted_points = sorted(points.items(), key=lambda x: x[1].get("points",0), reverse=True)
+        total_pages = (len(sorted_points)-1)//10 if sorted_points else 0
         start, end = page*10, page*10+10
         nav_buttons = []
-        total_pages = (len(sorted_points)-1)//10 if sorted_points else 0
         if page>0: nav_buttons.append(InlineKeyboardButton("⬅️ Prev", callback_data=f"BBB_PAGE_{page-1}"))
         if page<total_pages: nav_buttons.append(InlineKeyboardButton("➡️ Next", callback_data=f"BBB_PAGE_{page+1}"))
         if nav_buttons: buttons.append(nav_buttons)
-        for i, (uid, pdata) in enumerate(sorted_points[start:end], start=start+1):
+        for i,(uid,pdata) in enumerate(sorted_points[start:end], start=start+1):
             buttons.append([InlineKeyboardButton(f"{i}. {pdata.get('username','Unknown')} - {pdata.get('points',0)} pts", callback_data="BB")])
         buttons.append([InlineKeyboardButton("⬅️ Kembali", callback_data="B")])
 
+    # Menu Umpan
     elif menu_key in ["A","AA_COMMON","AA_RARE","AA_LEGEND","AA_MYTHIC"] and user_id is not None:
         user_umpan = umpan.get_user(user_id) or {}
         user_umpan.setdefault("umpan", {"A":0,"B":0,"C":0,"D":0})
         type_map = {"AA_COMMON":"A","AA_RARE":"B","AA_LEGEND":"C","AA_MYTHIC":"D"}
-        for text, callback in MENU_STRUCTURE.get(menu_key, {}).get("buttons", []):
+        for text, callback in MENU_STRUCTURE.get(menu_key, {}).get("buttons",[]):
             if callback in type_map:
                 tkey = type_map[callback]
                 jumlah = user_umpan["umpan"].get(tkey,0)
@@ -54,11 +88,13 @@ def make_keyboard(menu_key: str, user_id=None, page: int = 0) -> InlineKeyboardM
                 text += f" ({jumlah} pcs)"
             buttons.append([InlineKeyboardButton(text, callback_data=callback)])
 
+    # Tukar Point Chat
     elif menu_key=="D3A" and user_id is not None:
         user_points = yapping.load_points().get(str(user_id),{}).get("points",0)
         buttons.append([InlineKeyboardButton(f"Tukar Point Chat → Umpan (Anda: {user_points} pts)", callback_data="TUKAR_POINT")])
         buttons.append([InlineKeyboardButton("⬅️ Kembali", callback_data="D3")])
 
+    # Generic Menu
     else:
         for text, callback in MENU_STRUCTURE.get(menu_key, {}).get("buttons", []):
             buttons.append([InlineKeyboardButton(text, callback_data=callback)])
@@ -67,7 +103,6 @@ def make_keyboard(menu_key: str, user_id=None, page: int = 0) -> InlineKeyboardM
 
 # ---------------- MENU HANDLERS ---------------- #
 async def open_menu(client: Client, message: Message):
-    logger.debug(f"[MENU] .menufish dipanggil oleh {message.from_user.id}")
     try:
         msg = await message.reply(MENU_STRUCTURE["main"]["title"], reply_markup=make_keyboard("main", message.from_user.id))
         OPEN_MENU_STATE[message.from_user.id] = {"menu":"main","message_id":msg.message_id}
@@ -76,9 +111,8 @@ async def open_menu(client: Client, message: Message):
 
 async def open_menu_pm(client: Client, message: Message):
     user_id = message.from_user.id
-    keyboard = make_keyboard("main", user_id)
     try:
-        msg = await message.reply("📋 Menu Utama:", reply_markup=keyboard)
+        msg = await message.reply("📋 Menu Utama:", reply_markup=make_keyboard("main", user_id))
         OPEN_MENU_STATE[user_id] = {"menu":"main","message_id":msg.message_id}
     except Exception as e:
         logger.exception(f"Gagal buka menu PM: {e}")
@@ -204,4 +238,4 @@ def register(app: Client):
     app.add_handler(MessageHandler(open_menu_pm, filters.command("menu") & filters.private))
     app.add_handler(MessageHandler(handle_transfer_message, filters.text & filters.private))
     app.add_handler(CallbackQueryHandler(callback_handler))
-    logger.info("[MENU] Handler menu_utama FINAL v4 terdaftar.")
+    logger.info("[MENU] Handler menu_utama FINAL v5 terdaftar.")
