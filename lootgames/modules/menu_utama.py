@@ -30,18 +30,21 @@ MENU_STRUCTURE = {
 }
 
 # ---------------- CUSTOM MENU ---------------- #
-MENU_STRUCTURE["A"] = {"title": "📋 Menu UMPAN", "buttons": [("TYPE UMPAN", "AA"), ("⬅️ Kembali", "main")]}
-MENU_STRUCTURE["AA"] = {"title": "📋 TYPE UMPAN", "buttons": [
-    ("Common 🐛", "AA_COMMON"),
-    ("Rare 🐌", "AA_RARE"),
-    ("Legend 🧇", "AA_LEGEND"),
-    ("Mythic 🐟", "AA_MYTHIC"),
-    ("⬅️ Kembali", "A")
-]}
-MENU_STRUCTURE["AA_COMMON"] = {"title": "📋 TRANSFER UMPAN KE (Common)", "buttons": [("Klik OK untuk transfer", "TRANSFER_COMMON_OK"), ("⬅️ Kembali", "AA")]}
-MENU_STRUCTURE["AA_RARE"]   = {"title": "📋 TRANSFER UMPAN KE (Rare)",   "buttons": [("Klik OK untuk transfer", "TRANSFER_RARE_OK"),   ("⬅️ Kembali", "AA")]}
-MENU_STRUCTURE["AA_LEGEND"] = {"title": "📋 TRANSFER UMPAN KE (Legend)", "buttons": [("Klik OK untuk transfer", "TRANSFER_LEGEND_OK"), ("⬅️ Kembali", "AA")]}
-MENU_STRUCTURE["AA_MYTHIC"] = {"title": "📋 TRANSFER UMPAN KE (Mythic)", "buttons": [("Klik OK untuk transfer", "TRANSFER_MYTHIC_OK"), ("⬅️ Kembali", "AA")]}
+MENU_STRUCTURE["A"] = {
+    "title": "📋 Menu UMPAN",
+    "buttons": [
+        ("UMPAN COMMON 🐛", "AA_COMMON"),
+        ("UMPAN RARE 🐌", "AA_RARE"),
+        ("UMPAN LEGENDARY 🧇", "AA_LEGEND"),
+        ("UMPAN MYTHIC 🐟", "AA_MYTHIC"),
+        ("⬅️ Kembali", "main")
+    ]
+}
+
+MENU_STRUCTURE["AA_COMMON"] = {"title": "📋 TRANSFER UMPAN KE (Common)", "buttons": [("Klik OK untuk transfer", "TRANSFER_COMMON_OK"), ("⬅️ Kembali", "A")]}
+MENU_STRUCTURE["AA_RARE"]   = {"title": "📋 TRANSFER UMPAN KE (Rare)",   "buttons": [("Klik OK untuk transfer", "TRANSFER_RARE_OK"),   ("⬅️ Kembali", "A")]}
+MENU_STRUCTURE["AA_LEGEND"] = {"title": "📋 TRANSFER UMPAN KE (Legend)", "buttons": [("Klik OK untuk transfer", "TRANSFER_LEGEND_OK"), ("⬅️ Kembali", "A")]}
+MENU_STRUCTURE["AA_MYTHIC"] = {"title": "📋 TRANSFER UMPAN KE (Mythic)", "buttons": [("Klik OK untuk transfer", "TRANSFER_MYTHIC_OK"), ("⬅️ Kembali", "A")]}
 
 # ---------------- REGISTER MENU ---------------- #
 MENU_STRUCTURE["C"] = {"title": "📋 MENU REGISTER", "buttons": [("LANJUT", "CC"), ("⬅️ Kembali", "main")]}
@@ -70,6 +73,8 @@ MENU_STRUCTURE["BBB"] = {"title": "📋 Leaderboard Yapping", "buttons": [("⬅�
 # ---------------- KEYBOARD BUILDER ---------------- #
 def make_keyboard(menu_key: str, user_id=None, page: int = 0) -> InlineKeyboardMarkup:
     buttons = []
+
+    # --- LEADERBOARD ---
     if menu_key == "BBB" and user_id is not None:
         points = yapping.load_points()
         sorted_points = sorted(points.items(), key=lambda x: x[1]["points"], reverse=True)
@@ -82,26 +87,31 @@ def make_keyboard(menu_key: str, user_id=None, page: int = 0) -> InlineKeyboardM
         if nav_buttons:
             buttons.append(nav_buttons)
         buttons.append([InlineKeyboardButton("⬅️ Kembali", callback_data="B")])
-    elif menu_key.startswith("AA") and user_id is not None:
-        # tampilkan jumlah umpan masing2 type
+
+    # --- MENU UMPAN ---
+    elif menu_key in ["A","AA_COMMON","AA_RARE","AA_LEGEND","AA_MYTHIC"] and user_id is not None:
         user_umpan = umpan.get_user(user_id)
-        # pastikan semua type ada
-        for t in ["A","B","C","D"]:
-            if t not in user_umpan["umpan"]:
-                user_umpan["umpan"][t] = 0
         type_map = {"AA_COMMON":"A","AA_RARE":"B","AA_LEGEND":"C","AA_MYTHIC":"D"}
         for text, callback in MENU_STRUCTURE.get(menu_key, {}).get("buttons", []):
             if callback in type_map:
                 tkey = type_map[callback]
-                text += f" ({user_umpan['umpan'][tkey]} pcs)"
+                jumlah = user_umpan["umpan"].get(tkey, 0)
+                if user_id == OWNER_ID:
+                    jumlah = 999
+                text += f" ({jumlah} pcs)"
             buttons.append([InlineKeyboardButton(text, callback_data=callback)])
+
+    # --- TUKAR POINT CHAT ---
     elif menu_key == "D3A" and user_id is not None:
         user_points = yapping.load_points().get(str(user_id), {}).get("points", 0)
         buttons.append([InlineKeyboardButton(f"Tukar Point Chat → Umpan (Anda: {user_points} pts)", callback_data="TUKAR_POINT")])
         buttons.append([InlineKeyboardButton("⬅️ Kembali", callback_data="D3")])
+
+    # --- GENERIC MENU ---
     else:
         for text, callback in MENU_STRUCTURE.get(menu_key, {}).get("buttons", []):
             buttons.append([InlineKeyboardButton(text, callback_data=callback)])
+
     return InlineKeyboardMarkup(buttons)
 
 # ---------------- MENU HANDLERS ---------------- #
@@ -131,14 +141,9 @@ async def callback_handler(client: Client, callback_query: CallbackQuery):
     await callback_query.answer()
     await asyncio.sleep(0.2)
 
-    # --- TRANSFER PER JENIS ---
+    # --- TRANSFER ---
     if data.startswith("TRANSFER_"):
-        jenis_map = {
-            "COMMON": "A",
-            "RARE": "B",
-            "LEGEND": "C",
-            "MYTHIC": "D"
-        }
+        jenis_map = {"COMMON":"A","RARE":"B","LEGEND":"C","MYTHIC":"D"}
         jenis_key = data.replace("TRANSFER_", "").replace("_OK", "").upper()
         jenis = jenis_map.get(jenis_key, "A")
         TRANSFER_STATE[user_id] = {"jenis": jenis}
@@ -224,11 +229,9 @@ async def callback_handler(client: Client, callback_query: CallbackQuery):
             await callback_query.answer("❌ Point chat tidak cukup.", show_alert=True)
             TUKAR_POINT_STATE.pop(user_id, None)
             return
-        # kurangi chat points
         user_data["points"] -= total_points
         points_data[str(user_id)] = user_data
-        yapping.save_points(points_data)
-        # tambah umpan Common sebagai default
+        yaping.save_points(points_data)
         umpan.add_umpan(user_id, "A", jumlah_umpan)
         await callback_query.message.edit_text(
             f"✅ Tukar berhasil! {jumlah_umpan} umpan telah ditambahkan.\nSisa chat points: {user_data['points']}",
@@ -250,12 +253,11 @@ async def handle_transfer_message(client: Client, message: Message):
     # --- TRANSFER UMPAN ---
     if TRANSFER_STATE.get(user_id):
         try:
-            jenis = TRANSFER_STATE[user_id]["jenis"]  # A/B/C/D
+            jenis = TRANSFER_STATE[user_id]["jenis"]
             parts = message.text.strip().split()
             if len(parts) != 2:
                 await message.reply("Format salah. Contoh: @username 1")
                 return
-
             username, amount = parts
             if not username.startswith("@"):
                 await message.reply("Username harus diawali '@'.")
@@ -264,21 +266,16 @@ async def handle_transfer_message(client: Client, message: Message):
             if amount <= 0:
                 await message.reply("Jumlah harus > 0.")
                 return
-
             recipient_id = user_database.get_user_id_by_username(username)
             if recipient_id is None:
                 await message.reply(f"❌ Username {username} tidak ada di database!")
                 TRANSFER_STATE.pop(user_id, None)
                 return
-
-            # --- OWNER TRANSFER ---
             if user_id == OWNER_ID:
                 umpan.add_umpan(recipient_id, jenis, amount)
                 await message.reply(f"✅ Transfer {amount} umpan ke {username} berhasil! (Owner unlimited)", reply_markup=make_keyboard("main", user_id))
                 TRANSFER_STATE.pop(user_id, None)
                 return
-
-            # --- USER NORMAL ---
             sender_data = umpan.get_user(user_id)
             if sender_data["umpan"].get(jenis, 0) < amount:
                 await message.reply("❌ Umpan tidak cukup!")
@@ -286,7 +283,6 @@ async def handle_transfer_message(client: Client, message: Message):
                 umpan.remove_umpan(user_id, jenis, amount)
                 umpan.add_umpan(recipient_id, jenis, amount)
                 await message.reply(f"✅ Transfer {amount} umpan ke {username} berhasil!", reply_markup=make_keyboard("main", user_id))
-
             TRANSFER_STATE.pop(user_id, None)
         except Exception as e:
             await message.reply(f"❌ Error: {e}")
@@ -320,22 +316,11 @@ def register(app: Client):
     """
     Pastikan fungsi ini dipanggil dari main bot (mis. register(app))
     """
-    # pesan .menufish
     app.add_handler(MessageHandler(open_menu, filters.regex(r"^\.menufish$")))
-
-    # PM /menu
     app.add_handler(MessageHandler(open_menu_pm, filters.private & filters.regex(r"^/menu$")))
-
-    # callback query handler
     app.add_handler(CallbackQueryHandler(callback_handler))
-
-    # pesan teks umum (dipakai untuk transfer & tukar)
     app.add_handler(MessageHandler(handle_transfer_message, filters.text))
-
-    # jika modul umpan punya hook/topup
     try:
         umpan.register_topup(app)
     except Exception as e:
         logger.debug(f"umpan.register_topup gagal: {e}")
-
-
