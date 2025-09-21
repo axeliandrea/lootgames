@@ -23,12 +23,13 @@ MENU_STRUCTURE = {
             ("YAPPING", "B"),
             ("REGISTER", "C"),
             ("🛒STORE", "D"),
-            ("Menu E", "E"), ("Menu F", "F"), ("Menu G", "G"),
+            ("FISHING", "E"),  # 🔹 E diganti FISHING
+            ("Menu F", "F"), ("Menu G", "G"),
             ("Menu H", "H"), ("Menu I", "I"), ("Menu J", "J"),
             ("Menu K", "K"), ("Menu L", "L"),
         ],
     },
-    # --- UMPAN MENU TERBARU ---
+    # --- UMPAN MENU ---
     "A": {"title":"📋 Menu UMPAN","buttons":[
         ("COMMON 🐛","AA_COMMON"),
         ("RARE 🐌","AA_RARE"),
@@ -40,6 +41,22 @@ MENU_STRUCTURE = {
     "AA_RARE": {"title":"📋 TRANSFER UMPAN KE (Rare)","buttons":[("Klik OK untuk transfer","TRANSFER_RARE_OK"),("⬅️ Kembali","A")]},
     "AA_LEGEND": {"title":"📋 TRANSFER UMPAN KE (Legend)","buttons":[("Klik OK untuk transfer","TRANSFER_LEGEND_OK"),("⬅️ Kembali","A")]},
     "AA_MYTHIC": {"title":"📋 TRANSFER UMPAN KE (Mythic)","buttons":[("Klik OK untuk transfer","TRANSFER_MYTHIC_OK"),("⬅️ Kembali","A")]},
+    # --- FISHING MENU ---
+    "E": {"title":"🎣 FISHING","buttons":[
+        ("PILIH UMPAN","EE"),
+        ("⬅️ Kembali","main")
+    ]},
+    "EE": {"title":"📋 PILIH UMPAN","buttons":[
+        ("Lanjut Pilih Jenis","EEE"),
+        ("⬅️ Kembali","E")
+    ]},
+    "EEE": {"title":"📋 Pilih Jenis Umpan","buttons":[
+        ("COMMON 🐛","EEE_COMMON"),
+        ("RARE 🐌","EEE_RARE"),
+        ("LEGENDARY 🧇","EEE_LEGEND"),
+        ("MYTHIC 🐟","EEE_MYTHIC"),
+        ("⬅️ Kembali","EE")
+    ]},
     # REGISTER
     "C": {"title":"📋 MENU REGISTER","buttons":[("LANJUT","CC"),("⬅️ Kembali","main")]},
     "CC":{"title":"📋 APAKAH KAMU YAKIN INGIN MENJADI PLAYER LOOT?","buttons":[("PILIH OPSI","CCC"),("⬅️ Kembali","C")]},
@@ -56,8 +73,8 @@ MENU_STRUCTURE = {
     "BBB": {"title":"📋 Leaderboard Yapping","buttons":[("⬅️ Kembali","B")]}
 }
 
-# GENERIC MENU (E-L)
-for letter in "EFGHIJKL":
+# GENERIC MENU (F-L)
+for letter in "FGHIJKL":
     key1, key2, key3 = letter, f"{letter}{letter}", f"{letter}{letter}{letter}"
     MENU_STRUCTURE[key1] = {"title": f"📋 Menu {key1}", "buttons": [(f"Menu {key2}", key2), ("⬅️ Kembali", "main")]}
     MENU_STRUCTURE[key2] = {"title": f"📋 Menu {key2}", "buttons": [(f"Menu {key3}", key3), ("⬅️ Kembali", key1)]}
@@ -93,6 +110,22 @@ def make_keyboard(menu_key: str, user_id=None, page: int = 0) -> InlineKeyboardM
                     jumlah = 999
                 text += f" ({jumlah} pcs)"
             buttons.append([InlineKeyboardButton(text, callback_data=callback)])
+
+    # --- MENU FISHING (EEE) tampil jumlah umpan ---
+    elif menu_key == "EEE" and user_id is not None:
+        user_umpan = umpan.get_user(user_id) or {"A":{"umpan":0},"B":{"umpan":0},"C":{"umpan":0},"D":{"umpan":0}}
+        if user_id == OWNER_ID:
+            user_umpan = {"A":{"umpan":999},"B":{"umpan":999},"C":{"umpan":999},"D":{"umpan":999}}
+        type_map = {
+            "EEE_COMMON": ("COMMON 🐛", "A"),
+            "EEE_RARE": ("RARE 🐌", "B"),
+            "EEE_LEGEND": ("LEGENDARY 🧇", "C"),
+            "EEE_MYTHIC": ("MYTHIC 🐟", "D"),
+        }
+        for cb, (label, tkey) in type_map.items():
+            jumlah = user_umpan.get(tkey, {}).get("umpan", 0)
+            buttons.append([InlineKeyboardButton(f"{label} ({jumlah} pcs)", callback_data=cb)])
+        buttons.append([InlineKeyboardButton("⬅️ Kembali", callback_data="EE")])
 
     # --- TUKAR POINT CHAT ---
     elif menu_key == "D3A" and user_id is not None:
@@ -309,6 +342,3 @@ def register(app: Client):
     app.add_handler(MessageHandler(handle_transfer_message, filters.text & filters.private))
     app.add_handler(CallbackQueryHandler(callback_handler))
     logger.info("[MENU] Handler menu_utama terdaftar.")
-
-
-
