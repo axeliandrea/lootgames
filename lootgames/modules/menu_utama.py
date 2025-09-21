@@ -74,7 +74,6 @@ for jenis in ["COMMON","RARE","LEGEND","MYTHIC"]:
 # ---------------- KEYBOARD BUILDER ---------------- #
 def make_keyboard(menu_key: str, user_id=None, page: int=0) -> InlineKeyboardMarkup:
     buttons=[]
-    # Leaderboard paging
     if menu_key=="BBB" and user_id:
         points=yapping.load_points()
         sorted_pts=sorted(points.items(),key=lambda x:x[1]["points"],reverse=True)
@@ -84,7 +83,6 @@ def make_keyboard(menu_key: str, user_id=None, page: int=0) -> InlineKeyboardMar
         if page<total_pages: nav.append(InlineKeyboardButton("➡️ Next",callback_data=f"BBB_PAGE_{page+1}"))
         if nav: buttons.append(nav)
         buttons.append([InlineKeyboardButton("⬅️ Kembali",callback_data="B")])
-    # UMPAN jumlah
     elif menu_key in ["A","AA_COMMON","AA_RARE","AA_LEGEND","AA_MYTHIC"] and user_id:
         user_umpan = umpan.get_user(user_id) or {"A":{"umpan":0},"B":{"umpan":0},"C":{"umpan":0},"D":{"umpan":0}}
         type_map={"AA_COMMON":"A","AA_RARE":"B","AA_LEGEND":"C","AA_MYTHIC":"D"}
@@ -94,7 +92,6 @@ def make_keyboard(menu_key: str, user_id=None, page: int=0) -> InlineKeyboardMar
                 jumlah = 999 if user_id==OWNER_ID else user_umpan.get(tkey,{}).get("umpan",0)
                 text+=f" ({jumlah} pcs)"
             buttons.append([InlineKeyboardButton(text,callback_data=cb)])
-    # FISHING EEE
     elif menu_key=="EEE" and user_id:
         user_umpan = umpan.get_user(user_id) or {"A":{"umpan":0},"B":{"umpan":0},"C":{"umpan":0},"D":{"umpan":0}}
         if user_id==OWNER_ID: user_umpan={"A":{"umpan":999},"B":{"umpan":999},"C":{"umpan":999},"D":{"umpan":999}}
@@ -104,12 +101,10 @@ def make_keyboard(menu_key: str, user_id=None, page: int=0) -> InlineKeyboardMar
             jumlah=user_umpan.get(tkey,{}).get("umpan",0)
             buttons.append([InlineKeyboardButton(f"{label} ({jumlah} pcs)",callback_data=cb)])
         buttons.append([InlineKeyboardButton("⬅️ Kembali",callback_data="EE")])
-    # D3A Tukar point
     elif menu_key=="D3A" and user_id:
         pts=yapping.load_points().get(str(user_id),{}).get("points",0)
         buttons.append([InlineKeyboardButton(f"TUKAR 🔄 UMPAN (Anda: {pts} pts)",callback_data="TUKAR_POINT")])
         buttons.append([InlineKeyboardButton("⬅️ Kembali",callback_data="D3")])
-    # Default
     else:
         for text, cb in MENU_STRUCTURE.get(menu_key,{}).get("buttons",[]):
             buttons.append([InlineKeyboardButton(text,callback_data=cb)])
@@ -244,7 +239,7 @@ async def show_leaderboard(cq: CallbackQuery, uid:int, page:int=0):
     start,end=page*10,page*10+10
     text=f"🏆 Leaderboard Yapping (Page {page+1}/{total_pages+1}) 🏆\n\n"
     for i,(u,pdata) in enumerate(sorted_pts[start:end],start=start+1):
-        text+=f"{i}. {pdata.get('username','Unknown')} - {pdata.get('points',0)} pts | Level {pdata.get('level',0)} {yaping.get_badge(pdata.get('level',0))}\n"
+        text+=f"{i}. {pdata.get('username','Unknown')} - {pdata.get('points',0)} pts | Level {pdata.get('level',0)} {yapping.get_badge(pdata.get('level',0))}\n"
     await cq.message.edit_text(text,reply_markup=make_keyboard("BBB",uid,page))
 
 # ---------------- MENU OPEN ---------------- #
