@@ -24,15 +24,18 @@ def register(app):
         if not any(trigger in text for trigger in TRIGGERS):
             return
 
+        # Gunakan karakter dummy 🟦 agar Telegram pasti render custom emoji
+        dummy_char = "🟦"
+
         # Buat entity untuk premium emoji
         entities = [
             MessageEntity(
                 type=MessageEntityType.CUSTOM_EMOJI,
                 offset=0,
-                length=1,  # selalu 1 untuk dummy char
+                length=1,
                 custom_emoji_id=PREMIUM_EMOJI_ID,
             )
         ]
 
-        # Kirim dummy text (⬛), Telegram render jadi emoji premium
-        await message.reply(text="⬛", entities=entities)
+        # Kirim balasan
+        await message.reply(text=dummy_char, entities=entities)
