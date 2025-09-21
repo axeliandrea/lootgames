@@ -11,8 +11,8 @@ logger = logging.getLogger(__name__)
 OWNER_ID = 6395738130
 
 # ---------------- STATE ---------------- #
-TRANSFER_STATE = {}  # user_id: {"jenis": "A/B/C/D"}
-TUKAR_POINT_STATE = {}  # user_id: {"step": step, "jumlah_umpan": n}
+TRANSFER_STATE = {}       # user_id: {"jenis": "A/B/C/D"}
+TUKAR_POINT_STATE = {}    # user_id: {"step": step, "jumlah_umpan": n}
 
 # ---------------- MENU STRUCTURE ---------------- #
 MENU_STRUCTURE = {
@@ -109,14 +109,12 @@ def make_keyboard(menu_key: str, user_id=None, page: int = 0) -> InlineKeyboardM
 
 # ---------------- MENU HANDLERS ---------------- #
 async def open_menu(client: Client, message: Message):
-    logger.debug(f"[MENU] .menufish dipanggil oleh {message.from_user.id}")
     await message.reply(MENU_STRUCTURE["main"]["title"], reply_markup=make_keyboard("main", message.from_user.id))
 
 async def open_menu_pm(client: Client, message: Message):
     user_id = message.from_user.id
     keyboard = make_keyboard("main", user_id)
     await message.reply("📋 Menu Utama:", reply_markup=keyboard)
-    logger.debug(f"[PM MENU] User {user_id} membuka Menu Utama di PM bot")
 
 async def show_leaderboard(callback_query: CallbackQuery, user_id: int, page: int = 0):
     points = yapping.load_points()
@@ -132,7 +130,7 @@ async def show_leaderboard(callback_query: CallbackQuery, user_id: int, page: in
 async def callback_handler(client: Client, callback_query: CallbackQuery):
     data, user_id = callback_query.data, callback_query.from_user.id
     await callback_query.answer()
-    await asyncio.sleep(0.2)
+    await asyncio.sleep(0.1)
 
     # --- TRANSFER UMPAN ---
     if data.startswith("TRANSFER_"):
@@ -144,7 +142,6 @@ async def callback_handler(client: Client, callback_query: CallbackQuery):
             f"📥 Masukkan transfer format:\n@username jumlah_umpan\nContoh: @axeliandrea 1\n\nJenis: {jenis_key}",
             reply_markup=None
         )
-        logger.debug(f"[TRANSFER] User {user_id} masuk mode transfer jenis {jenis_key}")
         return
 
     # --- REGISTER ---
@@ -166,6 +163,13 @@ async def callback_handler(client: Client, callback_query: CallbackQuery):
         await callback_query.message.edit_text(MENU_STRUCTURE["C"]["title"], reply_markup=make_keyboard("C", user_id))
         return
 
+    # --- SCAN ID & USN ---
+    if data.startswith("SCAN_"):
+        scan_id = int(data.split("_")[-1])
+        username = user_database.get_username_by_id(scan_id) or "Unknown"
+        await callback_query.message.edit_text(f"📋 Scan User:\nID: {scan_id}\nUsername: @{username}")
+        return
+
     # --- POIN PRIBADI ---
     if data == "BB":
         points = yapping.load_points()
@@ -178,7 +182,7 @@ async def callback_handler(client: Client, callback_query: CallbackQuery):
         return
 
     # --- LEADERBOARD ---
-    elif data == "BBB":
+    if data == "BBB":
         await show_leaderboard(callback_query, user_id, 0)
         return
     elif data.startswith("BBB_PAGE_"):
@@ -187,7 +191,7 @@ async def callback_handler(client: Client, callback_query: CallbackQuery):
         return
 
     # --- TUKAR POINT CHAT KE UMPAN ---
-    elif data == "TUKAR_POINT":
+    if data == "TUKAR_POINT":
         points = yapping.load_points().get(str(user_id), {}).get("points", 0)
         if points < 100:
             await callback_query.answer("❌ Point chat tidak cukup minimal 100 untuk 1 umpan.", show_alert=True)
@@ -223,12 +227,11 @@ async def callback_handler(client: Client, callback_query: CallbackQuery):
         await callback_query.message.edit_text(MENU_STRUCTURE[data]["title"], reply_markup=make_keyboard(data, user_id))
     else:
         await callback_query.answer("Menu tidak tersedia.", show_alert=True)
-        logger.error(f"❌ Callback {data} tidak dikenal!")
 
 # ---------------- HANDLE TRANSFER & TUKAR MESSAGE ---------------- #
 async def handle_transfer_message(client: Client, message: Message):
     user_id = message.from_user.id
-    sender_username = message.from_user.username or f"user{user_id}"
+    username_sender = message.from_user.username or f"user{user_id}"
 
     # --- TRANSFER UMPAN ---
     if TRANSFER_STATE.get(user_id):
@@ -264,7 +267,7 @@ async def handle_transfer_message(client: Client, message: Message):
 
             await message.reply(f"✅ Transfer {amount} umpan ke {username} berhasil!", reply_markup=make_keyboard("main", user_id))
             try:
-                await client.send_message(recipient_id, f"🎁 Kamu mendapatkan {amount} umpan dari (@{sender_username})")
+                await client.send_message(recipient_id, f"🎁 Kamu mendapatkan {amount} umpan dari (@{username_sender})")
             except Exception as e:
                 logger.error(f"Gagal kirim notif ke penerima {recipient_id}: {e}")
             TRANSFER_STATE.pop(user_id, None)
@@ -280,7 +283,7 @@ async def handle_transfer_message(client: Client, message: Message):
             if jumlah_umpan <= 0:
                 await message.reply("Jumlah umpan harus > 0.")
                 return
-            points_data = yapping.load_points()
+            points_data = yaping.load_points()
             user_data = points_data.get(str(user_id), {})
             if user_data.get("points",0) < jumlah_umpan*100:
                 await message.reply("❌ Point chat tidak cukup.")
