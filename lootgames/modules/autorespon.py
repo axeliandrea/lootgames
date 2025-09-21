@@ -1,5 +1,4 @@
 # lootgames/modules/autorespon.py
-import re
 from pyrogram import filters
 from pyrogram.types import Message, MessageEntity
 from pyrogram.enums import MessageEntityType
@@ -11,7 +10,7 @@ Trigger: 'fish', 'fisher', 'lucky', 'fuck', 'kontol', 'anjing'
 """
 
 # Premium emoji ID (sesuaikan dengan botmu)
-PREMIUM_EMOJI_ID = 5257967696124852779  # contoh sama seperti AutoFuck
+PREMIUM_EMOJI_ID = 5257967696124852779
 
 # Daftar trigger
 TRIGGERS = ["fish", "fisher", "lucky", "fuck", "kontol", "anjing"]
@@ -21,23 +20,20 @@ def register(app):
     async def auto_reply_premium(client, message: Message):
         text = message.text.lower().strip()
 
-        # Regex untuk memastikan kata trigger match utuh
-        pattern = r'\b(?:' + '|'.join(map(re.escape, TRIGGERS)) + r')\b'
-        if not re.search(pattern, text):
-            return
+        # Trigger check: exact match untuk kata kasar, substring match untuk kata lain
+        if any(text == t for t in ["fuck", "kontol", "anjing"]) or any(t in text for t in ["fish", "fisher", "lucky"]):
+            # Dummy char untuk emoji premium
+            dummy_char = "⬛"
+            
+            # Buat entity custom emoji
+            entities = [
+                MessageEntity(
+                    type=MessageEntityType.CUSTOM_EMOJI,
+                    offset=0,
+                    length=1,
+                    custom_emoji_id=PREMIUM_EMOJI_ID,
+                )
+            ]
 
-        # Dummy char ⬛ yang pasti valid
-        dummy_char = "⬛"
-
-        # Entity custom emoji
-        entities = [
-            MessageEntity(
-                type=MessageEntityType.CUSTOM_EMOJI,
-                offset=0,
-                length=1,
-                custom_emoji_id=PREMIUM_EMOJI_ID,
-            )
-        ]
-
-        # Balas pesan dengan premium emoji
-        await message.reply(text=dummy_char, entities=entities)
+            # Kirim balasan emoji premium
+            await message.reply(text=dummy_char, entities=entities)
