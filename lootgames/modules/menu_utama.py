@@ -1,4 +1,4 @@
-# lootgames/modules/menu_utama.py FINAL (revisi transfer + notif PM saja)
+# lootgames/modules/menu_utama.py FINAL (transfer fix + notif PM)
 import logging
 import asyncio
 from pyrogram import Client, filters
@@ -156,7 +156,6 @@ async def callback_handler(client: Client, callback_query: CallbackQuery):
             pass
         return
 
-    # ... (callback handling REGISTER, SCAN, POIN, LEADERBOARD, TUKAR POINT sama seperti versi sebelumnya)
     # NAVIGATION
     if data in MENU_STRUCTURE:
         try:
@@ -178,13 +177,17 @@ async def handle_transfer_message(client: Client, message: Message):
             if len(parts) != 2:
                 await message.reply("Format salah. Contoh: @username 1")
                 return
-            username, amount = parts
+            username, amount_str = parts
             if not username.startswith("@"):
                 await message.reply("Username harus diawali '@'.")
                 return
-            amount = int(amount)
-            if amount <= 0:
-                await message.reply("Jumlah harus > 0.")
+            try:
+                amount = int(amount_str)
+                if amount <= 0:
+                    await message.reply("Jumlah harus > 0.")
+                    return
+            except Exception:
+                await message.reply("Format salah. Contoh: @username 1")
                 return
 
             recipient_id = user_database.get_user_id_by_username(username)
@@ -196,13 +199,13 @@ async def handle_transfer_message(client: Client, message: Message):
             umpan.init_user_if_missing(recipient_id, username.lstrip("@"))
             success, msg = umpan.transfer_umpan(user_id, recipient_id, jenis, amount)
             if success:
-                # notif sender PM
                 await message.reply(f"✅ Transfer {amount} umpan ({jenis}) ke {username} berhasil!", reply_markup=make_keyboard("main", user_id))
-                # notif recipient PM
                 try:
                     recipient_data = umpan.get_user(recipient_id)
-                    new_total = recipient_data.get(jenis, 0)
-                    await client.send_message(recipient_id, f"🎁 Kamu menerima {amount} umpan ({jenis}) dari @{sender_username}\n📌 Total {jenis}: {new_total} pcs")
+                    new_total = recipient_data.get(jenis, {}).get("umpan", 0)
+                    await client.send_message(recipient_id,
+                        f"🎁 Kamu menerima {amount} umpan ({jenis}) dari @{sender_username}\n📌 Total {jenis}: {new_total} pcs"
+                    )
                 except Exception as e:
                     logger.warning(f"Gagal notif penerima {recipient_id}: {e}")
             else:
@@ -221,7 +224,7 @@ async def handle_transfer_message(client: Client, message: Message):
             if jumlah_umpan <= 0:
                 await message.reply("Jumlah umpan harus > 0.")
                 return
-            points_data = yapping.load_points()
+            points_data = yaping.load_points()
             user_data = points_data.get(str(user_id), {})
             if user_data.get("points",0) < jumlah_umpan*100:
                 await message.reply("❌ Point chat tidak cukup.")
