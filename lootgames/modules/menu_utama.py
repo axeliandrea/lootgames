@@ -307,8 +307,9 @@ async def handle_transfer_message(client: Client, message: Message):
 
 # ---------------- REGISTER HANDLERS ---------------- #
 def register(app: Client):
-    app.add_handler(MessageHandler(open_menu, filters.command("menufish") & filters.private))
+    app.add_handler(MessageHandler(open_menu, filters.regex(r"^\.menufish$") & filters.private))
     app.add_handler(MessageHandler(open_menu_pm, filters.command("menu") & filters.private))
     app.add_handler(MessageHandler(handle_transfer_message, filters.text & filters.private))
     app.add_handler(CallbackQueryHandler(callback_handler))
     logger.info("[MENU] Handler menu_utama terdaftar.")
+
