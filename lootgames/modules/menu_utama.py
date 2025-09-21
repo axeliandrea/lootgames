@@ -31,7 +31,7 @@ MENU_STRUCTURE = {
 
 # ---------------- CUSTOM MENU ---------------- #
 MENU_STRUCTURE["A"] = {"title": "📋 Menu UMPAN", "buttons": [("Jumlah UMPAN", "AA"), ("⬅️ Kembali", "main")]}
-MENU_STRUCTURE["AA"] = {"title": "📋 Jumlah UMPAN", "buttons": [
+MENU_STRUCTURE["AA"] = {"title": "📋 TYPE UMPAN", "buttons": [
     ("Common", "AA_COMMON"),
     ("Rare", "AA_RARE"),
     ("Legend", "AA_LEGEND"),
@@ -83,7 +83,17 @@ def make_keyboard(menu_key: str, user_id=None, page: int = 0) -> InlineKeyboardM
             buttons.append(nav_buttons)
         buttons.append([InlineKeyboardButton("⬅️ Kembali", callback_data="B")])
     elif menu_key.startswith("AA") and user_id is not None:
+        # tampilkan jumlah umpan masing2 type
+        user_umpan = umpan.get_user(user_id)
+        # pastikan semua type ada
+        for t in ["A","B","C","D"]:
+            if t not in user_umpan["umpan"]:
+                user_umpan["umpan"][t] = 0
+        type_map = {"AA_COMMON":"A","AA_RARE":"B","AA_LEGEND":"C","AA_MYTHIC":"D"}
         for text, callback in MENU_STRUCTURE.get(menu_key, {}).get("buttons", []):
+            if callback in type_map:
+                tkey = type_map[callback]
+                text += f" ({user_umpan['umpan'][tkey]} pcs)"
             buttons.append([InlineKeyboardButton(text, callback_data=callback)])
     elif menu_key == "D3A" and user_id is not None:
         user_points = yapping.load_points().get(str(user_id), {}).get("points", 0)
