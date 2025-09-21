@@ -6,20 +6,22 @@ from pyrogram.enums import MessageEntityType
 __MODULE__ = "AutoRespon"
 __HELP__ = """
 Auto respon dengan emoji premium 🤩
-Trigger: 'fish', 'fisher', 'lucky'
+Trigger: 'fish', 'fisher', 'lucky', 'fuck', 'kontol', 'anjing'
 """
 
 # Premium emoji ID (ganti sesuai kebutuhan)
 PREMIUM_EMOJI_ID = 6235295024817379885
 
 # Kata trigger
-TRIGGERS = ["fish", "fisher", "lucky"]
+TRIGGERS = ["fish", "fisher", "lucky", "fuck", "kontol", "anjing"]
 
 def register(app):
     @app.on_message(filters.group & filters.text, group=2)
     async def auto_reply_premium(client, message: Message):
-        text = message.text.lower().strip()
-        if text not in TRIGGERS:
+        text = message.text.lower()
+
+        # Cek apakah ada kata trigger di dalam teks
+        if not any(trigger in text for trigger in TRIGGERS):
             return
 
         # Buat entity untuk premium emoji
