@@ -1,4 +1,4 @@
-# lootgames/modules/menu_utama.py FINAL (transfer fix + notif PM)
+# lootgames/modules/menu_utama.py FINAL v2 (revisi transfer + notif + auto-update keyboard)
 import logging
 import asyncio
 from pyrogram import Client, filters
@@ -13,16 +13,14 @@ OWNER_ID = 6395738130
 # ---------------- STATE ---------------- #
 TRANSFER_STATE = {}  # user_id: {"jenis": "COMMON/RARE/LEGEND/MYTHIC"}
 TUKAR_POINT_STATE = {}  # user_id: {"step": step, "jumlah_umpan": n}
+OPEN_MENU_STATE = {}   # user_id: {"menu": menu_key, "message_id": message_id}
 
 # ---------------- MENU STRUCTURE ---------------- #
 MENU_STRUCTURE = {
     "main": {
         "title": "📋 [Menu Utama]",
         "buttons": [
-            ("UMPAN", "A"),
-            ("YAPPING", "B"),
-            ("REGISTER", "C"),
-            ("🛒STORE", "D"),
+            ("UMPAN", "A"), ("YAPPING", "B"), ("REGISTER", "C"), ("🛒STORE", "D"),
             ("Menu E", "E"), ("Menu F", "F"), ("Menu G", "G"),
             ("Menu H", "H"), ("Menu I", "I"), ("Menu J", "J"),
             ("Menu K", "K"), ("Menu L", "L"),
@@ -72,6 +70,7 @@ def make_keyboard(menu_key: str, user_id=None, page: int = 0) -> InlineKeyboardM
         points = yapping.load_points()
         sorted_points = sorted(points.items(), key=lambda x: x[1]["points"], reverse=True)
         total_pages = (len(sorted_points) - 1) // 10 if len(sorted_points) > 0 else 0
+        start, end = page*10, page*10+10
         nav_buttons = []
         if page > 0:
             nav_buttons.append(InlineKeyboardButton("⬅️ Prev", callback_data=f"BBB_PAGE_{page-1}"))
@@ -79,6 +78,8 @@ def make_keyboard(menu_key: str, user_id=None, page: int = 0) -> InlineKeyboardM
             nav_buttons.append(InlineKeyboardButton("➡️ Next", callback_data=f"BBB_PAGE_{page+1}"))
         if nav_buttons:
             buttons.append(nav_buttons)
+        for i, (uid, pdata) in enumerate(sorted_points[start:end], start=start+1):
+            buttons.append([InlineKeyboardButton(f"{i}. {pdata.get('username','Unknown')} - {pdata.get('points',0)} pts", callback_data="BB")])
         buttons.append([InlineKeyboardButton("⬅️ Kembali", callback_data="B")])
 
     # --- MENU UMPAN ---
@@ -111,34 +112,21 @@ def make_keyboard(menu_key: str, user_id=None, page: int = 0) -> InlineKeyboardM
 # ---------------- MENU HANDLERS ---------------- #
 async def open_menu(client: Client, message: Message):
     logger.debug(f"[MENU] .menufish dipanggil oleh {message.from_user.id}")
-    await message.reply(MENU_STRUCTURE["main"]["title"], reply_markup=make_keyboard("main", message.from_user.id))
+    msg = await message.reply(MENU_STRUCTURE["main"]["title"], reply_markup=make_keyboard("main", message.from_user.id))
+    OPEN_MENU_STATE[message.from_user.id] = {"menu":"main","message_id":msg.message_id}
 
 async def open_menu_pm(client: Client, message: Message):
     user_id = message.from_user.id
     keyboard = make_keyboard("main", user_id)
-    await message.reply("📋 Menu Utama:", reply_markup=keyboard)
-    logger.debug(f"[PM MENU] User {user_id} membuka Menu Utama di PM bot")
-
-async def show_leaderboard(callback_query: CallbackQuery, user_id: int, page: int = 0):
-    points = yapping.load_points()
-    sorted_points = sorted(points.items(), key=lambda x: x[1]["points"], reverse=True)
-    total_pages = (len(sorted_points) - 1) // 10 if len(sorted_points) > 0 else 0
-    start, end = page*10, page*10+10
-    text = f"🏆 Leaderboard Yapping (Page {page+1}/{total_pages+1}) 🏆\n\n"
-    for i, (uid, pdata) in enumerate(sorted_points[start:end], start=start+1):
-        text += f"{i}. {pdata.get('username','Unknown')} - {pdata.get('points',0)} pts | Level {pdata.get('level',0)} {yapping.get_badge(pdata.get('level',0))}\n"
-    try:
-        await callback_query.message.edit_text(text, reply_markup=make_keyboard("BBB", user_id, page))
-    except Exception:
-        pass
+    msg = await message.reply("📋 Menu Utama:", reply_markup=keyboard)
+    OPEN_MENU_STATE[user_id] = {"menu":"main","message_id":msg.message_id}
 
 # ---------------- CALLBACK HANDLER ---------------- #
 async def callback_handler(client: Client, callback_query: CallbackQuery):
     data, user_id = callback_query.data, callback_query.from_user.id
     try:
         await callback_query.answer()
-    except Exception:
-        pass
+    except: pass
     await asyncio.sleep(0.15)
     logger.debug(f"[CALLBACK] {user_id} klik {data}")
 
@@ -146,98 +134,106 @@ async def callback_handler(client: Client, callback_query: CallbackQuery):
     if data.startswith("TRANSFER_"):
         jenis_map = {"COMMON":"A","RARE":"B","LEGEND":"C","MYTHIC":"D"}
         jenis_key = data.replace("TRANSFER_", "").replace("_OK", "").upper()
-        jenis = jenis_map.get(jenis_key, "A")
+        jenis = jenis_map.get(jenis_key,"A")
         TRANSFER_STATE[user_id] = {"jenis": jenis}
         try:
             await callback_query.message.edit_text(
                 f"📥 Masukkan transfer format:\n@username jumlah_umpan\nContoh: @axeliandrea 1\n\nJenis: {jenis_key}"
             )
-        except Exception:
-            pass
+        except: pass
         return
 
-    # NAVIGATION
+    # TUKAR POINT CHAT
+    if data == "TUKAR_POINT":
+        points = yaping.load_points().get(str(user_id), {}).get("points",0)
+        if points<100:
+            await callback_query.answer("❌ Point chat tidak cukup minimal 100 untuk 1 umpan.", show_alert=True)
+            return
+        TUKAR_POINT_STATE[user_id] = {"step":1, "jumlah_umpan":0}
+        try:
+            await callback_query.message.edit_text(
+                f"📊 Anda memiliki {points} chat points.\nBerapa umpan yang ingin ditukar? (1 umpan = 100 chat points)"
+            )
+        except: pass
+        return
+
+    if data == "TUKAR_CONFIRM" and user_id in TUKAR_POINT_STATE:
+        jumlah_umpan = TUKAR_POINT_STATE[user_id]["jumlah_umpan"]
+        total_points = jumlah_umpan*100
+        points_data = yapping.load_points()
+        user_data = points_data.get(str(user_id),{})
+        if user_data.get("points",0)<total_points:
+            await callback_query.answer("❌ Point chat tidak cukup.", show_alert=True)
+            TUKAR_POINT_STATE.pop(user_id,None)
+            return
+        user_data["points"] -= total_points
+        points_data[str(user_id)] = user_data
+        yapping.save_points(points_data)
+        umpan.add_umpan(user_id,"A",jumlah_umpan)
+        try:
+            await callback_query.message.edit_text(
+                f"✅ Tukar berhasil! {jumlah_umpan} umpan telah ditambahkan.\nSisa chat points: {user_data['points']}",
+                reply_markup=make_keyboard("D3", user_id)
+            )
+        except: pass
+        TUKAR_POINT_STATE.pop(user_id,None)
+        return
+
+    # NAVIGATION & GENERIC
     if data in MENU_STRUCTURE:
         try:
-            await callback_query.message.edit_text(MENU_STRUCTURE[data]["title"], reply_markup=make_keyboard(data, user_id))
-        except Exception:
-            pass
+            await callback_query.message.edit_text(MENU_STRUCTURE[data]["title"], reply_markup=make_keyboard(data,user_id))
+        except: pass
         return
 
-# ---------------- HANDLE TRANSFER & TUKAR MESSAGE ---------------- #
+# ---------------- HANDLE TRANSFER MESSAGE ---------------- #
 async def handle_transfer_message(client: Client, message: Message):
     user_id = message.from_user.id
     sender_username = message.from_user.username or f"user{user_id}"
 
-    # TRANSFER UMPAN
+    # TRANSFER
     if TRANSFER_STATE.get(user_id):
         try:
             jenis = TRANSFER_STATE[user_id]["jenis"]
             parts = message.text.strip().split()
-            if len(parts) != 2:
+            if len(parts)!=2:
                 await message.reply("Format salah. Contoh: @username 1")
                 return
-            username, amount_str = parts
+            username, amount = parts
             if not username.startswith("@"):
                 await message.reply("Username harus diawali '@'.")
                 return
-            try:
-                amount = int(amount_str)
-                if amount <= 0:
-                    await message.reply("Jumlah harus > 0.")
-                    return
-            except Exception:
-                await message.reply("Format salah. Contoh: @username 1")
+            amount = int(amount)
+            if amount<=0:
+                await message.reply("Jumlah harus > 0.")
                 return
 
             recipient_id = user_database.get_user_id_by_username(username)
             if recipient_id is None:
                 await message.reply(f"❌ Username {username} tidak ada di database! Minta penerima /start ke bot dulu.")
-                TRANSFER_STATE.pop(user_id, None)
+                TRANSFER_STATE.pop(user_id,None)
                 return
 
             umpan.init_user_if_missing(recipient_id, username.lstrip("@"))
-            success, msg = umpan.transfer_umpan(user_id, recipient_id, jenis, amount)
+            success,msg = umpan.transfer_umpan(user_id,recipient_id,jenis,amount)
             if success:
-                await message.reply(f"✅ Transfer {amount} umpan ({jenis}) ke {username} berhasil!", reply_markup=make_keyboard("main", user_id))
+                await message.reply(f"✅ Transfer {amount} umpan ({jenis}) ke {username} berhasil!", reply_markup=make_keyboard("main",user_id))
                 try:
-                    recipient_data = umpan.get_user(recipient_id)
-                    new_total = recipient_data.get(jenis, {}).get("umpan", 0)
-                    await client.send_message(recipient_id,
-                        f"🎁 Kamu menerima {amount} umpan ({jenis}) dari @{sender_username}\n📌 Total {jenis}: {new_total} pcs"
-                    )
+                    # notif penerima
+                    await client.send_message(recipient_id,f"🎁 Kamu menerima {amount} umpan ({jenis}) dari @{sender_username}")
+                    # auto-update keyboard penerima jika open
+                    if OPEN_MENU_STATE.get(recipient_id):
+                        menu_info = OPEN_MENU_STATE[recipient_id]
+                        await client.edit_message_reply_markup(recipient_id, menu_info["message_id"], reply_markup=make_keyboard(menu_info["menu"],recipient_id))
                 except Exception as e:
-                    logger.warning(f"Gagal notif penerima {recipient_id}: {e}")
+                    logger.warning(f"Gagal notif/update keyboard penerima {recipient_id}: {e}")
             else:
                 await message.reply(f"❌ Transfer gagal: {msg}")
-            TRANSFER_STATE.pop(user_id, None)
+            TRANSFER_STATE.pop(user_id,None)
         except Exception as e:
             await message.reply(f"❌ Error: {e}")
             logger.exception("Error handle_transfer_message")
-            TRANSFER_STATE.pop(user_id, None)
-        return
-
-    # TUKAR POINT CHAT KE UMPAN
-    if TUKAR_POINT_STATE.get(user_id):
-        try:
-            jumlah_umpan = int(message.text.strip())
-            if jumlah_umpan <= 0:
-                await message.reply("Jumlah umpan harus > 0.")
-                return
-            points_data = yaping.load_points()
-            user_data = points_data.get(str(user_id), {})
-            if user_data.get("points",0) < jumlah_umpan*100:
-                await message.reply("❌ Point chat tidak cukup.")
-                return
-            TUKAR_POINT_STATE[user_id]["jumlah_umpan"] = jumlah_umpan
-            TUKAR_POINT_STATE[user_id]["step"] = 2
-            keyboard = InlineKeyboardMarkup([
-                [InlineKeyboardButton("✅ YA", callback_data="TUKAR_CONFIRM")],
-                [InlineKeyboardButton("❌ Batal", callback_data="D3A")]
-            ])
-            await message.reply(f"Anda yakin ingin menukar {jumlah_umpan} umpan?\n(100 chat points = 1 umpan)", reply_markup=keyboard)
-        except:
-            await message.reply("Format salah. Masukkan angka jumlah umpan.")
+            TRANSFER_STATE.pop(user_id,None)
         return
 
 # ---------------- REGISTER HANDLERS ---------------- #
