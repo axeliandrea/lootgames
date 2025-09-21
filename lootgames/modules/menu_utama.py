@@ -7,7 +7,7 @@ from pyrogram.enums import MessageEntityType
 from pyrogram.handlers import MessageHandler, CallbackQueryHandler
 
 from lootgames.modules import yapping, umpan, user_database
-from lootgames.modules.gacha_fishing import fishing_loot  # import modul gacha
+from lootgames.modules.gacha_fishing import fishing_loot  # pastikan return loot ditambahkan
 from lootgames.modules.fishing_helper import send_single_emoji, FISHING_EMOJI
 
 logger = logging.getLogger(__name__)
@@ -100,7 +100,6 @@ for jenis in ["COMMON","RARE","LEGEND","MYTHIC"]:
 # ---------------- KEYBOARD BUILDER ---------------- #
 def make_keyboard(menu_key: str, user_id=None, page: int = 0) -> InlineKeyboardMarkup:
     buttons = []
-
     # --- LEADERBOARD ---
     if menu_key == "BBB" and user_id is not None:
         points = yapping.load_points()
@@ -114,7 +113,6 @@ def make_keyboard(menu_key: str, user_id=None, page: int = 0) -> InlineKeyboardM
         if nav_buttons:
             buttons.append(nav_buttons)
         buttons.append([InlineKeyboardButton("⬅️ Kembali", callback_data="B")])
-
     # --- MENU UMPAN TERBARU ---
     elif menu_key in ["A","AA_COMMON","AA_RARE","AA_LEGEND","AA_MYTHIC"] and user_id is not None:
         user_umpan = umpan.get_user(user_id) or {"A":{"umpan":0},"B":{"umpan":0},"C":{"umpan":0},"D":{"umpan":0}}
@@ -127,7 +125,6 @@ def make_keyboard(menu_key: str, user_id=None, page: int = 0) -> InlineKeyboardM
                     jumlah = 999
                 text += f" ({jumlah} pcs)"
             buttons.append([InlineKeyboardButton(text, callback_data=callback)])
-
     # --- MENU FISHING (EEE) ---
     elif menu_key == "EEE" and user_id is not None:
         user_umpan = umpan.get_user(user_id) or {"A":{"umpan":0},"B":{"umpan":0},"C":{"umpan":0},"D":{"umpan":0}}
@@ -143,18 +140,15 @@ def make_keyboard(menu_key: str, user_id=None, page: int = 0) -> InlineKeyboardM
             jumlah = user_umpan.get(tkey, {}).get("umpan", 0)
             buttons.append([InlineKeyboardButton(f"{label} ({jumlah} pcs)", callback_data=cb)])
         buttons.append([InlineKeyboardButton("⬅️ Kembali", callback_data="EE")])
-
     # --- TUKAR POINT CHAT ---
     elif menu_key == "D3A" and user_id is not None:
         user_points = yapping.load_points().get(str(user_id), {}).get("points", 0)
         buttons.append([InlineKeyboardButton(f"TUKAR 🔄 UMPAN (Anda: {user_points} pts)", callback_data="TUKAR_POINT")])
         buttons.append([InlineKeyboardButton("⬅️ Kembali", callback_data="D3")])
-
     # --- GENERIC MENU ---
     else:
         for text, callback in MENU_STRUCTURE.get(menu_key, {}).get("buttons", []):
             buttons.append([InlineKeyboardButton(text, callback_data=callback)])
-
     return InlineKeyboardMarkup(buttons)
 
 # ---------------- SEND PREMIUM EMOJI ---------------- #
@@ -200,9 +194,19 @@ async def callback_handler(client: Client, callback_query: CallbackQuery):
                 return
             umpan.remove_umpan(user_id, jenis_key, 1)
 
-        # panggil modul gacha untuk loot (perbaikan: tambahkan user_id)
-        asyncio.create_task(fishing_loot(client, TARGET_GROUP, username, user_id))
+        # Tampilkan konfirmasi ke user
         await callback_query.message.edit_text(f"🎣 Kamu berhasil melempar umpan {jenis} ke kolam!")
+
+        # Jalankan gacha dan kirim info ke group setelah 10 detik
+        async def fishing_task():
+            loot_result = await fishing_loot(client, None, username, user_id, return_loot=True)  # return loot
+            await asyncio.sleep(10)
+            try:
+                await send_single_emoji(client, TARGET_GROUP, FISHING_EMOJI, f" @{username} mendapatkan {loot_result}!")
+            except Exception as e:
+                logger.error(f"Gagal kirim info reward ke group: {e}")
+
+        asyncio.create_task(fishing_task())
         return
 
     # --- LEADERBOARD PAGE NAV ---
