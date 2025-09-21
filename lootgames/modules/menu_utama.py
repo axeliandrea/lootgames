@@ -1,4 +1,4 @@
-# lootgames/modules/menu_utama.py FINAL MIX
+# lootgames/modules/menu_utama.py FINAL MIX REVISI
 import logging
 import asyncio
 from pyrogram import Client, filters
@@ -135,7 +135,7 @@ async def callback_handler(client: Client, callback_query: CallbackQuery):
     await callback_query.answer()
     await asyncio.sleep(0.2)
 
-    # --- TRANSFER UMPAN (versi baru) ---
+    # --- TRANSFER UMPAN ---
     if data.startswith("TRANSFER_"):
         jenis_map = {"COMMON":"A","RARE":"B","LEGEND":"C","MYTHIC":"D"}
         jenis_key = data.replace("TRANSFER_", "").replace("_OK", "").upper()
@@ -280,7 +280,9 @@ async def handle_transfer_message(client: Client, message: Message):
                 return
 
             # --- Non-owner, cek saldo ---
-            sender_data = umpan.get_user(user_id)
+            sender_data = umpan.get_user(user_id) or {}
+            sender_data.setdefault("umpan", {"A":0,"B":0,"C":0,"D":0})
+
             if sender_data["umpan"].get(jenis, 0) < amount:
                 await message.reply("❌ Umpan tidak cukup!")
             else:
@@ -309,6 +311,7 @@ async def handle_transfer_message(client: Client, message: Message):
             user_data = points_data.get(str(user_id), {})
             if user_data.get("points",0) < jumlah_umpan*100:
                 await message.reply("❌ Point chat tidak cukup.")
+                return
             TUKAR_POINT_STATE[user_id]["jumlah_umpan"] = jumlah_umpan
             TUKAR_POINT_STATE[user_id]["step"] = 2
             keyboard = InlineKeyboardMarkup([
