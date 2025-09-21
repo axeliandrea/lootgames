@@ -1,4 +1,4 @@
-# lootgames/modules/menu_utama.py FINAL FULL
+# lootgames/modules/menu_utama.py FINAL (revisi transfer + notif)
 import logging
 import asyncio
 from pyrogram import Client, filters
@@ -148,9 +148,12 @@ async def callback_handler(client: Client, callback_query: CallbackQuery):
         jenis_key = data.replace("TRANSFER_", "").replace("_OK", "").upper()
         jenis = jenis_map.get(jenis_key, "A")
         TRANSFER_STATE[user_id] = {"jenis": jenis}
-        await callback_query.message.edit_text(
-            f"📥 Masukkan transfer format:\n@username jumlah_umpan\nContoh: @axeliandrea 1\n\nJenis: {jenis_key}"
-        )
+        try:
+            await callback_query.message.edit_text(
+                f"📥 Masukkan transfer format:\n@username jumlah_umpan\nContoh: @axeliandrea 1\n\nJenis: {jenis_key}"
+            )
+        except Exception:
+            pass
         return
 
     # REGISTER
@@ -161,20 +164,24 @@ async def callback_handler(client: Client, callback_query: CallbackQuery):
             [InlineKeyboardButton("📋 Scan ID & USN", callback_data=f"SCAN_{user_id}")],
             [InlineKeyboardButton("⬅️ Kembali", callback_data="C")]
         ])
-        await callback_query.message.edit_text(
-            f"🎉 Selamat @{username}\nID: {user_id}\nAnda sudah menjadi Player Loot!",
-            reply_markup=keyboard
-        )
         try:
+            await callback_query.message.edit_text(
+                f"🎉 Selamat @{username}\nID: {user_id}\nAnda sudah menjadi Player Loot!",
+                reply_markup=keyboard
+            )
             await client.send_message(OWNER_ID, f"📢 User baru Player Loot!\n👤 @{username}\n🆔 {user_id}")
         except Exception as e:
-            logger.error(f"Gagal kirim notif OWNER: {e}")
+            logger.error(f"Gagal notif owner/register: {e}")
         return
     elif data == "REGISTER_NO":
-        await callback_query.message.edit_text(MENU_STRUCTURE["C"]["title"], reply_markup=make_keyboard("C", user_id))
+        try:
+            await callback_query.message.edit_text(MENU_STRUCTURE["C"]["title"], reply_markup=make_keyboard("C", user_id))
+        except Exception:
+            pass
         return
 
-    elif data.startswith("SCAN_"):
+    # SCAN
+    if data.startswith("SCAN_"):
         try:
             scan_user_id = int(data.split("_")[1])
             user_data = user_database.get_user_data(scan_user_id)
@@ -196,31 +203,37 @@ async def callback_handler(client: Client, callback_query: CallbackQuery):
             text = "📊 Anda belum memiliki poin chat."
         else:
             text = f"📊 Poin Pribadi:\n\n- {user_data.get('username','Unknown')} - {user_data.get('points',0)} pts | Level {user_data.get('level',0)} {yapping.get_badge(user_data.get('level',0))}"
-        await callback_query.message.edit_text(text, reply_markup=make_keyboard("BB", user_id))
+        try:
+            await callback_query.message.edit_text(text, reply_markup=make_keyboard("BB", user_id))
+        except Exception:
+            pass
         return
 
     # LEADERBOARD
-    elif data == "BBB":
+    if data == "BBB":
         await show_leaderboard(callback_query, user_id, 0)
         return
-    elif data.startswith("BBB_PAGE_"):
+    if data.startswith("BBB_PAGE_"):
         page = int(data.split("_")[-1])
         await show_leaderboard(callback_query, user_id, page)
         return
 
     # TUKAR POINT CHAT
-    elif data == "TUKAR_POINT":
+    if data == "TUKAR_POINT":
         points = yapping.load_points().get(str(user_id), {}).get("points", 0)
         if points < 100:
             await callback_query.answer("❌ Point chat tidak cukup minimal 100 untuk 1 umpan.", show_alert=True)
             return
         TUKAR_POINT_STATE[user_id] = {"step": 1, "jumlah_umpan": 0}
-        await callback_query.message.edit_text(
-            f"📊 Anda memiliki {points} chat points.\nBerapa umpan yang ingin ditukar? (1 umpan = 100 chat points)"
-        )
+        try:
+            await callback_query.message.edit_text(
+                f"📊 Anda memiliki {points} chat points.\nBerapa umpan yang ingin ditukar? (1 umpan = 100 chat points)"
+            )
+        except Exception:
+            pass
         return
 
-    elif data == "TUKAR_CONFIRM" and user_id in TUKAR_POINT_STATE:
+    if data == "TUKAR_CONFIRM" and user_id in TUKAR_POINT_STATE:
         jumlah_umpan = TUKAR_POINT_STATE[user_id]["jumlah_umpan"]
         total_points = jumlah_umpan * 100
         points_data = yapping.load_points()
@@ -233,26 +246,35 @@ async def callback_handler(client: Client, callback_query: CallbackQuery):
         points_data[str(user_id)] = user_data
         yapping.save_points(points_data)
         umpan.add_umpan(user_id, "A", jumlah_umpan)
-        await callback_query.message.edit_text(
-            f"✅ Tukar berhasil! {jumlah_umpan} umpan telah ditambahkan.\nSisa chat points: {user_data['points']}",
-            reply_markup=make_keyboard("D3", user_id)
-        )
+        try:
+            await callback_query.message.edit_text(
+                f"✅ Tukar berhasil! {jumlah_umpan} umpan telah ditambahkan.\nSisa chat points: {user_data['points']}",
+                reply_markup=make_keyboard("D3", user_id)
+            )
+        except Exception:
+            pass
         TUKAR_POINT_STATE.pop(user_id, None)
         return
 
-    # GENERIC NAVIGATION
+    # NAVIGATION
     if data in MENU_STRUCTURE:
         try:
             await callback_query.message.edit_text(MENU_STRUCTURE[data]["title"], reply_markup=make_keyboard(data, user_id))
         except Exception:
             pass
-    else:
+        return
+
+    # fallback
+    try:
         await callback_query.answer("Menu tidak tersedia.", show_alert=True)
-        logger.error(f"❌ Callback {data} tidak dikenal!")
+    except Exception:
+        pass
 
 # ---------------- HANDLE TRANSFER & TUKAR MESSAGE ---------------- #
 async def handle_transfer_message(client: Client, message: Message):
     user_id = message.from_user.id
+    sender_username = message.from_user.username or f"user{user_id}"
+
     # TRANSFER UMPAN
     if TRANSFER_STATE.get(user_id):
         try:
@@ -269,26 +291,42 @@ async def handle_transfer_message(client: Client, message: Message):
             if amount <= 0:
                 await message.reply("Jumlah harus > 0.")
                 return
+
+            # get recipient id via user_database (ke sanalah mapping username->id berada)
             recipient_id = user_database.get_user_id_by_username(username)
             if recipient_id is None:
-                await message.reply(f"❌ Username {username} tidak ada di database!")
+                await message.reply(f"❌ Username {username} tidak ada di database! Minta penerima /start ke bot dulu atau admin bantu mapping.")
                 TRANSFER_STATE.pop(user_id, None)
                 return
-            if user_id == OWNER_ID:
-                umpan.add_umpan(recipient_id, jenis, amount)
-                await message.reply(f"✅ Transfer {amount} umpan ke {username} berhasil! (Owner unlimited)", reply_markup=make_keyboard("main", user_id))
-                TRANSFER_STATE.pop(user_id, None)
-                return
-            sender_data = umpan.get_user(user_id)
-            if sender_data["umpan"].get(jenis, 0) < amount:
-                await message.reply("❌ Umpan tidak cukup!")
+
+            # ensure recipient exists in umpan DB
+            umpan.init_user_if_missing(recipient_id, username.lstrip("@"))
+
+            # perform atomic transfer via umpan.transfer_umpan
+            success, msg = umpan.transfer_umpan(user_id, recipient_id, jenis, amount)
+            if success:
+                # notify sender
+                await message.reply(f"✅ Transfer {amount} umpan ({jenis}) ke {username} berhasil!", reply_markup=make_keyboard("main", user_id))
+                # notify recipient (try; fail silently but log)
+                try:
+                    await client.send_message(recipient_id, f"🎁 Kamu menerima {amount} umpan ({jenis}) dari @{sender_username}")
+                except Exception as e:
+                    logger.warning(f"Gagal kirim notif ke penerima {recipient_id}: {e}")
+                # additionally, confirm by checking recipient's balance for that jenis and include in message (best-effort)
+                try:
+                    recipient_data = umpan.get_user(recipient_id)
+                    new_total = recipient_data[jenis].get("umpan", 0)
+                    # edit sender message with confirmation of recipient total (optional)
+                    await client.send_message(user_id, f"📌 Penerima sekarang punya {new_total} umpan tipe {jenis}.")
+                except Exception:
+                    pass
             else:
-                umpan.remove_umpan(user_id, jenis, amount)
-                umpan.add_umpan(recipient_id, jenis, amount)
-                await message.reply(f"✅ Transfer {amount} umpan ke {username} berhasil!", reply_markup=make_keyboard("main", user_id))
+                # failed — inform sender (no notif to recipient)
+                await message.reply(f"❌ Transfer gagal: {msg}")
             TRANSFER_STATE.pop(user_id, None)
         except Exception as e:
             await message.reply(f"❌ Error: {e}")
+            logger.exception("Error saat handle_transfer_message")
             TRANSFER_STATE.pop(user_id, None)
         return
 
@@ -319,5 +357,6 @@ async def handle_transfer_message(client: Client, message: Message):
 def register(app: Client):
     app.add_handler(MessageHandler(open_menu, filters.regex(r"^\.menufish$") & filters.private))
     app.add_handler(MessageHandler(open_menu_pm, filters.command("menu") & filters.private))
-    app.add_handler(CallbackQueryHandler(callback_handler))
     app.add_handler(MessageHandler(handle_transfer_message, filters.text & filters.private))
+    app.add_handler(CallbackQueryHandler(callback_handler))
+    logger.info("[MENU] Handler menu_utama terdaftar.")
