@@ -177,7 +177,7 @@ async def callback_handler(client: Client, callback_query: CallbackQuery):
         if not user_data:
             text = "📊 Anda belum memiliki poin chat."
         else:
-            text = f"📊 Poin Pribadi:\n\n- {user_data.get('username','Unknown')} - {user_data.get('points',0)} pts | Level {user_data.get('level',0)} {yaping.get_badge(user_data.get('level',0))}"
+            text = f"📊 Poin Pribadi:\n\n- {user_data.get('username','Unknown')} - {user_data.get('points',0)} pts | Level {user_data.get('level',0)} {yapping.get_badge(user_data.get('level',0))}"
         await callback_query.message.edit_text(text, reply_markup=make_keyboard("BB", user_id))
         return
 
@@ -192,7 +192,7 @@ async def callback_handler(client: Client, callback_query: CallbackQuery):
 
     # --- TUKAR POINT CHAT KE UMPAN ---
     if data == "TUKAR_POINT":
-        points = yaping.load_points().get(str(user_id), {}).get("points", 0)
+        points = yapping.load_points().get(str(user_id), {}).get("points", 0)
         if points < 100:
             await callback_query.answer("❌ Point chat tidak cukup minimal 100 untuk 1 umpan.", show_alert=True)
             return
@@ -205,7 +205,7 @@ async def callback_handler(client: Client, callback_query: CallbackQuery):
     elif data == "TUKAR_CONFIRM" and user_id in TUKAR_POINT_STATE:
         jumlah_umpan = TUKAR_POINT_STATE[user_id]["jumlah_umpan"]
         total_points = jumlah_umpan * 100
-        points_data = yaping.load_points()
+        points_data = yapping.load_points()
         user_data = points_data.get(str(user_id), {})
         if user_data.get("points",0) < total_points:
             await callback_query.answer("❌ Point chat tidak cukup.", show_alert=True)
@@ -213,7 +213,7 @@ async def callback_handler(client: Client, callback_query: CallbackQuery):
             return
         user_data["points"] -= total_points
         points_data[str(user_id)] = user_data
-        yaping.save_points(points_data)
+        yapping.save_points(points_data)
         umpan.add_umpan(user_id, "A", jumlah_umpan)
         await callback_query.message.edit_text(
             f"✅ Tukar berhasil! {jumlah_umpan} umpan telah ditambahkan.\nSisa chat points: {user_data['points']}",
@@ -286,7 +286,7 @@ async def handle_transfer_message(client: Client, message: Message):
             if jumlah_umpan <= 0:
                 await message.reply("Jumlah umpan harus > 0.")
                 return
-            points_data = yaping.load_points()
+            points_data = yapping.load_points()
             user_data = points_data.get(str(user_id), {})
             if user_data.get("points",0) < jumlah_umpan*100:
                 await message.reply(f"❌ Point chat tidak cukup. Anda memiliki {user_data.get('points',0)} pts, tapi butuh {jumlah_umpan*100} pts.")
@@ -309,3 +309,4 @@ def register(app: Client):
     app.add_handler(MessageHandler(handle_transfer_message, filters.text & filters.private))
     app.add_handler(CallbackQueryHandler(callback_handler))
     logger.info("[MENU] Handler menu_utama terdaftar.")
+
