@@ -1,43 +1,31 @@
-# lootgames/modules/autorespon.py
-import re
-from pyrogram import filters
+from pyrogram import Client, filters
 from pyrogram.types import Message, MessageEntity
 from pyrogram.enums import MessageEntityType
 
-__MODULE__ = "AutoRespon"
+__MODULE__ = "AutoFuck"
 __HELP__ = """
-Auto respon dengan emoji premium 🤩 atau 🖕
-Trigger: 'fish', 'fisher', 'lucky', 'fuck', 'kontol', 'anjing'
+Auto respon dengan emoji premium 🖕
+Trigger: 'fuck', 'kontol', 'anjing'
 """
 
-# Premium emoji ID (ganti sesuai bot)
-PREMIUM_EMOJI_ID = 6235295024817379885  # contoh sama seperti AutoFuck
+# Premium emoji ID
+PREMIUM_EMOJI_ID = 5257967696124852779
 
-# Daftar trigger
-TRIGGERS = ["fish", "fisher", "lucky", "fuck", "kontol", "anjing"]
+@app.on_message(filters.group & filters.text, group=2)
+async def auto_fuck_reply(client, message: Message):
+    text = message.text.lower().strip()
 
-def register(app):
-    @app.on_message(filters.group & filters.text, group=2)
-    async def auto_reply_premium(client, message: Message):
-        text = message.text.lower().strip()
+    if text not in ["fuck", "kontol", "anjing"]:
+        return
 
-        # Gunakan regex untuk match kata trigger utuh
-        pattern = r'\b(?:' + '|'.join(map(re.escape, TRIGGERS)) + r')\b'
-        if not re.search(pattern, text):
-            return
+    entities = [
+        MessageEntity(
+            type=MessageEntityType.CUSTOM_EMOJI,
+            offset=0,
+            length=1,  # selalu 1 untuk dummy char
+            custom_emoji_id=PREMIUM_EMOJI_ID,
+        )
+    ]
 
-        # Dummy char yang pasti valid
-        dummy_char = "⬛"
-
-        # Buat entity custom emoji
-        entities = [
-            MessageEntity(
-                type=MessageEntityType.CUSTOM_EMOJI,
-                offset=0,
-                length=1,
-                custom_emoji_id=PREMIUM_EMOJI_ID,
-            )
-        ]
-
-        # Balas pesan dengan premium emoji
-        await message.reply(text=dummy_char, entities=entities)
+    # pakai dummy text (⬛), nanti Telegram render jadi emoji premium
+    await message.reply(text="⬛", entities=entities)
