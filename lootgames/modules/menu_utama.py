@@ -200,8 +200,8 @@ async def callback_handler(client: Client, callback_query: CallbackQuery):
                 return
             umpan.remove_umpan(user_id, jenis_key, 1)
 
-        # panggil modul gacha untuk loot
-        asyncio.create_task(fishing_loot(client, TARGET_GROUP, username))
+        # panggil modul gacha untuk loot (perbaikan: tambahkan user_id)
+        asyncio.create_task(fishing_loot(client, TARGET_GROUP, username, user_id))
         await callback_query.message.edit_text(f"🎣 Kamu berhasil melempar umpan {jenis} ke kolam!")
         return
 
@@ -320,5 +320,3 @@ def register(app: Client):
     app.add_handler(MessageHandler(handle_transfer_message, filters.text & filters.private))
     app.add_handler(CallbackQueryHandler(callback_handler))
     logger.info("[MENU] Handler menu_utama terdaftar.")
-
-
