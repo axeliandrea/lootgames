@@ -76,7 +76,7 @@ MENU_STRUCTURE = {
     # --- YAPPING ---
     "B": {"title":"📋 YAPPING","buttons":[("Poin Pribadi","BB"),("➡️ Leaderboard","BBB"),("⬅️ Kembali","main")]},
     "BB": {"title":"📋 Poin Pribadi","buttons":[("⬅️ Kembali","B")]},
-    "BBB": {"title":"📋 Leaderboard Yapping","buttons":[("⬅️ Kembali","B")}
+    "BBB": {"title":"📋 Leaderboard Yapping","buttons":[("⬅️ Kembali","B")]}
 }
 
 # GENERIC MENU (F-L)
@@ -319,3 +319,4 @@ def register(app: Client):
     app.add_handler(MessageHandler(handle_transfer_message, filters.text & filters.private))
     app.add_handler(CallbackQueryHandler(callback_handler))
     logger.info("[MENU] Handler menu_utama terdaftar.")
+
