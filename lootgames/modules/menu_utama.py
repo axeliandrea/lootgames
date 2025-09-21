@@ -6,7 +6,7 @@ from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton, CallbackQ
 from pyrogram.handlers import MessageHandler, CallbackQueryHandler
 
 from lootgames.modules import yapping, umpan, user_database
-from lootgames.modules.gacha_fishing import fishing_loot  # pastikan return_loot ditambahkan
+from lootgames.modules.gacha_fishing import fishing_loot
 
 logger = logging.getLogger(__name__)
 OWNER_ID = 6395738130
@@ -27,8 +27,8 @@ MENU_STRUCTURE = {
             ("🛒STORE", "D"),
             ("FISHING", "E"),
             ("Menu F", "F"), ("Menu G", "G"),
-            ("Menu H", "H"), ("Menu I", "I"), ("Menu J", "J"),
-            ("Menu K", "K"), ("Menu L", "L"),
+            ("Menu H", "H"), ("Menu I", "I"),
+            ("Menu J", "J"), ("Menu K", "K"), ("Menu L", "L"),
         ],
     },
     # --- UMPAN MENU ---
@@ -148,12 +148,14 @@ async def callback_handler(client: Client, callback_query: CallbackQuery):
     await callback_query.answer()
     await asyncio.sleep(0.1)
 
+    # ---------- FISHING ----------
     if data.startswith("FISH_CONFIRM_"):
         jenis = data.replace("FISH_CONFIRM_","")
         jenis_map = {"COMMON":"A","RARE":"B","LEGEND":"C","MYTHIC":"D"}
         jenis_key = jenis_map.get(jenis,"A")
         username = callback_query.from_user.username or f"user{user_id}"
 
+        # Cek dan kurangi umpan
         if user_id != OWNER_ID:
             user_data = umpan.get_user(user_id)
             if not user_data or user_data.get(jenis_key,{}).get("umpan",0) <= 0:
@@ -161,24 +163,41 @@ async def callback_handler(client: Client, callback_query: CallbackQuery):
                 return
             umpan.remove_umpan(user_id, jenis_key, 1)
 
+        # Konfirmasi ke user
         await callback_query.message.edit_text(f"🎣 Kamu berhasil melempar umpan {jenis} ke kolam!")
 
+        # Jalankan fishing task
         async def fishing_task():
-            loot_result = await fishing_loot(client, None, username, user_id, return_loot=True)
-            await asyncio.sleep(10)
             try:
-                await client.send_message(TARGET_GROUP, f"🎣 @{username} mendapatkan {loot_result}!")
+                # 1️⃣ Notifikasi awal ke group (delay 2 detik)
+                await asyncio.sleep(2)
+                await client.send_message(
+                    TARGET_GROUP,
+                    f"🎣 @{username} sedang memancing di group ini, kira2 dapet apa ya?"
+                )
+
+                # 2️⃣ Hit loot
+                loot_result = await fishing_loot(client, TARGET_GROUP, username, user_id, umpan_type=jenis)
+
+                # 3️⃣ Kirim reward ke group (delay 15 detik)
+                await asyncio.sleep(15)
+                await client.send_message(
+                    TARGET_GROUP,
+                    f"@{username} mendapatkan {loot_result}!"
+                )
             except Exception as e:
                 logger.error(f"Gagal kirim info reward ke group: {e}")
 
         asyncio.create_task(fishing_task())
         return
 
+    # ---------- LEADERBOARD PAGING ----------
     if data.startswith("BBB_PAGE_"):
         page = int(data.replace("BBB_PAGE_",""))
         await show_leaderboard(callback_query, user_id, page)
         return
 
+    # ---------- NAVIGASI MENU ----------
     if data in MENU_STRUCTURE:
         await callback_query.message.edit_text(
             MENU_STRUCTURE[data]["title"],
@@ -191,6 +210,7 @@ async def handle_transfer_message(client: Client, message: Message):
     user_id = message.from_user.id
     username_sender = message.from_user.username or f"user{user_id}"
 
+    # ---------- TRANSFER ----------
     if TRANSFER_STATE.get(user_id):
         try:
             jenis = TRANSFER_STATE[user_id]["jenis"]
@@ -233,6 +253,7 @@ async def handle_transfer_message(client: Client, message: Message):
             TRANSFER_STATE.pop(user_id, None)
         return
 
+    # ---------- TUKAR POINT ----------
     if TUKAR_POINT_STATE.get(user_id):
         step = TUKAR_POINT_STATE[user_id].get("step",0)
         if step != 1:
