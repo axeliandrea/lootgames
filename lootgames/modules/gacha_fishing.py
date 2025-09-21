@@ -3,7 +3,7 @@ import random
 import asyncio
 import logging
 from pyrogram import Client
-from lootgames.modules.menu_utama import send_single_emoji, FISHING_EMOJI
+from lootgames.modules.fishing_helper import send_single_emoji, FISHING_EMOJI
 from lootgames.modules import aquarium
 
 logger = logging.getLogger(__name__)
