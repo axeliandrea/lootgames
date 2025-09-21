@@ -10,18 +10,26 @@ Auto respon dengan emoji premium 🤩 atau 🖕
 Trigger: 'fish', 'fisher', 'lucky', 'fuck', 'kontol', 'anjing'
 """
 
-PREMIUM_EMOJI_ID = 5257967696124852779
+# Premium emoji ID (sesuaikan dengan botmu)
+PREMIUM_EMOJI_ID = 5257967696124852779  # contoh sama seperti AutoFuck
+
+# Daftar trigger
 TRIGGERS = ["fish", "fisher", "lucky", "fuck", "kontol", "anjing"]
 
 def register(app):
     @app.on_message(filters.group & filters.text, group=2)
     async def auto_reply_premium(client, message: Message):
         text = message.text.lower().strip()
+
+        # Regex untuk memastikan kata trigger match utuh
         pattern = r'\b(?:' + '|'.join(map(re.escape, TRIGGERS)) + r')\b'
         if not re.search(pattern, text):
             return
 
+        # Dummy char ⬛ yang pasti valid
         dummy_char = "⬛"
+
+        # Entity custom emoji
         entities = [
             MessageEntity(
                 type=MessageEntityType.CUSTOM_EMOJI,
@@ -30,4 +38,6 @@ def register(app):
                 custom_emoji_id=PREMIUM_EMOJI_ID,
             )
         ]
+
+        # Balas pesan dengan premium emoji
         await message.reply(text=dummy_char, entities=entities)
