@@ -32,10 +32,10 @@ MENU_STRUCTURE = {
 # ---------------- CUSTOM MENU ---------------- #
 MENU_STRUCTURE["A"] = {"title": "📋 Menu UMPAN", "buttons": [("TYPE UMPAN", "AA"), ("⬅️ Kembali", "main")]}
 MENU_STRUCTURE["AA"] = {"title": "📋 TYPE UMPAN", "buttons": [
-    ("Common", "AA_COMMON"),
-    ("Rare", "AA_RARE"),
-    ("Legend", "AA_LEGEND"),
-    ("Mythic", "AA_MYTHIC"),
+    ("Common 🐛", "AA_COMMON"),
+    ("Rare 🐌", "AA_RARE"),
+    ("Legend 🧇", "AA_LEGEND"),
+    ("Mythic 🐟", "AA_MYTHIC"),
     ("⬅️ Kembali", "A")
 ]}
 MENU_STRUCTURE["AA_COMMON"] = {"title": "📋 TRANSFER UMPAN KE (Common)", "buttons": [("Klik OK untuk transfer", "TRANSFER_COMMON_OK"), ("⬅️ Kembali", "AA")]}
@@ -337,4 +337,5 @@ def register(app: Client):
         umpan.register_topup(app)
     except Exception as e:
         logger.debug(f"umpan.register_topup gagal: {e}")
+
 
