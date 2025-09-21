@@ -8,7 +8,7 @@ from lootgames.modules import aquarium
 
 logger = logging.getLogger(__name__)
 
-# ---------------- LOOT TABLE SEDERHANA ---------------- #
+# ---------------- LOOT TABLE ---------------- #
 FISH_LOOT = {
     "🧺 Ember Pecah": 65,
     "🥾 Sepatu Butut": 75,
@@ -35,6 +35,8 @@ async def fishing_loot(client: Client, target_chat: int, username: str, user_id:
     buff = BUFF_RATE.get(umpan_type, 0)
     loot_item = roll_loot(buff)
     
+    logger.info(f"[FISHING] {username} ({user_id}) memancing dengan {umpan_type}, mendapatkan: {loot_item}")
+    
     try:
         await asyncio.sleep(2)  # delay animasi
         await send_single_emoji(client, target_chat, FISHING_EMOJI, f" @{username} mendapatkan {loot_item}!")
@@ -46,12 +48,12 @@ async def fishing_loot(client: Client, target_chat: int, username: str, user_id:
 def roll_loot(buff: int) -> str:
     """
     Roll loot berdasarkan persentase dan buff.
-    Chance dihitung: jika roll < chance - buff, item keluar
+    Chance dihitung: jika roll <= chance + buff, item keluar
     """
     items = list(FISH_LOOT.items())
     random.shuffle(items)  # acak urutan
     for item, chance in items:
         roll = random.randint(1, 100)
-        if roll <= max(0, chance - buff):
+        if roll <= chance + buff:
             return item
     return "🤧 Zonk"
