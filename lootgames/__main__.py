@@ -21,6 +21,7 @@ app = Client(
 yapping.register(app)
 menu_utama.register(app)
 user_database.register(app)  # Modul baru untuk .join/.update
+autorespon.register(app)     # Modul AutoRespon
 
 # ================= MAIN ================= #
 async def main():
@@ -46,3 +47,4 @@ if __name__ == "__main__":
         pass
 
     asyncio.run(main())
+
