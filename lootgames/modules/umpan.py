@@ -1,8 +1,8 @@
-# lootgames/modules/umpan.py TESTING 1
+# lootgames/modules/umpan.py FINAL
 import json
 import os
 from threading import Lock
-from pyrogram import Client, filters, handlers
+from pyrogram import Client
 from pyrogram.types import Message
 
 OWNER_ID = 6395738130
@@ -36,7 +36,8 @@ def save_db(db: dict, jenis: str):
 
 # ---------------- USER OPERATIONS ---------------- #
 def init_user(user_id: int, username: str = None):
-    for jenis, f in UMPAN_FILES.items():
+    """Inisialisasi user di semua tipe umpan jika belum ada"""
+    for jenis in ["A","B","C","D"]:
         db = load_db(jenis)
         str_id = str(user_id)
         if str_id not in db:
@@ -57,6 +58,7 @@ def get_user(user_id: int):
     return result
 
 def update_username(user_id: int, username: str):
+    """Update username di semua tipe umpan"""
     for jenis in ["A","B","C","D"]:
         db = load_db(jenis)
         str_id = str(user_id)
@@ -73,24 +75,24 @@ def add_umpan(user_id: int, jenis: str, jumlah: int):
         raise ValueError("Jenis umpan harus A, B, C, atau D")
     db = load_db(jenis)
     str_id = str(user_id)
-    if user_id == OWNER_ID:
+    if user_id != OWNER_ID:
+        if str_id not in db:
+            init_user(user_id)
+            db = load_db(jenis)
+        db[str_id]["umpan"] += jumlah
+        save_db(db, jenis)
+        print(f"[ADD] User {user_id} +{jumlah} umpan tipe {jenis}. Total sekarang: {db[str_id]['umpan']}")
+    else:
         print(f"[ADD] Owner, jumlah umpan tetap unlimited")
-        return
-    if str_id not in db:
-        init_user(user_id)
-        db = load_db(jenis)
-    db[str_id]["umpan"] += jumlah
-    save_db(db, jenis)
-    print(f"[ADD] User {user_id} +{jumlah} umpan tipe {jenis}. Total sekarang: {db[str_id]['umpan']}")
 
 def remove_umpan(user_id: int, jenis: str, jumlah: int):
     if jenis not in ["A","B","C","D"]:
         raise ValueError("Jenis umpan harus A, B, C, atau D")
+    db = load_db(jenis)
+    str_id = str(user_id)
     if user_id == OWNER_ID:
         print(f"[REMOVE] Owner, jumlah umpan tetap unlimited")
         return
-    db = load_db(jenis)
-    str_id = str(user_id)
     if str_id not in db:
         init_user(user_id)
         db = load_db(jenis)
@@ -107,12 +109,50 @@ def total_umpan(user_id: int) -> int:
     return sum([v["umpan"] for v in user_data.values()])
 
 def find_user_by_username(username: str):
+    """Cari user_id dan data user berdasarkan username"""
+    username_clean = username.lower().lstrip("@")
     for jenis in ["A","B","C","D"]:
         db = load_db(jenis)
         for uid, data in db.items():
-            if data["username"].lower() == username.lower().lstrip("@"):
+            if data["username"].lower() == username_clean:
                 return int(uid), data
     return None, None
+
+# ---------------- TRANSFER ---------------- #
+def transfer_umpan(sender_id: int, recipient_id: int, jenis: str, jumlah: int):
+    """
+    Transfer umpan dari sender ke recipient.
+    Owner tidak kehilangan umpan tapi recipient tetap bertambah.
+    """
+    if jenis not in ["A","B","C","D"]:
+        return False, "Jenis umpan salah"
+    if jumlah <= 0:
+        return False, "Jumlah harus > 0"
+
+    db_sender = load_db(jenis)
+    db_recipient = load_db(jenis)
+    str_sender = str(sender_id)
+    str_recipient = str(recipient_id)
+
+    if str_sender not in db_sender:
+        init_user(sender_id)
+        db_sender = load_db(jenis)
+    if str_recipient not in db_recipient:
+        init_user(recipient_id)
+        db_recipient = load_db(jenis)
+
+    # Kurangi umpan sender (kecuali owner)
+    if sender_id != OWNER_ID:
+        if db_sender[str_sender]["umpan"] < jumlah:
+            return False, f"Umpan {jenis} tidak cukup"
+        db_sender[str_sender]["umpan"] -= jumlah
+        save_db(db_sender, jenis)
+
+    # Tambah umpan recipient
+    db_recipient[str_recipient]["umpan"] += jumlah
+    save_db(db_recipient, jenis)
+
+    return True, f"Transfer {jumlah} umpan tipe {jenis} berhasil"
 
 # ---------------- COMMAND TOPUP ---------------- #
 async def topup_umpan(client: Client, message: Message):
@@ -147,6 +187,7 @@ async def topup_umpan(client: Client, message: Message):
 # ---------------- REGISTER ---------------- #
 def register_topup(app: Client):
     # .topup @username jumlah type
+    from pyrogram import handlers, filters
     app.add_handler(handlers.MessageHandler(topup_umpan, filters.regex(r"^\.topup\s+@\w+\s+\d+\s+[A-Da-d]$")))
 
 # ---------------- UTILS ---------------- #
@@ -157,3 +198,12 @@ def get_user_ids():
         db = load_db(jenis)
         ids.update([int(k) for k in db.keys()])
     return ids
+
+def init_user_if_missing(user_id: int, username: str = None):
+    """Init user hanya jika belum ada di semua tipe"""
+    for jenis in ["A","B","C","D"]:
+        db = load_db(jenis)
+        str_id = str(user_id)
+        if str_id not in db:
+            db[str_id] = {"username": username or f"user_{user_id}", "umpan": 0}
+            save_db(db, jenis)
