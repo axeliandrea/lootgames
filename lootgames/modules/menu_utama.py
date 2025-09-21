@@ -1,3 +1,4 @@
+# lootgames/modules/menu_utama.py
 import logging
 import asyncio
 from pyrogram import Client, filters
@@ -312,5 +313,6 @@ def register(app: Client):
     app.add_handler(MessageHandler(handle_transfer_message, filters.text & filters.private))
     app.add_handler(CallbackQueryHandler(callback_handler))
     logger.info("[MENU] Handler menu_utama terdaftar.")
+
 
 
