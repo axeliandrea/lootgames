@@ -2,7 +2,12 @@
 import logging
 import asyncio
 from pyrogram import Client, filters
-from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery, Message
+from pyrogram.types import (
+    InlineKeyboardMarkup,
+    InlineKeyboardButton,
+    CallbackQuery,
+    Message,
+)
 from pyrogram.handlers import MessageHandler, CallbackQueryHandler
 
 from lootgames.modules import yapping, umpan, user_database
@@ -134,14 +139,10 @@ async def callback_handler(client: Client, cq: CallbackQuery):
 
         async def fishing_task():
             try:
-                # tunggu 2 detik untuk animasi awal
                 await asyncio.sleep(2)
-                # Kirim info awal memancing
                 await client.send_message(TARGET_GROUP,
                                           f"🎣 @{uname} sedang memancing di group ini, kira2 dapet apa ya?")
-                # proses loot
                 loot_result = await fishing_loot(client, None, uname, user_id, umpan_type=jenis)
-                # tunggu 15 detik sebelum kirim hasil
                 await asyncio.sleep(15)
                 await client.send_message(TARGET_GROUP,f"🎣 @{uname} mendapatkan {loot_result}!")
             except Exception as e:
@@ -153,6 +154,32 @@ async def callback_handler(client: Client, cq: CallbackQuery):
     if data.startswith("BBB_PAGE_"):
         page=int(data.replace("BBB_PAGE_",""))
         await show_leaderboard(cq,user_id,page)
+        return
+
+    # POIN PRIBADI
+    if data == "BB":
+        points = yapping.load_points()
+        udata = points.get(str(user_id))
+        if not udata:
+            text = "❌ Kamu belum punya poin."
+        else:
+            lvl = udata.get("level", 0)
+            badge = yapping.get_badge(lvl)
+            text = (
+                f"📊 Poin Pribadi\n\n"
+                f"👤 {udata.get('username','Unknown')}\n"
+                f"⭐ {udata.get('points',0)} pts\n"
+                f"🏅 Level {lvl} {badge}"
+            )
+        try:
+            await cq.message.edit_text(text, reply_markup=make_keyboard("BB", user_id))
+        except:
+            pass
+        return
+
+    # LEADERBOARD
+    if data == "BBB":
+        await show_leaderboard(cq, user_id, 0)
         return
 
     # NAVIGASI MENU
@@ -184,7 +211,7 @@ async def callback_handler(client: Client, cq: CallbackQuery):
         return
 
 # ---------------- HANDLE TRANSFER & TUKAR INPUT ---------------- #
-async def handle_transfer_message(client: Client,message:Message):
+async def handle_transfer_message(client: Client,message: Message):
     uid=message.from_user.id
     uname=message.from_user.username or f"user{uid}"
 
@@ -240,8 +267,7 @@ async def handle_transfer_message(client: Client,message:Message):
 
 # ---------------- SHOW LEADERBOARD ---------------- #
 async def show_leaderboard(cq: CallbackQuery, uid:int, page:int=0):
-    pts
-    pts=yapping.load_points()
+    pts = yapping.load_points()
     sorted_pts=sorted(pts.items(),key=lambda x:x[1]["points"],reverse=True)
     total_pages=(len(sorted_pts)-1)//10 if len(sorted_pts)>0 else 0
     start,end=page*10,page*10+10
@@ -252,10 +278,10 @@ async def show_leaderboard(cq: CallbackQuery, uid:int, page:int=0):
     except: pass
 
 # ---------------- MENU OPEN ---------------- #
-async def open_menu(client:Client,message:Message):
+async def open_menu(client: Client,message: Message):
     await message.reply(MENU_STRUCTURE["main"]["title"],reply_markup=make_keyboard("main",message.from_user.id))
 
-async def open_menu_pm(client:Client,message:Message):
+async def open_menu_pm(client: Client,message: Message):
     uid=message.from_user.id
     await message.reply("📋 Menu Utama:",reply_markup=make_keyboard("main",uid))
 
@@ -268,3 +294,4 @@ def register(app: Client):
     logger.info("[MENU] Handler menu_utama terdaftar.")
 
     
+
