@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 FISH_LOOT = {
     "☘️ rumput laut": 65,
     "🥾 Sepatu Butut": 75,
-    "🍾 sampah":: 85,
+    "🍾 sampah": 85,
     "🤧 Zonk": 90,
     "𓆝 Small Fish": 45,
     "🐢 turtle": 10,
