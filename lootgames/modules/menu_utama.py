@@ -45,8 +45,6 @@ MENU_STRUCTURE = {
             ("⬅️ Kembali", "main")
         ]
     },
-    # Other menu items...
-
     # YAPPING MENU
     "B": {
         "title": "📋 YAPPING",
@@ -104,15 +102,19 @@ def make_keyboard(menu_key: str, user_id=None, page: int = 0) -> InlineKeyboardM
     return InlineKeyboardMarkup(buttons)
 
 
-# ---------------- MENU HANDLERS ---------------- #
-async def open_menu(client: Client, message: Message):
-    """Handle the opening of the main menu."""
-    await message.reply(MENU_STRUCTURE["main"]["title"], reply_markup=make_keyboard("main", message.from_user.id))
-
-async def open_menu_pm(client: Client, message: Message):
-    """Handle the opening of the menu for private messages."""
-    uid = message.from_user.id
-    await message.reply("📋 Menu Utama:", reply_markup=make_keyboard("main", uid))
+# ---------------- SHOW LEADERBOARD ---------------- #
+async def show_leaderboard(callback_query: CallbackQuery, user_id: int, page: int = 0):
+    points = yapping.load_points()
+    sorted_points = sorted(points.items(), key=lambda x: x[1]["points"], reverse=True)
+    total_pages = (len(sorted_points) - 1) // 10 if len(sorted_points) > 0 else 0
+    start, end = page * 10, page * 10 + 10
+    text = f"🏆 Leaderboard Yapping (Page {page + 1}/{total_pages + 1}) 🏆\n\n"
+    for i, (uid, pdata) in enumerate(sorted_points[start:end], start=start + 1):
+        text += f"{i}. {pdata.get('username', 'Unknown')} - {pdata.get('points', 0)} pts | Level {pdata.get('level', 0)} {yapping.get_badge(pdata.get('level', 0))}\n"
+    try:
+        await callback_query.message.edit_text(text, reply_markup=make_keyboard("BBB", user_id, page))
+    except Exception as e:
+        logger.error(f"Error while displaying leaderboard: {e}")
 
 
 # ---------------- CALLBACK HANDLER ---------------- #
@@ -168,8 +170,7 @@ async def callback_handler(client: Client, callback_query: CallbackQuery):
             uname = user_data.get("username", "Unknown")
             await callback_query.message.edit_text(
                 f"🔍 Info User:\nUser ID: {scan_user_id}\nUsername: @{uname}",
-                reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("⬅️ Kembali", callback_data="C")]])
-            )
+                reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("⬅️ Kembali", callback_data="C")]]))
         except Exception:
             await callback_query.answer("❌ Error scan user.", show_alert=True)
         return
