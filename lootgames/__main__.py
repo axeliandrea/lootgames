@@ -1,10 +1,8 @@
-# lootgames/__main__.py tester 1
 import asyncio
 import logging
 import os
 from pyrogram import Client
-from pyrogram.handlers import CallbackQueryHandler
-from lootgames.modules import aquarium
+from pyrogram.handlers import CallbackQueryHandler, MessageHandler
 
 from lootgames.modules import (
     yapping,
@@ -64,6 +62,16 @@ async def fishing_callback_handler(client, callback_query):
 # Daftarkan handler callback query
 app.add_handler(CallbackQueryHandler(fishing_callback_handler))
 
+# ================= HANDLE COMMAND .KOLEKSI ================= #
+async def koleksi_handler(client, message):
+    """Menangani perintah .koleksi untuk menampilkan semua tangkapan"""
+    user_id = message.from_user.id  # Mendapatkan ID user yang mengirim perintah
+    collection_info = aquarium.show_collection(user_id)
+    await message.reply(collection_info)
+
+# Daftarkan handler untuk command .koleksi
+app.add_handler(MessageHandler(koleksi_handler, filters.command("koleksi")))
+
 # ================= MAIN ================= #
 async def main():
     # Pastikan folder storage ada
@@ -93,4 +101,3 @@ if __name__ == "__main__":
         pass
 
     asyncio.run(main())
-
