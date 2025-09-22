@@ -2,11 +2,13 @@
 import logging
 import asyncio
 from pyrogram import Client, filters
-from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery, Message
+from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery, Message, MessageEntity
+from pyrogram.enums import MessageEntityType
 from pyrogram.handlers import MessageHandler, CallbackQueryHandler
 
 from lootgames.modules import yapping, umpan, user_database
-from lootgames.modules.gacha_fishing import fishing_loot
+from lootgames.modules.gacha_fishing import fishing_loot  # pastikan return loot ditambahkan
+from lootgames.modules.fishing_helper import send_single_emoji, FISHING_EMOJI
 
 logger = logging.getLogger(__name__)
 OWNER_ID = 6395738130
@@ -15,6 +17,9 @@ TARGET_GROUP = -1002904817520  # ganti sesuai supergroup bot
 # ---------------- STATE ---------------- #
 TRANSFER_STATE = {}       # user_id: {"jenis": "A/B/C/D"}
 TUKAR_POINT_STATE = {}    # user_id: {"step": step, "jumlah_umpan": n}
+
+# ---------------- EMOJI PREMIUM ---------------- #
+FISHING_EMOJI = {"char": "🎣", "id": 5463406036410969564}
 
 # ---------------- MENU STRUCTURE ---------------- #
 MENU_STRUCTURE = {
@@ -27,8 +32,8 @@ MENU_STRUCTURE = {
             ("🛒STORE", "D"),
             ("FISHING", "E"),
             ("Menu F", "F"), ("Menu G", "G"),
-            ("Menu H", "H"), ("Menu I", "I"),
-            ("Menu J", "J"), ("Menu K", "K"), ("Menu L", "L"),
+            ("Menu H", "H"), ("Menu I", "I"), ("Menu J", "J"),
+            ("Menu K", "K"), ("Menu L", "L"),
         ],
     },
     # --- UMPAN MENU ---
@@ -95,6 +100,7 @@ for jenis in ["COMMON","RARE","LEGEND","MYTHIC"]:
 # ---------------- KEYBOARD BUILDER ---------------- #
 def make_keyboard(menu_key: str, user_id=None, page: int = 0) -> InlineKeyboardMarkup:
     buttons = []
+    # --- LEADERBOARD ---
     if menu_key == "BBB" and user_id is not None:
         points = yapping.load_points()
         sorted_points = sorted(points.items(), key=lambda x: x[1]["points"], reverse=True)
@@ -107,6 +113,7 @@ def make_keyboard(menu_key: str, user_id=None, page: int = 0) -> InlineKeyboardM
         if nav_buttons:
             buttons.append(nav_buttons)
         buttons.append([InlineKeyboardButton("⬅️ Kembali", callback_data="B")])
+    # --- MENU UMPAN TERBARU ---
     elif menu_key in ["A","AA_COMMON","AA_RARE","AA_LEGEND","AA_MYTHIC"] and user_id is not None:
         user_umpan = umpan.get_user(user_id) or {"A":{"umpan":0},"B":{"umpan":0},"C":{"umpan":0},"D":{"umpan":0}}
         type_map = {"AA_COMMON":"A","AA_RARE":"B","AA_LEGEND":"C","AA_MYTHIC":"D"}
@@ -118,6 +125,7 @@ def make_keyboard(menu_key: str, user_id=None, page: int = 0) -> InlineKeyboardM
                     jumlah = 999
                 text += f" ({jumlah} pcs)"
             buttons.append([InlineKeyboardButton(text, callback_data=callback)])
+    # --- MENU FISHING (EEE) ---
     elif menu_key == "EEE" and user_id is not None:
         user_umpan = umpan.get_user(user_id) or {"A":{"umpan":0},"B":{"umpan":0},"C":{"umpan":0},"D":{"umpan":0}}
         if user_id == OWNER_ID:
@@ -132,14 +140,38 @@ def make_keyboard(menu_key: str, user_id=None, page: int = 0) -> InlineKeyboardM
             jumlah = user_umpan.get(tkey, {}).get("umpan", 0)
             buttons.append([InlineKeyboardButton(f"{label} ({jumlah} pcs)", callback_data=cb)])
         buttons.append([InlineKeyboardButton("⬅️ Kembali", callback_data="EE")])
+    # --- TUKAR POINT CHAT ---
     elif menu_key == "D3A" and user_id is not None:
         user_points = yapping.load_points().get(str(user_id), {}).get("points", 0)
         buttons.append([InlineKeyboardButton(f"TUKAR 🔄 UMPAN (Anda: {user_points} pts)", callback_data="TUKAR_POINT")])
         buttons.append([InlineKeyboardButton("⬅️ Kembali", callback_data="D3")])
+    # --- GENERIC MENU ---
     else:
         for text, callback in MENU_STRUCTURE.get(menu_key, {}).get("buttons", []):
             buttons.append([InlineKeyboardButton(text, callback_data=callback)])
     return InlineKeyboardMarkup(buttons)
+
+# ---------------- SEND PREMIUM EMOJI ---------------- #
+async def send_single_emoji(client: Client, chat_id: int, emoji: dict, text: str = "", reply_to: int = None):
+    dummy = "⬛"
+    full_text = dummy + text
+    entities = [
+        MessageEntity(
+            type=MessageEntityType.CUSTOM_EMOJI,
+            offset=0,
+            length=len(dummy),
+            custom_emoji_id=int(emoji["id"])
+        )
+    ]
+    try:
+        return await client.send_message(chat_id, full_text, entities=entities, reply_to_message_id=reply_to)
+    except Exception as e:
+        logger.error(f"Gagal kirim emoji ke {chat_id}: {e}")
+        try:
+            await client.send_message(OWNER_ID, f"⚠️ Error kirim emoji ke {chat_id}: {e}")
+        except:
+            pass
+        return None
 
 # ---------------- CALLBACK HANDLER ---------------- #
 async def callback_handler(client: Client, callback_query: CallbackQuery):
@@ -148,14 +180,13 @@ async def callback_handler(client: Client, callback_query: CallbackQuery):
     await callback_query.answer()
     await asyncio.sleep(0.1)
 
-    # ---------- FISHING ----------
+    # --- FISHING CONFIRM ---
     if data.startswith("FISH_CONFIRM_"):
         jenis = data.replace("FISH_CONFIRM_","")
         jenis_map = {"COMMON":"A","RARE":"B","LEGEND":"C","MYTHIC":"D"}
         jenis_key = jenis_map.get(jenis,"A")
         username = callback_query.from_user.username or f"user{user_id}"
 
-        # Cek dan kurangi umpan
         if user_id != OWNER_ID:
             user_data = umpan.get_user(user_id)
             if not user_data or user_data.get(jenis_key,{}).get("umpan",0) <= 0:
@@ -163,41 +194,28 @@ async def callback_handler(client: Client, callback_query: CallbackQuery):
                 return
             umpan.remove_umpan(user_id, jenis_key, 1)
 
-        # Konfirmasi ke user
+        # Tampilkan konfirmasi ke user
         await callback_query.message.edit_text(f"🎣 Kamu berhasil melempar umpan {jenis} ke kolam!")
 
-        # Jalankan fishing task
+        # Jalankan gacha dan kirim info ke group setelah 10 detik
         async def fishing_task():
+            loot_result = await fishing_loot(client, None, username, user_id, return_loot=True)  # return loot
+            await asyncio.sleep(10)
             try:
-                # 1️⃣ Notifikasi awal ke group (delay 2 detik)
-                await asyncio.sleep(2)
-                await client.send_message(
-                    TARGET_GROUP,
-                    f"🎣 @{username} sedang memancing di group ini, kira2 dapet apa ya?"
-                )
-
-                # 2️⃣ Hit loot
-                loot_result = await fishing_loot(client, TARGET_GROUP, username, user_id, umpan_type=jenis)
-
-                # 3️⃣ Kirim reward ke group (delay 15 detik)
-                await asyncio.sleep(15)
-                await client.send_message(
-                    TARGET_GROUP,
-                    f"@{username} mendapatkan {loot_result}!"
-                )
+                await send_single_emoji(client, TARGET_GROUP, FISHING_EMOJI, f" @{username} mendapatkan {loot_result}!")
             except Exception as e:
                 logger.error(f"Gagal kirim info reward ke group: {e}")
 
         asyncio.create_task(fishing_task())
         return
 
-    # ---------- LEADERBOARD PAGING ----------
+    # --- LEADERBOARD PAGE NAV ---
     if data.startswith("BBB_PAGE_"):
         page = int(data.replace("BBB_PAGE_",""))
         await show_leaderboard(callback_query, user_id, page)
         return
 
-    # ---------- NAVIGASI MENU ----------
+    # --- GENERIC MENU NAVIGATION ---
     if data in MENU_STRUCTURE:
         await callback_query.message.edit_text(
             MENU_STRUCTURE[data]["title"],
@@ -210,7 +228,7 @@ async def handle_transfer_message(client: Client, message: Message):
     user_id = message.from_user.id
     username_sender = message.from_user.username or f"user{user_id}"
 
-    # ---------- TRANSFER ----------
+    # --- TRANSFER UMPAN ---
     if TRANSFER_STATE.get(user_id):
         try:
             jenis = TRANSFER_STATE[user_id]["jenis"]
@@ -253,7 +271,7 @@ async def handle_transfer_message(client: Client, message: Message):
             TRANSFER_STATE.pop(user_id, None)
         return
 
-    # ---------- TUKAR POINT ----------
+    # --- TUKAR POINT CHAT KE UMPAN ---
     if TUKAR_POINT_STATE.get(user_id):
         step = TUKAR_POINT_STATE[user_id].get("step",0)
         if step != 1:
