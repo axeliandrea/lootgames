@@ -26,8 +26,7 @@ MENU_STRUCTURE = {
     "main": {"title": "📋 [Menu Utama]", "buttons": [
         ("UMPAN", "A"), ("YAPPING", "B"), ("REGISTER", "C"),
         ("🛒STORE", "D"), ("FISHING", "E"),
-        ("Menu F", "F"), ("Menu G", "G"), ("Menu H", "H"),
-        ("Menu I", "I"), ("Menu J", "J"), ("Menu K", "K"), ("Menu L", "L")
+        ("Menu F", "F"), ("Menu G", "G")
     ]},
     # UMPAN
     "A": {"title": "📋 Menu UMPAN", "buttons": [
@@ -362,3 +361,4 @@ def register(app: Client):
     app.add_handler(MessageHandler(handle_transfer_message, filters.text & filters.private))
     app.add_handler(CallbackQueryHandler(callback_handler))
     logger.info("[MENU] Handler menu_utama terdaftar.")
+
