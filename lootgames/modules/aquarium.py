@@ -1,8 +1,8 @@
+# lootgames/modules/aquarium.py tester 1
 import json
 import os
 import logging
 
-# Setup logger
 logger = logging.getLogger(__name__)
 
 DB_FILE = "storage/aquarium_data.json"
@@ -73,39 +73,4 @@ def list_inventory(user_id: int) -> str:
     lines = []
     for fish, qty in inventory.items():
         lines.append(f"{fish}: {qty} pcs")
-    return "\n".join(lines)
-
-# ---------------- COLLECTION HANDLER ---------------- #
-def show_collection(user_id: int) -> str:
-    """Menampilkan semua koleksi tangkapan hasil memancing"""
-    inventory = get_user_fish(user_id)
-    if not inventory:
-        return "🎣 Kamu belum menangkap apapun."
-    
-    lines = []
-    
-    # Daftar emoji dan nama item
-    emoji_map = {
-        "rumput laut": "☘️ rumput laut",
-        "sepatu": "🥾 sepatu butut",
-        "sampah": "🍾 sampah",
-        "zonk": "🤧 zonk",
-        "fish": "𓆝 small fish",
-        "turtle": "🐢 turtle",
-        "snail": "🐌 snail",
-        "pufferfish": "🐡 pufferfish"
-    }
-    
-    for item, qty in inventory.items():
-        # Menentukan emoji dan nama item yang sesuai berdasarkan kata kunci dalam nama item
-        item_lower = item.lower()
-        emoji_name = "🐟 " + item  # Default jika tidak ada kecocokan
-        
-        for key, emoji in emoji_map.items():
-            if key in item_lower:
-                emoji_name = emoji
-                break
-        
-        lines.append(f"{emoji_name}: {qty} pcs")
-    
     return "\n".join(lines)
