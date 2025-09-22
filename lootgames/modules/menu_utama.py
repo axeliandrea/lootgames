@@ -60,7 +60,7 @@ MENU_STRUCTURE = {
 
 # GENERIC MENU F-L
 for l in "FGHIJKL":
-    MENU_STRUCTURE[l] = {"title":f"📋 Menu {l}","buttons":[(f"Menu {l*2}",l*2),("⬅️ Kembali","main")]}
+    MENU_STRUCTURE[l] = {"title":f"📋 Menu {l}","buttons":[(f"Menu {l*2}",l*2),("⬅️ Kembali","main")] }
     MENU_STRUCTURE[l*2] = {"title":f"📋 Menu {l*2}","buttons":[(f"Menu {l*3}",l*3),("⬅️ Kembali",l)]}
     MENU_STRUCTURE[l*3] = {"title":f"📋 Menu {l*3} (Tampilan Terakhir)","buttons":[("⬅️ Kembali",l*2)]}
 
@@ -134,14 +134,16 @@ async def callback_handler(client: Client, cq: CallbackQuery):
 
         async def fishing_task():
             try:
+                # tunggu 2 detik untuk animasi awal
                 await asyncio.sleep(2)
-                # Hanya kirim satu pesan ke group
+                # Kirim info awal memancing
                 await client.send_message(TARGET_GROUP,
                                           f"🎣 @{uname} sedang memancing di group ini, kira2 dapet apa ya?")
-
-                # Proses loot di background tanpa kirim ke group
+                # proses loot
                 loot_result = await fishing_loot(client, None, uname, user_id, umpan_type=jenis)
-                logger.info(f"[FISHING] @{uname} mendapatkan {loot_result} (background only)")
+                # tunggu 15 detik sebelum kirim hasil
+                await asyncio.sleep(15)
+                await client.send_message(TARGET_GROUP,f"🏆 @{uname} mendapatkan {loot_result}!")
             except Exception as e:
                 logger.error(f"Gagal kirim info reward: {e}")
         asyncio.create_task(fishing_task())
@@ -238,6 +240,7 @@ async def handle_transfer_message(client: Client,message:Message):
 
 # ---------------- SHOW LEADERBOARD ---------------- #
 async def show_leaderboard(cq: CallbackQuery, uid:int, page:int=0):
+    pts
     pts=yapping.load_points()
     sorted_pts=sorted(pts.items(),key=lambda x:x[1]["points"],reverse=True)
     total_pages=(len(sorted_pts)-1)//10 if len(sorted_pts)>0 else 0
@@ -263,3 +266,5 @@ def register(app: Client):
     app.add_handler(MessageHandler(handle_transfer_message,filters.text & filters.private))
     app.add_handler(CallbackQueryHandler(callback_handler))
     logger.info("[MENU] Handler menu_utama terdaftar.")
+
+    
