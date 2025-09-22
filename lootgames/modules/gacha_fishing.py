@@ -16,7 +16,7 @@ FISH_LOOT = {
     "🤧 Zonk": 90,
     "𓆝 Small Fish": 45,
     "🐢 turtle": 10,
-    "🐌 Snail : 35,
+    "🐌 snail : 35,
     "🐡 Pufferfish": 3
 }
 
