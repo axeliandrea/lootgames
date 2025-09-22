@@ -1,103 +1,88 @@
-import asyncio
-import logging
+import json
 import os
-from pyrogram import Client
-from pyrogram.handlers import CallbackQueryHandler, MessageHandler
+import logging
 
-from lootgames.modules import (
-    yapping,
-    menu_utama,
-    user_database,
-    autorespon,
-    gacha_fishing,
-    aquarium
-)
-from lootgames.config import API_ID, API_HASH, BOT_TOKEN, OWNER_ID, ALLOWED_GROUP_ID, LOG_LEVEL, LOG_FORMAT
-
-# ================= LOGGING ================= #
-logging.basicConfig(level=LOG_LEVEL, format=LOG_FORMAT)
 logger = logging.getLogger(__name__)
 
-# ================= CLIENT ================= #
-app = Client(
-    "lootgames",
-    api_id=API_ID,
-    api_hash=API_HASH,
-    bot_token=BOT_TOKEN
-)
+DB_FILE = "storage/aquarium_data.json"
 
-# ================= REGISTER MODULES ================= #
-yapping.register(app)
-menu_utama.register(app)
-user_database.register(app)
-autorespon.setup(app)
-
-# ================= CALLBACK FISHING ================= #
-async def fishing_callback_handler(client, callback_query):
-    """
-    Handler untuk callback FISH_CONFIRM_ dari menu fishing.
-    """
-    data = callback_query.data
-    user_id = callback_query.from_user.id
-
-    if data.startswith("FISH_CONFIRM_"):
-        jenis = data.replace("FISH_CONFIRM_", "")
-        username = callback_query.from_user.username or f"user{user_id}"
-
-        # Ambil TARGET_GROUP dari menu_utama
-        from lootgames.modules.menu_utama import TARGET_GROUP
-
-        # Panggil fungsi fishing loot
-        await gacha_fishing.fishing_loot(
-            client,
-            TARGET_GROUP,
-            username,
-            user_id,
-            umpan_type=jenis
-        )
-
-        # Edit pesan callback untuk memberi feedback ke user
-        await callback_query.message.edit_text(f"🎣 Kamu memancing dengan umpan {jenis}!")
-
-# Daftarkan handler callback query
-app.add_handler(CallbackQueryHandler(fishing_callback_handler))
-
-# ================= HANDLE COMMAND .KOLEKSI ================= #
-async def koleksi_handler(client, message):
-    """Menangani perintah .koleksi untuk menampilkan semua tangkapan"""
-    user_id = message.from_user.id  # Mendapatkan ID user yang mengirim perintah
-    collection_info = aquarium.show_collection(user_id)
-    await message.reply(collection_info)
-
-# Daftarkan handler untuk command .koleksi
-app.add_handler(MessageHandler(koleksi_handler, filters.command("koleksi")))
-
-# ================= MAIN ================= #
-async def main():
-    # Pastikan folder storage ada
-    os.makedirs("storage", exist_ok=True)
-
-    # Start client
-    await app.start()
-    logger.info("🚀 LootGames Bot started!")
-    logger.info(f"📱 Monitoring group: {ALLOWED_GROUP_ID}")
-    logger.info(f"👑 Owner ID: {OWNER_ID}")
-
-    # Kirim notifikasi ke owner
+# ---------------- LOAD & SAVE ---------------- #
+def load_data() -> dict:
+    """Load semua data aquarium dari file JSON"""
+    if not os.path.exists(DB_FILE):
+        return {}
     try:
-        await app.send_message(OWNER_ID, "🤖 LootGames Bot sudah aktif dan siap dipakai!")
-        logger.info("📢 Notifikasi start terkirim ke OWNER.")
+        with open(DB_FILE, "r") as f:
+            return json.load(f)
     except Exception as e:
-        logger.error(f"Gagal kirim notifikasi start: {e}")
+        logger.error(f"Gagal load aquarium_data.json: {e}")
+        return {}
 
-    # Bot berjalan terus
-    await asyncio.Event().wait()
-
-if __name__ == "__main__":
+def save_data(data: dict):
+    """Simpan data aquarium ke file JSON"""
     try:
-        import nest_asyncio
-        nest_asyncio.apply()
-    except ImportError:
-        pass
+        os.makedirs(os.path.dirname(DB_FILE), exist_ok=True)
+        with open(DB_FILE, "w") as f:
+            json.dump(data, f, indent=2)
+    except Exception as e:
+        logger.error(f"Gagal save aquarium_data.json: {e}")
 
-    asyncio.run(main())
+# ---------------- USER DATA HANDLER ---------------- #
+def add_fish(user_id: int, fish_name: str, jumlah: int = 1):
+    """
+    Tambahkan ikan ke inventory user
+    Tetap masuk database tanpa mengirim chat ke group
+    """
+    data = load_data()
+    str_uid = str(user_id)
+    if str_uid not in data:
+        data[str_uid] = {}
+    data[str_uid][fish_name] = data[str_uid].get(fish_name, 0) + jumlah
+    save_data(data)
+    logger.info(f"[AQUARIUM] User {user_id} mendapatkan {jumlah}x {fish_name} (background only)")
+
+def get_user_fish(user_id: int) -> dict:
+    """Ambil seluruh inventory ikan user"""
+    data = load_data()
+    return data.get(str(user_id), {})
+
+def reset_user(user_id: int):
+    """Reset inventory user tertentu"""
+    data = load_data()
+    data.pop(str(user_id), None)
+    save_data(data)
+    logger.info(f"[AQUARIUM] Inventory user {user_id} direset")
+
+def reset_all():
+    """Reset semua inventory user"""
+    save_data({})
+    logger.info("[AQUARIUM] Semua inventory direset")
+
+# ---------------- UTILITY ---------------- #
+def get_total_fish(user_id: int) -> int:
+    """Hitung total jumlah semua ikan user"""
+    inventory = get_user_fish(user_id)
+    return sum(inventory.values())
+
+def list_inventory(user_id: int) -> str:
+    """Buat string daftar inventory user untuk ditampilkan di menu"""
+    inventory = get_user_fish(user_id)
+    if not inventory:
+        return "🎣 Kamu belum menangkap ikan apapun."
+    lines = []
+    for fish, qty in inventory.items():
+        lines.append(f"{fish}: {qty} pcs")
+    return "\n".join(lines)
+
+# ---------------- COLLECTION HANDLER ---------------- #
+def show_collection(user_id: int) -> str:
+    """Menampilkan semua koleksi tangkapan hasil memancing"""
+    inventory = get_user_fish(user_id)
+    if not inventory:
+        return "🎣 Kamu belum menangkap apapun."
+    
+    lines = []
+    for item, qty in inventory.items():
+        lines.append(f"☘️ {item}: {qty} pcs")
+    
+    return "\n".join(lines)
