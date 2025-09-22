@@ -259,7 +259,13 @@ async def callback_handler(client: Client, cq: CallbackQuery):
             return
         yapping.update_points(user_id, -jml * 100)
         umpan.add_umpan(user_id, "A", jml)
-        await cq.message.reply(f"✅ Tukar berhasil! {jml} umpan ditambahkan ke akunmu.")
+
+        # ubah jadi edit_text dengan tombol "⬅️ Kembali"
+        kb = InlineKeyboardMarkup([
+            [InlineKeyboardButton("⬅️ Kembali", callback_data="D3A")]
+        ])
+        await cq.message.edit_text(f"✅ Tukar berhasil! {jml} umpan ditambahkan ke akunmu.", reply_markup=kb)
+
         TUKAR_POINT_STATE.pop(user_id, None)
         return
 
@@ -359,3 +365,4 @@ def register(app: Client):
     app.add_handler(MessageHandler(handle_transfer_message, filters.text & filters.private))
     app.add_handler(CallbackQueryHandler(callback_handler))
     logger.info("[MENU] Handler menu_utama terdaftar.")
+
