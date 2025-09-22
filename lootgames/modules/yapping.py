@@ -1,4 +1,3 @@
-# lootgames/modules/yapping.py
 import os, re, json
 from datetime import datetime
 from pyrogram import Client, filters
@@ -45,7 +44,12 @@ def save_points(data):
 def add_user_if_not_exist(points, user_id, username):
     user_id = str(user_id)
     if user_id not in points:
-        points[user_id] = {"username": username, "points": 0, "level": 0, "last_milestone": 0}
+        points[user_id] = {
+            "username": username,
+            "points": 0,
+            "level": 0,
+            "last_milestone": 0
+        }
         if DEBUG:
             log_debug(f"User baru ditambahkan: {username} ({user_id})")
     else:
@@ -118,3 +122,57 @@ def generate_leaderboard(points: dict, top=0) -> str:
         if top and i > top: break
         text += f"{i}. {data['username']} - {data['points']} pts | Level {data['level']} {get_badge(data['level'])}\n"
     return text
+
+# ================= HANDLER REGISTER ================= #
+def register(app: Client):
+    @app.on_message(filters.chat(TARGET_GROUP) & filters.text)
+    async def handle_chat(client: Client, message: Message):
+        user = message.from_user
+        if not user or str(user.id) in IGNORED_USERS:
+            return
+        text = message.text or ""
+        points = load_points()
+        username = user.username or user.first_name or str(user.id)
+
+        amount = calculate_points_from_text(text)
+        if amount > 0:
+            add_points(points, user.id, username, amount)
+
+            # Check level up
+            new_level = check_level_up(points[str(user.id)])
+            if new_level != -1:
+                await message.reply_text(
+                    f"🎉 Selamat {username}, naik ke level {new_level}! {get_badge(new_level)}"
+                )
+
+            # milestone
+            total_points = points[str(user.id)]["points"]
+            last_milestone = points[str(user.id)].get("last_milestone", 0)
+            if total_points // MILESTONE_INTERVAL > last_milestone:
+                points[str(user.id)]["last_milestone"] = total_points // MILESTONE_INTERVAL
+                await message.reply_text(
+                    f"🏆 {username} mencapai {total_points} poin!"
+                )
+
+            save_points(points)
+
+    # Command untuk cek poin
+    @app.on_message(filters.command("rank") & filters.chat(TARGET_GROUP))
+    async def rank_cmd(client: Client, message: Message):
+        user = message.from_user
+        if not user: return
+        points = load_points()
+        user_data = points.get(str(user.id))
+        if not user_data:
+            await message.reply_text("Kamu belum punya poin.")
+            return
+        await message.reply_text(
+            f"📊 {user_data['username']} - {user_data['points']} pts | Level {user_data['level']} {get_badge(user_data['level'])}"
+        )
+
+    # Command leaderboard
+    @app.on_message(filters.command("leaderboard") & filters.chat(TARGET_GROUP))
+    async def leaderboard_cmd(client: Client, message: Message):
+        points = load_points()
+        text = generate_leaderboard(points, top=10)
+        await message.reply_text(text)
