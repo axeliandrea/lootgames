@@ -1,14 +1,17 @@
+# lootgames/__main__.py tester 1
 import asyncio
 import logging
 import os
 from pyrogram import Client
-from pyrogram.handlers import CallbackQueryHandler, MessageHandler
-from pyrogram import filters  # <-- Import filters
+from pyrogram.handlers import CallbackQueryHandler
+from lootgames.modules import aquarium
 
 from lootgames.modules import (
     yapping,
+    menu_utama,
     user_database,
     autorespon,
+    gacha_fishing,
     aquarium
 )
 from lootgames.config import API_ID, API_HASH, BOT_TOKEN, OWNER_ID, ALLOWED_GROUP_ID, LOG_LEVEL, LOG_FORMAT
@@ -27,6 +30,7 @@ app = Client(
 
 # ================= REGISTER MODULES ================= #
 yapping.register(app)
+menu_utama.register(app)
 user_database.register(app)
 autorespon.setup(app)
 
@@ -46,8 +50,7 @@ async def fishing_callback_handler(client, callback_query):
         from lootgames.modules.menu_utama import TARGET_GROUP
 
         # Panggil fungsi fishing loot
-        from lootgames.modules.gacha_fishing import fishing_loot
-        await fishing_loot(
+        await gacha_fishing.fishing_loot(
             client,
             TARGET_GROUP,
             username,
@@ -61,16 +64,6 @@ async def fishing_callback_handler(client, callback_query):
 # Daftarkan handler callback query
 app.add_handler(CallbackQueryHandler(fishing_callback_handler))
 
-# ================= HANDLE COMMAND .KOLEKSI ================= #
-async def koleksi_handler(client, message):
-    """Menangani perintah .koleksi untuk menampilkan semua tangkapan"""
-    user_id = message.from_user.id  # Mendapatkan ID user yang mengirim perintah
-    collection_info = aquarium.show_collection(user_id)
-    await message.reply(collection_info)
-
-# Daftarkan handler untuk command .koleksi
-app.add_handler(MessageHandler(koleksi_handler, filters.command("koleksi")))  # <-- Gunakan filters
-
 # ================= MAIN ================= #
 async def main():
     # Pastikan folder storage ada
@@ -81,10 +74,6 @@ async def main():
     logger.info("🚀 LootGames Bot started!")
     logger.info(f"📱 Monitoring group: {ALLOWED_GROUP_ID}")
     logger.info(f"👑 Owner ID: {OWNER_ID}")
-
-    # Registrasi menu_utama setelah app dimulai
-    from lootgames.modules import menu_utama
-    menu_utama.register(app)
 
     # Kirim notifikasi ke owner
     try:
