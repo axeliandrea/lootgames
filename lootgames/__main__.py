@@ -3,6 +3,7 @@ import logging
 import os
 from pyrogram import Client
 from pyrogram.handlers import CallbackQueryHandler, MessageHandler
+from pyrogram import filters  # <-- Import filters
 
 from lootgames.modules import (
     yapping,
@@ -68,7 +69,7 @@ async def koleksi_handler(client, message):
     await message.reply(collection_info)
 
 # Daftarkan handler untuk command .koleksi
-app.add_handler(MessageHandler(koleksi_handler, filters.command("koleksi")))
+app.add_handler(MessageHandler(koleksi_handler, filters.command("koleksi")))  # <-- Gunakan filters
 
 # ================= MAIN ================= #
 async def main():
