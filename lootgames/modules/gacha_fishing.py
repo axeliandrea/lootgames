@@ -10,12 +10,12 @@ logger = logging.getLogger(__name__)
 
 # ---------------- LOOT TABLE ---------------- #
 FISH_LOOT = {
-    "🧺 Ember Pecah": 65,
+    "☘️ rumput laut": 65,
     "🥾 Sepatu Butut": 75,
-    "🧻 Roll Tisue Bekas": 85,
+    "🍾 sampah":: 85,
     "🤧 Zonk": 90,
     "𓆝 Small Fish": 45,
-    "🦀 Crab": 10,
+    "🐢 turtle": 10,
     "🐌 Snail : 35,
     "🐡 Pufferfish": 3
 }
