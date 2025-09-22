@@ -83,28 +83,29 @@ def show_collection(user_id: int) -> str:
         return "🎣 Kamu belum menangkap apapun."
     
     lines = []
+    
+    # Daftar emoji dan nama item
+    emoji_map = {
+        "rumput laut": "☘️ rumput laut",
+        "sepatu": "🥾 sepatu butut",
+        "sampah": "🍾 sampah",
+        "zonk": "🤧 zonk",
+        "fish": "𓆝 small fish",
+        "turtle": "🐢 turtle",
+        "snail": "🐌 snail",
+        "pufferfish": "🐡 pufferfish"
+    }
+    
     for item, qty in inventory.items():
-        # Menambahkan emoji item berdasarkan nama
-        if "rumput laut" in item.lower():
-            emoji = "☘️"
-        elif "sepatu" in item.lower():
-            emoji = "🥾"
-        elif "sampah" in item.lower():
-            emoji = "🍾"
-        elif "zonk" in item.lower():
-            emoji = "🤧"
-        elif "fish" in item.lower():
-            emoji = "𓆝"
-        elif "turtle" in item.lower():
-            emoji = "🐢"
-        elif "snail" in item.lower():
-            emoji = "🐌"
-        elif "pufferfish" in item.lower():
-            emoji = "🐡"
-        else:
-            emoji = "🐟"  # default fish emoji
-
-        lines.append(f"{emoji} {item}: {qty} pcs")
+        # Menentukan emoji dan nama item yang sesuai berdasarkan kata kunci dalam nama item
+        item_lower = item.lower()
+        emoji_name = "🐟 " + item  # Default jika tidak ada kecocokan
+        
+        for key, emoji in emoji_map.items():
+            if key in item_lower:
+                emoji_name = emoji
+                break
+        
+        lines.append(f"{emoji_name}: {qty} pcs")
     
     return "\n".join(lines)
-
