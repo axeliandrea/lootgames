@@ -1,21 +1,23 @@
+# lootgames/modules/yapping.py
 import os, re, json
 from datetime import datetime
 from pyrogram import Client, filters
 from pyrogram.types import Message
+from lootgames.config import ALLOWED_GROUP_ID as TARGET_GROUP
 
 # ================= CONFIG ================= #
 OWNER_ID = 6395738130
-TARGET_GROUP = -1002946278772
 YAPPINGPOINT_DB = "storage/chat_points.json"
 DEBUG = True
 IGNORED_USERS = ["6946903915"]
-MAX_POINT_PER_CHAT = 5  # maksimal point per chat bubble
-MILESTONE_INTERVAL = 100  # setiap 100 point chat beri notifikasi
+MAX_POINT_PER_CHAT = 5   # maksimal point per chat bubble
+MILESTONE_INTERVAL = 100 # setiap 100 point chat beri notifikasi
 
 # ================= UTILS ================= #
 def log_debug(msg: str):
-    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    print(f"[DEBUG] {timestamp} - {msg}")
+    if DEBUG:
+        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        print(f"[DEBUG] {timestamp} - {msg}")
 
 def load_json(file_path):
     if os.path.exists(file_path):
@@ -31,8 +33,7 @@ def save_json(file_path, data):
     os.makedirs(os.path.dirname(file_path), exist_ok=True)
     with open(file_path, "w") as f:
         json.dump(data, f, indent=2)
-    if DEBUG:
-        log_debug(f"Data disimpan ke {file_path}")
+    log_debug(f"Data disimpan ke {file_path}")
 
 # ================= POINTS ================= #
 def load_points() -> dict:
@@ -50,8 +51,7 @@ def add_user_if_not_exist(points, user_id, username):
             "level": 0,
             "last_milestone": 0
         }
-        if DEBUG:
-            log_debug(f"User baru ditambahkan: {username} ({user_id})")
+        log_debug(f"User baru ditambahkan: {username} ({user_id})")
     else:
         points[user_id]["username"] = username
         points[user_id].setdefault("level", 0)
@@ -65,8 +65,7 @@ def calculate_points_from_text(text: str) -> int:
 def add_points(points, user_id, username, amount):
     add_user_if_not_exist(points, user_id, username)
     points[str(user_id)]["points"] += amount
-    if DEBUG:
-        log_debug(f"{username} ({user_id}) +{amount} point | total: {points[str(user_id)]['points']}")
+    log_debug(f"{username} ({user_id}) +{amount} point | total: {points[str(user_id)]['points']}")
 
 def update_points(user_id, points_change):
     points = load_points()
@@ -75,8 +74,7 @@ def update_points(user_id, points_change):
         points[user_id] = {"username": "Unknown", "points": 0, "level": 0, "last_milestone": 0}
     points[user_id]["points"] += points_change
     save_points(points)
-    if DEBUG:
-        log_debug(f"Updated points for {user_id}: {points_change} change")
+    log_debug(f"Updated points for {user_id}: {points_change} change")
 
 # ================= LEVEL & BADGE ================= #
 LEVEL_EXP = {}
@@ -115,8 +113,9 @@ def get_badge(level: int) -> str:
 
 # ================= LEADERBOARD ================= #
 def generate_leaderboard(points: dict, top=0) -> str:
-    sorted_points = sorted(points.items(), key=lambda x: x[1].get("points",0), reverse=True)
-    if not sorted_points: return "Leaderboard kosong"
+    sorted_points = sorted(points.items(), key=lambda x: x[1].get("points", 0), reverse=True)
+    if not sorted_points: 
+        return "Leaderboard kosong"
     text = "🏆 Leaderboard 🏆\n\n"
     for i, (uid, data) in enumerate(sorted_points, start=1):
         if top and i > top: break
@@ -127,6 +126,8 @@ def generate_leaderboard(points: dict, top=0) -> str:
 def register(app: Client):
     @app.on_message(filters.chat(TARGET_GROUP) & filters.text)
     async def handle_chat(client: Client, message: Message):
+        log_debug(f"Pesan masuk dari {message.from_user.id if message.from_user else 'UNKNOWN'}: {message.text}")
+
         user = message.from_user
         if not user or str(user.id) in IGNORED_USERS:
             return
@@ -185,5 +186,4 @@ def register(app: Client):
             return
         save_points({})
         await message.reply_text("✅ Semua poin yapping sudah direset menjadi 0.")
-        if DEBUG:
-            log_debug("Database poin yapping direset oleh OWNER")
+        log_debug("Database poin yapping direset oleh OWNER")
