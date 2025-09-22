@@ -1,4 +1,3 @@
-MENU_UTAMA TERBARU
 # lootgames/modules/menu_utama.py FINAL REVISI
 import logging
 import asyncio
@@ -318,3 +317,4 @@ def register(app: Client):
     # Callback query
     app.add_handler(CallbackQueryHandler(callback_handler))
     logger.info("[MENU] Handler menu_utama terdaftar.")
+
