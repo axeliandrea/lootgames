@@ -2,6 +2,7 @@ import json
 import os
 import logging
 
+# Setup logger
 logger = logging.getLogger(__name__)
 
 DB_FILE = "storage/aquarium_data.json"
@@ -83,6 +84,27 @@ def show_collection(user_id: int) -> str:
     
     lines = []
     for item, qty in inventory.items():
-        lines.append(f"☘️ {item}: {qty} pcs")
+        # Menambahkan emoji item berdasarkan nama
+        if "rumput laut" in item.lower():
+            emoji = "☘️"
+        elif "sepatu" in item.lower():
+            emoji = "🥾"
+        elif "sampah" in item.lower():
+            emoji = "🍾"
+        elif "zonk" in item.lower():
+            emoji = "🤧"
+        elif "fish" in item.lower():
+            emoji = "𓆝"
+        elif "turtle" in item.lower():
+            emoji = "🐢"
+        elif "snail" in item.lower():
+            emoji = "🐌"
+        elif "pufferfish" in item.lower():
+            emoji = "🐡"
+        else:
+            emoji = "🐟"  # default fish emoji
+
+        lines.append(f"{emoji} {item}: {qty} pcs")
     
     return "\n".join(lines)
+
