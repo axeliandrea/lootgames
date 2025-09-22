@@ -3,10 +3,10 @@ import os, re, json
 from datetime import datetime
 from pyrogram import Client, filters
 from pyrogram.types import Message
-from lootgames.config import ALLOWED_GROUP_ID as TARGET_GROUP
 
 # ================= CONFIG ================= #
 OWNER_ID = 6395738130
+TARGET_GROUP = -1002946278772   # <-- FIXED group ID
 YAPPINGPOINT_DB = "storage/chat_points.json"
 DEBUG = True
 IGNORED_USERS = ["6946903915"]
@@ -124,6 +124,8 @@ def generate_leaderboard(points: dict, top=0) -> str:
 
 # ================= HANDLER REGISTER ================= #
 def register(app: Client):
+    print("[YAPPING] Handler registered ✅ (Target group:", TARGET_GROUP, ")")
+
     @app.on_message(filters.chat(TARGET_GROUP) & filters.text)
     async def handle_chat(client: Client, message: Message):
         log_debug(f"Pesan masuk dari {message.from_user.id if message.from_user else 'UNKNOWN'}: {message.text}")
