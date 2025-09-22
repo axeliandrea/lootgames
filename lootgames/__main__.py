@@ -1,9 +1,10 @@
-# lootgames/__main__.py
+# lootgames/__main__.py tester 1
 import asyncio
 import logging
 import os
 from pyrogram import Client
 from pyrogram.handlers import CallbackQueryHandler
+from lootgames.modules import aquarium
 
 from lootgames.modules import (
     yapping,
@@ -92,3 +93,4 @@ if __name__ == "__main__":
         pass
 
     asyncio.run(main())
+
