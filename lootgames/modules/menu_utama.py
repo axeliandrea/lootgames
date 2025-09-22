@@ -7,7 +7,6 @@ from pyrogram.enums import MessageEntityType
 from pyrogram.handlers import MessageHandler, CallbackQueryHandler
 
 from lootgames.modules import yapping, umpan, user_database
-from lootgames.modules.gacha_fishing import fishing_loot  # import modul gacha
 
 logger = logging.getLogger(__name__)
 OWNER_ID = 6395738130
@@ -19,6 +18,7 @@ TUKAR_POINT_STATE = {}    # user_id: {"step": step, "jumlah_umpan": n}
 
 # ---------------- EMOJI PREMIUM ---------------- #
 FISHING_EMOJI = {"char": "🎣", "id": 5463406036410969564}
+CATCH_EMOJI   = {"char": "🤩", "id": 6235295024817379885}
 
 # ---------------- MENU STRUCTURE ---------------- #
 MENU_STRUCTURE = {
@@ -199,9 +199,14 @@ async def callback_handler(client: Client, callback_query: CallbackQuery):
                 return
             umpan.remove_umpan(user_id, jenis_key, 1)
 
-        # panggil modul gacha untuk loot
-        asyncio.create_task(fishing_loot(client, TARGET_GROUP, username))
+        msg = await send_single_emoji(client, TARGET_GROUP, FISHING_EMOJI, f" @{username} sedang melempar umpan ({jenis})..")
+
         await callback_query.message.edit_text(f"🎣 Kamu berhasil melempar umpan {jenis} ke kolam!")
+
+        async def delayed():
+            await asyncio.sleep(10)
+            await send_single_emoji(client, TARGET_GROUP, CATCH_EMOJI, f" @{username} berhasil mendapatkan ikan!", reply_to=msg.id if msg else None)
+        asyncio.create_task(delayed())
         return
 
     # --- LEADERBOARD PAGE NAV ---
