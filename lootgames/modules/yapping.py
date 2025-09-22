@@ -5,11 +5,11 @@ from pyrogram.types import Message
 
 # ================= CONFIG ================= #
 OWNER_ID = 6395738130
-TARGET_GROUP = -1002904817520
+TARGET_GROUP = -1002946278772
 YAPPINGPOINT_DB = "storage/chat_points.json"
 DEBUG = True
 IGNORED_USERS = ["6946903915"]
-MAX_POINT_PER_CHAT = 5  # maksimal point per chat per chat bubble
+MAX_POINT_PER_CHAT = 5  # maksimal point per chat bubble
 MILESTONE_INTERVAL = 100  # setiap 100 point chat beri notifikasi
 
 # ================= UTILS ================= #
@@ -176,3 +176,14 @@ def register(app: Client):
         points = load_points()
         text = generate_leaderboard(points, top=10)
         await message.reply_text(text)
+
+    # Command reset semua poin yapping
+    @app.on_message(filters.command("resetyapping") & filters.chat(TARGET_GROUP))
+    async def reset_yapping_cmd(client: Client, message: Message):
+        if message.from_user.id != OWNER_ID:
+            await message.reply_text("❌ Kamu tidak punya izin untuk reset poin.")
+            return
+        save_points({})
+        await message.reply_text("✅ Semua poin yapping sudah direset menjadi 0.")
+        if DEBUG:
+            log_debug("Database poin yapping direset oleh OWNER")
