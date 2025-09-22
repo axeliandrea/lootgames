@@ -6,7 +6,6 @@ from pyrogram.handlers import CallbackQueryHandler, MessageHandler
 
 from lootgames.modules import (
     yapping,
-    menu_utama,
     user_database,
     autorespon,
     gacha_fishing,
@@ -28,7 +27,6 @@ app = Client(
 
 # ================= REGISTER MODULES ================= #
 yapping.register(app)
-menu_utama.register(app)
 user_database.register(app)
 autorespon.setup(app)
 
@@ -82,6 +80,10 @@ async def main():
     logger.info("🚀 LootGames Bot started!")
     logger.info(f"📱 Monitoring group: {ALLOWED_GROUP_ID}")
     logger.info(f"👑 Owner ID: {OWNER_ID}")
+
+    # Registrasi menu_utama setelah app dimulai
+    from lootgames.modules import menu_utama
+    menu_utama.register(app)
 
     # Kirim notifikasi ke owner
     try:
