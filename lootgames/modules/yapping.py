@@ -1,5 +1,6 @@
-# lootgames/modules/yapping.py tester 1
-import os, re, json
+import os
+import re
+import json
 from datetime import datetime
 from pyrogram import Client, filters
 from pyrogram.types import Message
@@ -19,6 +20,7 @@ def log_debug(msg: str):
     print(f"[DEBUG] {timestamp} - {msg}")
 
 def load_json(file_path):
+    """Load data from JSON file."""
     if os.path.exists(file_path):
         try:
             with open(file_path, "r") as f:
@@ -29,6 +31,7 @@ def load_json(file_path):
     return {}
 
 def save_json(file_path, data):
+    """Save data to JSON file."""
     os.makedirs(os.path.dirname(file_path), exist_ok=True)
     with open(file_path, "w") as f:
         json.dump(data, f, indent=2)
@@ -37,12 +40,15 @@ def save_json(file_path, data):
 
 # ================= POINTS ================= #
 def load_points() -> dict:
+    """Load points data from JSON."""
     return load_json(YAPPINGPOINT_DB)
 
 def save_points(data):
+    """Save points data to JSON."""
     save_json(YAPPINGPOINT_DB, data)
 
 def add_user_if_not_exist(points, user_id, username):
+    """Add user to points data if not exist."""
     user_id = str(user_id)
     if user_id not in points:
         points[user_id] = {"username": username, "points": 0, "level": 0, "last_milestone": 0}
@@ -54,11 +60,13 @@ def add_user_if_not_exist(points, user_id, username):
         points[user_id].setdefault("last_milestone", 0)
 
 def calculate_points_from_text(text: str) -> int:
+    """Calculate points based on text length."""
     clean_text = re.sub(r"[^a-zA-Z]", "", text)
     points = len(clean_text) // 5
     return min(points, MAX_POINT_PER_CHAT)
 
 def add_points(points, user_id, username, amount):
+    """Add points to a user."""
     add_user_if_not_exist(points, user_id, username)
     points[str(user_id)]["points"] += amount
     if DEBUG:
@@ -73,6 +81,7 @@ for lvl in range(0, 100):
     base_exp = int(base_exp * factor)
 
 def check_level_up(user_data: dict) -> int:
+    """Check if the user has leveled up."""
     points_val = user_data.get("points", 0)
     old_level = user_data.get("level", 0)
     new_level = old_level
@@ -87,6 +96,7 @@ def check_level_up(user_data: dict) -> int:
     return -1
 
 def get_badge(level: int) -> str:
+    """Get the badge based on the user's level."""
     if level <= 0: return "⬜ NOOB"
     elif level <= 9: return "🥉 VIP 1"
     elif level <= 19: return "🥈 VIP 2"
@@ -101,7 +111,8 @@ def get_badge(level: int) -> str:
 
 # ================= LEADERBOARD ================= #
 def generate_leaderboard(points: dict, top=0) -> str:
-    sorted_points = sorted(points.items(), key=lambda x: x[1].get("points",0), reverse=True)
+    """Generate leaderboard."""
+    sorted_points = sorted(points.items(), key=lambda x: x[1].get("points", 0), reverse=True)
     if not sorted_points: return "Leaderboard kosong"
     text = "🏆 Leaderboard 🏆\n\n"
     for i, (uid, data) in enumerate(sorted_points, start=1):
