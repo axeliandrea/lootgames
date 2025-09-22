@@ -8,7 +8,6 @@ from lootgames.modules import (
     yapping,
     user_database,
     autorespon,
-    gacha_fishing,
     aquarium
 )
 from lootgames.config import API_ID, API_HASH, BOT_TOKEN, OWNER_ID, ALLOWED_GROUP_ID, LOG_LEVEL, LOG_FORMAT
@@ -46,7 +45,8 @@ async def fishing_callback_handler(client, callback_query):
         from lootgames.modules.menu_utama import TARGET_GROUP
 
         # Panggil fungsi fishing loot
-        await gacha_fishing.fishing_loot(
+        from lootgames.modules.gacha_fishing import fishing_loot
+        await fishing_loot(
             client,
             TARGET_GROUP,
             username,
