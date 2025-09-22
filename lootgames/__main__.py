@@ -1,3 +1,4 @@
+lootgames/__main__.py
 import asyncio
 import logging
 import os
@@ -92,3 +93,4 @@ if __name__ == "__main__":
         pass
 
     asyncio.run(main())
+
