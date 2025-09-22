@@ -16,6 +16,7 @@ MILESTONE_INTERVAL = 100  # setiap 100 point chat beri notifikasi
 
 # ================= UTILS ================= #
 def log_debug(msg: str):
+    """Function to log debug messages."""
     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     print(f"[DEBUG] {timestamp} - {msg}")
 
@@ -135,7 +136,7 @@ def register(app: Client):
         username = user.username or user.first_name or "Unknown"
 
         if DEBUG:
-            log_debug(f"Pesan masuk dari {username} ({user_id}): {text_raw}")  # Log debug pesan masuk
+            log_debug(f"Pesan masuk dari {username} ({user_id}) di grup {message.chat.id}: {text_raw}")  # Log debug pesan masuk
 
         # Abaikan command kecuali EXCLUDED_COMMANDS
         if text_raw.startswith(("/", ".", "!", "#")):
@@ -154,7 +155,7 @@ def register(app: Client):
         user_data = points[user_id]
 
         if DEBUG:
-            log_debug(f"Points untuk {username} ({user_id}): {points_value} poin")
+            log_debug(f"Points untuk {username} ({user_id}): {points_value} poin")  # Log debug perhitungan poin
 
         # Level up
         new_level = check_level_up(user_data)
