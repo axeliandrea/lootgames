@@ -25,14 +25,14 @@ MENU_STRUCTURE = {
             ("REGISTER", "C"),
             ("🛒STORE", "D"),
             ("FISHING", "E"),
-            ("Menu F", "F"), 
-            ("Menu G", "G"), 
+            ("Menu F", "F"),
+            ("Menu G", "G"),
             ("Menu H", "H"),
-            ("Menu I", "I"), 
-            ("Menu J", "J"), 
-            ("Menu K", "K"), 
+            ("Menu I", "I"),
+            ("Menu J", "J"),
+            ("Menu K", "K"),
             ("Menu L", "L")
-        ],
+        ]
     },
     # UMPAN MENU
     "A": {
@@ -59,7 +59,6 @@ MENU_STRUCTURE = {
     "BB": {"title": "📋 Poin Pribadi", "buttons": [("⬅️ Kembali", "B")]},
     "BBB": {"title": "📋 Leaderboard Yapping", "buttons": [("⬅️ Kembali", "B")]},
 }
-
 
 # ---------------- KEYBOARD BUILDER ---------------- #
 def make_keyboard(menu_key: str, user_id=None, page: int = 0) -> InlineKeyboardMarkup:
