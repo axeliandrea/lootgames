@@ -64,6 +64,8 @@ def calculate_points_from_text(text: str) -> int:
     """Calculate points based on text length."""
     clean_text = re.sub(r"[^a-zA-Z]", "", text)
     points = len(clean_text) // 5
+    if DEBUG:
+        log_debug(f"Teks bersih: {clean_text}, Poin dihitung: {points}")
     return min(points, MAX_POINT_PER_CHAT)
 
 def add_points(points, user_id, username, amount):
