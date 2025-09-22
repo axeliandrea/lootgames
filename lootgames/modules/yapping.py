@@ -62,8 +62,8 @@ def add_user_if_not_exist(points, user_id, username):
 
 def calculate_points_from_text(text: str) -> int:
     """Calculate points based on text length."""
-    clean_text = re.sub(r"[^a-zA-Z]", "", text)
-    points = len(clean_text) // 5
+    clean_text = re.sub(r"[^a-zA-Z]", "", text)  # Remove non-alphabet characters
+    points = len(clean_text) // 5  # Calculate points based on number of characters
     if DEBUG:
         log_debug(f"Teks bersih: {clean_text}, Poin dihitung: {points}")
     return min(points, MAX_POINT_PER_CHAT)
