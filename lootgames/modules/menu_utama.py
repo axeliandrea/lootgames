@@ -143,7 +143,7 @@ async def callback_handler(client: Client, cq: CallbackQuery):
                 loot_result = await fishing_loot(client, None, uname, user_id, umpan_type=jenis)
                 # tunggu 15 detik sebelum kirim hasil
                 await asyncio.sleep(15)
-                await client.send_message(TARGET_GROUP,f"🏆 @{uname} mendapatkan {loot_result}!")
+                await client.send_message(TARGET_GROUP,f"🎣 @{uname} mendapatkan {loot_result}!")
             except Exception as e:
                 logger.error(f"Gagal kirim info reward: {e}")
         asyncio.create_task(fishing_task())
@@ -268,3 +268,4 @@ def register(app: Client):
     logger.info("[MENU] Handler menu_utama terdaftar.")
 
     
+
