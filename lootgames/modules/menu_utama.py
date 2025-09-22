@@ -135,10 +135,13 @@ async def callback_handler(client: Client, cq: CallbackQuery):
         async def fishing_task():
             try:
                 await asyncio.sleep(2)
-                await client.send_message(TARGET_GROUP,f"🎣 @{uname} sedang memancing di group ini, kira2 dapet apa ya?")
-                loot_result = await fishing_loot(client,TARGET_GROUP,uname,user_id,umpan_type=jenis)
-                await asyncio.sleep(15)
-                await client.send_message(TARGET_GROUP,f"@{uname} mendapatkan {loot_result}!")
+                # Hanya kirim satu pesan ke group
+                await client.send_message(TARGET_GROUP,
+                                          f"🎣 @{uname} sedang memancing di group ini, kira2 dapet apa ya?")
+
+                # Proses loot di background tanpa kirim ke group
+                loot_result = await fishing_loot(client, None, uname, user_id, umpan_type=jenis)
+                logger.info(f"[FISHING] @{uname} mendapatkan {loot_result} (background only)")
             except Exception as e:
                 logger.error(f"Gagal kirim info reward: {e}")
         asyncio.create_task(fishing_task())
