@@ -14,8 +14,9 @@ FISH_LOOT = {
     "🥾 Sepatu Butut": 75,
     "🧻 Roll Tisue Bekas": 85,
     "🤧 Zonk": 90,
-    "𓆝 Small Fish": 35,
+    "𓆝 Small Fish": 45,
     "🦀 Crab": 10,
+    "🐌 Snail : 35,
     "🐡 Pufferfish": 3
 }
 
@@ -23,8 +24,8 @@ FISH_LOOT = {
 BUFF_RATE = {
     "COMMON": 0,
     "RARE": 5,
-    "LEGEND": 10,
-    "MYTHIC": 15
+    "LEGEND": 15,
+    "MYTHIC": 25
 }
 
 # ---------------- FISHING FUNCTION ---------------- #
