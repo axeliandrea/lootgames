@@ -135,7 +135,7 @@ def register(app: Client):
         username = user.username or user.first_name or "Unknown"
 
         if DEBUG:
-            log_debug(f"Pesan masuk dari {username}: {text_raw}")
+            log_debug(f"Pesan masuk dari {username} ({user_id}): {text_raw}")  # Log debug pesan masuk
 
         # Abaikan command kecuali EXCLUDED_COMMANDS
         if text_raw.startswith(("/", ".", "!", "#")):
@@ -152,6 +152,9 @@ def register(app: Client):
         points = load_points()
         add_points(points, user_id, username, points_value)
         user_data = points[user_id]
+
+        if DEBUG:
+            log_debug(f"Points untuk {username} ({user_id}): {points_value} poin")
 
         # Level up
         new_level = check_level_up(user_data)
