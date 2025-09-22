@@ -1,4 +1,4 @@
-# lootgames/modules/yapping.py
+# lootgames/modules/yapping.py tester 1
 import os, re, json
 from datetime import datetime
 from pyrogram import Client, filters
