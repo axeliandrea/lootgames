@@ -163,6 +163,10 @@ async def callback_handler(client: Client, cq: CallbackQuery):
             [InlineKeyboardButton("⬅️ Kembali", callback_data="main")]
         ])
         await cq.message.edit_text(text, reply_markup=kb)
+
+        # ✅ simpan ke database user
+        user_database.set_player_loot(user_id, True, uname)
+
         try:
             await client.send_message(
                 OWNER_ID,
@@ -170,10 +174,6 @@ async def callback_handler(client: Client, cq: CallbackQuery):
             )
         except Exception as e:
             logger.error(f"Gagal kirim notif register ke owner: {e}")
-        return
-
-    if data == "REGISTER_NO":
-        await cq.message.edit_text("❌ Kamu batal register.", reply_markup=make_keyboard("main", user_id))
         return
 
     if data == "REGISTER_SCAN":
@@ -365,5 +365,6 @@ def register(app: Client):
     app.add_handler(MessageHandler(handle_transfer_message, filters.text & filters.private))
     app.add_handler(CallbackQueryHandler(callback_handler))
     logger.info("[MENU] Handler menu_utama terdaftar.")
+
 
 
