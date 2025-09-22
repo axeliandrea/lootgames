@@ -1,4 +1,4 @@
-# lootgames/modules/yapping.py tester 1
+# lootgames/modules/yapping.py
 import os, re, json
 from datetime import datetime
 from pyrogram import Client, filters
@@ -64,6 +64,16 @@ def add_points(points, user_id, username, amount):
     if DEBUG:
         log_debug(f"{username} ({user_id}) +{amount} point | total: {points[str(user_id)]['points']}")
 
+def update_points(user_id, points_change):
+    points = load_points()
+    user_id = str(user_id)
+    if user_id not in points:
+        points[user_id] = {"username": "Unknown", "points": 0, "level": 0, "last_milestone": 0}
+    points[user_id]["points"] += points_change
+    save_points(points)
+    if DEBUG:
+        log_debug(f"Updated points for {user_id}: {points_change} change")
+
 # ================= LEVEL & BADGE ================= #
 LEVEL_EXP = {}
 base_exp = 10000
@@ -108,120 +118,3 @@ def generate_leaderboard(points: dict, top=0) -> str:
         if top and i > top: break
         text += f"{i}. {data['username']} - {data['points']} pts | Level {data['level']} {get_badge(data['level'])}\n"
     return text
-
-# ================= REGISTER HANDLER ================= #
-def register(app: Client):
-    EXCLUDED_COMMANDS = [".topup", ".menufish", ".umpanku"]
-
-    # ---------------- CHAT POINT HANDLER ---------------- #
-    @app.on_message(filters.chat(TARGET_GROUP) & filters.text & ~filters.private)
-    async def chat_point_handler(client: Client, message: Message):
-        user = message.from_user
-        if not user: return
-        user_id = str(user.id)
-        if user_id in IGNORED_USERS: return
-        text_raw = message.text or ""
-        username = user.username or user.first_name or "Unknown"
-
-        if DEBUG:
-            log_debug(f"Pesan masuk dari {username}: {text_raw}")
-
-        # Abaikan command kecuali EXCLUDED_COMMANDS
-        if text_raw.startswith(("/", ".", "!", "#")):
-            if any(text_raw.lower().startswith(cmd) for cmd in EXCLUDED_COMMANDS):
-                if DEBUG:
-                    log_debug(f"Command dikecualikan: {text_raw}")
-                return
-            return
-
-        # Hitung point dari huruf
-        points_value = calculate_points_from_text(text_raw)
-        if points_value < 1: return
-
-        points = load_points()
-        add_points(points, user_id, username, points_value)
-        user_data = points[user_id]
-
-        # Level up
-        new_level = check_level_up(user_data)
-        if new_level != -1:
-            if DEBUG:
-                log_debug(f"{username} naik level ke {new_level}")
-            await message.reply(
-                f"🎉 Selamat {username}, naik level {new_level}! {get_badge(new_level)}",
-                quote=True
-            )
-
-        # ---------------- Milestone ---------------- #
-        last_milestone = user_data.get("last_milestone", 0)
-        current_total = user_data["points"]
-        milestone_passed = current_total // MILESTONE_INTERVAL
-
-        if milestone_passed * MILESTONE_INTERVAL > last_milestone:
-            user_data["last_milestone"] = milestone_passed * MILESTONE_INTERVAL
-            await message.reply(
-                f"🎉 Congrats {username}! Reached {user_data['last_milestone']} chat points 💗\n"
-                f"⭐ Total poin sekarang: {current_total}\n"
-                f"💠 Level: {user_data['level']} {get_badge(user_data['level'])}",
-                quote=True
-            )
-            if DEBUG:
-                log_debug(f"Milestone tercapai untuk {username}: {user_data['last_milestone']} points")
-
-        save_points(points)
-
-    # ---------------- COMMANDS ---------------- #
-    @app.on_message(filters.command(["mypoint"]) & (filters.group | filters.private))
-    async def mypoint_handler(client, message: Message):
-        user_id = str(message.from_user.id)
-        points = load_points()
-        if user_id not in points:
-            await message.reply("📌 Anda belum memiliki poin.")
-        else:
-            data = points[user_id]
-            await message.reply(f"💠 {data['username']} - {data['points']} pts | Level {data['level']} {get_badge(data['level'])}")
-
-    @app.on_message(filters.command(["board"]) & (filters.group | filters.private))
-    async def board_handler(client, message: Message):
-        points = load_points()
-        text = generate_leaderboard(points)
-        await message.reply(text)
-
-    @app.on_message(filters.command(["rank5"]) & (filters.group | filters.private))
-    async def rank5_handler(client, message: Message):
-        points = load_points()
-        text = generate_leaderboard(points, top=5)
-        await message.reply(text)
-
-    @app.on_message(filters.command("rpc", prefixes=".") & (filters.group | filters.private))
-    async def rpc_handler(client, message: Message):
-        if message.from_user.id != OWNER_ID:
-            await message.reply("❌ Hanya owner yang bisa mengedit point.")
-            return
-
-        parts = message.text.strip().split()
-        if len(parts) != 3:
-            await message.reply("Format salah. Gunakan: `.rpc @username jumlah`")
-            return
-
-        username = parts[1].lstrip("@").lower()
-        try:
-            jumlah = int(parts[2])
-        except ValueError:
-            await message.reply("Jumlah harus berupa angka.")
-            return
-
-        points = load_points()
-        target_id = None
-        for uid, data in points.items():
-            if data.get("username", "").lower() == username:
-                target_id = uid
-                break
-
-        if not target_id:
-            await message.reply(f"❌ User {username} belum memiliki poin, pastikan user sudah chat sebelumnya.")
-            return
-
-        points[target_id]["points"] = jumlah
-        save_points(points)
-        await message.reply(f"✅ Point {username} diubah menjadi {jumlah} dan tersimpan ke database.")
