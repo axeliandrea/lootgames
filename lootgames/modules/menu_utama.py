@@ -8,7 +8,6 @@ from pyrogram.handlers import MessageHandler, CallbackQueryHandler
 
 from lootgames.modules import yapping, umpan, user_database
 from lootgames.modules.gacha_fishing import fishing_loot  # import modul gacha
-from lootgames.modules.fishing_helper import send_single_emoji, FISHING_EMOJI
 
 logger = logging.getLogger(__name__)
 OWNER_ID = 6395738130
@@ -77,7 +76,7 @@ MENU_STRUCTURE = {
     # --- YAPPING ---
     "B": {"title":"📋 YAPPING","buttons":[("Poin Pribadi","BB"),("➡️ Leaderboard","BBB"),("⬅️ Kembali","main")]},
     "BB": {"title":"📋 Poin Pribadi","buttons":[("⬅️ Kembali","B")]},
-    "BBB": {"title":"📋 Leaderboard Yapping","buttons":[("⬅️ Kembali","B")]}
+    "BBB": {"title":"📋 Leaderboard Yapping","buttons":[("⬅️ Kembali","B")}
 }
 
 # GENERIC MENU (F-L)
@@ -320,4 +319,3 @@ def register(app: Client):
     app.add_handler(MessageHandler(handle_transfer_message, filters.text & filters.private))
     app.add_handler(CallbackQueryHandler(callback_handler))
     logger.info("[MENU] Handler menu_utama terdaftar.")
-
