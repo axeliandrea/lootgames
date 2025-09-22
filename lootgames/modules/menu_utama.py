@@ -129,7 +129,8 @@ async def callback_handler(client: Client, cq: CallbackQuery):
                 await cq.answer("❌ Umpan tidak cukup!",show_alert=True)
                 return
             umpan.remove_umpan(user_id,jk,1)
-        await cq.message.edit_text(f"🎣 Kamu berhasil melempar umpan {jenis} ke kolam!")
+        try: await cq.message.edit_text(f"🎣 Kamu berhasil melempar umpan {jenis} ke kolam!")
+        except: pass
 
         async def fishing_task():
             try:
@@ -151,7 +152,8 @@ async def callback_handler(client: Client, cq: CallbackQuery):
 
     # NAVIGASI MENU
     if data in MENU_STRUCTURE:
-        await cq.message.edit_text(MENU_STRUCTURE[data]["title"],reply_markup=make_keyboard(data,user_id))
+        try: await cq.message.edit_text(MENU_STRUCTURE[data]["title"],reply_markup=make_keyboard(data,user_id))
+        except: pass
         return
 
     # TUKAR POINT
@@ -240,7 +242,8 @@ async def show_leaderboard(cq: CallbackQuery, uid:int, page:int=0):
     text=f"🏆 Leaderboard Yapping (Page {page+1}/{total_pages+1}) 🏆\n\n"
     for i,(u,pdata) in enumerate(sorted_pts[start:end],start=start+1):
         text+=f"{i}. {pdata.get('username','Unknown')} - {pdata.get('points',0)} pts | Level {pdata.get('level',0)} {yapping.get_badge(pdata.get('level',0))}\n"
-    await cq.message.edit_text(text,reply_markup=make_keyboard("BBB",uid,page))
+    try: await cq.message.edit_text(text,reply_markup=make_keyboard("BBB",uid,page))
+    except: pass
 
 # ---------------- MENU OPEN ---------------- #
 async def open_menu(client:Client,message:Message):
