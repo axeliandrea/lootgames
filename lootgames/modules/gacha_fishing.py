@@ -1,3 +1,4 @@
+# lootgames/modules/gacha_fishing.py
 import random
 import asyncio
 import logging
@@ -37,13 +38,17 @@ async def fishing_loot(client: Client, target_chat: int, username: str, user_id:
     
     logger.info(f"[FISHING] {username} ({user_id}) memancing dengan {umpan_type}, mendapatkan: {loot_item}")
     
+    # Simulasi animasi dan kirim pesan ke group
     try:
-        await asyncio.sleep(2)  # delay animasi
+        await asyncio.sleep(2)  # delay animasi awal
         if target_chat:
-            await send_single_emoji(client, target_chat, FISHING_EMOJI, f" @{username} mendapatkan {loot_item}!")
+            # Kirim pesan langsung ke group, menggantikan pesan ⬛ lama
+            await client.send_message(target_chat, f"@{username} mendapatkan {loot_item}!")
+        # Simpan loot ke database aquarium
         aquarium.add_fish(user_id, loot_item, 1)
     except Exception as e:
         logger.error(f"Error fishing loot untuk {username}: {e}")
+    
     return loot_item
 
 # ---------------- HELPERS ---------------- #
