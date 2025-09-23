@@ -1,19 +1,29 @@
-# lootgames/__main__.py tester 1
+# lootgames/__main__.py
 import asyncio
 import logging
 import os
 from pyrogram import Client
 from pyrogram.handlers import CallbackQueryHandler
-from lootgames.modules import aquarium
 
+# Import semua modules
 from lootgames.modules import (
     yapping,
     menu_utama,
     user_database,
     gacha_fishing,
-    aquarium
+    aquarium,
+    treasure_chest   # <<=== NEW MODULE
 )
-from lootgames.config import API_ID, API_HASH, BOT_TOKEN, OWNER_ID, ALLOWED_GROUP_ID, LOG_LEVEL, LOG_FORMAT
+
+from lootgames.config import (
+    API_ID,
+    API_HASH,
+    BOT_TOKEN,
+    OWNER_ID,
+    ALLOWED_GROUP_ID,
+    LOG_LEVEL,
+    LOG_FORMAT,
+)
 
 # ================= LOGGING ================= #
 logging.basicConfig(level=LOG_LEVEL, format=LOG_FORMAT)
@@ -31,6 +41,7 @@ app = Client(
 yapping.register(app)
 menu_utama.register(app)
 user_database.register(app)
+treasure_chest.register(app)   # <<=== REGISTER TREASURE CHEST
 
 # ================= CALLBACK FISHING ================= #
 async def fishing_callback_handler(client, callback_query):
@@ -59,7 +70,7 @@ async def fishing_callback_handler(client, callback_query):
         # Edit pesan callback untuk memberi feedback ke user
         await callback_query.message.edit_text(f"🎣 Kamu memancing dengan umpan {jenis}!")
 
-# Daftarkan handler callback query
+# Daftarkan handler callback query untuk fishing
 app.add_handler(CallbackQueryHandler(fishing_callback_handler))
 
 # ================= MAIN ================= #
@@ -91,5 +102,3 @@ if __name__ == "__main__":
         pass
 
     asyncio.run(main())
-
-
