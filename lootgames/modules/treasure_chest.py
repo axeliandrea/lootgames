@@ -1,6 +1,5 @@
 # lootgames/modules/treasure_chest.py
 import os
-import json
 import random
 import asyncio
 from datetime import datetime
@@ -23,10 +22,14 @@ def log_debug(msg: str):
 # ================= HANDLERS ================= #
 async def spawn_chest(client: Client, message: Message):
     """Owner spawn treasure chest ke group target"""
+    log_debug(f"Command '.treasurechest' diterima dari user {message.from_user.id} di chat {message.chat.id} ({message.chat.type})")
+
     if message.from_user.id != OWNER_ID:
+        log_debug("❌ Bukan owner, command ditolak")
         return await message.reply_text("❌ Kamu tidak memiliki izin menggunakan command ini.")
 
     if message.chat.type != "private":
+        log_debug("⚠️ Bukan private chat, command ditolak")
         return await message.reply_text("⚠️ Command ini hanya bisa dipakai di private chat ke bot.")
 
     btn = InlineKeyboardMarkup(
@@ -45,9 +48,11 @@ async def spawn_chest(client: Client, message: Message):
 async def open_chest(client: Client, cq: CallbackQuery):
     """User klik tombol chest"""
     user = cq.from_user
+    log_debug(f"User {user.id} menekan tombol chest di message {cq.message.id}")
 
     await asyncio.sleep(1)  # Anti-flood delay
     roll = random.randint(1, 100)
+    log_debug(f"Random roll: {roll}")
 
     if roll <= 90:
         result = "ZONK ❌ (tidak dapat apa-apa)"
@@ -60,6 +65,8 @@ async def open_chest(client: Client, cq: CallbackQuery):
 
 # ================= REGISTER ================= #
 def register(app: Client):
+    log_debug("Mendaftarkan handler treasure_chest...")
+
     # Command spawn chest
     app.add_handler(
         MessageHandler(
