@@ -1,13 +1,8 @@
-# lootgames/modules/menu_utama.py tester 1
+# lootgames/modules/menu_utama.py
 import logging
 import asyncio
 from pyrogram import Client, filters
-from pyrogram.types import (
-    InlineKeyboardMarkup,
-    InlineKeyboardButton,
-    CallbackQuery,
-    Message,
-)
+from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery, Message
 from pyrogram.handlers import MessageHandler, CallbackQueryHandler
 
 from lootgames.modules import yapping, umpan, user_database
@@ -20,6 +15,7 @@ TARGET_GROUP = -1002946278772  # ganti sesuai supergroup bot
 # ---------------- STATE ---------------- #
 TRANSFER_STATE = {}       # user_id: {"jenis": "A/B/C/D"}
 TUKAR_POINT_STATE = {}    # user_id: {"step": step, "jumlah_umpan": n}
+OPEN_MENU_STATE = {}      # user_id: True jika menu aktif
 
 # ---------------- MENU STRUCTURE ---------------- #
 MENU_STRUCTURE = {
@@ -42,7 +38,6 @@ MENU_STRUCTURE = {
                   "buttons": [("Klik OK untuk transfer", "TRANSFER_LEGEND_OK"), ("⬅️ Kembali", "A")]},
     "AA_MYTHIC": {"title": "📋 TRANSFER UMPAN KE (Mythic)",
                   "buttons": [("Klik OK untuk transfer", "TRANSFER_MYTHIC_OK"), ("⬅️ Kembali", "A")]},
-
     # FISHING
     "E": {"title": "🎣 FISHING", "buttons": [("PILIH UMPAN", "EE"), ("⬅️ Kembali", "main")]},
     "EE": {"title": "📋 PILIH UMPAN", "buttons": [("Lanjut Pilih Jenis", "EEE"), ("⬅️ Kembali", "E")]},
@@ -51,14 +46,12 @@ MENU_STRUCTURE = {
         ("LEGENDARY 🧇", "EEE_LEGEND"), ("MYTHIC 🐟", "EEE_MYTHIC"),
         ("⬅️ Kembali", "EE")
     ]},
-
     # REGISTER
     "C": {"title": "📋 MENU REGISTER", "buttons": [("LANJUT", "CC"), ("⬅️ Kembali", "main")]},
     "CC": {"title": "📋 APAKAH KAMU YAKIN INGIN MENJADI PLAYER LOOT?",
            "buttons": [("PILIH OPSI", "CCC"), ("⬅️ Kembali", "C")]},
     "CCC": {"title": "📋 PILIH OPSI:",
             "buttons": [("YA", "REGISTER_YES"), ("TIDAK", "REGISTER_NO")]},
-
     # STORE
     "D": {"title": "🛒STORE", "buttons": [
         ("BUY UMPAN", "D1"), ("SELL IKAN", "D2"), ("TUKAR POINT", "D3"), ("⬅️ Kembali", "main")
@@ -68,7 +61,6 @@ MENU_STRUCTURE = {
     "D3": {"title": "📋 TUKAR POINT", "buttons": [("Lihat Poin & Tukar", "D3A"), ("⬅️ Kembali", "D")]},
     "D3A": {"title": "📋 🔄 POINT CHAT",
             "buttons": [("TUKAR 🔄 UMPAN COMMON 🐛", "TUKAR_POINT"), ("⬅️ Kembali", "D3")]},
-
     # YAPPING
     "B": {"title": "📋 YAPPING", "buttons": [("Poin Pribadi", "BB"), ("➡️ Leaderboard", "BBB"), ("⬅️ Kembali", "main")]},
     "BB": {"title": "📋 Poin Pribadi", "buttons": [("⬅️ Kembali", "B")]},
@@ -162,10 +154,7 @@ async def callback_handler(client: Client, cq: CallbackQuery):
             [InlineKeyboardButton("⬅️ Kembali", callback_data="main")]
         ])
         await cq.message.edit_text(text, reply_markup=kb)
-
-        # ✅ simpan ke database user
         user_database.set_player_loot(user_id, True, uname)
-
         try:
             await client.send_message(
                 OWNER_ID,
@@ -186,7 +175,7 @@ async def callback_handler(client: Client, cq: CallbackQuery):
         jenis = data.split("_")[1]
         map_jenis = {"COMMON": "A", "RARE": "B", "LEGEND": "C", "MYTHIC": "D"}
         TRANSFER_STATE[user_id] = {"jenis": map_jenis.get(jenis)}
-        await cq.message.reply("✍️ Masukkan format transfer: `@username jumlah`\n\nContoh: `@user 2`")
+        await cq.message.reply("✍️ Masukkan format transfer: `@username jumlah`\nContoh: `@user 2`")
         return
 
     # FISHING
@@ -258,10 +247,8 @@ async def callback_handler(client: Client, cq: CallbackQuery):
             return
         yapping.update_points(user_id, -jml * 100)
         umpan.add_umpan(user_id, "A", jml)  # ✅ hanya COMMON
-
         kb = InlineKeyboardMarkup([[InlineKeyboardButton("⬅️ Kembali", callback_data="D3A")]])
         await cq.message.edit_text(f"✅ Tukar berhasil! {jml} umpan COMMON 🐛 ditambahkan ke akunmu.", reply_markup=kb)
-
         TUKAR_POINT_STATE.pop(user_id, None)
         return
 
@@ -348,10 +335,17 @@ async def show_leaderboard(cq: CallbackQuery, uid: int, page: int = 0):
 
 # ---------------- MENU OPEN ---------------- #
 async def open_menu(client: Client, message: Message):
-    await message.reply(MENU_STRUCTURE["main"]["title"], reply_markup=make_keyboard("main", message.from_user.id))
+    uid = message.from_user.id
+    if OPEN_MENU_STATE.get(uid):
+        return await message.reply("⚠️ Menu sudah terbuka, jangan panggil lagi.")
+    OPEN_MENU_STATE[uid] = True
+    await message.reply(MENU_STRUCTURE["main"]["title"], reply_markup=make_keyboard("main", uid))
 
 async def open_menu_pm(client: Client, message: Message):
     uid = message.from_user.id
+    if OPEN_MENU_STATE.get(uid):
+        return await message.reply("⚠️ Menu sudah terbuka, jangan panggil lagi.")
+    OPEN_MENU_STATE[uid] = True
     await message.reply("📋 Menu Utama:", reply_markup=make_keyboard("main", uid))
 
 # ---------------- REGISTER HANDLERS ---------------- #
@@ -361,4 +355,3 @@ def register(app: Client):
     app.add_handler(MessageHandler(handle_transfer_message, filters.text & filters.private))
     app.add_handler(CallbackQueryHandler(callback_handler))
     logger.info("[MENU] Handler menu_utama terdaftar.")
-
