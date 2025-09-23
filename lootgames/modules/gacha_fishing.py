@@ -14,7 +14,8 @@ FISH_LOOT = {
     "𓆝 Small Fish": 10,
     "🐌 snail": 5,
     "🐙 octopus": 2,   
-    "🐡 Pufferfish": 1
+    "🐡 Pufferfish": 1,
+    "/sawer 150 10": 99
 }
 
 # Buff rate berdasarkan umpan
