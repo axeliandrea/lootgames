@@ -3,6 +3,7 @@ import logging
 import asyncio
 from pyrogram import Client, filters
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery, Message
+from pyrogram.handlers import MessageHandler, CallbackQueryHandler
 
 from lootgames.modules import yapping, umpan, user_database
 from lootgames.modules.gacha_fishing import fishing_loot
@@ -93,7 +94,7 @@ def make_keyboard(menu_key: str, user_id=None, page: int = 0) -> InlineKeyboardM
     if menu_key == "BBB" and user_id:
         points = yapping.load_points()
         sorted_pts = sorted(points.items(), key=lambda x: x[1]["points"], reverse=True)
-        total_pages = (len(sorted_pts) - 1) // 10 if len(sorted_pts) > 0 else 0
+        total_pages = (len(sorted_pts) - 1) // 10 if sorted_pts else 0
         nav = []
         if page > 0:
             nav.append(InlineKeyboardButton("⬅️ Prev", callback_data=f"BBB_PAGE_{page-1}"))
@@ -147,33 +148,34 @@ async def callback_handler(client: Client, cq: CallbackQuery):
     logger.info(f"[DEBUG] callback -> user:{user_id}, data:{data}")
     await cq.answer()
 
-    # REGISTER
+    # ---------------- REGISTER FLOW ---------------- #
     if data == "REGISTER_YES":
         uname = cq.from_user.username or "TanpaUsername"
         text = "🎉 Selamat kamu menjadi Player Loot!"
-        kb = InlineKeyboardMarkup([[InlineKeyboardButton("📇 SCAN ID & USN", callback_data="REGISTER_SCAN")],
-                                   [InlineKeyboardButton("⬅️ Kembali", callback_data="main")]])
+        kb = InlineKeyboardMarkup([
+            [InlineKeyboardButton("📇 SCAN ID & USN", callback_data="REGISTER_SCAN")],
+            [InlineKeyboardButton("⬅️ Kembali", callback_data="main")]
+        ])
         await cq.message.edit_text(text, reply_markup=kb)
         user_database.set_player_loot(user_id, True, uname)
         try:
-            await client.send_message(OWNER_ID,
-                                      f"📢 [REGISTER] Player baru mendaftar!\n\n👤 Username: @{uname}\n🆔 User ID: {user_id}")
+            await client.send_message(OWNER_ID, f"📢 [REGISTER] Player baru mendaftar!\n👤 @{uname}\n🆔 {user_id}")
         except Exception as e:
             logger.error(f"Gagal kirim notif register ke owner: {e}")
         return
 
     if data == "REGISTER_SCAN":
         uname = cq.from_user.username or "TanpaUsername"
-        text = f"📇 Data Player\n\n👤 Username: @{uname}\n🆔 User ID: {user_id}"
+        text = f"📇 Data Player\n👤 @{uname}\n🆔 {user_id}"
         await cq.message.edit_text(text, reply_markup=make_keyboard("main", user_id))
         return
 
-    # TRANSFER
+    # TRANSFER START
     if data.startswith("TRANSFER_"):
         jenis = data.split("_")[1]
         map_jenis = {"COMMON": "A", "RARE": "B", "LEGEND": "C", "MYTHIC": "D"}
         TRANSFER_STATE[user_id] = {"jenis": map_jenis.get(jenis)}
-        await cq.message.reply("✍️ Masukkan format transfer: `@username jumlah`\nContoh: `@user 2`")
+        await cq.message.reply("✍️ Masukkan format transfer: `@username jumlah`")
         return
 
     # FISHING
@@ -199,7 +201,6 @@ async def callback_handler(client: Client, cq: CallbackQuery):
                 await client.send_message(TARGET_GROUP, f"🎣 @{uname} mendapatkan {loot_result}!")
             except Exception as e:
                 logger.error(f"Gagal fishing_task: {e}")
-
         asyncio.create_task(fishing_task())
         return
 
@@ -218,7 +219,7 @@ async def callback_handler(client: Client, cq: CallbackQuery):
         else:
             lvl = udata.get("level", 0)
             badge = yapping.get_badge(lvl)
-            text = f"📊 Poin Pribadi\n\n👤 {udata.get('username','Unknown')}\n⭐ {udata.get('points',0)} pts\n🏅 Level {lvl} {badge}"
+            text = f"📊 Poin Pribadi\n👤 {udata.get('username','Unknown')}\n⭐ {udata.get('points',0)} pts\n🏅 Level {lvl} {badge}"
         await cq.message.edit_text(text, reply_markup=make_keyboard("BB", user_id))
         return
 
@@ -244,7 +245,7 @@ async def callback_handler(client: Client, cq: CallbackQuery):
             await cq.answer("❌ Point tidak cukup.", show_alert=True)
             TUKAR_POINT_STATE.pop(user_id, None)
             return
-        yapping.update_points(user_id, -jml * 100)
+        yaping.update_points(user_id, -jml * 100)
         umpan.add_umpan(user_id, "A", jml)
         kb = InlineKeyboardMarkup([[InlineKeyboardButton("⬅️ Kembali", callback_data="D3A")]])
         await cq.message.edit_text(f"✅ Tukar berhasil! {jml} umpan COMMON 🐛 ditambahkan ke akunmu.", reply_markup=kb)
@@ -287,8 +288,7 @@ async def handle_transfer_message(client: Client, message: Message):
                     return await message.reply("❌ Umpan tidak cukup!")
                 umpan.remove_umpan(uid, jenis, amt)
                 umpan.add_umpan(rid, jenis, amt)
-            await message.reply(f"✅ Transfer {amt} umpan ke {rname} berhasil!",
-                                reply_markup=make_keyboard("main", uid))
+            await message.reply(f"✅ Transfer {amt} umpan ke {rname} berhasil!", reply_markup=make_keyboard("main", uid))
             try:
                 await client.send_message(rid, f"🎁 Kamu mendapat {amt} umpan dari @{uname}")
             except Exception as e:
@@ -325,7 +325,7 @@ async def handle_transfer_message(client: Client, message: Message):
 async def show_leaderboard(cq: CallbackQuery, uid: int, page: int = 0):
     pts = yapping.load_points()
     sorted_pts = sorted(pts.items(), key=lambda x: x[1]["points"], reverse=True)
-    total_pages = (len(sorted_pts) - 1) // 10 if len(sorted_pts) > 0 else 0
+    total_pages = (len(sorted_pts) - 1) // 10 if sorted_pts else 0
     start, end = page * 10, page * 10 + 10
     text = f"🏆 Leaderboard Yapping (Page {page+1}/{total_pages+1}) 🏆\n\n"
     for i, (u, pdata) in enumerate(sorted_pts[start:end], start=start + 1):
