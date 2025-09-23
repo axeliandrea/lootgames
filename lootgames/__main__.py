@@ -31,7 +31,6 @@ app = Client(
 yapping.register(app)
 menu_utama.register(app)
 user_database.register(app)
-autorespon.setup(app)
 
 # ================= CALLBACK FISHING ================= #
 async def fishing_callback_handler(client, callback_query):
@@ -92,4 +91,5 @@ if __name__ == "__main__":
         pass
 
     asyncio.run(main())
+
 
