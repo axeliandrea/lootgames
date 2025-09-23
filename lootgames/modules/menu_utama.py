@@ -1,4 +1,4 @@
-# lootgames/modules/menu_utama.py
+# lootgames/modules/menu_utama.py tester 1
 import logging
 import asyncio
 from pyrogram import Client, filters
@@ -20,7 +20,6 @@ TARGET_GROUP = -1002946278772  # ganti sesuai supergroup bot
 # ---------------- STATE ---------------- #
 TRANSFER_STATE = {}       # user_id: {"jenis": "A/B/C/D"}
 TUKAR_POINT_STATE = {}    # user_id: {"step": step, "jumlah_umpan": n}
-OPENED_MENUS = set()      # user_id untuk mencegah menu dobel
 
 # ---------------- MENU STRUCTURE ---------------- #
 MENU_STRUCTURE = {
@@ -76,14 +75,14 @@ MENU_STRUCTURE = {
     "BBB": {"title": "📋 Leaderboard Yapping", "buttons": [("⬅️ Kembali", "B")]}
 }
 
-# GENERIC MENU F-G-H
+# GENERIC MENU F-G
 for l in "FGH":
     MENU_STRUCTURE[l] = {"title": f"📋 Menu {l}",
                          "buttons": [(f"Menu {l*2}", l*2), ("⬅️ Kembali", "main")]}
     MENU_STRUCTURE[l*2] = {"title": f"📋 Menu {l*2}",
-                            "buttons": [(f"Menu {l*3}", l*3), ("⬅️ Kembali", l)]}
+                           "buttons": [(f"Menu {l*3}", l*3), ("⬅️ Kembali", l)]}
     MENU_STRUCTURE[l*3] = {"title": f"📋 Menu {l*3} (Tampilan Terakhir)",
-                            "buttons": [("⬅️ Kembali", l*2)]}
+                           "buttons": [("⬅️ Kembali", l*2)]}
 
 # FISH_CONFIRM
 for jenis in ["COMMON", "RARE", "LEGEND", "MYTHIC"]:
@@ -110,7 +109,7 @@ def make_keyboard(menu_key: str, user_id=None, page: int = 0) -> InlineKeyboardM
             buttons.append(nav)
         buttons.append([InlineKeyboardButton("⬅️ Kembali", callback_data="B")])
 
-    # MENU UMPAN TRANSFER
+    # MENU UMPAN
     elif menu_key in ["A", "AA_COMMON", "AA_RARE", "AA_LEGEND", "AA_MYTHIC"] and user_id:
         user_umpan = umpan.get_user(user_id) or {"A": {"umpan": 0}, "B": {"umpan": 0},
                                                  "C": {"umpan": 0}, "D": {"umpan": 0}}
@@ -154,7 +153,7 @@ async def callback_handler(client: Client, cq: CallbackQuery):
     logger.info(f"[DEBUG] callback -> user:{user_id}, data:{data}")
     await cq.answer()
 
-    # REGISTER FLOW
+    # ---------------- REGISTER FLOW ---------------- #
     if data == "REGISTER_YES":
         uname = cq.from_user.username or "TanpaUsername"
         text = "🎉 Selamat kamu menjadi Player Loot!"
@@ -163,7 +162,10 @@ async def callback_handler(client: Client, cq: CallbackQuery):
             [InlineKeyboardButton("⬅️ Kembali", callback_data="main")]
         ])
         await cq.message.edit_text(text, reply_markup=kb)
+
+        # ✅ simpan ke database user
         user_database.set_player_loot(user_id, True, uname)
+
         try:
             await client.send_message(
                 OWNER_ID,
@@ -184,7 +186,7 @@ async def callback_handler(client: Client, cq: CallbackQuery):
         jenis = data.split("_")[1]
         map_jenis = {"COMMON": "A", "RARE": "B", "LEGEND": "C", "MYTHIC": "D"}
         TRANSFER_STATE[user_id] = {"jenis": map_jenis.get(jenis)}
-        await cq.message.reply("✍️ Masukkan format transfer: `@username jumlah`\nContoh: `@user 2`")
+        await cq.message.reply("✍️ Masukkan format transfer: `@username jumlah`\n\nContoh: `@user 2`")
         return
 
     # FISHING
@@ -210,7 +212,6 @@ async def callback_handler(client: Client, cq: CallbackQuery):
                 await client.send_message(TARGET_GROUP, f"🎣 @{uname} mendapatkan {loot_result}!")
             except Exception as e:
                 logger.error(f"Gagal fishing_task: {e}")
-
         asyncio.create_task(fishing_task())
         return
 
@@ -255,10 +256,12 @@ async def callback_handler(client: Client, cq: CallbackQuery):
             await cq.answer("❌ Point tidak cukup.", show_alert=True)
             TUKAR_POINT_STATE.pop(user_id, None)
             return
-        yaping.update_points(user_id, -jml * 100)
-        umpan.add_umpan(user_id, "A", jml)
+        yapping.update_points(user_id, -jml * 100)
+        umpan.add_umpan(user_id, "A", jml)  # ✅ hanya COMMON
+
         kb = InlineKeyboardMarkup([[InlineKeyboardButton("⬅️ Kembali", callback_data="D3A")]])
         await cq.message.edit_text(f"✅ Tukar berhasil! {jml} umpan COMMON 🐛 ditambahkan ke akunmu.", reply_markup=kb)
+
         TUKAR_POINT_STATE.pop(user_id, None)
         return
 
@@ -298,7 +301,8 @@ async def handle_transfer_message(client: Client, message: Message):
                     return await message.reply("❌ Umpan tidak cukup!")
                 umpan.remove_umpan(uid, jenis, amt)
                 umpan.add_umpan(rid, jenis, amt)
-            await message.reply(f"✅ Transfer {amt} umpan ke {rname} berhasil!", reply_markup=make_keyboard("main", uid))
+            await message.reply(f"✅ Transfer {amt} umpan ke {rname} berhasil!",
+                                reply_markup=make_keyboard("main", uid))
             try:
                 await client.send_message(rid, f"🎁 Kamu mendapat {amt} umpan dari @{uname}")
             except Exception as e:
@@ -344,19 +348,10 @@ async def show_leaderboard(cq: CallbackQuery, uid: int, page: int = 0):
 
 # ---------------- MENU OPEN ---------------- #
 async def open_menu(client: Client, message: Message):
-    uid = message.from_user.id
-    if uid in OPENED_MENUS:
-        await message.reply("⚠️ Menu sudah terbuka.")
-        return
-    OPENED_MENUS.add(uid)
-    await message.reply(MENU_STRUCTURE["main"]["title"], reply_markup=make_keyboard("main", uid))
+    await message.reply(MENU_STRUCTURE["main"]["title"], reply_markup=make_keyboard("main", message.from_user.id))
 
 async def open_menu_pm(client: Client, message: Message):
     uid = message.from_user.id
-    if uid in OPENED_MENUS:
-        await message.reply("⚠️ Menu sudah terbuka.")
-        return
-    OPENED_MENUS.add(uid)
     await message.reply("📋 Menu Utama:", reply_markup=make_keyboard("main", uid))
 
 # ---------------- REGISTER HANDLERS ---------------- #
@@ -366,3 +361,4 @@ def register(app: Client):
     app.add_handler(MessageHandler(handle_transfer_message, filters.text & filters.private))
     app.add_handler(CallbackQueryHandler(callback_handler))
     logger.info("[MENU] Handler menu_utama terdaftar.")
+
