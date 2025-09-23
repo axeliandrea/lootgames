@@ -20,83 +20,218 @@ OPEN_MENU_STATE = {}      # user_id: True jika menu aktif
 
 # ---------------- MENU STRUCTURE ---------------- #
 MENU_STRUCTURE = {
-    "main": {"title": "📋 [Menu Utama]", "buttons": [
-        ("UMPAN", "A"), ("YAPPING", "B"), ("REGISTER", "C"),
-        ("🛒STORE", "D"), ("FISHING", "E"),
-        ("HASIL TANGKAPAN", "F"), ("Menu G", "G")
-    ]},
-    # UMPAN
-    "A": {"title": "📋 Menu UMPAN", "buttons": [
-        ("COMMON 🐛", "AA_COMMON"), ("RARE 🐌", "AA_RARE"),
-        ("LEGENDARY 🧇", "AA_LEGEND"), ("MYTHIC 🐟", "AA_MYTHIC"),
-        ("⬅️ Kembali", "main")
-    ]},
-    "AA_COMMON": {"title": "📋 TRANSFER UMPAN KE (Common)",
-                  "buttons": [("Klik OK untuk transfer", "TRANSFER_COMMON_OK"), ("⬅️ Kembali", "A")]},
-    "AA_RARE": {"title": "📋 TRANSFER UMPAN KE (Rare)",
-                "buttons": [("Klik OK untuk transfer", "TRANSFER_RARE_OK"), ("⬅️ Kembali", "A")]},
-    "AA_LEGEND": {"title": "📋 TRANSFER UMPAN KE (Legend)",
-                  "buttons": [("Klik OK untuk transfer", "TRANSFER_LEGEND_OK"), ("⬅️ Kembali", "A")]},
-    "AA_MYTHIC": {"title": "📋 TRANSFER UMPAN KE (Mythic)",
-                  "buttons": [("Klik OK untuk transfer", "TRANSFER_MYTHIC_OK"), ("⬅️ Kembali", "A")]},
-    # FISHING
-    "E": {"title": "🎣 FISHING", "buttons": [("PILIH UMPAN", "EE"), ("⬅️ Kembali", "main")]},
-    "EE": {"title": "📋 PILIH UMPAN", "buttons": [("Lanjut Pilih Jenis", "EEE"), ("⬅️ Kembali", "E")]},
-    "EEE": {"title": "📋 Pilih Jenis Umpan", "buttons": [
-        ("COMMON 🐛", "EEE_COMMON"), ("RARE 🐌", "EEE_RARE"),
-        ("LEGENDARY 🧇", "EEE_LEGEND"), ("MYTHIC 🐟", "EEE_MYTHIC"),
-        ("⬅️ Kembali", "EE")
-    ]},
-    # REGISTER
-    "C": {"title": "📋 MENU REGISTER", "buttons": [("LANJUT", "CC"), ("⬅️ Kembali", "main")]},
-    "CC": {"title": "📋 APAKAH KAMU YAKIN INGIN MENJADI PLAYER LOOT?",
-           "buttons": [("PILIH OPSI", "CCC"), ("⬅️ Kembali", "C")]},
-    "CCC": {"title": "📋 PILIH OPSI:",
-            "buttons": [("YA", "REGISTER_YES"), ("TIDAK", "REGISTER_NO")]},
-    # STORE
-    "D": {"title": "🛒STORE", "buttons": [
-        ("BUY UMPAN", "D1"), ("SELL ITEM", "D2"), ("TUKAR POINT", "D3"), ("⬅️ Kembali", "main")
-    ]},
-    "D1": {"title": "📋 BUY UMPAN", "buttons": [("D1A", "D1A"), ("⬅️ Kembali", "D")]},
-    "D2": {"title": "📋 SELL ITEM", "buttons": [
-        ("📦 CEK INVENTORY", "D2A"),
-        ("💰 DAFTAR HARGA", "D2B"),
-        ("⬅️ Kembali", "D")
-    ]},
-    "D2A": {"title": "📦 CEK INVENTORY", "buttons": [
-        ("⬅️ Kembali", "D2")
-    ]},
-    "D2B": {"title": "💰 DAFTAR HARGA", "buttons": [
-        ("🧺 Ember Pecah", "SELL_EMBER"),
-        ("🦀 Crab", "SELL_CRAB"),
-        ("🤧 Zonk", "SELL_ZONK"),
-        ("🧻 Roll Tisue Bekas", "SELL_TISUE"),
-        ("🥾 Sepatu Butut", "SELL_SEPATU"),
-        ("𓆝 Small Fish", "SELL_SMALLFISH"),
-        ("🐡 Pufferfish", "SELL_PUFFER"),
-        ("🐢 Turtle", "SELL_TURTLE"),
-        ("🐌 Snail", "SELL_SNAIL"),
-        ("🐙 Octopus", "SELL_OCTOPUS"),
-        ("⬅️ Kembali", "D2")
-    ]}
+    # MAIN MENU
+    "main": {
+        "title": "📋 [Menu Utama]",
+        "buttons": [
+            ("UMPAN", "A"),
+            ("YAPPING", "B"),
+            ("REGISTER", "C"),
+            ("🛒STORE", "D"),
+            ("FISHING", "E"),
+            ("HASIL TANGKAPAN", "F"),
+            ("Menu G", "G")
+        ]
+    },
 
-    "D3": {"title": "📋 TUKAR POINT", "buttons": [("Lihat Poin & Tukar", "D3A"), ("⬅️ Kembali", "D")]},
-    "D3A": {"title": "📋 🔄 POINT CHAT",
-            "buttons": [("TUKAR 🔄 UMPAN COMMON 🐛", "TUKAR_POINT"), ("⬅️ Kembali", "D3")]},
-    # YAPPING
-    "B": {"title": "📋 YAPPING", "buttons": [("Poin Pribadi", "BB"), ("➡️ Leaderboard", "BBB"), ("⬅️ Kembali", "main")]},
-    "BB": {"title": "📋 Poin Pribadi", "buttons": [("⬅️ Kembali", "B")]},
-    "BBB": {"title": "📋 Leaderboard Yapping", "buttons": [("⬅️ Kembali", "B")]},
-    # HASIL TANGKAPAN
-    "F": {"title": "📋 HASIL TANGKAPAN", "buttons": [("CEK INVENTORY", "FF"), ("⬅️ Kembali", "main")]},
-    "FF": {"title": "📋 CEK INVENTORY", "buttons": [("LIHAT HASIL TANGKAPAN", "FFF"), ("⬅️ Kembali", "F")]}
+    # =============== UMPAN =============== #
+    "A": {
+        "title": "📋 Menu UMPAN",
+        "buttons": [
+            ("COMMON 🐛", "AA_COMMON"),
+            ("RARE 🐌", "AA_RARE"),
+            ("LEGENDARY 🧇", "AA_LEGEND"),
+            ("MYTHIC 🐟", "AA_MYTHIC"),
+            ("⬅️ Kembali", "main")
+        ]
+    },
+    "AA_COMMON": {
+        "title": "📋 TRANSFER UMPAN KE (Common)",
+        "buttons": [
+            ("Klik OK untuk transfer", "TRANSFER_COMMON_OK"),
+            ("⬅️ Kembali", "A")
+        ]
+    },
+    "AA_RARE": {
+        "title": "📋 TRANSFER UMPAN KE (Rare)",
+        "buttons": [
+            ("Klik OK untuk transfer", "TRANSFER_RARE_OK"),
+            ("⬅️ Kembali", "A")
+        ]
+    },
+    "AA_LEGEND": {
+        "title": "📋 TRANSFER UMPAN KE (Legend)",
+        "buttons": [
+            ("Klik OK untuk transfer", "TRANSFER_LEGEND_OK"),
+            ("⬅️ Kembali", "A")
+        ]
+    },
+    "AA_MYTHIC": {
+        "title": "📋 TRANSFER UMPAN KE (Mythic)",
+        "buttons": [
+            ("Klik OK untuk transfer", "TRANSFER_MYTHIC_OK"),
+            ("⬅️ Kembali", "A")
+        ]
+    },
+
+    # =============== FISHING =============== #
+    "E": {
+        "title": "🎣 FISHING",
+        "buttons": [
+            ("PILIH UMPAN", "EE"),
+            ("⬅️ Kembali", "main")
+        ]
+    },
+    "EE": {
+        "title": "📋 PILIH UMPAN",
+        "buttons": [
+            ("Lanjut Pilih Jenis", "EEE"),
+            ("⬅️ Kembali", "E")
+        ]
+    },
+    "EEE": {
+        "title": "📋 Pilih Jenis Umpan",
+        "buttons": [
+            ("COMMON 🐛", "EEE_COMMON"),
+            ("RARE 🐌", "EEE_RARE"),
+            ("LEGENDARY 🧇", "EEE_LEGEND"),
+            ("MYTHIC 🐟", "EEE_MYTHIC"),
+            ("⬅️ Kembali", "EE")
+        ]
+    },
+
+    # =============== REGISTER =============== #
+    "C": {
+        "title": "📋 MENU REGISTER",
+        "buttons": [
+            ("LANJUT", "CC"),
+            ("⬅️ Kembali", "main")
+        ]
+    },
+    "CC": {
+        "title": "📋 APAKAH KAMU YAKIN INGIN MENJADI PLAYER LOOT?",
+        "buttons": [
+            ("PILIH OPSI", "CCC"),
+            ("⬅️ Kembali", "C")
+        ]
+    },
+    "CCC": {
+        "title": "📋 PILIH OPSI:",
+        "buttons": [
+            ("YA", "REGISTER_YES"),
+            ("TIDAK", "REGISTER_NO")
+        ]
+    },
+
+    # =============== STORE =============== #
+    "D": {
+        "title": "🛒STORE",
+        "buttons": [
+            ("BUY UMPAN", "D1"),
+            ("SELL ITEM", "D2"),
+            ("TUKAR POINT", "D3"),
+            ("⬅️ Kembali", "main")
+        ]
+    },
+    "D1": {
+        "title": "📋 BUY UMPAN",
+        "buttons": [
+            ("D1A", "D1A"),
+            ("⬅️ Kembali", "D")
+        ]
+    },
+    "D2": {
+        "title": "📋 SELL ITEM",
+        "buttons": [
+            ("📦 CEK INVENTORY", "D2A"),
+            ("💰 DAFTAR HARGA", "D2B"),
+            ("⬅️ Kembali", "D")
+        ]
+    },
+    "D2A": {
+        "title": "📦 CEK INVENTORY",
+        "buttons": [
+            ("⬅️ Kembali", "D2")
+        ]
+    },
+    "D2B": {
+        "title": "💰 DAFTAR HARGA",
+        "buttons": [
+            ("🧺 Ember Pecah", "SELL_EMBER"),
+            ("🦀 Crab", "SELL_CRAB"),
+            ("🤧 Zonk", "SELL_ZONK"),
+            ("🧻 Roll Tisue Bekas", "SELL_TISUE"),
+            ("🥾 Sepatu Butut", "SELL_SEPATU"),
+            ("𓆝 Small Fish", "SELL_SMALLFISH"),
+            ("🐡 Pufferfish", "SELL_PUFFER"),
+            ("🐢 Turtle", "SELL_TURTLE"),
+            ("🐌 Snail", "SELL_SNAIL"),
+            ("🐙 Octopus", "SELL_OCTOPUS"),
+            ("⬅️ Kembali", "D2")
+        ]
+    },
+    "D3": {
+        "title": "📋 TUKAR POINT",
+        "buttons": [
+            ("Lihat Poin & Tukar", "D3A"),
+            ("⬅️ Kembali", "D")
+        ]
+    },
+    "D3A": {
+        "title": "📋 🔄 POINT CHAT",
+        "buttons": [
+            ("TUKAR 🔄 UMPAN COMMON 🐛", "TUKAR_POINT"),
+            ("⬅️ Kembali", "D3")
+        ]
+    },
+
+    # =============== YAPPING =============== #
+    "B": {
+        "title": "📋 YAPPING",
+        "buttons": [
+            ("Poin Pribadi", "BB"),
+            ("➡️ Leaderboard", "BBB"),
+            ("⬅️ Kembali", "main")
+        ]
+    },
+    "BB": {
+        "title": "📋 Poin Pribadi",
+        "buttons": [
+            ("⬅️ Kembali", "B")
+        ]
+    },
+    "BBB": {
+        "title": "📋 Leaderboard Yapping",
+        "buttons": [
+            ("⬅️ Kembali", "B")
+        ]
+    },
+
+    # =============== HASIL TANGKAPAN =============== #
+    "F": {
+        "title": "📋 HASIL TANGKAPAN",
+        "buttons": [
+            ("CEK INVENTORY", "FF"),
+            ("⬅️ Kembali", "main")
+        ]
+    },
+    "FF": {
+        "title": "📋 CEK INVENTORY",
+        "buttons": [
+            ("LIHAT HASIL TANGKAPAN", "FFF"),
+            ("⬅️ Kembali", "F")
+        ]
+    }
 }
 
-# FISH_CONFIRM
+# Tambahan confirm untuk fishing
 for jenis in ["COMMON", "RARE", "LEGEND", "MYTHIC"]:
     MENU_STRUCTURE[f"EEE_{jenis}"] = {
         "title": f"📋 Apakah kamu ingin memancing menggunakan umpan {jenis}?",
-        "buttons": [("✅ YA", f"FISH_CONFIRM_{jenis}"), ("❌ TIDAK", "EEE")]
+        "buttons": [
+            ("✅ YA", f"FISH_CONFIRM_{jenis}"),
+            ("❌ TIDAK", "EEE")
+        ]
     }
 
 # ---------------- KEYBOARD BUILDER ---------------- #
@@ -385,6 +520,7 @@ def register(app: Client):
     app.add_handler(MessageHandler(handle_transfer_message, filters.text & filters.private))
     app.add_handler(CallbackQueryHandler(callback_handler))
     logger.info("[MENU] Handler menu_utama terdaftar.")
+
 
 
 
