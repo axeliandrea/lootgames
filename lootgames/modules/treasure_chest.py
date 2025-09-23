@@ -1,4 +1,3 @@
-# lootgames/modules/treasure_chest.py
 import asyncio
 import logging
 from pyrogram import filters
@@ -9,12 +8,11 @@ logger = logging.getLogger(__name__)
 OWNER_ID = 6395738130
 TARGET_GROUP = -1002946278772  # ID grup target
 
-
 def register(app):
     logger.info("[CHEST] Registering treasure_chest module...")
 
-    # Tes: tanpa filter user dulu
-    @app.on_message(filters.private & filters.command("treasurechest", prefixes=["."]))
+    # Command hanya untuk owner di private chat
+    @app.on_message(filters.private & filters.user(OWNER_ID) & filters.command("treasurechest", prefixes=["."]))
     async def treasure_handler(client, message):
         logger.info("[CHEST] Handler .treasurechest terpanggil")
         await message.reply("⏳ Preparing kirim chest...")
@@ -32,6 +30,7 @@ def register(app):
 
         await message.reply(f"✅ Berhasil kirim TREASURE CHEST ke group {TARGET_GROUP}")
 
+    # Callback button untuk semua user
     @app.on_callback_query(filters.regex("^open_treasure$"))
     async def chest_callback(client, cq):
         user = cq.from_user
