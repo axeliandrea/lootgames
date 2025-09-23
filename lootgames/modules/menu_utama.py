@@ -148,7 +148,7 @@ async def callback_handler(client: Client, cq: CallbackQuery):
     logger.info(f"[DEBUG] callback -> user:{user_id}, data:{data}")
     await cq.answer()
 
-    # ---------------- REGISTER FLOW ---------------- #
+    # REGISTER FLOW
     if data == "REGISTER_YES":
         uname = cq.from_user.username or "TanpaUsername"
         text = "🎉 Selamat kamu menjadi Player Loot!"
@@ -201,6 +201,7 @@ async def callback_handler(client: Client, cq: CallbackQuery):
                 await client.send_message(TARGET_GROUP, f"🎣 @{uname} mendapatkan {loot_result}!")
             except Exception as e:
                 logger.error(f"Gagal fishing_task: {e}")
+
         asyncio.create_task(fishing_task())
         return
 
@@ -245,7 +246,7 @@ async def callback_handler(client: Client, cq: CallbackQuery):
             await cq.answer("❌ Point tidak cukup.", show_alert=True)
             TUKAR_POINT_STATE.pop(user_id, None)
             return
-        yaping.update_points(user_id, -jml * 100)
+        yapping.update_points(user_id, -jml * 100)
         umpan.add_umpan(user_id, "A", jml)
         kb = InlineKeyboardMarkup([[InlineKeyboardButton("⬅️ Kembali", callback_data="D3A")]])
         await cq.message.edit_text(f"✅ Tukar berhasil! {jml} umpan COMMON 🐛 ditambahkan ke akunmu.", reply_markup=kb)
