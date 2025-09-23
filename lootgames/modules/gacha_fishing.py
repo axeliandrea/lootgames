@@ -15,7 +15,7 @@ FISH_LOOT = {
     "🐌 snail": 5,
     "🐙 octopus": 2,   
     "🐡 Pufferfish": 1,
-    "/sawer 150 10": 99
+    "lost cip": 90
 }
 
 # Buff rate berdasarkan umpan
