@@ -287,6 +287,10 @@ def make_keyboard(menu_key: str, user_id=None, page: int = 0) -> InlineKeyboardM
     elif menu_key == "FFF" and user_id:
         buttons.append([InlineKeyboardButton("⬅️ Kembali", callback_data="F")])
 
+    # STORE CEK INVENTORY
+    elif menu_key == "D2A" and user_id:
+        buttons.append([InlineKeyboardButton("⬅️ Kembali", callback_data="D2")])
+
     # DEFAULT
     else:
         for text, cb in MENU_STRUCTURE.get(menu_key, {}).get("buttons", []):
@@ -409,6 +413,13 @@ async def callback_handler(client: Client, cq: CallbackQuery):
         await cq.message.edit_text(f"✅ Tukar berhasil! {jml} umpan COMMON 🐛 ditambahkan ke akunmu.", reply_markup=kb)
         TUKAR_POINT_STATE.pop(user_id, None)
         return
+        
+    # CEK INVENTORY STORE
+    if data == "D2A":
+        inv_text = aquarium.list_inventory(user_id)
+        kb = make_keyboard("D2A", user_id)
+        await cq.message.edit_text(f"📦 Inventorymu:\n\n{inv_text}", reply_markup=kb)
+        return
 
     # NAVIGASI MENU
     if data in MENU_STRUCTURE:
@@ -520,12 +531,3 @@ def register(app: Client):
     app.add_handler(MessageHandler(handle_transfer_message, filters.text & filters.private))
     app.add_handler(CallbackQueryHandler(callback_handler))
     logger.info("[MENU] Handler menu_utama terdaftar.")
-
-
-
-
-
-
-
-
-
