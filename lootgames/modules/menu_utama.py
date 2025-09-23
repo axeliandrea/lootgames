@@ -349,7 +349,6 @@ async def open_menu(client: Client, message: Message):
     last_msg_id = OPEN_MENU_MSG.get(uid)
 
     if last_msg_id:
-        # menu sudah terbuka, beri peringatan
         try:
             await client.send_message(uid, "❌ Menu sudah terbuka sebelumnya.", reply_to_message_id=last_msg_id)
         except Exception:
