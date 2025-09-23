@@ -84,12 +84,14 @@ async def open_chest(client: Client, cq: CallbackQuery):
 
 # ================= REGISTER ================= #
 def register(app: Client):
+    # Command spawn chest
     app.add_handler(
         filters.command("treasurechest", prefixes=["."]) & filters.private,
         spawn_chest,
     )
+    # CallbackQuery filter khusus untuk "open_chest"
     app.add_handler(
-        filters.callback_query("open_chest"),
+        filters.create(lambda _, __, cq: isinstance(cq, CallbackQuery) and cq.data == "open_chest"),
         open_chest,
     )
     log_debug("Handler treasure_chest terdaftar ✅")
