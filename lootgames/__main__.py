@@ -1,9 +1,6 @@
-import asyncio
-import logging
 import os
+import logging
 from pyrogram import Client
-
-# ================= IMPORT MODULES ================= #
 from lootgames.modules import (
     treasure_chest,
     yapping,
@@ -14,7 +11,7 @@ from lootgames.modules import (
 )
 from lootgames.modules.umpan import register_topup
 from lootgames.config import (
-    API_ID, API_HASH, BOT_TOKEN, OWNER_ID, ALLOWED_GROUP_ID, LOG_LEVEL, LOG_FORMAT
+    API_ID, API_HASH, BOT_TOKEN, OWNER_ID, LOG_LEVEL, LOG_FORMAT
 )
 
 # ================= LOGGING ================= #
@@ -50,22 +47,19 @@ user_database.register(app)
 register_topup(app)
 print("[MAIN] Semua module dipanggil register (check logs untuk konfirmasi).")
 
-# ================= MAIN ================= #
-async def main():
-    os.makedirs("storage", exist_ok=True)
-    await app.start()
-    logger.info("🚀 LootGames Bot started!")
-    logger.info(f"👑 Owner ID: {OWNER_ID}")
+# ================= STORAGE ================= #
+os.makedirs("storage", exist_ok=True)
+
+# ================= START BOT ================= #
+print("[MAIN] Bot starting...")
+
+# Kirim notifikasi start ke owner
+@app.on_message(filters.private & filters.user(OWNER_ID) & filters.command("start", prefixes=["/"]))
+async def notify_owner(client, message):
     try:
-        await app.send_message(OWNER_ID, "🤖 LootGames Bot sudah aktif.")
+        await message.reply("🤖 LootGames Bot sudah aktif.")
     except Exception as e:
         logger.error(f"Gagal kirim notifikasi start ke owner: {e}")
-    await asyncio.Event().wait()
 
-if __name__ == "__main__":
-    try:
-        import nest_asyncio
-        nest_asyncio.apply()
-    except Exception:
-        pass
-    asyncio.run(main())
+# Jalankan bot
+app.run()
