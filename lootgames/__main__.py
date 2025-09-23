@@ -1,6 +1,6 @@
 import os
 import logging
-from pyrogram import Client
+from pyrogram import Client, filters  # ✅ filters sudah diimport
 from lootgames.modules import (
     treasure_chest,
     yapping,
@@ -53,7 +53,7 @@ os.makedirs("storage", exist_ok=True)
 # ================= START BOT ================= #
 print("[MAIN] Bot starting...")
 
-# Kirim notifikasi start ke owner
+# Kirim notifikasi start ke owner melalui command /start
 @app.on_message(filters.private & filters.user(OWNER_ID) & filters.command("start", prefixes=["/"]))
 async def notify_owner(client, message):
     try:
