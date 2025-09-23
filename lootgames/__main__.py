@@ -42,18 +42,21 @@ yapping.register(app)
 menu_utama.register(app)
 user_database.register(app)
 treasure_chest.register(app)   # <<=== REGISTER TREASURE CHEST
+# Tambahkan modul lain jika ada
+# aquarium.register(app)
+# gacha_fishing.register(app)
 
 # ================= CALLBACK FISHING ================= #
-async def fishing_callback_handler(client, callback_query):
+async def fishing_callback_handler(client, cq):
     """
     Handler untuk callback FISH_CONFIRM_ dari menu fishing.
     """
-    data = callback_query.data
-    user_id = callback_query.from_user.id
+    data = cq.data
+    user_id = cq.from_user.id
 
     if data.startswith("FISH_CONFIRM_"):
         jenis = data.replace("FISH_CONFIRM_", "")
-        username = callback_query.from_user.username or f"user{user_id}"
+        username = cq.from_user.username or f"user{user_id}"
 
         # Ambil TARGET_GROUP dari menu_utama
         from lootgames.modules.menu_utama import TARGET_GROUP
@@ -68,10 +71,10 @@ async def fishing_callback_handler(client, callback_query):
         )
 
         # Edit pesan callback untuk memberi feedback ke user
-        await callback_query.message.edit_text(f"🎣 Kamu memancing dengan umpan {jenis}!")
+        await cq.message.edit_text(f"🎣 Kamu memancing dengan umpan {jenis}!")
 
 # Daftarkan handler callback query untuk fishing
-app.add_handler(CallbackQueryHandler(fishing_callback_handler))
+app.add_handler(CallbackQueryHandler(fishing_callback_handler), group=1)
 
 # ================= MAIN ================= #
 async def main():
@@ -95,6 +98,7 @@ async def main():
     await asyncio.Event().wait()
 
 if __name__ == "__main__":
+    # Apply nest_asyncio jika dijalankan di Jupyter / environment yang butuh
     try:
         import nest_asyncio
         nest_asyncio.apply()
