@@ -53,7 +53,7 @@ os.makedirs("storage", exist_ok=True)
 # ================= START BOT ================= #
 print("[MAIN] Bot starting...")
 
-# Kirim notifikasi start ke owner melalui command /start
+# Notifikasi ke owner via command /start
 @app.on_message(filters.private & filters.user(OWNER_ID) & filters.command("start", prefixes=["/"]))
 async def notify_owner(client, message):
     try:
