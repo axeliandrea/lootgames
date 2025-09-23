@@ -5,14 +5,14 @@ import os
 from pyrogram import Client
 from pyrogram.handlers import CallbackQueryHandler
 
-# Import semua modules
+# ================= IMPORT MODULES ================= #
 from lootgames.modules import (
     yapping,
     menu_utama,
     user_database,
     gacha_fishing,
     aquarium,
-    treasure_chest   # <<=== NEW MODULE
+    treasure_chest   # <<< NEW MODULE TREASURE CHEST
 )
 
 from lootgames.config import (
@@ -41,7 +41,7 @@ app = Client(
 yapping.register(app)
 menu_utama.register(app)
 user_database.register(app)
-treasure_chest.register(app)   # <<=== REGISTER TREASURE CHEST
+treasure_chest.register(app)   # <<< REGISTER TREASURE CHEST MODULE
 
 # ================= CALLBACK FISHING ================= #
 async def fishing_callback_handler(client, callback_query):
@@ -58,22 +58,25 @@ async def fishing_callback_handler(client, callback_query):
         # Ambil TARGET_GROUP dari menu_utama
         from lootgames.modules.menu_utama import TARGET_GROUP
 
-        # Panggil fungsi fishing loot
-        await gacha_fishing.fishing_loot(
-            client,
-            TARGET_GROUP,
-            username,
-            user_id,
-            umpan_type=jenis
-        )
-
-        # Edit pesan callback untuk memberi feedback ke user
+        # Kirim pesan bahwa user mulai memancing
         await callback_query.message.edit_text(f"🎣 Kamu memancing dengan umpan {jenis}!")
+
+        # Panggil fungsi fishing loot
+        try:
+            await gacha_fishing.fishing_loot(
+                client,
+                TARGET_GROUP,
+                username,
+                user_id,
+                umpan_type=jenis
+            )
+        except Exception as e:
+            logger.error(f"Gagal proses fishing_loot: {e}")
 
 # Daftarkan handler callback query untuk fishing
 app.add_handler(CallbackQueryHandler(fishing_callback_handler))
 
-# ================= MAIN ================= #
+# ================= MAIN BOT ================= #
 async def main():
     # Pastikan folder storage ada
     os.makedirs("storage", exist_ok=True)
@@ -94,6 +97,7 @@ async def main():
     # Bot berjalan terus
     await asyncio.Event().wait()
 
+# ================= ENTRY POINT ================= #
 if __name__ == "__main__":
     try:
         import nest_asyncio
