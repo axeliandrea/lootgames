@@ -1,4 +1,3 @@
-# lootgames/__main__.py
 import asyncio
 import logging
 import os
@@ -14,7 +13,6 @@ from lootgames.modules import (
     aquarium,
 )
 from lootgames.modules.umpan import register_topup
-
 from lootgames.config import (
     API_ID, API_HASH, BOT_TOKEN, OWNER_ID, ALLOWED_GROUP_ID, LOG_LEVEL, LOG_FORMAT
 )
@@ -31,7 +29,7 @@ app = Client(
     bot_token=BOT_TOKEN
 )
 
-# ================= GLOBAL MESSAGE LOGGER (debug) ================= #
+# ================= GLOBAL MESSAGE LOGGER ================= #
 @app.on_message()
 async def _debug_all_messages(client, message):
     try:
@@ -45,13 +43,11 @@ async def _debug_all_messages(client, message):
 
 # ================= REGISTER MODULES ================= #
 print("[MAIN] Mendaftarkan modules (treasure_chest sebelum yapping)...")
-# daftar treasure_chest dulu supaya command private prioritas
-treasure_chest.register(app)
+treasure_chest.register(app)  # prioritas command private
 yapping.register(app)
 menu_utama.register(app)
 user_database.register(app)
 register_topup(app)
-# jangan daftarkan callback fishing manual di main jika gacha_fishing sudah handle sendiri
 print("[MAIN] Semua module dipanggil register (check logs untuk konfirmasi).")
 
 # ================= MAIN ================= #
