@@ -760,9 +760,10 @@ async def open_menu_pm(client: Client, message: Message):
 # ---------------- REGISTER HANDLERS ---------------- #
 def register(app: Client):
     # register handlers already expected by your app:
-    app.add_handler(MessageHandler(open_menu, filters.regex(r"^\\.menufish$") & filters.private))
+    app.add_handler(MessageHandler(open_menu, filters.regex(r"^\.menufish$") & filters.private))
     app.add_handler(MessageHandler(open_menu_pm, filters.command("menu") & filters.private))
     # this handler will also handle SELL amount input because SELL_WAITING is checked inside
     app.add_handler(MessageHandler(handle_transfer_message, filters.text & filters.private))
     app.add_handler(CallbackQueryHandler(callback_handler))
     logger.info("[MENU] Handler menu_utama terdaftar.")
+
