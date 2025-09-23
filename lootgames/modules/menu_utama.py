@@ -6,6 +6,7 @@ from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton, CallbackQ
 from pyrogram.handlers import MessageHandler, CallbackQueryHandler
 
 from lootgames.modules import yapping, umpan, user_database
+from lootgames.modules import aquarium
 from lootgames.modules.gacha_fishing import fishing_loot
 
 logger = logging.getLogger(__name__)
@@ -67,14 +68,11 @@ MENU_STRUCTURE = {
     "BBB": {"title": "📋 Leaderboard Yapping", "buttons": [("⬅️ Kembali", "B")]}
 }
 
-# GENERIC MENU F-G
-for l in "FGH":
-    MENU_STRUCTURE[l] = {"title": f"📋 Menu {l}",
-                         "buttons": [(f"Menu {l*2}", l*2), ("⬅️ Kembali", "main")]}
-    MENU_STRUCTURE[l*2] = {"title": f"📋 Menu {l*2}",
-                           "buttons": [(f"Menu {l*3}", l*3), ("⬅️ Kembali", l)]}
-    MENU_STRUCTURE[l*3] = {"title": f"📋 Menu {l*3} (Tampilan Terakhir)",
-                           "buttons": [("⬅️ Kembali", l*2)]}
+# MENU F Baru: HASIL TANGKAPAN
+MENU_STRUCTURE["F"] = {"title": "📋 HASIL TANGKAPAN", "buttons": [("CEK INVENTORY", "FF"), ("⬅️ Kembali", "main")]}
+MENU_STRUCTURE["FF"] = {"title": "📋 CEK INVENTORY", "buttons": [("LIHAT HASIL", "FFF"), ("⬅️ Kembali", "F")]}
+MENU_STRUCTURE["FFF"] = {"title": "📋 HASIL TANGKAPAN ANDA", "buttons": [("⬅️ Kembali", "FF")]}
+
 
 # FISH_CONFIRM
 for jenis in ["COMMON", "RARE", "LEGEND", "MYTHIC"]:
@@ -145,7 +143,7 @@ async def callback_handler(client: Client, cq: CallbackQuery):
     logger.info(f"[DEBUG] callback -> user:{user_id}, data:{data}")
     await cq.answer()
 
-    # REGISTER FLOW
+    # ---------------- REGISTER FLOW ---------------- #
     if data == "REGISTER_YES":
         uname = cq.from_user.username or "TanpaUsername"
         text = "🎉 Selamat kamu menjadi Player Loot!"
@@ -255,6 +253,13 @@ async def callback_handler(client: Client, cq: CallbackQuery):
     # NAVIGASI MENU
     if data in MENU_STRUCTURE:
         await cq.message.edit_text(MENU_STRUCTURE[data]["title"], reply_markup=make_keyboard(data, user_id))
+        return
+
+# ---------------- HASIL TANGKAPAN ---------------- #
+    if data == "FFF":
+        user_inventory = aquarium.list_inventory(user_id)
+        kb = make_keyboard("FFF", user_id)  # tombol kembali
+        await cq.message.edit_text(f"🎣 Hasil Tangkapan @{cq.from_user.username or user_id}:\n\n{user_inventory}", reply_markup=kb)
         return
 
 # ---------------- HANDLE TRANSFER & TUKAR INPUT ---------------- #
