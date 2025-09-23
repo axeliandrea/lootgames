@@ -599,7 +599,7 @@ async def callback_handler(client: Client, cq: CallbackQuery):
             return
 
         earned = amount * item["price"]
-
+        new_total = fizz_coin.add_coin(user_id, earned)  # ✅ simpan ke database
         # NOTE: belum menambahkan coin ke wallet (belum ada fizz_coin module) — hanya notifikasi
         await cq.message.reply_text(
             f"✅ Berhasil menjual {amount}x {item['name']}.\n"
@@ -791,6 +791,7 @@ def register(app: Client):
     app.add_handler(MessageHandler(handle_transfer_message, filters.text & filters.private))
     app.add_handler(CallbackQueryHandler(callback_handler))
     logger.info("[MENU] Handler menu_utama terdaftar.")
+
 
 
 
