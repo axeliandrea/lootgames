@@ -35,8 +35,8 @@ SELL_WAITING = {}  # user_id: item_code
 # kita bisa map nama yang sering muncul ke bentuk canonical.
 INV_KEY_ALIASES = {
     "🤧 Zonk": "Zonk",
-    "zonk":"zonk"
-    "𓆝 Small Fish": "Small Fish"
+    "zonk": "zonk",
+    "𓆝 Small Fish": "Small Fish",
     "small fish": "Small Fish",
     "🐌 snail": "Snail",
     "snail": "Snail",
@@ -44,7 +44,7 @@ INV_KEY_ALIASES = {
     "octopus": "Octopus",
     "🐡 Pufferfish": "Pufferfish",
     "pufferfish": "Pufferfish",
-    # tambahkan sesuai kebutuhan
+    # tambahkan sesuai kebutuhan 
 }
 
 # ---------------- KEYBOARD / MENU STRUCTURE ---------------- #
@@ -782,6 +782,7 @@ def register(app: Client):
     app.add_handler(MessageHandler(handle_transfer_message, filters.text & filters.private))
     app.add_handler(CallbackQueryHandler(callback_handler))
     logger.info("[MENU] Handler menu_utama terdaftar.")
+
 
 
 
