@@ -3,6 +3,7 @@ import asyncio
 import logging
 import os
 from pyrogram import Client
+from lootgames.modules.umpan import register_topup
 from pyrogram.handlers import CallbackQueryHandler
 
 # Import semua modules
@@ -12,6 +13,7 @@ from lootgames.modules import (
     user_database,
     gacha_fishing,
     aquarium,
+    register_topup,
     treasure_chest   # <<=== NEW MODULE
 )
 
@@ -106,3 +108,4 @@ if __name__ == "__main__":
         pass
 
     asyncio.run(main())
+
