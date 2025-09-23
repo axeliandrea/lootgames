@@ -255,11 +255,11 @@ async def callback_handler(client: Client, cq: CallbackQuery):
         await cq.message.edit_text(MENU_STRUCTURE[data]["title"], reply_markup=make_keyboard(data, user_id))
         return
 
-# ---------------- HASIL TANGKAPAN ---------------- #
+# CEK INVENTORY
     if data == "FFF":
-        user_inventory = aquarium.list_inventory(user_id)
-        kb = make_keyboard("FFF", user_id)  # tombol kembali
-        await cq.message.edit_text(f"🎣 Hasil Tangkapan @{cq.from_user.username or user_id}:\n\n{user_inventory}", reply_markup=kb)
+        inv_text = aquarium.list_inventory(user_id)
+        kb = make_keyboard("FFF", user_id)
+        await cq.message.edit_text(f"🎣 Inventorymu:\n\n{inv_text}", reply_markup=kb)
         return
 
 # ---------------- HANDLE TRANSFER & TUKAR INPUT ---------------- #
@@ -360,3 +360,4 @@ def register(app: Client):
     app.add_handler(MessageHandler(handle_transfer_message, filters.text & filters.private))
     app.add_handler(CallbackQueryHandler(callback_handler))
     logger.info("[MENU] Handler menu_utama terdaftar.")
+
