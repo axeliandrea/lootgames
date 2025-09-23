@@ -23,16 +23,10 @@ OPEN_MENU_STATE = {}      # user_id: True jika menu aktif
 # ---------------- SELL / ITEM CONFIG ---------------- #
 # inv_key harus cocok dengan key di aquarium_data.json (nama item di DB)
 ITEM_PRICES = {
-    "SELL_EMBER":    {"name": "🧺 Ember Pecah",        "price": 1,  "inv_key": "Ember Pecah"},
-    "SELL_CRAB":     {"name": "🦀 Crab",               "price": 10, "inv_key": "Crab"},
-    "SELL_ZONK":     {"name": "🤧 Zonk",               "price": 1,  "inv_key": "Zonk"},
-    "SELL_TISUE":    {"name": "🧻 Roll Tisue Bekas",   "price": 1,  "inv_key": "Roll Tisue Bekas"},
-    "SELL_SEPATU":   {"name": "🥾 Sepatu Butut",       "price": 1,  "inv_key": "Sepatu Butut"},
-    "SELL_SMALLFISH":{"name": "𓆝 Small Fish",        "price": 5,  "inv_key": "Small Fish"},
-    "SELL_PUFFER":   {"name": "🐡 Pufferfish",         "price": 7,  "inv_key": "Pufferfish"},
-    "SELL_TURTLE":   {"name": "🐢 Turtle",             "price": 10, "inv_key": "Turtle"},
-    "SELL_SNAIL":    {"name": "🐌 Snail",              "price": 4,  "inv_key": "Snail"},
-    "SELL_OCTOPUS":  {"name": "🐙 Octopus",            "price": 12, "inv_key": "Octopus"},
+    "SELL_SMALLFISH":{"name": "𓆝 Small Fish",        "price": 1,  "inv_key": "Small Fish"},
+    "SELL_SNAIL":    {"name": "🐌 Snail",              "price": 2,  "inv_key": "Snail"},
+    "SELL_OCTOPUS":  {"name": "🐙 Octopus",            "price": 3, "inv_key": "Octopus"},
+    "SELL_PUFFER":   {"name": "🐡 Pufferfish",         "price": 5,  "inv_key": "Pufferfish"},
 }
 # sementara user -> item_code waiting for amount input (chat)
 SELL_WAITING = {}  # user_id: item_code
@@ -40,16 +34,16 @@ SELL_WAITING = {}  # user_id: item_code
 # Optional aliases: jika DB berisi emoji atau variasi penulisan,
 # kita bisa map nama yang sering muncul ke bentuk canonical.
 INV_KEY_ALIASES = {
-    "🧺 ember pecah": "Ember Pecah",
-    "ember pecah": "Ember Pecah",
-    "🦀 crab": "Crab",
-    "crab": "Crab",
-    "🐢 turtle": "Turtle",
-    "turtle": "Turtle",
+    "🤧 Zonk": "Zonk",
+    "zonk":"zonk"
+    "𓆝 Small Fish": "Small Fish"
+    "small fish": "Small Fish",
     "🐌 snail": "Snail",
     "snail": "Snail",
     "🐙 octopus": "Octopus",
     "octopus": "Octopus",
+    "🐡 Pufferfish": "Pufferfish",
+    "pufferfish": "Pufferfish",
     # tambahkan sesuai kebutuhan
 }
 
@@ -194,16 +188,10 @@ MENU_STRUCTURE = {
     "D2B": {
         "title": "💰 DAFTAR HARGA",
         "buttons": [
-            ("🧺 Ember Pecah", "SELL_DETAIL:SELL_EMBER"),
-            ("🦀 Crab", "SELL_DETAIL:SELL_CRAB"),
-            ("🤧 Zonk", "SELL_DETAIL:SELL_ZONK"),
-            ("🧻 Roll Tisue Bekas", "SELL_DETAIL:SELL_TISUE"),
-            ("🥾 Sepatu Butut", "SELL_DETAIL:SELL_SEPATU"),
             ("𓆝 Small Fish", "SELL_DETAIL:SELL_SMALLFISH"),
-            ("🐡 Pufferfish", "SELL_DETAIL:SELL_PUFFER"),
-            ("🐢 Turtle", "SELL_DETAIL:SELL_TURTLE"),
             ("🐌 Snail", "SELL_DETAIL:SELL_SNAIL"),
             ("🐙 Octopus", "SELL_DETAIL:SELL_OCTOPUS"),
+            ("🐡 Pufferfish", "SELL_DETAIL:SELL_PUFFER"),
             ("⬅️ Kembali", "D2"),
         ]
     },
@@ -794,6 +782,7 @@ def register(app: Client):
     app.add_handler(MessageHandler(handle_transfer_message, filters.text & filters.private))
     app.add_handler(CallbackQueryHandler(callback_handler))
     logger.info("[MENU] Handler menu_utama terdaftar.")
+
 
 
 
