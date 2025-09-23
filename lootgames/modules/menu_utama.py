@@ -18,9 +18,9 @@ OWNER_ID = 6395738130
 TARGET_GROUP = -1002946278772  # ganti sesuai supergroup bot
 
 # ---------------- STATE ---------------- #
-TRANSFER_STATE = {}        # user_id: {"jenis": "A/B/C/D"}
-TUKAR_POINT_STATE = {}     # user_id: {"step": step, "jumlah_umpan": n}
-OPEN_MENU_MSG = {}         # user_id: message_id terakhir menu terbuka
+TRANSFER_STATE = {}       # user_id: {"jenis": "A/B/C/D"}
+TUKAR_POINT_STATE = {}    # user_id: {"step": step, "jumlah_umpan": n}
+OPENED_MENUS = set()      # user_id untuk mencegah menu dobel
 
 # ---------------- MENU STRUCTURE ---------------- #
 MENU_STRUCTURE = {
@@ -66,7 +66,7 @@ MENU_STRUCTURE = {
     ]},
     "D1": {"title": "📋 BUY UMPAN", "buttons": [("D1A", "D1A"), ("⬅️ Kembali", "D")]},
     "D2": {"title": "📋 SELL IKAN", "buttons": [("D2A", "D2A"), ("⬅️ Kembali", "D")]},
-    "D3": {"title": "📋 TUKAR POINT", "buttons": [("Lihat Poin & Tukar", "D3A"), ("⬅️ Kembali", "D3")]},
+    "D3": {"title": "📋 TUKAR POINT", "buttons": [("Lihat Poin & Tukar", "D3A"), ("⬅️ Kembali", "D")]},
     "D3A": {"title": "📋 🔄 POINT CHAT",
             "buttons": [("TUKAR 🔄 UMPAN COMMON 🐛", "TUKAR_POINT"), ("⬅️ Kembali", "D3")]},
 
@@ -76,7 +76,7 @@ MENU_STRUCTURE = {
     "BBB": {"title": "📋 Leaderboard Yapping", "buttons": [("⬅️ Kembali", "B")]}
 }
 
-# GENERIC MENU F-G-H
+# GENERIC MENU F-G
 for l in "FGH":
     MENU_STRUCTURE[l] = {"title": f"📋 Menu {l}",
                          "buttons": [(f"Menu {l*2}", l*2), ("⬅️ Kembali", "main")]}
@@ -112,7 +112,8 @@ def make_keyboard(menu_key: str, user_id=None, page: int = 0) -> InlineKeyboardM
 
     # MENU UMPAN
     elif menu_key in ["A", "AA_COMMON", "AA_RARE", "AA_LEGEND", "AA_MYTHIC"] and user_id:
-        user_umpan = umpan.get_user(user_id) or {"A": {"umpan": 0}, "B": {"umpan": 0}, "C": {"umpan": 0}, "D": {"umpan": 0}}
+        user_umpan = umpan.get_user(user_id) or {"A": {"umpan": 0}, "B": {"umpan": 0},
+                                                 "C": {"umpan": 0}, "D": {"umpan": 0}}
         type_map = {"AA_COMMON": "A", "AA_RARE": "B", "AA_LEGEND": "C", "AA_MYTHIC": "D"}
         for text, cb in MENU_STRUCTURE.get(menu_key, {}).get("buttons", []):
             if cb.startswith("TRANSFER_"):
@@ -123,7 +124,8 @@ def make_keyboard(menu_key: str, user_id=None, page: int = 0) -> InlineKeyboardM
 
     # FISHING PILIH UMPAN
     elif menu_key == "EEE" and user_id:
-        user_umpan = umpan.get_user(user_id) or {"A": {"umpan": 0}, "B": {"umpan": 0}, "C": {"umpan": 0}, "D": {"umpan": 0}}
+        user_umpan = umpan.get_user(user_id) or {"A": {"umpan": 0}, "B": {"umpan": 0},
+                                                 "C": {"umpan": 0}, "D": {"umpan": 0}}
         if user_id == OWNER_ID:
             user_umpan = {"A": {"umpan": 999}, "B": {"umpan": 999}, "C": {"umpan": 999}, "D": {"umpan": 999}}
         map_type = {"EEE_COMMON": ("COMMON 🐛", "A"), "EEE_RARE": ("RARE 🐌", "B"),
@@ -152,18 +154,15 @@ async def callback_handler(client: Client, cq: CallbackQuery):
     logger.info(f"[DEBUG] callback -> user:{user_id}, data:{data}")
     await cq.answer()
 
-    # HAPUS MENU TERBUKA SAAT KEMBALI KE MAIN
-    if data == "main" and OPEN_MENU_MSG.get(user_id):
-        OPEN_MENU_MSG.pop(user_id, None)
-
-    # REGISTER FLOW
+    # ---------------- REGISTER FLOW ---------------- #
     if data == "REGISTER_YES":
         uname = cq.from_user.username or "TanpaUsername"
         text = "🎉 Selamat kamu menjadi Player Loot!"
-        kb = InlineKeyboardMarkup([
-            [InlineKeyboardButton("📇 SCAN ID & USN", callback_data="REGISTER_SCAN")],
-            [InlineKeyboardButton("⬅️ Kembali", callback_data="main")]
-        ])
+        kb = InlineKeyboardMarkup([[
+            InlineKeyboardButton("📇 SCAN ID & USN", callback_data="REGISTER_SCAN")
+        ], [
+            InlineKeyboardButton("⬅️ Kembali", callback_data="main")
+        ]])
         await cq.message.edit_text(text, reply_markup=kb)
         user_database.set_player_loot(user_id, True, uname)
         try:
@@ -186,7 +185,7 @@ async def callback_handler(client: Client, cq: CallbackQuery):
         jenis = data.split("_")[1]
         map_jenis = {"COMMON": "A", "RARE": "B", "LEGEND": "C", "MYTHIC": "D"}
         TRANSFER_STATE[user_id] = {"jenis": map_jenis.get(jenis)}
-        await cq.message.reply("✍️ Masukkan format transfer: @username jumlah\n\nContoh: @user 2")
+        await cq.message.reply("✍️ Masukkan format transfer: `@username jumlah`\nContoh: `@user 2`")
         return
 
     # FISHING
@@ -346,31 +345,19 @@ async def show_leaderboard(cq: CallbackQuery, uid: int, page: int = 0):
 # ---------------- MENU OPEN ---------------- #
 async def open_menu(client: Client, message: Message):
     uid = message.from_user.id
-    last_msg_id = OPEN_MENU_MSG.get(uid)
-
-    if last_msg_id:
-        try:
-            await client.send_message(uid, "❌ Menu sudah terbuka sebelumnya.", reply_to_message_id=last_msg_id)
-        except Exception:
-            pass
+    if uid in OPENED_MENUS:
+        await message.reply("⚠️ Menu sudah terbuka.")
         return
-
-    sent_msg = await message.reply(MENU_STRUCTURE["main"]["title"], reply_markup=make_keyboard("main", uid))
-    OPEN_MENU_MSG[uid] = sent_msg.message_id
+    OPENED_MENUS.add(uid)
+    await message.reply(MENU_STRUCTURE["main"]["title"], reply_markup=make_keyboard("main", uid))
 
 async def open_menu_pm(client: Client, message: Message):
     uid = message.from_user.id
-    last_msg_id = OPEN_MENU_MSG.get(uid)
-
-    if last_msg_id:
-        try:
-            await client.send_message(uid, "❌ Menu sudah terbuka sebelumnya.", reply_to_message_id=last_msg_id)
-        except Exception:
-            pass
+    if uid in OPENED_MENUS:
+        await message.reply("⚠️ Menu sudah terbuka.")
         return
-
-    sent_msg = await message.reply("📋 Menu Utama:", reply_markup=make_keyboard("main", uid))
-    OPEN_MENU_MSG[uid] = sent_msg.message_id
+    OPENED_MENUS.add(uid)
+    await message.reply("📋 Menu Utama:", reply_markup=make_keyboard("main", uid))
 
 # ---------------- REGISTER HANDLERS ---------------- #
 def register(app: Client):
