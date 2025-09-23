@@ -65,13 +65,11 @@ MENU_STRUCTURE = {
     # YAPPING
     "B": {"title": "📋 YAPPING", "buttons": [("Poin Pribadi", "BB"), ("➡️ Leaderboard", "BBB"), ("⬅️ Kembali", "main")]},
     "BB": {"title": "📋 Poin Pribadi", "buttons": [("⬅️ Kembali", "B")]},
-    "BBB": {"title": "📋 Leaderboard Yapping", "buttons": [("⬅️ Kembali", "B")]}
+    "BBB": {"title": "📋 Leaderboard Yapping", "buttons": [("⬅️ Kembali", "B")]},
+    # HASIL TANGKAPAN
+    "F": {"title": "📋 HASIL TANGKAPAN", "buttons": [("CEK INVENTORY", "FF"), ("⬅️ Kembali", "main")]},
+    "FF": {"title": "📋 CEK INVENTORY", "buttons": [("LIHAT HASIL TANGKAPAN", "FFF"), ("⬅️ Kembali", "F")]}
 }
-
-# HASIL TANGKAPAN
-"F": {"title": "📋 HASIL TANGKAPAN", "buttons": [("CEK INVENTORY", "FF"), ("⬅️ Kembali", "main")]},
-"FF": {"title": "📋 CEK INVENTORY", "buttons": [("LIHAT HASIL TANGKAPAN", "FFF"), ("⬅️ Kembali", "F")]}
-}  # <-- pastikan ini menutup MENU_STRUCTURE
 
 # FISH_CONFIRM
 for jenis in ["COMMON", "RARE", "LEGEND", "MYTHIC"]:
@@ -359,6 +357,7 @@ def register(app: Client):
     app.add_handler(MessageHandler(handle_transfer_message, filters.text & filters.private))
     app.add_handler(CallbackQueryHandler(callback_handler))
     logger.info("[MENU] Handler menu_utama terdaftar.")
+
 
 
 
