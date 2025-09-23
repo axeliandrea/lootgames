@@ -127,10 +127,17 @@ def make_keyboard(menu_key: str, user_id=None, page: int = 0) -> InlineKeyboardM
         buttons.append([InlineKeyboardButton(f"TUKAR 🔄 UMPAN COMMON 🐛 (Anda: {pts} pts)", callback_data="TUKAR_POINT")])
         buttons.append([InlineKeyboardButton("⬅️ Kembali", callback_data="D3")])
 
+    # HASIL TANGKAPAN INVENTORY
+    elif menu_key == "FFF" and user_id:
+        buttons.append([InlineKeyboardButton("⬅️ Kembali", callback_data="F")])
+
     # DEFAULT
     else:
         for text, cb in MENU_STRUCTURE.get(menu_key, {}).get("buttons", []):
             buttons.append([InlineKeyboardButton(text, callback_data=cb)])
+        if not buttons:
+            # fallback minimal supaya selalu valid
+            buttons.append([InlineKeyboardButton("⬅️ Kembali", callback_data="main")])
 
     return InlineKeyboardMarkup(buttons)
 
@@ -357,6 +364,7 @@ def register(app: Client):
     app.add_handler(MessageHandler(handle_transfer_message, filters.text & filters.private))
     app.add_handler(CallbackQueryHandler(callback_handler))
     logger.info("[MENU] Handler menu_utama terdaftar.")
+
 
 
 
