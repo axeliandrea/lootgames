@@ -3,7 +3,6 @@ import asyncio
 import logging
 import os
 from pyrogram import Client
-from pyrogram.handlers import CallbackQueryHandler
 
 # ================= IMPORT MODULES ================= #
 from lootgames.modules import (
@@ -51,36 +50,6 @@ logger.info("Semua module terdaftar ✅")
 # aquarium.register(app)
 # gacha_fishing.register(app)
 
-# ================= CALLBACK FISHING ================= #
-async def fishing_callback_handler(client, cq):
-    """
-    Handler untuk callback FISH_CONFIRM_ dari menu fishing.
-    """
-    data = cq.data
-    user_id = cq.from_user.id
-
-    if data.startswith("FISH_CONFIRM_"):
-        jenis = data.replace("FISH_CONFIRM_", "")
-        username = cq.from_user.username or f"user{user_id}"
-
-        # Ambil TARGET_GROUP dari menu_utama
-        from lootgames.modules.menu_utama import TARGET_GROUP
-
-        # Panggil fungsi fishing loot
-        await gacha_fishing.fishing_loot(
-            client,
-            TARGET_GROUP,
-            username,
-            user_id,
-            umpan_type=jenis
-        )
-
-        # Edit pesan callback untuk memberi feedback ke user
-        await cq.message.edit_text(f"🎣 Kamu memancing dengan umpan {jenis}!")
-
-# Daftarkan handler callback query untuk fishing
-app.add_handler(CallbackQueryHandler(fishing_callback_handler), group=1)
-
 # ================= MAIN ================= #
 async def main():
     # Pastikan folder storage ada
@@ -104,7 +73,6 @@ async def main():
 
 # ================= RUN BOT ================= #
 if __name__ == "__main__":
-    # Apply nest_asyncio jika dijalankan di Jupyter / environment tertentu
     try:
         import nest_asyncio
         nest_asyncio.apply()
