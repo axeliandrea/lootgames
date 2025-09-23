@@ -6,25 +6,17 @@ from pyrogram import Client
 
 # ================= IMPORT MODULES ================= #
 from lootgames.modules import (
+    treasure_chest,
     yapping,
     menu_utama,
     user_database,
     gacha_fishing,
     aquarium,
-    treasure_chest
 )
-
-# Import register_topup langsung dari umpan
 from lootgames.modules.umpan import register_topup
 
 from lootgames.config import (
-    API_ID,
-    API_HASH,
-    BOT_TOKEN,
-    OWNER_ID,
-    ALLOWED_GROUP_ID,
-    LOG_LEVEL,
-    LOG_FORMAT,
+    API_ID, API_HASH, BOT_TOKEN, OWNER_ID, ALLOWED_GROUP_ID, LOG_LEVEL, LOG_FORMAT
 )
 
 # ================= LOGGING ================= #
@@ -39,44 +31,45 @@ app = Client(
     bot_token=BOT_TOKEN
 )
 
+# ================= GLOBAL MESSAGE LOGGER (debug) ================= #
+@app.on_message()
+async def _debug_all_messages(client, message):
+    try:
+        uid = message.from_user.id if message.from_user else "NONE"
+        uname = message.from_user.username if message.from_user else "NONE"
+        ctype = message.chat.type if message.chat else "NONE"
+        text = message.text or message.caption or "<non-text>"
+        print(f"[ALL MSG][{uid}][{uname}] chat_type={ctype} -> {repr(text)}")
+    except Exception as e:
+        print("[ALL MSG][ERR]", e)
+
 # ================= REGISTER MODULES ================= #
-logger.info("Mendaftarkan module...")
+print("[MAIN] Mendaftarkan modules (treasure_chest sebelum yapping)...")
+# daftar treasure_chest dulu supaya command private prioritas
+treasure_chest.register(app)
 yapping.register(app)
 menu_utama.register(app)
 user_database.register(app)
-treasure_chest.register(app)
 register_topup(app)
-logger.info("Semua module terdaftar ✅")
-# aquarium.register(app)
-# gacha_fishing.register(app)
+# jangan daftarkan callback fishing manual di main jika gacha_fishing sudah handle sendiri
+print("[MAIN] Semua module dipanggil register (check logs untuk konfirmasi).")
 
 # ================= MAIN ================= #
 async def main():
-    # Pastikan folder storage ada
     os.makedirs("storage", exist_ok=True)
-
-    # Start client
     await app.start()
     logger.info("🚀 LootGames Bot started!")
-    logger.info(f"📱 Monitoring group: {ALLOWED_GROUP_ID}")
     logger.info(f"👑 Owner ID: {OWNER_ID}")
-
-    # Kirim notifikasi ke owner
     try:
-        await app.send_message(OWNER_ID, "🤖 LootGames Bot sudah aktif dan siap dipakai!")
-        logger.info("📢 Notifikasi start terkirim ke OWNER.")
+        await app.send_message(OWNER_ID, "🤖 LootGames Bot sudah aktif.")
     except Exception as e:
-        logger.error(f"Gagal kirim notifikasi start: {e}")
-
-    # Bot berjalan terus
+        logger.error(f"Gagal kirim notifikasi start ke owner: {e}")
     await asyncio.Event().wait()
 
-# ================= RUN BOT ================= #
 if __name__ == "__main__":
     try:
         import nest_asyncio
         nest_asyncio.apply()
-    except ImportError:
+    except Exception:
         pass
-
     asyncio.run(main())
