@@ -7,6 +7,7 @@ from datetime import datetime
 from pyrogram import Client, filters
 from pyrogram.types import Message, CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton
 from pyrogram.handlers import MessageHandler, CallbackQueryHandler
+from pyrogram.enums import ChatType   # ✅ gunakan enum resmi
 
 from lootgames.modules import umpan
 
@@ -22,19 +23,21 @@ def log_debug(msg: str):
 
 # ================= HANDLERS ================= #
 async def spawn_chest(client: Client, message: Message):
-    """Owner spawn treasure chest ke group target"""
-    log_debug(f"Command '.treasurechest' diterima dari user {message.from_user.id} ({message.from_user.username}) di chat {message.chat.id} ({message.chat.type})")
+    log_debug(
+        f"Command '.treasurechest' dari {message.from_user.id} "
+        f"({message.from_user.username}) di chat {message.chat.id} ({message.chat.type})"
+    )
 
     # Cek owner
     if message.from_user.id != OWNER_ID:
         await message.reply_text("❌ Kamu tidak memiliki izin menggunakan command ini.")
-        log_debug(f"User {message.from_user.id} bukan owner. Command diblokir.")
+        log_debug(f"User {message.from_user.id} bukan owner → diblokir.")
         return
 
     # Cek private chat
-    if message.chat.type != "private":
+    if message.chat.type != ChatType.PRIVATE:   # ✅ perbaikan
         await message.reply_text("⚠️ Command ini hanya bisa dipakai di private chat ke bot.")
-        log_debug(f"Command dijalankan bukan di private chat. chat_type={message.chat.type}")
+        log_debug(f"Command ditolak: chat_type={message.chat.type}")
         return
 
     # Kirim treasure chest
@@ -49,14 +52,13 @@ async def spawn_chest(client: Client, message: Message):
         reply_markup=btn
     )
     await message.reply_text("✅ Treasure Chest berhasil dikirim ke group target.")
-    log_debug("Treasure chest spawned ke group target.")
+    log_debug("Treasure chest dikirim ke group target.")
 
 async def open_chest(client: Client, cq: CallbackQuery):
-    """User klik tombol chest"""
     user = cq.from_user
-    log_debug(f"Callback 'open_chest' ditekan oleh user {user.id} ({user.username})")
+    log_debug(f"Callback 'open_chest' ditekan oleh {user.id} ({user.username})")
 
-    await asyncio.sleep(1)  # Anti-flood delay
+    await asyncio.sleep(1)
     roll = random.randint(1, 100)
 
     if roll <= 90:
@@ -72,7 +74,6 @@ async def open_chest(client: Client, cq: CallbackQuery):
 def register(app: Client):
     log_debug("Mendaftarkan handler treasure_chest...")
 
-    # Command spawn chest hanya di private chat
     app.add_handler(
         MessageHandler(
             spawn_chest,
@@ -81,7 +82,6 @@ def register(app: Client):
         group=0
     )
 
-    # CallbackQuery untuk tombol treasure chest
     app.add_handler(
         CallbackQueryHandler(
             open_chest,
