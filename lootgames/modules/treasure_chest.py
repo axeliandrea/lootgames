@@ -6,6 +6,7 @@ import asyncio
 from datetime import datetime
 from pyrogram import Client, filters
 from pyrogram.types import Message, CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton
+from pyrogram.handlers import MessageHandler, CallbackQueryHandler
 
 from lootgames.modules import umpan
 
@@ -86,12 +87,20 @@ async def open_chest(client: Client, cq: CallbackQuery):
 def register(app: Client):
     # Command spawn chest
     app.add_handler(
-        filters.command("treasurechest", prefixes=["."]) & filters.private,
-        spawn_chest,
+        MessageHandler(
+            spawn_chest,
+            filters.command("treasurechest", prefixes=["."]) & filters.private
+        ),
+        group=0
     )
-    # CallbackQuery filter khusus untuk "open_chest"
+
+    # CallbackQuery khusus "open_chest"
     app.add_handler(
-        filters.create(lambda _, __, cq: isinstance(cq, CallbackQuery) and cq.data == "open_chest"),
-        open_chest,
+        CallbackQueryHandler(
+            open_chest,
+            filters=lambda cq: cq.data == "open_chest"
+        ),
+        group=1
     )
+
     log_debug("Handler treasure_chest terdaftar ✅")
