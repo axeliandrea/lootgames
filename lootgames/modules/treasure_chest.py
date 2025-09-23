@@ -98,7 +98,7 @@ def register(app: Client):
     app.add_handler(
         CallbackQueryHandler(
             open_chest,
-            filters=lambda cq: cq.data == "open_chest"
+            filters=lambda _, cq: cq.data == "open_chest"
         ),
         group=1
     )
