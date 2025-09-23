@@ -50,19 +50,6 @@ print("[MAIN] Semua module dipanggil register (check logs untuk konfirmasi).")
 # ================= STORAGE ================= #
 os.makedirs("storage", exist_ok=True)
 
-# ================= START BOT ================= #
-print("[MAIN] Bot starting...")
-
-# ================= TEST HANDLER TREASURECHEST ================= #
-@app.on_message()
-async def test_treasure_command(client, message):
-    if message.text and message.text.strip() == ".treasurechest":
-        try:
-            await client.send_message(-1002946278772, "TEST CHEST - pesan ke group")
-            await message.reply("✅ TEST CHEST dikirim ke group!")
-        except Exception as e:
-            await message.reply(f"❌ Gagal kirim TEST CHEST: {e}")
-
 # ================= OWNER START COMMAND ================= #
 @app.on_message(filters.private & filters.user(OWNER_ID) & filters.command("start", prefixes=["/"]))
 async def notify_owner(client, message):
@@ -72,4 +59,5 @@ async def notify_owner(client, message):
         logger.error(f"Gagal kirim notifikasi start ke owner: {e}")
 
 # ================= RUN BOT ================= #
+print("[MAIN] Bot starting...")
 app.run()
