@@ -1,3 +1,4 @@
+# treasure_chest.py
 import logging
 from pyrogram import filters
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
@@ -31,6 +32,8 @@ def register(app):
                 reply_markup=keyboard
             )
             await message.reply(f"✅ Berhasil kirim treasure chest ke group {TARGET_GROUP}")
+            # reset klik user setiap chest baru
+            clicked_users.clear()
         except Exception as e:
             logger.error(f"[CHEST] Gagal kirim chest: {e}")
             await message.reply(f"❌ Gagal kirim chest: {e}")
