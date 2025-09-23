@@ -1,5 +1,4 @@
 # lootgames/__main__.py
-from lootgames.modules.umpan import register_topup
 import asyncio
 import logging
 import os
@@ -13,9 +12,11 @@ from lootgames.modules import (
     user_database,
     gacha_fishing,
     aquarium,
-    register_topup,
-    treasure_chest   # <<=== NEW MODULE
+    treasure_chest
 )
+
+# Import register_topup langsung dari umpan
+from lootgames.modules.umpan import register_topup
 
 from lootgames.config import (
     API_ID,
@@ -43,9 +44,9 @@ app = Client(
 yapping.register(app)
 menu_utama.register(app)
 user_database.register(app)
-treasure_chest.register(app)   # <<=== REGISTER TREASURE CHEST
+treasure_chest.register(app)
 register_topup(app)
-# Tambahkan modul lain jika ada
+# Jika mau, aktifkan modul lain:
 # aquarium.register(app)
 # gacha_fishing.register(app)
 
@@ -109,6 +110,3 @@ if __name__ == "__main__":
         pass
 
     asyncio.run(main())
-
-
-
