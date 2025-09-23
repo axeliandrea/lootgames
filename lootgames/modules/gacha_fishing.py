@@ -11,10 +11,10 @@ logger = logging.getLogger(__name__)
 # ---------------- LOOT TABLE ---------------- #
 FISH_LOOT = {
     "🤧 Zonk": 90,
-    "𓆝 Small Fish": 45,
-    "🐌 snail": 35,
-    "🐙 octopus": 10,   
-    "🐡 Pufferfish": 5
+    "𓆝 Small Fish": 15,
+    "🐌 snail": 10,
+    "🐙 octopus": 5,   
+    "🐡 Pufferfish": 1
 }
 
 # Buff rate berdasarkan umpan
