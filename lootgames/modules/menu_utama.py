@@ -18,6 +18,23 @@ TRANSFER_STATE = {}       # user_id: {"jenis": "A/B/C/D"}
 TUKAR_POINT_STATE = {}    # user_id: {"step": step, "jumlah_umpan": n}
 OPEN_MENU_STATE = {}      # user_id: True jika menu aktif
 
+# ---------------- SELL / ITEM CONFIG ---------------- #
+# inv_key harus cocok dengan key di aquarium_data.json (nama item di DB)
+ITEM_PRICES = {
+    "SELL_EMBER":    {"name": "🧺 Ember Pecah",        "price": 1,  "inv_key": "Ember Pecah"},
+    "SELL_CRAB":     {"name": "🦀 Crab",               "price": 10, "inv_key": "Crab"},
+    "SELL_ZONK":     {"name": "🤧 Zonk",               "price": 1,  "inv_key": "Zonk"},
+    "SELL_TISUE":    {"name": "🧻 Roll Tisue Bekas",   "price": 1,  "inv_key": "Roll Tisue Bekas"},
+    "SELL_SEPATU":   {"name": "🥾 Sepatu Butut",       "price": 1,  "inv_key": "Sepatu Butut"},
+    "SELL_SMALLFISH":{"name": "𓆝 Small Fish",        "price": 5,  "inv_key": "Small Fish"},
+    "SELL_PUFFER":   {"name": "🐡 Pufferfish",         "price": 7,  "inv_key": "Pufferfish"},
+    "SELL_TURTLE":   {"name": "🐢 Turtle",             "price": 10, "inv_key": "Turtle"},
+    "SELL_SNAIL":    {"name": "🐌 Snail",              "price": 4,  "inv_key": "Snail"},
+    "SELL_OCTOPUS":  {"name": "🐙 Octopus",            "price": 12, "inv_key": "Octopus"},
+}
+# sementara user -> item_code waiting for amount input (chat)
+SELL_WAITING = {}  # user_id: item_code
+
 # ---------------- MENU STRUCTURE ---------------- #
 MENU_STRUCTURE = {
     # MAIN MENU
@@ -154,20 +171,21 @@ MENU_STRUCTURE = {
             ("⬅️ Kembali", "D2")
         ]
     },
+    # DAFTAR HARGA -> note: callback format SELL_DETAIL:<code>
     "D2B": {
         "title": "💰 DAFTAR HARGA",
         "buttons": [
-            ("🧺 Ember Pecah", "SELL_EMBER"),
-            ("🦀 Crab", "SELL_CRAB"),
-            ("🤧 Zonk", "SELL_ZONK"),
-            ("🧻 Roll Tisue Bekas", "SELL_TISUE"),
-            ("🥾 Sepatu Butut", "SELL_SEPATU"),
-            ("𓆝 Small Fish", "SELL_SMALLFISH"),
-            ("🐡 Pufferfish", "SELL_PUFFER"),
-            ("🐢 Turtle", "SELL_TURTLE"),
-            ("🐌 Snail", "SELL_SNAIL"),
-            ("🐙 Octopus", "SELL_OCTOPUS"),
-            ("⬅️ Kembali", "D2")
+            ("🧺 Ember Pecah", "SELL_DETAIL:SELL_EMBER"),
+            ("🦀 Crab", "SELL_DETAIL:SELL_CRAB"),
+            ("🤧 Zonk", "SELL_DETAIL:SELL_ZONK"),
+            ("🧻 Roll Tisue Bekas", "SELL_DETAIL:SELL_TISUE"),
+            ("🥾 Sepatu Butut", "SELL_DETAIL:SELL_SEPATU"),
+            ("𓆝 Small Fish", "SELL_DETAIL:SELL_SMALLFISH"),
+            ("🐡 Pufferfish", "SELL_DETAIL:SELL_PUFFER"),
+            ("🐢 Turtle", "SELL_DETAIL:SELL_TURTLE"),
+            ("🐌 Snail", "SELL_DETAIL:SELL_SNAIL"),
+            ("🐙 Octopus", "SELL_DETAIL:SELL_OCTOPUS"),
+            ("⬅️ Kembali", "D2"),
         ]
     },
     "D3": {
@@ -413,7 +431,91 @@ async def callback_handler(client: Client, cq: CallbackQuery):
         await cq.message.edit_text(f"✅ Tukar berhasil! {jml} umpan COMMON 🐛 ditambahkan ke akunmu.", reply_markup=kb)
         TUKAR_POINT_STATE.pop(user_id, None)
         return
-        
+
+    # SELL FLOW: DETAIL -> START -> CONFIRM / CANCEL
+    # data format: SELL_DETAIL:<code> , SELL_START:<code> , SELL_CONFIRM:<code>:<amount> , SELL_CANCEL
+    if data.startswith("SELL_DETAIL:"):
+        item_code = data.split(":", 1)[1]
+        item = ITEM_PRICES.get(item_code)
+        if not item:
+            await cq.answer("Item tidak ditemukan.", show_alert=True)
+            return
+        # show price + opsi jual (mulai)
+        text = f"💰 Harga {item['name']}\n1x = {item['price']} coin\n\nKetik jumlah yang ingin kamu jual, atau pilih tombol untuk mulai."
+        kb = InlineKeyboardMarkup([
+            [InlineKeyboardButton("🛒 Jual Sekarang (ketik jumlah)", callback_data=f"SELL_START:{item_code}")],
+            [InlineKeyboardButton("⬅️ Kembali", callback_data="D2B")]
+        ])
+        await cq.message.edit_text(text, reply_markup=kb)
+        return
+
+    if data.startswith("SELL_START:"):
+        item_code = data.split(":", 1)[1]
+        # tandai user menunggu input jumlah via chat
+        SELL_WAITING[user_id] = item_code
+        item = ITEM_PRICES.get(item_code)
+        if not item:
+            await cq.answer("Item tidak ditemukan.", show_alert=True)
+            SELL_WAITING.pop(user_id, None)
+            return
+        await cq.message.edit_text(f"📝 Ketik jumlah {item['name']} yang ingin kamu jual (contoh: 2)\nKetik 0 untuk batal.")
+        return
+
+    if data.startswith("SELL_CONFIRM:"):
+        # format SELL_CONFIRM:<code>:<amount>
+        parts = data.split(":")
+        if len(parts) != 3:
+            await cq.answer("Data konfirmasi tidak valid.", show_alert=True)
+            return
+        item_code = parts[1]
+        try:
+            amount = int(parts[2])
+        except ValueError:
+            await cq.answer("Jumlah tidak valid.", show_alert=True)
+            return
+        item = ITEM_PRICES.get(item_code)
+        if not item:
+            await cq.answer("Item tidak ditemukan.", show_alert=True)
+            return
+
+        # load DB, cek stok
+        db = aquarium.load_data()
+        user_inv = db.get(str(user_id), {}) or {}
+        stock = user_inv.get(item["inv_key"], 0)
+        if amount <= 0 or amount > stock:
+            await cq.answer("Stok tidak cukup atau jumlah salah.", show_alert=True)
+            return
+
+        # kurangi stok
+        new_stock = stock - amount
+        if new_stock > 0:
+            user_inv[item["inv_key"]] = new_stock
+        else:
+            # hapus key jika 0
+            user_inv.pop(item["inv_key"], None)
+
+        db[str(user_id)] = user_inv
+        try:
+            aquarium.save_data(db)
+        except Exception as e:
+            logger.error(f"Gagal save aquarium setelah jual: {e}")
+            await cq.answer("Gagal menyimpan data. Coba lagi nanti.", show_alert=True)
+            return
+
+        earned = amount * item["price"]
+        # NOTE: belum menambahkan coin ke wallet (belum ada fizz_coin module) — hanya notifikasi
+        await cq.message.edit_text(
+            f"✅ Berhasil menjual {amount}x {item['name']}.\n"
+            f"Kamu mendapatkan {earned} coin fizz (simulasi).\n"
+            f"Sisa stok {item['name']}: {new_stock}"
+        )
+        return
+
+    if data == "SELL_CANCEL":
+        SELL_WAITING.pop(user_id, None)
+        await cq.message.edit_text("❌ Penjualan dibatalkan.", reply_markup=make_keyboard("D2", user_id))
+        return
+
     # CEK INVENTORY STORE
     if data == "D2A":
         inv_text = aquarium.list_inventory(user_id)
@@ -426,19 +528,54 @@ async def callback_handler(client: Client, cq: CallbackQuery):
         await cq.message.edit_text(MENU_STRUCTURE[data]["title"], reply_markup=make_keyboard(data, user_id))
         return
 
-# CEK INVENTORY
+# CEK INVENTORY (hasil tangkapan)
     if data == "FFF":
         inv_text = aquarium.list_inventory(user_id)
         kb = make_keyboard("FFF", user_id)
         await cq.message.edit_text(f"🎣 Inventorymu:\n\n{inv_text}", reply_markup=kb)
         return
 
-# ---------------- HANDLE TRANSFER & TUKAR INPUT ---------------- #
+# ---------------- HANDLE TRANSFER, TUKAR & SELL AMOUNT (TEXT INPUT) ---------------- #
 async def handle_transfer_message(client: Client, message: Message):
     uid = message.from_user.id
     uname = message.from_user.username or f"user{uid}"
 
-    # TRANSFER
+    # SELL AMOUNT via chat (user previously pressed SELL_START -> SELL_WAITING populated)
+    if SELL_WAITING.get(uid):
+        item_code = SELL_WAITING.pop(uid)
+        item = ITEM_PRICES.get(item_code)
+        if not item:
+            return await message.reply("Item tidak ditemukan. Proses dibatalkan.")
+        text = message.text.strip()
+        # allow '0' to cancel
+        if not text.isdigit():
+            return await message.reply("Format salah. Masukkan angka jumlah yang ingin dijual.")
+        amount = int(text)
+        if amount <= 0:
+            return await message.reply("Penjualan dibatalkan (jumlah <= 0).")
+
+        # cek stok
+        db = aquarium.load_data()
+        user_inv = db.get(str(uid), {}) or {}
+        stock = user_inv.get(item["inv_key"], 0)
+        if stock <= 0:
+            return await message.reply(f"❌ Kamu tidak memiliki {item['name']} sama sekali.")
+        if amount > stock:
+            return await message.reply(f"❌ Stok tidak cukup ({stock} pcs).")
+
+        # minta konfirmasi dengan tombol YA/TIDAK
+        kb = InlineKeyboardMarkup([
+            [
+                InlineKeyboardButton("✅ Ya", callback_data=f"SELL_CONFIRM:{item_code}:{amount}"),
+                InlineKeyboardButton("❌ Tidak", callback_data="SELL_CANCEL")
+            ]
+        ])
+        return await message.reply(
+            f"📌 Konfirmasi\nApakah kamu yakin ingin menjual {amount}x {item['name']}?\nStok kamu: {stock}",
+            reply_markup=kb
+        )
+
+    # TRANSFER (existing)
     if TRANSFER_STATE.get(uid):
         try:
             jenis = TRANSFER_STATE[uid]["jenis"]
@@ -475,7 +612,7 @@ async def handle_transfer_message(client: Client, message: Message):
         TRANSFER_STATE.pop(uid, None)
         return
 
-    # TUKAR POINT
+    # TUKAR POINT (existing)
     if TUKAR_POINT_STATE.get(uid):
         step = TUKAR_POINT_STATE[uid].get("step", 0)
         if step != 1:
@@ -526,8 +663,10 @@ async def open_menu_pm(client: Client, message: Message):
 
 # ---------------- REGISTER HANDLERS ---------------- #
 def register(app: Client):
+    # register handlers already expected by your app:
     app.add_handler(MessageHandler(open_menu, filters.regex(r"^\.menufish$") & filters.private))
     app.add_handler(MessageHandler(open_menu_pm, filters.command("menu") & filters.private))
+    # this handler will also handle SELL amount input because SELL_WAITING is checked inside
     app.add_handler(MessageHandler(handle_transfer_message, filters.text & filters.private))
     app.add_handler(CallbackQueryHandler(callback_handler))
     logger.info("[MENU] Handler menu_utama terdaftar.")
