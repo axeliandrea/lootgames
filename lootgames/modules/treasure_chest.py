@@ -15,6 +15,7 @@ OWNER_ID = 6395738130
 TARGET_GROUP = -1002946278772
 LUCKY_DB = "storage/lucky_chip.json"
 DEBUG = True
+BOT_USERNAME = "gamesofloot_bot"  # <-- hanya bot ini yang bisa menerima command
 
 # ================= UTIL ================= #
 def log_debug(msg: str):
@@ -35,10 +36,17 @@ def save_lucky(data):
 # ================= HANDLERS ================= #
 async def spawn_chest(client: Client, message: Message):
     """Owner spawn treasure chest ke group target"""
+    # Hanya owner
     if message.from_user.id != OWNER_ID:
         return await message.reply_text("❌ Kamu tidak memiliki izin menggunakan command ini.")
+    
+    # Hanya private chat
     if message.chat.type != "private":
-        return await message.reply_text("⚠️ Command ini hanya bisa dipakai di private chat.")
+        return await message.reply_text("⚠️ Command ini hanya bisa dipakai di private chat ke bot.")
+    
+    # Hanya bot @gamesofloot_bot
+    if client.me.username != BOT_USERNAME:
+        return await message.reply_text(f"⚠️ Command ini hanya bisa dijalankan di bot @{BOT_USERNAME}.")
 
     btn = InlineKeyboardMarkup(
         [[InlineKeyboardButton("🎁 TREASURE CHEST 🎁", callback_data="open_chest")]]
