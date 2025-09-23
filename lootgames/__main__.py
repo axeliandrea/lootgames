@@ -1,17 +1,28 @@
-import os
+# lootgames/__main__.py
+import asyncio
 import logging
-from pyrogram import Client, filters
+import os
+from pyrogram import Client
+from pyrogram.handlers import CallbackQueryHandler
+
+# Import semua modules
 from lootgames.modules import (
-    treasure_chest,
     yapping,
     menu_utama,
     user_database,
     gacha_fishing,
     aquarium,
+    treasure_chest   # <<=== NEW MODULE
 )
-from lootgames.modules.umpan import register_topup
+
 from lootgames.config import (
-    API_ID, API_HASH, BOT_TOKEN, OWNER_ID, LOG_LEVEL, LOG_FORMAT
+    API_ID,
+    API_HASH,
+    BOT_TOKEN,
+    OWNER_ID,
+    ALLOWED_GROUP_ID,
+    LOG_LEVEL,
+    LOG_FORMAT,
 )
 
 # ================= LOGGING ================= #
@@ -26,38 +37,68 @@ app = Client(
     bot_token=BOT_TOKEN
 )
 
-# ================= GLOBAL MESSAGE LOGGER ================= #
-@app.on_message()
-async def _debug_all_messages(client, message):
-    try:
-        uid = message.from_user.id if message.from_user else "NONE"
-        uname = message.from_user.username if message.from_user else "NONE"
-        ctype = message.chat.type if message.chat else "NONE"
-        text = message.text or message.caption or "<non-text>"
-        print(f"[ALL MSG][{uid}][{uname}] chat_type={ctype} -> {repr(text)}")
-    except Exception as e:
-        print("[ALL MSG][ERR]", e)
-
 # ================= REGISTER MODULES ================= #
-print("[MAIN] Mendaftarkan modules...")
-treasure_chest.register(app)  # prioritas command private
 yapping.register(app)
 menu_utama.register(app)
 user_database.register(app)
-register_topup(app)
-print("[MAIN] Semua module dipanggil register (check logs untuk konfirmasi).")
+treasure_chest.register(app)   # <<=== REGISTER TREASURE CHEST
 
-# ================= STORAGE ================= #
-os.makedirs("storage", exist_ok=True)
+# ================= CALLBACK FISHING ================= #
+async def fishing_callback_handler(client, callback_query):
+    """
+    Handler untuk callback FISH_CONFIRM_ dari menu fishing.
+    """
+    data = callback_query.data
+    user_id = callback_query.from_user.id
 
-# ================= OWNER START COMMAND ================= #
-@app.on_message(filters.private & filters.user(OWNER_ID) & filters.command("start", prefixes=["/"]))
-async def notify_owner(client, message):
+    if data.startswith("FISH_CONFIRM_"):
+        jenis = data.replace("FISH_CONFIRM_", "")
+        username = callback_query.from_user.username or f"user{user_id}"
+
+        # Ambil TARGET_GROUP dari menu_utama
+        from lootgames.modules.menu_utama import TARGET_GROUP
+
+        # Panggil fungsi fishing loot
+        await gacha_fishing.fishing_loot(
+            client,
+            TARGET_GROUP,
+            username,
+            user_id,
+            umpan_type=jenis
+        )
+
+        # Edit pesan callback untuk memberi feedback ke user
+        await callback_query.message.edit_text(f"🎣 Kamu memancing dengan umpan {jenis}!")
+
+# Daftarkan handler callback query untuk fishing
+app.add_handler(CallbackQueryHandler(fishing_callback_handler))
+
+# ================= MAIN ================= #
+async def main():
+    # Pastikan folder storage ada
+    os.makedirs("storage", exist_ok=True)
+
+    # Start client
+    await app.start()
+    logger.info("🚀 LootGames Bot started!")
+    logger.info(f"📱 Monitoring group: {ALLOWED_GROUP_ID}")
+    logger.info(f"👑 Owner ID: {OWNER_ID}")
+
+    # Kirim notifikasi ke owner
     try:
-        await message.reply("🤖 LootGames Bot sudah aktif.")
+        await app.send_message(OWNER_ID, "🤖 LootGames Bot sudah aktif dan siap dipakai!")
+        logger.info("📢 Notifikasi start terkirim ke OWNER.")
     except Exception as e:
-        logger.error(f"Gagal kirim notifikasi start ke owner: {e}")
+        logger.error(f"Gagal kirim notifikasi start: {e}")
 
-# ================= RUN BOT ================= #
-print("[MAIN] Bot starting...")
-app.run()
+    # Bot berjalan terus
+    await asyncio.Event().wait()
+
+if __name__ == "__main__":
+    try:
+        import nest_asyncio
+        nest_asyncio.apply()
+    except ImportError:
+        pass
+
+    asyncio.run(main())
