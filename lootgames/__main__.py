@@ -10,7 +10,6 @@ from lootgames.modules import (
     yapping,
     menu_utama,
     user_database,
-    autorespon,
     gacha_fishing,
     aquarium
 )
@@ -93,3 +92,4 @@ if __name__ == "__main__":
         pass
 
     asyncio.run(main())
+
