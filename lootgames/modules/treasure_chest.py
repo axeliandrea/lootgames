@@ -8,7 +8,7 @@ from lootgames.modules.umpan import add_umpan
 logger = logging.getLogger(__name__)
 
 OWNER_ID = 6395738130
-TARGET_GROUP = -1002946278772  # Ganti sesuai ID group
+TARGET_GROUP = -1002946278772  # Default group target
 clicked_users = set()  # Tracking user yang sudah klik chest
 
 def register(app: Client):
@@ -20,6 +20,8 @@ def register(app: Client):
         global clicked_users
         clicked_users = set()  # reset setiap spawn baru
 
+        # Bisa kirim ke TARGET_GROUP default atau ke chat sekarang
+        target = TARGET_GROUP if message.chat.type in ["private", "supergroup", "group"] else message.chat.id
         await message.reply("⏳ Preparing kirim treasure chest...")
 
         keyboard = InlineKeyboardMarkup(
@@ -28,12 +30,12 @@ def register(app: Client):
 
         try:
             await client.send_message(
-                TARGET_GROUP,
+                target,
                 "🎁 **TREASURE CHEST SPAWNED!**\nKlik tombol di bawah untuk mendapatkan reward!",
                 reply_markup=keyboard
             )
-            logger.info(f"[CHEST] Treasure chest dikirim ke group {TARGET_GROUP}")
-            await message.reply(f"✅ Berhasil kirim treasure chest ke group {TARGET_GROUP}")
+            logger.info(f"[CHEST] Treasure chest dikirim ke chat {target}")
+            await message.reply(f"✅ Berhasil kirim treasure chest ke chat {target}")
         except Exception as e:
             logger.error(f"[CHEST] Gagal kirim chest: {e}")
             await message.reply(f"❌ Gagal kirim chest: {e}")
