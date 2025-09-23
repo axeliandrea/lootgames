@@ -58,7 +58,28 @@ MENU_STRUCTURE = {
         ("BUY UMPAN", "D1"), ("SELL ITEM", "D2"), ("TUKAR POINT", "D3"), ("⬅️ Kembali", "main")
     ]},
     "D1": {"title": "📋 BUY UMPAN", "buttons": [("D1A", "D1A"), ("⬅️ Kembali", "D")]},
-    "D2": {"title": "📋 SELL ITEM", "buttons": [("CHECK INVENTORY", "D2A"), ("⬅️ Kembali", "D")]},
+    "D2": {"title": "📋 SELL ITEM", "buttons": [
+        ("📦 CEK INVENTORY", "D2A"),
+        ("💰 DAFTAR HARGA", "D2B"),
+        ("⬅️ Kembali", "D")
+    ]},
+    "D2A": {"title": "📦 CEK INVENTORY", "buttons": [
+        ("⬅️ Kembali", "D2")
+    ]},
+    "D2B": {"title": "💰 DAFTAR HARGA", "buttons": [
+        ("🧺 Ember Pecah", "SELL_EMBER"),
+        ("🦀 Crab", "SELL_CRAB"),
+        ("🤧 Zonk", "SELL_ZONK"),
+        ("🧻 Roll Tisue Bekas", "SELL_TISUE"),
+        ("🥾 Sepatu Butut", "SELL_SEPATU"),
+        ("𓆝 Small Fish", "SELL_SMALLFISH"),
+        ("🐡 Pufferfish", "SELL_PUFFER"),
+        ("🐢 Turtle", "SELL_TURTLE"),
+        ("🐌 Snail", "SELL_SNAIL"),
+        ("🐙 Octopus", "SELL_OCTOPUS"),
+        ("⬅️ Kembali", "D2")
+    ]}
+
     "D3": {"title": "📋 TUKAR POINT", "buttons": [("Lihat Poin & Tukar", "D3A"), ("⬅️ Kembali", "D")]},
     "D3A": {"title": "📋 🔄 POINT CHAT",
             "buttons": [("TUKAR 🔄 UMPAN COMMON 🐛", "TUKAR_POINT"), ("⬅️ Kembali", "D3")]},
@@ -364,6 +385,7 @@ def register(app: Client):
     app.add_handler(MessageHandler(handle_transfer_message, filters.text & filters.private))
     app.add_handler(CallbackQueryHandler(callback_handler))
     logger.info("[MENU] Handler menu_utama terdaftar.")
+
 
 
 
