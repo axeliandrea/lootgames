@@ -423,7 +423,15 @@ async def callback_handler(client: Client, cq: CallbackQuery):
         total_coin = fizz_coin.get_coin(user_id)
         text = f"💰 Total coinmu saat ini: {total_coin} fizz coin"
         kb = make_keyboard("D2", user_id)  # tombol kembali ke menu SELL ITEM
-        await cq.message.edit_text(text, reply_markup=kb)
+        try:
+            if cq.message.text != text or cq.message.reply_markup != kb:
+                await cq.message.edit_text(text, reply_markup=kb)
+            else:
+                # fallback: kirim pesan baru
+                await cq.message.reply_text(text, reply_markup=kb)
+        except Exception as e:
+            # safety fallback
+            await cq.message.reply_text(text, reply_markup=kb)
         return
     
     # FISHING
@@ -783,6 +791,7 @@ def register(app: Client):
     app.add_handler(MessageHandler(handle_transfer_message, filters.text & filters.private))
     app.add_handler(CallbackQueryHandler(callback_handler))
     logger.info("[MENU] Handler menu_utama terdaftar.")
+
 
 
 
