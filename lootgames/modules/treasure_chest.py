@@ -23,7 +23,7 @@ def log_debug(msg: str):
 # ================= HANDLERS ================= #
 async def spawn_chest(client: Client, message: Message):
     """Owner spawn treasure chest ke group target"""
-    log_debug(f"Command '.treasurechest' diterima dari user {message.from_user.id} di chat {message.chat.id} ({message.chat.type})")
+    log_debug(f"Command '.treasurechest' diterima dari user {message.from_user.id} ({message.from_user.username}) di chat {message.chat.id} ({message.chat.type})")
 
     # Cek owner
     if message.from_user.id != OWNER_ID:
@@ -72,11 +72,11 @@ async def open_chest(client: Client, cq: CallbackQuery):
 def register(app: Client):
     log_debug("Mendaftarkan handler treasure_chest...")
 
-    # Command spawn chest
+    # Command spawn chest hanya di private chat
     app.add_handler(
         MessageHandler(
             spawn_chest,
-            filters.command("treasurechest", prefixes=["."])
+            filters.command("treasurechest", prefixes=["."]) & filters.private
         ),
         group=0
     )
