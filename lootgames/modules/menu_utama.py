@@ -7,6 +7,7 @@ from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton, CallbackQ
 from pyrogram.handlers import MessageHandler, CallbackQueryHandler
 
 from lootgames.modules import yapping, umpan, user_database
+from lootgames.modules import fizz_coin
 from lootgames.modules import aquarium
 from lootgames.modules.gacha_fishing import fishing_loot
 
@@ -416,6 +417,15 @@ async def callback_handler(client: Client, cq: CallbackQuery):
         await cq.message.reply("✍️ Masukkan format transfer: `@username jumlah`\nContoh: `@user 2`")
         return
 
+    # CHECK COIN Fizz
+    if data == "D2C":
+        user_id = cq.from_user.id
+        total_coin = fizz_coin.get_coin(user_id)
+        text = f"💰 Total coinmu saat ini: {total_coin} fizz coin"
+        kb = make_keyboard("D2", user_id)  # tombol kembali ke menu SELL ITEM
+        await cq.message.edit_text(text, reply_markup=kb)
+        return
+    
     # FISHING
     if data.startswith("FISH_CONFIRM_"):
         jenis = data.replace("FISH_CONFIRM_", "")
@@ -773,5 +783,6 @@ def register(app: Client):
     app.add_handler(MessageHandler(handle_transfer_message, filters.text & filters.private))
     app.add_handler(CallbackQueryHandler(callback_handler))
     logger.info("[MENU] Handler menu_utama terdaftar.")
+
 
 
