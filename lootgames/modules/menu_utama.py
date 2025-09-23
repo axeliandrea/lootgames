@@ -604,7 +604,7 @@ async def callback_handler(client: Client, cq: CallbackQuery):
         new_total = fizz_coin.add_coin(user_id, earned)  # ✅ simpan ke database
         await cq.message.reply_text(
             f"✅ Berhasil menjual {amount}x {item['name']}.\n"
-            f"Kamu mendapatkan {earned} coin fizz (simulasi).\n"
+            f"Kamu mendapatkan {earned} coin fizz.\n"
             f"💰 Total coinmu sekarang: {new_total} fizz coin\n"
             f"Sisa stok {item['name']}: {new_stock}",
             reply_markup=InlineKeyboardMarkup(
@@ -793,6 +793,7 @@ def register(app: Client):
     app.add_handler(MessageHandler(handle_transfer_message, filters.text & filters.private))
     app.add_handler(CallbackQueryHandler(callback_handler))
     logger.info("[MENU] Handler menu_utama terdaftar.")
+
 
 
 
