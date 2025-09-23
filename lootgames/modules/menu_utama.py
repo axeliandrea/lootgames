@@ -437,7 +437,11 @@ async def callback_handler(client: Client, cq: CallbackQuery):
                 await cq.answer("❌ Umpan tidak cukup!", show_alert=True)
                 return
             umpan.remove_umpan(user_id, jk, 1)
-        await cq.message.edit_text(f"🎣 Kamu berhasil melempar umpan {jenis} ke kolam!")
+    
+        # Tombol kembali
+        kb_back = InlineKeyboardMarkup([[InlineKeyboardButton("⬅️ Kembali", callback_data="E")]])
+    
+        await cq.message.edit_text(f"🎣 Kamu berhasil melempar umpan {jenis} ke kolam!", reply_markup=kb_back)
 
         async def fishing_task():
             try:
@@ -448,6 +452,7 @@ async def callback_handler(client: Client, cq: CallbackQuery):
                 await client.send_message(TARGET_GROUP, f"🎣 @{uname} mendapatkan {loot_result}!")
             except Exception as e:
                 logger.error(f"Gagal fishing_task: {e}")
+
         asyncio.create_task(fishing_task())
         return
 
@@ -782,6 +787,7 @@ def register(app: Client):
     app.add_handler(MessageHandler(handle_transfer_message, filters.text & filters.private))
     app.add_handler(CallbackQueryHandler(callback_handler))
     logger.info("[MENU] Handler menu_utama terdaftar.")
+
 
 
 
