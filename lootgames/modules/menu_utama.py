@@ -23,7 +23,7 @@ MENU_STRUCTURE = {
     "main": {"title": "📋 [Menu Utama]", "buttons": [
         ("UMPAN", "A"), ("YAPPING", "B"), ("REGISTER", "C"),
         ("🛒STORE", "D"), ("FISHING", "E"),
-        ("Menu F", "F"), ("Menu G", "G")
+        ("HASIL TANGKAPAN", "F"), ("Menu G", "G")
     ]},
     # UMPAN
     "A": {"title": "📋 Menu UMPAN", "buttons": [
@@ -68,11 +68,10 @@ MENU_STRUCTURE = {
     "BBB": {"title": "📋 Leaderboard Yapping", "buttons": [("⬅️ Kembali", "B")]}
 }
 
-# MENU F Baru: HASIL TANGKAPAN
-MENU_STRUCTURE["F"] = {"title": "📋 HASIL TANGKAPAN", "buttons": [("CEK INVENTORY", "FF"), ("⬅️ Kembali", "main")]}
-MENU_STRUCTURE["FF"] = {"title": "📋 CEK INVENTORY", "buttons": [("LIHAT HASIL", "FFF"), ("⬅️ Kembali", "F")]}
-MENU_STRUCTURE["FFF"] = {"title": "📋 HASIL TANGKAPAN ANDA", "buttons": [("⬅️ Kembali", "FF")]}
-
+# HASIL TANGKAPAN
+    "F": {"title": "📋 HASIL TANGKAPAN", "buttons": [("CEK INVENTORY", "FF"), ("⬅️ Kembali", "main")]},
+    "FF": {"title": "📋 CEK INVENTORY", "buttons": [("LIHAT HASIL TANGKAPAN", "FFF"), ("⬅️ Kembali", "F")]}
+}
 
 # FISH_CONFIRM
 for jenis in ["COMMON", "RARE", "LEGEND", "MYTHIC"]:
@@ -360,4 +359,5 @@ def register(app: Client):
     app.add_handler(MessageHandler(handle_transfer_message, filters.text & filters.private))
     app.add_handler(CallbackQueryHandler(callback_handler))
     logger.info("[MENU] Handler menu_utama terdaftar.")
+
 
