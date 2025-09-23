@@ -1,14 +1,8 @@
-# lootgames/modules/menu_utama.py tester 1
+# lootgames/modules/menu_utama.py
 import logging
 import asyncio
 from pyrogram import Client, filters
-from pyrogram.types import (
-    InlineKeyboardMarkup,
-    InlineKeyboardButton,
-    CallbackQuery,
-    Message,
-)
-from pyrogram.handlers import MessageHandler, CallbackQueryHandler
+from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery, Message
 
 from lootgames.modules import yapping, umpan, user_database
 from lootgames.modules.gacha_fishing import fishing_loot
@@ -75,14 +69,14 @@ MENU_STRUCTURE = {
     "BBB": {"title": "📋 Leaderboard Yapping", "buttons": [("⬅️ Kembali", "B")]}
 }
 
-# GENERIC MENU F-G
+# GENERIC MENU F-G-H
 for l in "FGH":
     MENU_STRUCTURE[l] = {"title": f"📋 Menu {l}",
                          "buttons": [(f"Menu {l*2}", l*2), ("⬅️ Kembali", "main")]}
     MENU_STRUCTURE[l*2] = {"title": f"📋 Menu {l*2}",
-                           "buttons": [(f"Menu {l*3}", l*3), ("⬅️ Kembali", l)]}
+                            "buttons": [(f"Menu {l*3}", l*3), ("⬅️ Kembali", l)]}
     MENU_STRUCTURE[l*3] = {"title": f"📋 Menu {l*3} (Tampilan Terakhir)",
-                           "buttons": [("⬅️ Kembali", l*2)]}
+                            "buttons": [("⬅️ Kembali", l*2)]}
 
 # FISH_CONFIRM
 for jenis in ["COMMON", "RARE", "LEGEND", "MYTHIC"]:
@@ -153,24 +147,17 @@ async def callback_handler(client: Client, cq: CallbackQuery):
     logger.info(f"[DEBUG] callback -> user:{user_id}, data:{data}")
     await cq.answer()
 
-    # ---------------- REGISTER FLOW ---------------- #
+    # REGISTER
     if data == "REGISTER_YES":
         uname = cq.from_user.username or "TanpaUsername"
         text = "🎉 Selamat kamu menjadi Player Loot!"
-        kb = InlineKeyboardMarkup([
-            [InlineKeyboardButton("📇 SCAN ID & USN", callback_data="REGISTER_SCAN")],
-            [InlineKeyboardButton("⬅️ Kembali", callback_data="main")]
-        ])
+        kb = InlineKeyboardMarkup([[InlineKeyboardButton("📇 SCAN ID & USN", callback_data="REGISTER_SCAN")],
+                                   [InlineKeyboardButton("⬅️ Kembali", callback_data="main")]])
         await cq.message.edit_text(text, reply_markup=kb)
-
-        # ✅ simpan ke database user
         user_database.set_player_loot(user_id, True, uname)
-
         try:
-            await client.send_message(
-                OWNER_ID,
-                f"📢 [REGISTER] Player baru mendaftar!\n\n👤 Username: @{uname}\n🆔 User ID: {user_id}"
-            )
+            await client.send_message(OWNER_ID,
+                                      f"📢 [REGISTER] Player baru mendaftar!\n\n👤 Username: @{uname}\n🆔 User ID: {user_id}")
         except Exception as e:
             logger.error(f"Gagal kirim notif register ke owner: {e}")
         return
@@ -181,12 +168,12 @@ async def callback_handler(client: Client, cq: CallbackQuery):
         await cq.message.edit_text(text, reply_markup=make_keyboard("main", user_id))
         return
 
-    # TRANSFER START
+    # TRANSFER
     if data.startswith("TRANSFER_"):
         jenis = data.split("_")[1]
         map_jenis = {"COMMON": "A", "RARE": "B", "LEGEND": "C", "MYTHIC": "D"}
         TRANSFER_STATE[user_id] = {"jenis": map_jenis.get(jenis)}
-        await cq.message.reply("✍️ Masukkan format transfer: `@username jumlah`\n\nContoh: `@user 2`")
+        await cq.message.reply("✍️ Masukkan format transfer: `@username jumlah`\nContoh: `@user 2`")
         return
 
     # FISHING
@@ -212,6 +199,7 @@ async def callback_handler(client: Client, cq: CallbackQuery):
                 await client.send_message(TARGET_GROUP, f"🎣 @{uname} mendapatkan {loot_result}!")
             except Exception as e:
                 logger.error(f"Gagal fishing_task: {e}")
+
         asyncio.create_task(fishing_task())
         return
 
@@ -257,11 +245,9 @@ async def callback_handler(client: Client, cq: CallbackQuery):
             TUKAR_POINT_STATE.pop(user_id, None)
             return
         yapping.update_points(user_id, -jml * 100)
-        umpan.add_umpan(user_id, "A", jml)  # ✅ hanya COMMON
-
+        umpan.add_umpan(user_id, "A", jml)
         kb = InlineKeyboardMarkup([[InlineKeyboardButton("⬅️ Kembali", callback_data="D3A")]])
         await cq.message.edit_text(f"✅ Tukar berhasil! {jml} umpan COMMON 🐛 ditambahkan ke akunmu.", reply_markup=kb)
-
         TUKAR_POINT_STATE.pop(user_id, None)
         return
 
@@ -361,5 +347,3 @@ def register(app: Client):
     app.add_handler(MessageHandler(handle_transfer_message, filters.text & filters.private))
     app.add_handler(CallbackQueryHandler(callback_handler))
     logger.info("[MENU] Handler menu_utama terdaftar.")
-
-
