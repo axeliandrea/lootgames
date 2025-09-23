@@ -7,7 +7,7 @@ from pyrogram.handlers import MessageHandler, CallbackQueryHandler
 
 from lootgames.modules import yapping, umpan, user_database
 from lootgames.modules.gacha_fishing import fishing_loot
-from lootgames.modules import aquarium  # <-- import aquarium
+from lootgames.modules import aquarium  # import aquarium
 
 logger = logging.getLogger(__name__)
 OWNER_ID = 6395738130
@@ -22,8 +22,8 @@ OPEN_MENU_STATE = {}      # user_id: True jika menu aktif
 MENU_STRUCTURE = {
     "main": {"title": "📋 [Menu Utama]", "buttons": [
         ("UMPAN", "A"), ("YAPPING", "B"), ("REGISTER", "C"),
-        ("🛒STORE", "D"), ("HASIL TANGKAPAN", "F"),
-        ("Menu G", "G")
+        ("🛒STORE", "D"), ("FISHING", "E"),
+        ("HASIL TANGKAPAN", "G"), ("Menu F", "F")
     ]},
     # UMPAN
     "A": {"title": "📋 Menu UMPAN", "buttons": [
@@ -67,8 +67,8 @@ MENU_STRUCTURE = {
     "BB": {"title": "📋 Poin Pribadi", "buttons": [("⬅️ Kembali", "B")]},
     "BBB": {"title": "📋 Leaderboard Yapping", "buttons": [("⬅️ Kembali", "B")]},
     # HASIL TANGKAPAN
-    "F": {"title": "📋 HASIL TANGKAPAN", "buttons": [("CEK INVENTORY", "FF"), ("⬅️ Kembali", "main")]},
-    "FF": {"title": "📋 CEK INVENTORY", "buttons": [("LIHAT HASIL TANGKAPAN", "FFF"), ("⬅️ Kembali", "F")]}
+    "G": {"title": "📋 HASIL TANGKAPAN", "buttons": [("CEK INVENTORY", "GG"), ("⬅️ Kembali", "main")]},
+    "GG": {"title": "📋 CEK INVENTORY", "buttons": [("Tampilkan Hasil Tangkapanku", "GGG"), ("⬅️ Kembali", "G")]}
 }
 
 # FISH_CONFIRM
@@ -127,10 +127,11 @@ def make_keyboard(menu_key: str, user_id=None, page: int = 0) -> InlineKeyboardM
         buttons.append([InlineKeyboardButton(f"TUKAR 🔄 UMPAN COMMON 🐛 (Anda: {pts} pts)", callback_data="TUKAR_POINT")])
         buttons.append([InlineKeyboardButton("⬅️ Kembali", callback_data="D3")])
 
-    # CEK INVENTORY
-    elif menu_key == "FFF" and user_id:
-        inventory_text = aquarium.list_inventory(user_id)
-        buttons.append([InlineKeyboardButton("⬅️ Kembali", callback_data="FF")])
+    # HASIL TANGKAPAN PER USER
+    elif menu_key == "GGG" and user_id:
+        inv_text = aquarium.list_inventory(user_id)
+        buttons.append([InlineKeyboardButton("⬅️ Kembali", callback_data="GG")])
+        # tampilkan inventory di message edit nanti
 
     # DEFAULT
     else:
@@ -170,7 +171,7 @@ async def callback_handler(client: Client, cq: CallbackQuery):
         await cq.message.edit_text(text, reply_markup=make_keyboard("main", user_id))
         return
 
-    # ---------------- FISHING ---------------- #
+    # FISHING CONFIRM
     if data.startswith("FISH_CONFIRM_"):
         jenis = data.replace("FISH_CONFIRM_", "")
         jenis_map = {"COMMON": "A", "RARE": "B", "LEGEND": "C", "MYTHIC": "D"}
@@ -189,7 +190,6 @@ async def callback_handler(client: Client, cq: CallbackQuery):
                 await asyncio.sleep(2)
                 await client.send_message(TARGET_GROUP, f"🎣 @{uname} sedang memancing...")
                 loot_result = await fishing_loot(client, None, uname, user_id, umpan_type=jenis)
-                aquarium.add_fish(user_id, loot_result)  # simpan hasil tangkapan di aquarium
                 await asyncio.sleep(15)
                 await client.send_message(TARGET_GROUP, f"🎣 @{uname} mendapatkan {loot_result}!")
             except Exception as e:
@@ -221,35 +221,10 @@ async def callback_handler(client: Client, cq: CallbackQuery):
         await show_leaderboard(cq, user_id, 0)
         return
 
-    # TUKAR POINT
-    if data == "TUKAR_POINT":
-        TUKAR_POINT_STATE[user_id] = {"step": 1, "jumlah_umpan": 0}
-        await cq.message.reply("Masukkan jumlah umpan COMMON 🐛 yang ingin ditukar (100 poin = 1 umpan):")
-        return
-
-    if data == "TUKAR_CONFIRM":
-        info = TUKAR_POINT_STATE.get(user_id)
-        if not info or info.get("step") != 2:
-            await cq.answer("❌ Proses tidak valid.", show_alert=True)
-            return
-        jml = info["jumlah_umpan"]
-        pts = yapping.load_points().get(str(user_id), {}).get("points", 0)
-        if pts < jml * 100:
-            await cq.answer("❌ Point tidak cukup.", show_alert=True)
-            TUKAR_POINT_STATE.pop(user_id, None)
-            return
-        yaping.update_points(user_id, -jml * 100)
-        umpan.add_umpan(user_id, "A", jml)  # ✅ hanya COMMON
-        kb = InlineKeyboardMarkup([[InlineKeyboardButton("⬅️ Kembali", callback_data="D3A")]])
-        await cq.message.edit_text(f"✅ Tukar berhasil! {jml} umpan COMMON 🐛 ditambahkan ke akunmu.", reply_markup=kb)
-        TUKAR_POINT_STATE.pop(user_id, None)
-        return
-
-    # CEK INVENTORY
-    if data == "FFF":
+    # HASIL INVENTORY
+    if data == "GGG":
         inv_text = aquarium.list_inventory(user_id)
-        kb = make_keyboard("FFF", user_id)
-        await cq.message.edit_text(f"🎣 Inventorymu:\n\n{inv_text}", reply_markup=kb)
+        await cq.message.edit_text(f"📦 Inventory kamu:\n\n{inv_text}", reply_markup=make_keyboard("GGG", user_id))
         return
 
     # NAVIGASI MENU
@@ -298,7 +273,7 @@ async def handle_transfer_message(client: Client, message: Message):
             await message.reply(f"❌ Error: {e}")
         TRANSFER_STATE.pop(uid, None)
         return
-        
+
     # TUKAR POINT
     if TUKAR_POINT_STATE.get(uid):
         step = TUKAR_POINT_STATE[uid].get("step", 0)
@@ -355,4 +330,3 @@ def register(app: Client):
     app.add_handler(MessageHandler(handle_transfer_message, filters.text & filters.private))
     app.add_handler(CallbackQueryHandler(callback_handler))
     logger.info("[MENU] Handler menu_utama terdaftar.")
-   
