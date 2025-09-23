@@ -1,6 +1,6 @@
 import os
 import logging
-from pyrogram import Client, filters  # ✅ filters sudah diimport
+from pyrogram import Client, filters
 from lootgames.modules import (
     treasure_chest,
     yapping,
@@ -39,7 +39,7 @@ async def _debug_all_messages(client, message):
         print("[ALL MSG][ERR]", e)
 
 # ================= REGISTER MODULES ================= #
-print("[MAIN] Mendaftarkan modules (treasure_chest sebelum yapping)...")
+print("[MAIN] Mendaftarkan modules...")
 treasure_chest.register(app)  # prioritas command private
 yapping.register(app)
 menu_utama.register(app)
@@ -53,7 +53,17 @@ os.makedirs("storage", exist_ok=True)
 # ================= START BOT ================= #
 print("[MAIN] Bot starting...")
 
-# Notifikasi ke owner via command /start
+# ================= TEST HANDLER TREASURECHEST ================= #
+@app.on_message()
+async def test_treasure_command(client, message):
+    if message.text and message.text.strip() == ".treasurechest":
+        try:
+            await client.send_message(-1002946278772, "TEST CHEST - pesan ke group")
+            await message.reply("✅ TEST CHEST dikirim ke group!")
+        except Exception as e:
+            await message.reply(f"❌ Gagal kirim TEST CHEST: {e}")
+
+# ================= OWNER START COMMAND ================= #
 @app.on_message(filters.private & filters.user(OWNER_ID) & filters.command("start", prefixes=["/"]))
 async def notify_owner(client, message):
     try:
@@ -61,5 +71,5 @@ async def notify_owner(client, message):
     except Exception as e:
         logger.error(f"Gagal kirim notifikasi start ke owner: {e}")
 
-# Jalankan bot
+# ================= RUN BOT ================= #
 app.run()
