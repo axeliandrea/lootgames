@@ -11,9 +11,9 @@ logger = logging.getLogger(__name__)
 # ---------------- LOOT TABLE ---------------- #
 FISH_LOOT = {
     "🤧 Zonk": 90,
-    "𓆝 Small Fish": 15,
-    "🐌 snail": 10,
-    "🐙 octopus": 5,   
+    "𓆝 Small Fish": 10,
+    "🐌 snail": 5,
+    "🐙 octopus": 2,   
     "🐡 Pufferfish": 1
 }
 
