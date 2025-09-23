@@ -419,17 +419,18 @@ async def callback_handler(client: Client, cq: CallbackQuery):
 
     # CHECK COIN Fizz
     if data == "D2C":
-        user_id = cq.from_user.id
-        total_coin = fizz_coin.get_coin(user_id)
-        # buat text baru
-        text = f"💰 Total coinmu saat ini: {total_coin} fizz coin"
-
-        # Cek apakah text sama dengan pesan sekarang, jika sama tambahkan invisible char supaya aman
-        if cq.message.text == text:
-            text += "\u200b"  # zero-width space untuk memaksa edit
-            
-        kb = make_keyboard("D2", user_id)  # tombol kembali ke menu SELL ITEM
+        uid = cq.from_user.id
         try:
+            # load langsung dari DB
+            user_id = cq.from_user.id
+            total_coin = fizz_coin.get_coin(user_id)
+            text = f"💰 Total coinmu saat ini: {total_coin} fizz coin"
+
+            # Cek apakah text sama dengan pesan sekarang, jika sama tambahkan invisible char supaya aman
+            if cq.message.text == text:
+                text += "\u200b"  # zero-width space untuk memaksa edit
+            
+            kb = make_keyboard("D2", user_id)  # tombol kembali ke menu SELL ITEM
             await cq.message.edit_text(text, reply_markup=kb)
         except Exception as e:
             # fallback aman jika tetap gagal edit
@@ -793,6 +794,7 @@ def register(app: Client):
     app.add_handler(MessageHandler(handle_transfer_message, filters.text & filters.private))
     app.add_handler(CallbackQueryHandler(callback_handler))
     logger.info("[MENU] Handler menu_utama terdaftar.")
+
 
 
 
