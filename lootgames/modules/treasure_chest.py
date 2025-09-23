@@ -32,9 +32,13 @@ def save_lucky(data):
         json.dump(data, f, indent=2)
 
 # ================= HANDLERS ================= #
-@Client.on_message(filters.command("treasurechest", ".") & filters.user(OWNER_ID) & filters.private)
 async def spawn_chest(client: Client, message: Message):
     """Owner spawn treasure chest ke group target"""
+    if message.from_user.id != OWNER_ID:
+        return await message.reply_text("❌ Kamu tidak memiliki izin menggunakan command ini.")
+    if message.chat.type != "private":
+        return await message.reply_text("⚠️ Command ini hanya bisa dipakai di private chat.")
+
     btn = InlineKeyboardMarkup(
         [[InlineKeyboardButton("🎁 TREASURE CHEST 🎁", callback_data="open_chest")]]
     )
@@ -48,7 +52,6 @@ async def spawn_chest(client: Client, message: Message):
     await message.reply_text("✅ Treasure Chest berhasil dikirim ke group target.")
     log_debug("Treasure chest spawned.")
 
-@Client.on_callback_query(filters.regex("^open_chest$"))
 async def open_chest(client: Client, cq: CallbackQuery):
     """User klik tombol chest"""
     user = cq.from_user
@@ -78,3 +81,15 @@ async def open_chest(client: Client, cq: CallbackQuery):
     # Kirim hasil ke user
     await cq.answer(result, show_alert=True)
     log_debug(f"{user.id} opened chest → {result}")
+
+# ================= REGISTER ================= #
+def register(app: Client):
+    app.add_handler(
+        filters.command("treasurechest", prefixes=["."]) & filters.private,
+        spawn_chest,
+    )
+    app.add_handler(
+        filters.callback_query("open_chest"),
+        open_chest,
+    )
+    log_debug("Handler treasure_chest terdaftar ✅")
