@@ -76,14 +76,14 @@ MENU_STRUCTURE = {
     "BBB": {"title": "📋 Leaderboard Yapping", "buttons": [("⬅️ Kembali", "B")]}
 }
 
-# GENERIC MENU F-G
+# GENERIC MENU F-G-H
 for l in "FGH":
     MENU_STRUCTURE[l] = {"title": f"📋 Menu {l}",
                          "buttons": [(f"Menu {l*2}", l*2), ("⬅️ Kembali", "main")]}
     MENU_STRUCTURE[l*2] = {"title": f"📋 Menu {l*2}",
-                           "buttons": [(f"Menu {l*3}", l*3), ("⬅️ Kembali", l)]}
+                            "buttons": [(f"Menu {l*3}", l*3), ("⬅️ Kembali", l)]}
     MENU_STRUCTURE[l*3] = {"title": f"📋 Menu {l*3} (Tampilan Terakhir)",
-                           "buttons": [("⬅️ Kembali", l*2)]}
+                            "buttons": [("⬅️ Kembali", l*2)]}
 
 # FISH_CONFIRM
 for jenis in ["COMMON", "RARE", "LEGEND", "MYTHIC"]:
@@ -110,7 +110,7 @@ def make_keyboard(menu_key: str, user_id=None, page: int = 0) -> InlineKeyboardM
             buttons.append(nav)
         buttons.append([InlineKeyboardButton("⬅️ Kembali", callback_data="B")])
 
-    # MENU UMPAN
+    # MENU UMPAN TRANSFER
     elif menu_key in ["A", "AA_COMMON", "AA_RARE", "AA_LEGEND", "AA_MYTHIC"] and user_id:
         user_umpan = umpan.get_user(user_id) or {"A": {"umpan": 0}, "B": {"umpan": 0},
                                                  "C": {"umpan": 0}, "D": {"umpan": 0}}
@@ -154,15 +154,14 @@ async def callback_handler(client: Client, cq: CallbackQuery):
     logger.info(f"[DEBUG] callback -> user:{user_id}, data:{data}")
     await cq.answer()
 
-    # ---------------- REGISTER FLOW ---------------- #
+    # REGISTER FLOW
     if data == "REGISTER_YES":
         uname = cq.from_user.username or "TanpaUsername"
         text = "🎉 Selamat kamu menjadi Player Loot!"
-        kb = InlineKeyboardMarkup([[
-            InlineKeyboardButton("📇 SCAN ID & USN", callback_data="REGISTER_SCAN")
-        ], [
-            InlineKeyboardButton("⬅️ Kembali", callback_data="main")
-        ]])
+        kb = InlineKeyboardMarkup([
+            [InlineKeyboardButton("📇 SCAN ID & USN", callback_data="REGISTER_SCAN")],
+            [InlineKeyboardButton("⬅️ Kembali", callback_data="main")]
+        ])
         await cq.message.edit_text(text, reply_markup=kb)
         user_database.set_player_loot(user_id, True, uname)
         try:
@@ -211,6 +210,7 @@ async def callback_handler(client: Client, cq: CallbackQuery):
                 await client.send_message(TARGET_GROUP, f"🎣 @{uname} mendapatkan {loot_result}!")
             except Exception as e:
                 logger.error(f"Gagal fishing_task: {e}")
+
         asyncio.create_task(fishing_task())
         return
 
@@ -255,7 +255,7 @@ async def callback_handler(client: Client, cq: CallbackQuery):
             await cq.answer("❌ Point tidak cukup.", show_alert=True)
             TUKAR_POINT_STATE.pop(user_id, None)
             return
-        yapping.update_points(user_id, -jml * 100)
+        yaping.update_points(user_id, -jml * 100)
         umpan.add_umpan(user_id, "A", jml)
         kb = InlineKeyboardMarkup([[InlineKeyboardButton("⬅️ Kembali", callback_data="D3A")]])
         await cq.message.edit_text(f"✅ Tukar berhasil! {jml} umpan COMMON 🐛 ditambahkan ke akunmu.", reply_markup=kb)
