@@ -580,8 +580,9 @@ async def callback_handler(client: Client, cq: CallbackQuery):
             return
 
         earned = amount * item["price"]
-    # NOTE: belum menambahkan coin ke wallet (belum ada fizz_coin module) — hanya notifikasi
-    await query.message.reply_text(
+ 
+# NOTE: belum menambahkan coin ke wallet (belum ada fizz_coin module) — hanya notifikasi
+await query.message.reply_text(
     f"✅ Berhasil menjual {amount}x {item['name']}.\n"
     f"Kamu mendapatkan {earned} coin fizz (simulasi).\n"
     f"Sisa stok {item['name']}: {new_stock}",
@@ -591,7 +592,7 @@ async def callback_handler(client: Client, cq: CallbackQuery):
         ]
     )
 )
-    return
+return
 
     if data == "SELL_CANCEL":
         SELL_WAITING.pop(user_id, None)
@@ -771,6 +772,7 @@ def register(app: Client):
     app.add_handler(MessageHandler(handle_transfer_message, filters.text & filters.private))
     app.add_handler(CallbackQueryHandler(callback_handler))
     logger.info("[MENU] Handler menu_utama terdaftar.")
+
 
 
 
