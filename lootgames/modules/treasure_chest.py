@@ -1,5 +1,6 @@
 # lootgames/modules/treasure_chest.py
 import os
+import json
 import random
 import asyncio
 from datetime import datetime
@@ -24,14 +25,19 @@ async def spawn_chest(client: Client, message: Message):
     """Owner spawn treasure chest ke group target"""
     log_debug(f"Command '.treasurechest' diterima dari user {message.from_user.id} di chat {message.chat.id} ({message.chat.type})")
 
+    # Cek owner
     if message.from_user.id != OWNER_ID:
-        log_debug("❌ Bukan owner, command ditolak")
-        return await message.reply_text("❌ Kamu tidak memiliki izin menggunakan command ini.")
+        await message.reply_text("❌ Kamu tidak memiliki izin menggunakan command ini.")
+        log_debug(f"User {message.from_user.id} bukan owner. Command diblokir.")
+        return
 
+    # Cek private chat
     if message.chat.type != "private":
-        log_debug("⚠️ Bukan private chat, command ditolak")
-        return await message.reply_text("⚠️ Command ini hanya bisa dipakai di private chat ke bot.")
+        await message.reply_text("⚠️ Command ini hanya bisa dipakai di private chat ke bot.")
+        log_debug(f"Command dijalankan bukan di private chat. chat_type={message.chat.type}")
+        return
 
+    # Kirim treasure chest
     btn = InlineKeyboardMarkup(
         [[InlineKeyboardButton("🎁 TREASURE CHEST 🎁", callback_data="open_chest")]]
     )
@@ -43,16 +49,15 @@ async def spawn_chest(client: Client, message: Message):
         reply_markup=btn
     )
     await message.reply_text("✅ Treasure Chest berhasil dikirim ke group target.")
-    log_debug("Treasure chest spawned.")
+    log_debug("Treasure chest spawned ke group target.")
 
 async def open_chest(client: Client, cq: CallbackQuery):
     """User klik tombol chest"""
     user = cq.from_user
-    log_debug(f"User {user.id} menekan tombol chest di message {cq.message.id}")
+    log_debug(f"Callback 'open_chest' ditekan oleh user {user.id} ({user.username})")
 
     await asyncio.sleep(1)  # Anti-flood delay
     roll = random.randint(1, 100)
-    log_debug(f"Random roll: {roll}")
 
     if roll <= 90:
         result = "ZONK ❌ (tidak dapat apa-apa)"
