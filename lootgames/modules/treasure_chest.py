@@ -9,8 +9,11 @@ logger = logging.getLogger(__name__)
 OWNER_ID = 6395738130
 TARGET_GROUP = -1002946278772  # ID grup target
 
+
 def register(app):
-    @app.on_message(filters.private & filters.user(OWNER_ID) & filters.regex(r"^\.treasurechest$"))
+    logger.info("[CHEST] Registering treasure_chest module...")
+
+    @app.on_message(filters.private & filters.user(OWNER_ID) & filters.command("treasurechest", prefixes=["."]))
     async def treasure_handler(client, message):
         try:
             # Step 1: notify owner preparing
@@ -38,3 +41,9 @@ def register(app):
             err = f"[CHEST] Error: {e}"
             logger.error(err)
             await message.reply(f"❌ Gagal kirim chest:\n`{e}`")
+
+    @app.on_callback_query(filters.regex("^open_treasure$"))
+    async def chest_callback(client, callback_query):
+        user = callback_query.from_user
+        logger.info(f"[CHEST] {user.id} klik chest!")
+        await callback_query.answer("🎉 Kamu buka chest... (reward system menyusul)", show_alert=True)
