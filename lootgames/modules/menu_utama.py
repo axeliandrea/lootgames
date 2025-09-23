@@ -177,6 +177,7 @@ MENU_STRUCTURE = {
     "D2": {
         "title": "📋 SELL ITEM",
         "buttons": [
+            ("💰 CEK COIN", "D2C"),
             ("📦 CEK INVENTORY", "D2A"),
             ("💰 DAFTAR HARGA", "D2B"),
             ("⬅️ Kembali", "D")
@@ -772,4 +773,5 @@ def register(app: Client):
     app.add_handler(MessageHandler(handle_transfer_message, filters.text & filters.private))
     app.add_handler(CallbackQueryHandler(callback_handler))
     logger.info("[MENU] Handler menu_utama terdaftar.")
+
 
