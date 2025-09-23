@@ -1,9 +1,9 @@
 # lootgames/__main__.py
+from lootgames.modules.umpan import register_topup
 import asyncio
 import logging
 import os
 from pyrogram import Client
-from lootgames.modules.umpan import register_topup
 from pyrogram.handlers import CallbackQueryHandler
 
 # Import semua modules
@@ -44,6 +44,7 @@ yapping.register(app)
 menu_utama.register(app)
 user_database.register(app)
 treasure_chest.register(app)   # <<=== REGISTER TREASURE CHEST
+register_topup(app)
 # Tambahkan modul lain jika ada
 # aquarium.register(app)
 # gacha_fishing.register(app)
@@ -108,5 +109,6 @@ if __name__ == "__main__":
         pass
 
     asyncio.run(main())
+
 
 
