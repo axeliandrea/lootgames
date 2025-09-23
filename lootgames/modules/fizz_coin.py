@@ -1,3 +1,4 @@
+#lootgames/modules/fizz_coin.py
 import json
 import os
 import threading
