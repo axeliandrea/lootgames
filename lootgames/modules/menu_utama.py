@@ -7,7 +7,6 @@ from pyrogram.handlers import MessageHandler, CallbackQueryHandler
 
 from lootgames.modules import yapping, umpan, user_database
 from lootgames.modules.gacha_fishing import fishing_loot
-from lootgames.modules import aquarium
 
 logger = logging.getLogger(__name__)
 OWNER_ID = 6395738130
@@ -22,8 +21,8 @@ OPEN_MENU_STATE = {}      # user_id: True jika menu aktif
 MENU_STRUCTURE = {
     "main": {"title": "📋 [Menu Utama]", "buttons": [
         ("UMPAN", "A"), ("YAPPING", "B"), ("REGISTER", "C"),
-        ("🛒STORE", "D"), ("HASIL TANGKAPAN", "F"),
-        ("Menu G", "G")
+        ("🛒STORE", "D"), ("FISHING", "E"),
+        ("Menu F", "F"), ("Menu G", "G")
     ]},
     # UMPAN
     "A": {"title": "📋 Menu UMPAN", "buttons": [
@@ -65,11 +64,17 @@ MENU_STRUCTURE = {
     # YAPPING
     "B": {"title": "📋 YAPPING", "buttons": [("Poin Pribadi", "BB"), ("➡️ Leaderboard", "BBB"), ("⬅️ Kembali", "main")]},
     "BB": {"title": "📋 Poin Pribadi", "buttons": [("⬅️ Kembali", "B")]},
-    "BBB": {"title": "📋 Leaderboard Yapping", "buttons": [("⬅️ Kembali", "B")]},
-    # HASIL TANGKAPAN
-    "F": {"title": "📋 HASIL TANGKAPAN", "buttons": [("CEK INVENTORY", "FF"), ("⬅️ Kembali", "main")]},
-    "FF": {"title": "📋 CEK INVENTORY", "buttons": [("LIHAT HASIL TANGKAPAN", "FFF"), ("⬅️ Kembali", "F")]}
+    "BBB": {"title": "📋 Leaderboard Yapping", "buttons": [("⬅️ Kembali", "B")]}
 }
+
+# GENERIC MENU F-G
+for l in "FGH":
+    MENU_STRUCTURE[l] = {"title": f"📋 Menu {l}",
+                         "buttons": [(f"Menu {l*2}", l*2), ("⬅️ Kembali", "main")]}
+    MENU_STRUCTURE[l*2] = {"title": f"📋 Menu {l*2}",
+                           "buttons": [(f"Menu {l*3}", l*3), ("⬅️ Kembali", l)]}
+    MENU_STRUCTURE[l*3] = {"title": f"📋 Menu {l*3} (Tampilan Terakhir)",
+                           "buttons": [("⬅️ Kembali", l*2)]}
 
 # FISH_CONFIRM
 for jenis in ["COMMON", "RARE", "LEGEND", "MYTHIC"]:
@@ -98,7 +103,8 @@ def make_keyboard(menu_key: str, user_id=None, page: int = 0) -> InlineKeyboardM
 
     # MENU UMPAN
     elif menu_key in ["A", "AA_COMMON", "AA_RARE", "AA_LEGEND", "AA_MYTHIC"] and user_id:
-        user_umpan = umpan.get_user(user_id) or {k: {"umpan": 0} for k in ["A", "B", "C", "D"]}
+        user_umpan = umpan.get_user(user_id) or {"A": {"umpan": 0}, "B": {"umpan": 0},
+                                                 "C": {"umpan": 0}, "D": {"umpan": 0}}
         type_map = {"AA_COMMON": "A", "AA_RARE": "B", "AA_LEGEND": "C", "AA_MYTHIC": "D"}
         for text, cb in MENU_STRUCTURE.get(menu_key, {}).get("buttons", []):
             if cb.startswith("TRANSFER_"):
@@ -109,9 +115,10 @@ def make_keyboard(menu_key: str, user_id=None, page: int = 0) -> InlineKeyboardM
 
     # FISHING PILIH UMPAN
     elif menu_key == "EEE" and user_id:
-        user_umpan = umpan.get_user(user_id) or {k: {"umpan": 0} for k in ["A", "B", "C", "D"]}
+        user_umpan = umpan.get_user(user_id) or {"A": {"umpan": 0}, "B": {"umpan": 0},
+                                                 "C": {"umpan": 0}, "D": {"umpan": 0}}
         if user_id == OWNER_ID:
-            user_umpan = {k: {"umpan": 999} for k in ["A", "B", "C", "D"]}
+            user_umpan = {"A": {"umpan": 999}, "B": {"umpan": 999}, "C": {"umpan": 999}, "D": {"umpan": 999}}
         map_type = {"EEE_COMMON": ("COMMON 🐛", "A"), "EEE_RARE": ("RARE 🐌", "B"),
                     "EEE_LEGEND": ("LEGENDARY 🧇", "C"), "EEE_MYTHIC": ("MYTHIC 🐟", "D")}
         for cb, (label, tkey) in map_type.items():
@@ -124,11 +131,6 @@ def make_keyboard(menu_key: str, user_id=None, page: int = 0) -> InlineKeyboardM
         pts = yapping.load_points().get(str(user_id), {}).get("points", 0)
         buttons.append([InlineKeyboardButton(f"TUKAR 🔄 UMPAN COMMON 🐛 (Anda: {pts} pts)", callback_data="TUKAR_POINT")])
         buttons.append([InlineKeyboardButton("⬅️ Kembali", callback_data="D3")])
-
-    # CEK INVENTORY
-    elif menu_key == "FFF" and user_id:
-        inventory_text = aquarium.list_inventory(user_id)
-        buttons.append([InlineKeyboardButton("⬅️ Kembali", callback_data="FF")])
 
     # DEFAULT
     else:
@@ -143,7 +145,7 @@ async def callback_handler(client: Client, cq: CallbackQuery):
     logger.info(f"[DEBUG] callback -> user:{user_id}, data:{data}")
     await cq.answer()
 
-    # REGISTER FLOW
+    # ---------------- REGISTER FLOW ---------------- #
     if data == "REGISTER_YES":
         uname = cq.from_user.username or "TanpaUsername"
         text = "🎉 Selamat kamu menjadi Player Loot!"
@@ -154,7 +156,10 @@ async def callback_handler(client: Client, cq: CallbackQuery):
         await cq.message.edit_text(text, reply_markup=kb)
         user_database.set_player_loot(user_id, True, uname)
         try:
-            await client.send_message(OWNER_ID, f"📢 [REGISTER] Player baru mendaftar!\n\n👤 Username: @{uname}\n🆔 User ID: {user_id}")
+            await client.send_message(
+                OWNER_ID,
+                f"📢 [REGISTER] Player baru mendaftar!\n\n👤 Username: @{uname}\n🆔 User ID: {user_id}"
+            )
         except Exception as e:
             logger.error(f"Gagal kirim notif register ke owner: {e}")
         return
@@ -165,7 +170,15 @@ async def callback_handler(client: Client, cq: CallbackQuery):
         await cq.message.edit_text(text, reply_markup=make_keyboard("main", user_id))
         return
 
-    # FISHING FLOW
+    # TRANSFER START
+    if data.startswith("TRANSFER_"):
+        jenis = data.split("_")[1]
+        map_jenis = {"COMMON": "A", "RARE": "B", "LEGEND": "C", "MYTHIC": "D"}
+        TRANSFER_STATE[user_id] = {"jenis": map_jenis.get(jenis)}
+        await cq.message.reply("✍️ Masukkan format transfer: `@username jumlah`\nContoh: `@user 2`")
+        return
+
+    # FISHING
     if data.startswith("FISH_CONFIRM_"):
         jenis = data.replace("FISH_CONFIRM_", "")
         jenis_map = {"COMMON": "A", "RARE": "B", "LEGEND": "C", "MYTHIC": "D"}
@@ -184,12 +197,10 @@ async def callback_handler(client: Client, cq: CallbackQuery):
                 await asyncio.sleep(2)
                 await client.send_message(TARGET_GROUP, f"🎣 @{uname} sedang memancing...")
                 loot_result = await fishing_loot(client, None, uname, user_id, umpan_type=jenis)
-                aquarium.add_fish(user_id, loot_result)
                 await asyncio.sleep(15)
                 await client.send_message(TARGET_GROUP, f"🎣 @{uname} mendapatkan {loot_result}!")
             except Exception as e:
                 logger.error(f"Gagal fishing_task: {e}")
-
         asyncio.create_task(fishing_task())
         return
 
@@ -235,17 +246,10 @@ async def callback_handler(client: Client, cq: CallbackQuery):
             TUKAR_POINT_STATE.pop(user_id, None)
             return
         yapping.update_points(user_id, -jml * 100)
-        umpan.add_umpan(user_id, "A", jml)
+        umpan.add_umpan(user_id, "A", jml)  # ✅ hanya COMMON
         kb = InlineKeyboardMarkup([[InlineKeyboardButton("⬅️ Kembali", callback_data="D3A")]])
         await cq.message.edit_text(f"✅ Tukar berhasil! {jml} umpan COMMON 🐛 ditambahkan ke akunmu.", reply_markup=kb)
         TUKAR_POINT_STATE.pop(user_id, None)
-        return
-
-    # CEK INVENTORY
-    if data == "FFF":
-        inv_text = aquarium.list_inventory(user_id)
-        kb = make_keyboard("FFF", user_id)
-        await cq.message.edit_text(f"🎣 Inventorymu:\n\n{inv_text}", reply_markup=kb)
         return
 
     # NAVIGASI MENU
@@ -284,7 +288,8 @@ async def handle_transfer_message(client: Client, message: Message):
                     return await message.reply("❌ Umpan tidak cukup!")
                 umpan.remove_umpan(uid, jenis, amt)
                 umpan.add_umpan(rid, jenis, amt)
-            await message.reply(f"✅ Transfer {amt} umpan ke {rname} berhasil!", reply_markup=make_keyboard("main", uid))
+            await message.reply(f"✅ Transfer {amt} umpan ke {rname} berhasil!",
+                                reply_markup=make_keyboard("main", uid))
             try:
                 await client.send_message(rid, f"🎁 Kamu mendapat {amt} umpan dari @{uname}")
             except Exception as e:
