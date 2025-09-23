@@ -1,6 +1,7 @@
 # lootgames/modules/menu_utama.py
 import logging
 import asyncio
+import re
 from pyrogram import Client, filters
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery, Message
 from pyrogram.handlers import MessageHandler, CallbackQueryHandler
@@ -35,7 +36,23 @@ ITEM_PRICES = {
 # sementara user -> item_code waiting for amount input (chat)
 SELL_WAITING = {}  # user_id: item_code
 
-# ---------------- MENU STRUCTURE ---------------- #
+# Optional aliases: jika DB berisi emoji atau variasi penulisan,
+# kita bisa map nama yang sering muncul ke bentuk canonical.
+INV_KEY_ALIASES = {
+    "🧺 ember pecah": "Ember Pecah",
+    "ember pecah": "Ember Pecah",
+    "🦀 crab": "Crab",
+    "crab": "Crab",
+    "🐢 turtle": "Turtle",
+    "turtle": "Turtle",
+    "🐌 snail": "Snail",
+    "snail": "Snail",
+    "🐙 octopus": "Octopus",
+    "octopus": "Octopus",
+    # tambahkan sesuai kebutuhan
+}
+
+# ---------------- KEYBOARD / MENU STRUCTURE ---------------- #
 MENU_STRUCTURE = {
     # MAIN MENU
     "main": {
@@ -252,6 +269,46 @@ for jenis in ["COMMON", "RARE", "LEGEND", "MYTHIC"]:
         ]
     }
 
+# ---------------- Helper untuk normalisasi key ---------------- #
+
+def normalize_key(key: str) -> str:
+    """
+    Normalisasi nama item dari inventory agar cocok dengan inv_key.
+    - Lowercase
+    - Hilangkan emoji dan karakter non-alnum (kecuali spasi)
+    - Trim spasi berlebih
+    """
+    if not isinstance(key, str):
+        return ""
+    # ubah ke lowercase
+    s = key.strip().lower()
+    # replace non-alphanumeric (tetap simpan spasi)
+    s = re.sub(r"[^0-9a-z\s]", "", s)
+    # collapse multiple spaces
+    s = re.sub(r"\s+", " ", s)
+    return s.strip()
+
+
+def canonical_inv_key_from_any(key: str) -> str:
+    """Coba konversi nama key inventory (dari DB) menjadi bentuk canonical yang dipakai di ITEM_PRICES.
+    Menggunakan INV_KEY_ALIASES dulu, jika tidak ditemukan, coba normalisasi dan cocokkan dengan
+    semua ITEM_PRICES inv_key yang dinormalisasi.
+    """
+    if not key:
+        return ""
+    norm = normalize_key(key)
+    # cek aliases
+    if norm in INV_KEY_ALIASES:
+        return INV_KEY_ALIASES[norm]
+
+    # coba match dengan inv_key pada ITEM_PRICES
+    for cfg in ITEM_PRICES.values():
+        canon = cfg.get("inv_key")
+        if normalize_key(canon) == norm:
+            return canon
+    # fallback - return original key (caller harus tetap handle absence)
+    return key
+
 # ---------------- KEYBOARD BUILDER ---------------- #
 def make_keyboard(menu_key: str, user_id=None, page: int = 0) -> InlineKeyboardMarkup:
     buttons = []
@@ -260,7 +317,7 @@ def make_keyboard(menu_key: str, user_id=None, page: int = 0) -> InlineKeyboardM
     if menu_key == "BBB" and user_id:
         points = yapping.load_points()
         sorted_pts = sorted(points.items(), key=lambda x: x[1]["points"], reverse=True)
-        total_pages = (len(sorted_pts) - 1) // 10 if len(sorted_pts) > 0 else 0
+        total_pages = max((len(sorted_pts) - 1) // 10, 0) if len(sorted_pts) > 0 else 0
         nav = []
         if page > 0:
             nav.append(InlineKeyboardButton("⬅️ Prev", callback_data=f"BBB_PAGE_{page-1}"))
@@ -478,10 +535,30 @@ async def callback_handler(client: Client, cq: CallbackQuery):
             await cq.answer("Item tidak ditemukan.", show_alert=True)
             return
 
-        # load DB, cek stok
+        # load DB, cek stok (menggunakan normalisasi key)
         db = aquarium.load_data()
         user_inv = db.get(str(user_id), {}) or {}
-        stock = user_inv.get(item["inv_key"], 0)
+        # buat mapping normalized_key -> (orig_key, value)
+        normalized_inv = {}
+        for k, v in user_inv.items():
+            norm = normalize_key(k)
+            normalized_inv[norm] = (k, v)
+
+        target_norm = normalize_key(item["inv_key"])  # normalisasi inv_key
+        # cek alias mapping juga
+        canon_key = None
+        if target_norm in normalized_inv:
+            canon_key, stock = normalized_inv[target_norm]
+        else:
+            # coba cari lewat INV_KEY_ALIASES dan perbandingan terhadap normalized ITEM_PRICES
+            # attempt: match any inventory key to this item
+            stock = 0
+            for orig_k, val in user_inv.items():
+                if canonical_inv_key_from_any(orig_k) == item["inv_key"]:
+                    canon_key = orig_k
+                    stock = val
+                    break
+
         if amount <= 0 or amount > stock:
             await cq.answer("Stok tidak cukup atau jumlah salah.", show_alert=True)
             return
@@ -489,10 +566,10 @@ async def callback_handler(client: Client, cq: CallbackQuery):
         # kurangi stok
         new_stock = stock - amount
         if new_stock > 0:
-            user_inv[item["inv_key"]] = new_stock
+            user_inv[canon_key or item["inv_key"]] = new_stock
         else:
             # hapus key jika 0
-            user_inv.pop(item["inv_key"], None)
+            user_inv.pop(canon_key or item["inv_key"], None)
 
         db[str(user_id)] = user_inv
         try:
@@ -513,7 +590,11 @@ async def callback_handler(client: Client, cq: CallbackQuery):
 
     if data == "SELL_CANCEL":
         SELL_WAITING.pop(user_id, None)
-        await cq.message.edit_text("❌ Penjualan dibatalkan.", reply_markup=make_keyboard("D2", user_id))
+        # lebih aman fallback ke D2 jika ada, kalau tidak ada ke main
+        try:
+            await cq.message.edit_text("❌ Penjualan dibatalkan.", reply_markup=make_keyboard("D2", user_id))
+        except Exception:
+            await cq.message.edit_text("❌ Penjualan dibatalkan.", reply_markup=make_keyboard("main", user_id))
         return
 
     # CEK INVENTORY STORE
@@ -523,16 +604,16 @@ async def callback_handler(client: Client, cq: CallbackQuery):
         await cq.message.edit_text(f"📦 Inventorymu:\n\n{inv_text}", reply_markup=kb)
         return
 
-    # NAVIGASI MENU
-    if data in MENU_STRUCTURE:
-        await cq.message.edit_text(MENU_STRUCTURE[data]["title"], reply_markup=make_keyboard(data, user_id))
-        return
-
-# CEK INVENTORY (hasil tangkapan)
+    # CEK INVENTORY (hasil tangkapan)
     if data == "FFF":
         inv_text = aquarium.list_inventory(user_id)
         kb = make_keyboard("FFF", user_id)
         await cq.message.edit_text(f"🎣 Inventorymu:\n\n{inv_text}", reply_markup=kb)
+        return
+
+    # NAVIGASI MENU
+    if data in MENU_STRUCTURE:
+        await cq.message.edit_text(MENU_STRUCTURE[data]["title"], reply_markup=make_keyboard(data, user_id))
         return
 
 # ---------------- HANDLE TRANSFER, TUKAR & SELL AMOUNT (TEXT INPUT) ---------------- #
@@ -554,10 +635,25 @@ async def handle_transfer_message(client: Client, message: Message):
         if amount <= 0:
             return await message.reply("Penjualan dibatalkan (jumlah <= 0).")
 
-        # cek stok
+        # cek stok menggunakan normalisasi
         db = aquarium.load_data()
         user_inv = db.get(str(uid), {}) or {}
-        stock = user_inv.get(item["inv_key"], 0)
+        normalized_inv = {}
+        for k, v in user_inv.items():
+            normalized_inv[normalize_key(k)] = (k, v)
+
+        target_norm = normalize_key(item["inv_key"])  # target inv_key normal
+        canon_key = None
+        stock = 0
+        if target_norm in normalized_inv:
+            canon_key, stock = normalized_inv[target_norm]
+        else:
+            for orig_k, val in user_inv.items():
+                if canonical_inv_key_from_any(orig_k) == item["inv_key"]:
+                    canon_key = orig_k
+                    stock = val
+                    break
+
         if stock <= 0:
             return await message.reply(f"❌ Kamu tidak memiliki {item['name']} sama sekali.")
         if amount > stock:
@@ -639,7 +735,7 @@ async def handle_transfer_message(client: Client, message: Message):
 async def show_leaderboard(cq: CallbackQuery, uid: int, page: int = 0):
     pts = yapping.load_points()
     sorted_pts = sorted(pts.items(), key=lambda x: x[1]["points"], reverse=True)
-    total_pages = (len(sorted_pts) - 1) // 10 if len(sorted_pts) > 0 else 0
+    total_pages = max((len(sorted_pts) - 1) // 10, 0) if len(sorted_pts) > 0 else 0
     start, end = page * 10, page * 10 + 10
     text = f"🏆 Leaderboard Yapping (Page {page+1}/{total_pages+1}) 🏆\n\n"
     for i, (u, pdata) in enumerate(sorted_pts[start:end], start=start + 1):
@@ -664,7 +760,7 @@ async def open_menu_pm(client: Client, message: Message):
 # ---------------- REGISTER HANDLERS ---------------- #
 def register(app: Client):
     # register handlers already expected by your app:
-    app.add_handler(MessageHandler(open_menu, filters.regex(r"^\.menufish$") & filters.private))
+    app.add_handler(MessageHandler(open_menu, filters.regex(r"^\\.menufish$") & filters.private))
     app.add_handler(MessageHandler(open_menu_pm, filters.command("menu") & filters.private))
     # this handler will also handle SELL amount input because SELL_WAITING is checked inside
     app.add_handler(MessageHandler(handle_transfer_message, filters.text & filters.private))
