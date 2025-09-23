@@ -5,7 +5,7 @@ import os
 from pyrogram import Client
 from pyrogram.handlers import CallbackQueryHandler
 
-# Import semua modules
+# ================= IMPORT MODULES ================= #
 from lootgames.modules import (
     yapping,
     menu_utama,
@@ -41,12 +41,13 @@ app = Client(
 )
 
 # ================= REGISTER MODULES ================= #
+logger.info("Mendaftarkan module...")
 yapping.register(app)
 menu_utama.register(app)
 user_database.register(app)
 treasure_chest.register(app)
 register_topup(app)
-# Jika mau, aktifkan modul lain:
+logger.info("Semua module terdaftar ✅")
 # aquarium.register(app)
 # gacha_fishing.register(app)
 
@@ -101,8 +102,9 @@ async def main():
     # Bot berjalan terus
     await asyncio.Event().wait()
 
+# ================= RUN BOT ================= #
 if __name__ == "__main__":
-    # Apply nest_asyncio jika dijalankan di Jupyter / environment yang butuh
+    # Apply nest_asyncio jika dijalankan di Jupyter / environment tertentu
     try:
         import nest_asyncio
         nest_asyncio.apply()
