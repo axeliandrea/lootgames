@@ -55,10 +55,10 @@ MENU_STRUCTURE = {
             "buttons": [("YA", "REGISTER_YES"), ("TIDAK", "REGISTER_NO")]},
     # STORE
     "D": {"title": "🛒STORE", "buttons": [
-        ("BUY UMPAN", "D1"), ("SELL IKAN", "D2"), ("TUKAR POINT", "D3"), ("⬅️ Kembali", "main")
+        ("BUY UMPAN", "D1"), ("SELL ITEM", "D2"), ("TUKAR POINT", "D3"), ("⬅️ Kembali", "main")
     ]},
     "D1": {"title": "📋 BUY UMPAN", "buttons": [("D1A", "D1A"), ("⬅️ Kembali", "D")]},
-    "D2": {"title": "📋 SELL IKAN", "buttons": [("D2A", "D2A"), ("⬅️ Kembali", "D")]},
+    "D2": {"title": "📋 SELL ITEM", "buttons": [("CHECK INVENTORY", "D2A"), ("⬅️ Kembali", "D")]},
     "D3": {"title": "📋 TUKAR POINT", "buttons": [("Lihat Poin & Tukar", "D3A"), ("⬅️ Kembali", "D")]},
     "D3A": {"title": "📋 🔄 POINT CHAT",
             "buttons": [("TUKAR 🔄 UMPAN COMMON 🐛", "TUKAR_POINT"), ("⬅️ Kembali", "D3")]},
@@ -364,6 +364,7 @@ def register(app: Client):
     app.add_handler(MessageHandler(handle_transfer_message, filters.text & filters.private))
     app.add_handler(CallbackQueryHandler(callback_handler))
     logger.info("[MENU] Handler menu_utama terdaftar.")
+
 
 
 
