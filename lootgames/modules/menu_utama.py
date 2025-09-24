@@ -429,7 +429,7 @@ async def callback_handler(client: Client, cq: CallbackQuery):
     await cq.message.edit_text(msg, reply_markup=make_keyboard("G", user_id))
     return
 
-    elif data == "LOGIN_STATUS":
+    if data == "LOGIN_STATUS":
         # tampilkan 7 hari terakhir streak user
         init_user_login(user_id)
         user_login = LOGIN_STATE[user_id]
@@ -934,6 +934,7 @@ def register(app: Client):
     app.add_handler(MessageHandler(handle_transfer_message, filters.text & filters.private))
     app.add_handler(CallbackQueryHandler(callback_handler))
     logger.info("[MENU] Handler menu_utama terdaftar.")
+
 
 
 
