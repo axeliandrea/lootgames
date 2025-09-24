@@ -400,39 +400,36 @@ async def callback_handler(client: Client, cq: CallbackQuery):
             await cq.answer("❌ Kamu sudah absen hari ini!", show_alert=True)
             return
 
-        # reset mingguan jika perlu
-        reset_weekly_streak_if_needed(user_id)
+        # Update streak: +1 jika berturut-turut, reset 1 jika tidak
+        yesterday_int = today - 1  # asumsi sederhana YYYYMMDD int
+        if user_login["last_login_day"] == yesterday_int:
+            user_login["streak"] += 1
+        else:
+            user_login["streak"] = 1
 
-        # update streak dan hari terakhir
-        user_login["streak"] += 1
         user_login["last_login_day"] = today
 
-        # Berikan 1 Umpan COMMON A jika belum pernah diterima untuk streak hari ini
-        reward = STREAK_REWARDS.get(user_login["streak"], 10)  # default 10 umpan jika streak tidak ada
-        reward_key = f"COMMON_{user_login['streak']}"  # key untuk track apakah reward sudah diberikan
-
-        # Pastikan "umpan_given" adalah set untuk efisiensi pengecekan
+        # Pastikan "umpan_given" adalah set
         if not isinstance(user_login.get("umpan_given"), set):
-            user_login["umpan_given"] = set(user_login.get("umpan_given", []))
+        user_login["umpan_given"] = set(user_login.get("umpan_given", []))
 
-        if reward_key not in user_login["umpan_given"]:
-            # Berikan umpan dan catat sudah diterima
-            umpan.add_umpan(user_id, "A", reward)
-            user_login["umpan_given"].add(reward_key)
-            msg = (
-                f"🎉 Absen berhasil! Kamu mendapatkan {reward} Umpan COMMON 🐛.\n"
-                f"Streak: {user_login['streak']} hari."
-            )
-        else:
-            msg = (
-                f"✅ Absen berhasil! Tapi Umpan COMMON sudah diterima sebelumnya.\n"
-                f"Streak: {user_login['streak']} hari."
-            )
+    # Tentukan reward sesuai streak, max streak 7
+    streak_for_reward = min(user_login["streak"], 7)
+    reward = STREAK_REWARDS.get(streak_for_reward, 10)
+    reward_key = f"streak_{user_login['streak']}"
 
-        # Update pesan dengan keyboard sesuai user
-        await cq.message.edit_text(msg, reply_markup=make_keyboard("G", user_id))
-        return
+    if reward_key not in user_login["umpan_given"]:
+        # Berikan reward
+        umpan.add_umpan(user_id, "A", reward)
+        user_login["umpan_given"].add(reward_key)
+        msg = f"🎉 Absen berhasil! Kamu mendapatkan {reward} Umpan COMMON 🐛.\nStreak: {user_login['streak']} hari."
+    else:
+        msg = f"✅ Absen berhasil! Tapi Umpan COMMON sudah diterima sebelumnya.\nStreak: {user_login['streak']} hari."
 
+    await cq.message.edit_text(msg, reply_markup=make_keyboard("G", user_id))
+    return
+
+    #login status
     elif data == "LOGIN_STATUS":
         # tampilkan 7 hari terakhir streak user
         init_user_login(user_id)
@@ -938,4 +935,5 @@ def register(app: Client):
     app.add_handler(MessageHandler(handle_transfer_message, filters.text & filters.private))
     app.add_handler(CallbackQueryHandler(callback_handler))
     logger.info("[MENU] Handler menu_utama terdaftar.")
+
 
