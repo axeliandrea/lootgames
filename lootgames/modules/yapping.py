@@ -1,5 +1,6 @@
 # lootgames/modules/yapping.py
 import os, re, json
+import logging
 from datetime import datetime
 from pyrogram import Client, filters
 from pyrogram.types import Message
@@ -13,11 +14,14 @@ MAX_POINT_PER_CHAT = 5
 MILESTONE_INTERVAL = 100
 LOGIN_DB_FILE = "storage/login_data.json"
 
+# ================= LOGGING ================= #
+logger = logging.getLogger(__name__)
+if DEBUG:
+    logger.setLevel(logging.DEBUG)
+
 # ================= UTILS ================= #
 def log_debug(msg: str):
-    if DEBUG:
-        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        print(f"[DEBUG] {timestamp} - {msg}")
+    logger.debug(msg)
 
 def load_json(file_path):
     if os.path.exists(file_path):
@@ -58,15 +62,15 @@ def add_user_if_not_exist(points, user_id, username):
         points[user_id].setdefault("last_milestone", 0)
 
 def calculate_points_from_text(text: str) -> int:
-    clean_text = re.sub(r"\s+", "", text)  # hapus spasi saja
+    clean_text = re.sub(r"\s+", "", text)
     points = len(clean_text) // 5
-    return max(1, min(points, MAX_POINT_PER_CHAT))  # minimal 1 point
+    return max(1, min(points, MAX_POINT_PER_CHAT))
 
 def add_points(points, user_id, username, amount):
     add_user_if_not_exist(points, user_id, username)
     points[str(user_id)]["points"] += amount
     log_debug(f"{username} ({user_id}) +{amount} point | total: {points[str(user_id)]['points']}")
-    save_points(points)  # langsung simpan
+    save_points(points)
 
 # ================= LEVEL & BADGE ================= #
 LEVEL_EXP = {}
@@ -116,14 +120,17 @@ def generate_leaderboard(points: dict, top=0) -> str:
 
 # ================= HANDLER REGISTER ================= #
 def register(app: Client):
-    print("[YAPPING] Handler registered ✅ (Target group:", ALLOWED_GROUP_ID, ")")
+    log_debug(f"[YAPPING] Handler registered ✅ (Target group: {ALLOWED_GROUP_ID})")
 
     @app.on_message(filters.chat(ALLOWED_GROUP_ID) & filters.text)
     async def handle_chat(client: Client, message: Message):
         user = message.from_user
         if not user or str(user.id) in IGNORED_USERS:
             return
+
         text = message.text or ""
+        log_debug(f"[CHAT] Dari {user.id} ({user.username}) → {text}")
+
         points = load_points()
         username = user.username or user.first_name or str(user.id)
 
