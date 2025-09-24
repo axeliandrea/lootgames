@@ -390,18 +390,21 @@ async def callback_handler(client: Client, cq: CallbackQuery):
     if data == "LOGIN_TODAY":
         # inisialisasi user jika belum ada
         init_user_login(user_id)
-        today = get_today_int()
-        user_login["login_dates"].add(today_int)
+        user_login = LOGIN_STATE[user_id]  # <-- ambil state sekarang
+        today = get_today_int()            # <-- integer YYYYMMDD untuk hari ini
 
-        if user_login["last_login_day"] == today:
+        if today in user_login["login_dates"]:
             await cq.answer("❌ Kamu sudah absen hari ini!", show_alert=True)
             return
+
+        # tambahkan tanggal login hari ini
+        user_login["login_dates"].add(today)
 
         # update streak dan hari terakhir
         user_login["streak"] += 1
         user_login["last_login_day"] = today
 
-        # berikan 1 Umpan COMMON A jika belum pernah diterima
+        # berikan reward
         reward = STREAK_REWARDS.get(user_login["streak"], 10)  # max 10 umpan
         reward_key = f"COMMON_{user_login['streak']}"  # track per streak
         if reward_key not in user_login["umpan_given"]:
@@ -901,6 +904,7 @@ def register(app: Client):
     app.add_handler(MessageHandler(handle_transfer_message, filters.text & filters.private))
     app.add_handler(CallbackQueryHandler(callback_handler))
     logger.info("[MENU] Handler menu_utama terdaftar.")
+
 
 
 
