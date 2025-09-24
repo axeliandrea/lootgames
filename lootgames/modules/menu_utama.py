@@ -366,20 +366,34 @@ def make_keyboard(menu_key: str, user_id=None, page: int = 0) -> InlineKeyboardM
 
     return InlineKeyboardMarkup(buttons)
 
-# di dalam fungsi make_keyboard
-if menu_key == "G" and user_id:
-    login_db = yapping.load_login()
-    status = login_db.get(str(user_id), False)
-    buttons.append([InlineKeyboardButton(f"LOGIN {'✅' if status else '❌'}", callback_data="G_LOGIN")])
-    buttons.append([InlineKeyboardButton("LOGOUT", callback_data="G_LOGOUT")])
-    buttons.append([InlineKeyboardButton("STATUS LOGIN", callback_data="G_STATUS")])
-    buttons.append([InlineKeyboardButton("⬅️ Kembali", callback_data="main")])
-
 # ---------------- CALLBACK HANDLER ---------------- #
 async def callback_handler(client: Client, cq: CallbackQuery):
     data, user_id = cq.data, cq.from_user.id
     logger.info(f"[DEBUG] callback -> user:{user_id}, data:{data}")
     await cq.answer()
+
+    # ---------------- SYSTEM LOGIN ---------------- #
+    if data.startswith("G_"):
+        uid = cq.from_user.id
+        login_db = yapping.load_login()
+
+        if data == "G_LOGIN":
+            login_db[str(uid)] = True
+            yapping.save_login(login_db)
+            await cq.message.edit_text("✅ Login berhasil!", reply_markup=make_keyboard("G", uid))
+            return
+
+        if data == "G_LOGOUT":
+            login_db[str(uid)] = False
+            yapping.save_login(login_db)
+            await cq.message.edit_text("✅ Logout berhasil!", reply_markup=make_keyboard("G", uid))
+            return
+
+        if data == "G_STATUS":
+            status = login_db.get(str(uid), False)
+            text = f"🔐 Status login kamu: {'✅ Login aktif' if status else '❌ Tidak login'}"
+            await cq.message.edit_text(text, reply_markup=make_keyboard("G", uid))
+            return
 
     # ---------------- REGISTER FLOW ---------------- #
     if data == "REGISTER_YES":
@@ -830,6 +844,7 @@ if data.startswith("G_"):
         text = f"🔐 Status login kamu: {'✅ Login aktif' if status else '❌ Tidak login'}"
         await cq.message.edit_text(text, reply_markup=make_keyboard("G", uid))
         return
+
 
 
 
