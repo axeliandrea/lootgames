@@ -1,3 +1,4 @@
+#lootgames/config.py
 import os
 import logging
 from dotenv import load_dotenv
@@ -40,3 +41,4 @@ LOG_FORMAT = os.getenv("LOG_FORMAT", "%(asctime)s - %(name)s - %(levelname)s - %
 # ================== Yapping System Configuration ================== #
 POINTS_PER_CHARS = get_env_int("POINTS_PER_CHARS", 5)  # default 5
 USER_DATA_FILE = get_env_str("USER_DATA_FILE", "lootgames/data/users.json")
+
