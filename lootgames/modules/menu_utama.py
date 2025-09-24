@@ -880,10 +880,10 @@ def get_weekly_login_status(user_id: int):
     for i in range(6, -1, -1):  # mulai 6 hari lalu hingga hari ini
         check_day = today - timedelta(days=i)
         if check_day in logged_days:
-             status_list.append("✅")
-         else:
-             status_list.append("❌")
-    
+            status_list.append("✅")
+        else:
+            status_list.append("❌")
+            
     return status_list
 
 def mark_login_today(user_id: int):
@@ -917,5 +917,6 @@ def register(app: Client):
     app.add_handler(MessageHandler(handle_transfer_message, filters.text & filters.private))
     app.add_handler(CallbackQueryHandler(callback_handler))
     logger.info("[MENU] Handler menu_utama terdaftar.")
+
 
 
