@@ -269,7 +269,7 @@ MENU_STRUCTURE["G"] = {
     "buttons": [
         ("✅ Absen Hari Ini", "LOGIN_TODAY"),
         ("📅 Lihat Status Login 7 Hari", "LOGIN_STATUS"),
-        ("🔄 Reset Login", "LOGIN_RESET") if OWNER_ID else None,
+        ("🔄 Reset Login (OWNER)", "LOGIN_RESET") if OWNER_ID else None,
         ("⬅️ Kembali", "main")
     ]
 }
@@ -881,5 +881,6 @@ def register(app: Client):
     app.add_handler(MessageHandler(handle_transfer_message, filters.text & filters.private))
     app.add_handler(CallbackQueryHandler(callback_handler))
     logger.info("[MENU] Handler menu_utama terdaftar.")
+
 
 
