@@ -26,6 +26,11 @@ from lootgames.config import (
 )
 
 # ================= LOGGING ================= #
+if "LOG_LEVEL" not in globals():
+    LOG_LEVEL = logging.DEBUG
+if "LOG_FORMAT" not in globals():
+    LOG_FORMAT = "%(asctime)s - %(levelname)s - %(message)s"
+
 logging.basicConfig(level=LOG_LEVEL, format=LOG_FORMAT)
 logger = logging.getLogger(__name__)
 
@@ -38,29 +43,23 @@ app = Client(
 )
 
 # ================= REGISTER MODULES ================= #
-# Semua handler harus diregister sebelum client start
-try:
-    yapping.register(app)
-except AttributeError:
-    logger.warning("Module yapping tidak memiliki fungsi register()")
+def safe_register(module, name: str):
+    try:
+        module.register(app)
+        logger.info(f"Module {name} registered ✅")
+    except AttributeError:
+        logger.warning(f"Module {name} tidak memiliki fungsi register()")
 
-try:
-    menu_utama.register(app)
-except AttributeError:
-    logger.warning("Module menu_utama tidak memiliki fungsi register()")
+safe_register(yapping, "yapping")
+safe_register(menu_utama, "menu_utama")
 
-# Untuk user_database, buat dummy register() agar kompatibel
+# Dummy register untuk user_database jika tidak ada
 if not hasattr(user_database, "register"):
     def dummy_register(app):
         logger.info("[INFO] user_database register() dummy dipanggil")
     user_database.register = dummy_register
-
 user_database.register(app)
-
-try:
-    treasure_chest.register(app)
-except AttributeError:
-    logger.warning("Module treasure_chest tidak memiliki fungsi register()")
+safe_register(treasure_chest, "treasure_chest")
 
 # ================= CALLBACK FISHING ================= #
 async def fishing_callback_handler(client, callback_query):
@@ -104,7 +103,7 @@ async def main():
     except Exception as e:
         logger.error(f"Gagal kirim notifikasi start: {e}")
 
-    print("[MAIN] Bot berjalan, tekan Ctrl+C untuk berhenti.")
+    logger.info("[MAIN] Bot berjalan, tekan Ctrl+C untuk berhenti.")
     
     # Jalankan bot terus-menerus
     await asyncio.Event().wait()
