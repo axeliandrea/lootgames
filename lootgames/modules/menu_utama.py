@@ -11,6 +11,7 @@ from lootgames.modules import fizz_coin
 from lootgames.modules import aquarium
 from lootgames.modules.gacha_fishing import fishing_loot
 from datetime import datetime, date, timedelta
+from lootgames.modules.user_database import reset_weekly_streak_if_needed
 
 logger = logging.getLogger(__name__)
 OWNER_ID = 6395738130
@@ -22,6 +23,7 @@ TUKAR_POINT_STATE = {}    # user_id: {"step": step, "jumlah_umpan": n}
 OPEN_MENU_STATE = {}      # user_id: True jika menu aktif
 LOGIN_STATE = {}  # user_id: {"last_login_day": int, "streak": int, "umpan_given": set()}
 STREAK_REWARDS = {1: 4, 2: 5, 3: 6, 4: 7, 5: 8, 6: 9, 7: 10}
+USER_DB_FILE = "storage/user_data.json"
 
 
 # ---------------- SELL / ITEM CONFIG ---------------- #
@@ -917,6 +919,7 @@ def register(app: Client):
     app.add_handler(MessageHandler(handle_transfer_message, filters.text & filters.private))
     app.add_handler(CallbackQueryHandler(callback_handler))
     logger.info("[MENU] Handler menu_utama terdaftar.")
+
 
 
 
