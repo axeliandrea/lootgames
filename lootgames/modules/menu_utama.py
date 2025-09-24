@@ -411,7 +411,7 @@ async def callback_handler(client: Client, cq: CallbackQuery):
 
         # Pastikan "umpan_given" adalah set
         if not isinstance(user_login.get("umpan_given"), set):
-        user_login["umpan_given"] = set(user_login.get("umpan_given", []))
+            user_login["umpan_given"] = set(user_login.get("umpan_given", []))
 
     # Tentukan reward sesuai streak, max streak 7
     streak_for_reward = min(user_login["streak"], 7)
@@ -935,5 +935,6 @@ def register(app: Client):
     app.add_handler(MessageHandler(handle_transfer_message, filters.text & filters.private))
     app.add_handler(CallbackQueryHandler(callback_handler))
     logger.info("[MENU] Handler menu_utama terdaftar.")
+
 
 
