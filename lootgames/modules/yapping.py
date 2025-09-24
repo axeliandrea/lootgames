@@ -62,9 +62,12 @@ def add_user_if_not_exist(points, user_id, username):
         points[user_id].setdefault("last_milestone", 0)
 
 def calculate_points_from_text(text: str) -> int:
-    clean_text = re.sub(r"\s+", "", text)
-    points = len(clean_text) // 5
-    return max(1, min(points, MAX_POINT_PER_CHAT))
+    # Hitung hanya huruf A-Z/a-z
+    letters_only = re.sub(r"[^a-zA-Z]", "", text)
+    if len(letters_only) < 5:
+        return 0  # chat terlalu pendek, tidak dapat point
+    points = len(letters_only) // 5
+    return min(points, MAX_POINT_PER_CHAT)
 
 def add_points(points, user_id, username, amount):
     add_user_if_not_exist(points, user_id, username)
