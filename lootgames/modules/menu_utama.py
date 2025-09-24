@@ -788,3 +788,44 @@ def register(app: Client):
     app.add_handler(CallbackQueryHandler(callback_handler))
     logger.info("[MENU] Handler menu_utama terdaftar.")
 
+# =============== MENU G / SYSTEM LOGIN =============== #
+MENU_STRUCTURE["G"] = {
+    "title": "🔐 System Login",
+    "buttons": [
+        ("LOGIN", "G_LOGIN"),
+        ("LOGOUT", "G_LOGOUT"),
+        ("STATUS LOGIN", "G_STATUS"),
+        ("⬅️ Kembali", "main")
+    ]
+}
+
+# ---------------- SYSTEM LOGIN ---------------- #
+if data.startswith("G_"):
+    uid = cq.from_user.id
+    login_db = yapping.load_login()  # asumsi DB login mirip load_points(), dictionary user_id -> status
+
+    if data == "G_LOGIN":
+        login_db[str(uid)] = True
+        yapping.save_login(login_db)
+        await cq.message.edit_text("✅ Login berhasil!", reply_markup=make_keyboard("G", uid))
+        return
+
+    if data == "G_LOGOUT":
+        login_db[str(uid)] = False
+        yapping.save_login(login_db)
+        await cq.message.edit_text("✅ Logout berhasil!", reply_markup=make_keyboard("G", uid))
+        return
+
+    if data == "G_STATUS":
+        status = login_db.get(str(uid), False)
+        text = f"🔐 Status login kamu: {'✅ Login aktif' if status else '❌ Tidak login'}"
+        await cq.message.edit_text(text, reply_markup=make_keyboard("G", uid))
+        return
+
+elif menu_key == "G" and user_id:
+    login_db = yapping.load_login()
+    status = login_db.get(str(user_id), False)
+    buttons.append([InlineKeyboardButton(f"LOGIN {'✅' if status else '❌'}", callback_data="G_LOGIN")])
+    buttons.append([InlineKeyboardButton("LOGOUT", callback_data="G_LOGOUT")])
+    buttons.append([InlineKeyboardButton("STATUS LOGIN", callback_data="G_STATUS")])
+    buttons.append([InlineKeyboardButton("⬅️ Kembali", callback_data="main")])
