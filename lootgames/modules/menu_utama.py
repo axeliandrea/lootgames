@@ -862,7 +862,7 @@ def init_user_login(user_id: int):
     LOGIN_STATE[user_id] = {
         "login_days": set(),
         "streak": 0,
-        "last_login_day": 0
+        "last_login_day": 0,
         "umpan_given": set()   # <--- tambahkan ini
     }
 
@@ -920,8 +920,3 @@ def register(app: Client):
     app.add_handler(MessageHandler(handle_transfer_message, filters.text & filters.private))
     app.add_handler(CallbackQueryHandler(callback_handler))
     logger.info("[MENU] Handler menu_utama terdaftar.")
-
-
-
-
-
