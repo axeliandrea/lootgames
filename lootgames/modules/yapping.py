@@ -3,13 +3,12 @@ import os, re, json
 from datetime import datetime
 from pyrogram import Client, filters
 from pyrogram.types import Message
+from lootgames.config import OWNER_ID, ALLOWED_GROUP_ID
 
 # ================= CONFIG ================= #
-OWNER_ID = 6395738130
-TARGET_GROUP = -1002946278772  # ID group langsung ditulis
 YAPPINGPOINT_DB = "storage/chat_points.json"
 DEBUG = True
-IGNORED_USERS = ["6946903915"]
+IGNORED_USERS = ["6946903915"]  # user ID yang di-ignore
 MAX_POINT_PER_CHAT = 5
 MILESTONE_INTERVAL = 100
 
@@ -62,24 +61,13 @@ def add_points(points, user_id, username, amount):
     points[str(user_id)]["points"] += amount
     log_debug(f"{username} ({user_id}) +{amount} point | total: {points[str(user_id)]['points']}")
 
-def update_points(user_id, points_change):
-    points = load_points()
-    user_id = str(user_id)
-    if user_id not in points:
-        points[user_id] = {"username": "Unknown", "points": 0, "level": 0, "last_milestone": 0}
-    points[user_id]["points"] += points_change
-    save_points(points)
-    log_debug(f"Updated points for {user_id}: {points_change} change")
-
-# ================= LEVEL & BADGE ================= #
-LEVEL_EXP = {}
-base_exp = 10000
-factor = 1.4
-for lvl in range(0, 100):
-    LEVEL_EXP[lvl] = int(base_exp)
-    base_exp = int(base_exp * factor)
-
 def check_level_up(user_data: dict) -> int:
+    LEVEL_EXP = {}
+    base_exp = 10000
+    factor = 1.4
+    for lvl in range(0, 100):
+        LEVEL_EXP[lvl] = int(base_exp)
+        base_exp = int(base_exp * factor)
     points_val = user_data.get("points", 0)
     old_level = user_data.get("level", 0)
     new_level = old_level
@@ -106,7 +94,6 @@ def get_badge(level: int) -> str:
     elif level <= 89: return "🐉 VIP 9"
     else: return "🏆 MAX VIP"
 
-# ================= LEADERBOARD ================= #
 def generate_leaderboard(points: dict, top=0) -> str:
     sorted_points = sorted(points.items(), key=lambda x: x[1].get("points", 0), reverse=True)
     if not sorted_points:
@@ -119,10 +106,10 @@ def generate_leaderboard(points: dict, top=0) -> str:
 
 # ================= HANDLER REGISTER ================= #
 def register(app: Client):
-    print(f"[YAPPING] Handler registered ✅ (Target group: {TARGET_GROUP})")
+    print(f"[YAPPING] Handler registered ✅ (Target group: {ALLOWED_GROUP_ID})")
 
-    # ----- AUTO POINT DARI CHAT DI GROUP ----- #
-    @app.on_message(filters.chat(TARGET_GROUP) & filters.text)
+    # ----- DEBUG SEMUA PESAN DARI GROUP ----- #
+    @app.on_message(filters.chat(ALLOWED_GROUP_ID) & filters.text)
     async def handle_chat(client: Client, message: Message):
         user = message.from_user
         text = message.text or ""
@@ -161,8 +148,8 @@ def register(app: Client):
         else:
             log_debug(f"Pesan dari {username} ({user_id}) tidak menghasilkan point")
 
-    # ----- COMMAND DI GROUP ----- #
-    @app.on_message(filters.command("rank", prefixes=["/", "."]) & filters.chat(TARGET_GROUP))
+    # ----- COMMANDS ----- #
+    @app.on_message(filters.command("rank", prefixes=["/", "."]) & filters.chat(ALLOWED_GROUP_ID))
     async def rank_cmd(client: Client, message: Message):
         user = message.from_user
         if not user: return
@@ -175,13 +162,13 @@ def register(app: Client):
             f"📊 {user_data['username']} - {user_data['points']} pts | Level {user_data['level']} {get_badge(user_data['level'])}"
         )
 
-    @app.on_message(filters.command("leaderboard", prefixes=["/", "."]) & filters.chat(TARGET_GROUP))
+    @app.on_message(filters.command("leaderboard", prefixes=["/", "."]) & filters.chat(ALLOWED_GROUP_ID))
     async def leaderboard_cmd(client: Client, message: Message):
         points = load_points()
         text = generate_leaderboard(points, top=10)
         await message.reply_text(text)
 
-    @app.on_message(filters.command("resetyapping", prefixes=["/", "."]) & filters.chat(TARGET_GROUP))
+    @app.on_message(filters.command("resetyapping", prefixes=["/", "."]) & filters.chat(ALLOWED_GROUP_ID))
     async def reset_yapping_cmd(client: Client, message: Message):
         if message.from_user.id != OWNER_ID:
             await message.reply_text("❌ Kamu tidak punya izin untuk reset poin.")
@@ -189,37 +176,3 @@ def register(app: Client):
         save_points({})
         await message.reply_text("✅ Semua poin yapping sudah direset menjadi 0.")
         log_debug("Database poin yapping direset oleh OWNER")
-
-    # ----- COMMAND CPC (HANYA PRIVATE, OWNER ONLY) ----- #
-    @app.on_message(filters.command("cpc", prefixes=[".", "/"]) & filters.private)
-    async def cheat_point_cmd(client: Client, message: Message):
-        if message.from_user.id != OWNER_ID:
-            await message.reply_text("❌ Kamu tidak punya izin untuk cheat point.")
-            return
-
-        if len(message.command) < 3:
-            await message.reply_text("⚠️ Format: .cpc @username jumlah")
-            return
-
-        target_username = message.command[1].lstrip("@")
-        try:
-            amount = int(message.command[2])
-        except ValueError:
-            await message.reply_text("⚠️ Jumlah harus angka.")
-            return
-
-        points = load_points()
-        target_id = None
-        for uid, data in points.items():
-            if data["username"].lower() == target_username.lower():
-                target_id = uid
-                break
-
-        if not target_id:
-            await message.reply_text("❌ User tidak ditemukan di database poin.")
-            return
-
-        points[target_id]["points"] = amount
-        save_points(points)
-        await message.reply_text(f"✅ Poin {points[target_id]['username']} berhasil di-set ke {amount}.")
-        log_debug(f"OWNER set poin {points[target_id]['username']} ({target_id}) jadi {amount}")
