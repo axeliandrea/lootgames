@@ -415,6 +415,8 @@ async def callback_handler(client: Client, cq: CallbackQuery):
         return
 
     # ... di callback_handler, ganti bagian LOGIN_STATUS
+    days_of_week_id = ["SENIN","SELASA","RABU","KAMIS","JUMAT","SABTU","MINGGU"]
+    
     if data == "LOGIN_STATUS":
         # inisialisasi user jika belum ada
         init_user_login(user_id)
@@ -880,4 +882,5 @@ def register(app: Client):
     app.add_handler(MessageHandler(handle_transfer_message, filters.text & filters.private))
     app.add_handler(CallbackQueryHandler(callback_handler))
     logger.info("[MENU] Handler menu_utama terdaftar.")
+
 
