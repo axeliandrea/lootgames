@@ -552,8 +552,11 @@ async def handle_yapping_points(client, message: Message):
         return
 
     text = (message.text or "").strip()
-    # Skip jika pesan diawali command
+    
+    # **Hanya chat biasa, skip jika pesan diawali / atau .**
     if not text or text.startswith("/") or text.startswith("."):
+        if yapping.DEBUG:
+            logger.debug(f"[YAPPING] Pesan dari {user_id} di-skip karena command: {text}")
         return
 
     username = message.from_user.username or f"user{user_id}"
@@ -568,9 +571,9 @@ async def handle_yapping_points(client, message: Message):
         yapping.add_points(pts, user_id, username, amount)
         # simpan DB
         yapping.save_points(pts)
-        # opsional: debug log
+        # debug log
         if yapping.DEBUG:
-            logger.info(f"[YAPPING] {username} ({user_id}) mendapat {amount} poin.")
+            logger.debug(f"[YAPPING] {username} ({user_id}) mendapat {amount} poin | total: {pts.get(str(user_id), 0)}")
    
 
     # POIN PRIBADI
@@ -911,6 +914,7 @@ def register(app: Client):
     app.add_handler(CallbackQueryHandler(callback_handler))
     app.add_handler(MessageHandler(handle_yapping_points, filters.text & filters.group & filters.chat(TARGET_GROUP)))
     logger.info("[MENU] Handler menu_utama terdaftar.")
+
 
 
 
