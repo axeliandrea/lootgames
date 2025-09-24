@@ -423,19 +423,22 @@ async def callback_handler(client: Client, cq: CallbackQuery):
         user_login = LOGIN_STATE[user_id]
 
         # daftar 7 hari terakhir dari hari ini, dari paling lama → hari ini
+        def get_login_status(user_id):
         days_of_week = ["SENIN", "SELASA", "RABU", "KAMIS", "JUMAT", "SABTU", "MINGGU"]
         today = date.today()
+
+        # ambil tanggal 7 hari terakhir
+        last_7_days = [(today - timedelta(days=i)) for i in range(6, -1, -1)]  # 6 hari lalu → hari ini
+
+        # buat list login berdasarkan urutan Senin→Minggu
         status_text = "📅 Status LOGIN 7 Hari Terakhir:\n"
-
-        for i in range(6, -1, -1):  # 6 hari lalu → hari ini
-            day = today - timedelta(days=i)
-            day_name = days_of_week[day.weekday()]  # weekday = 0 → Senin
+        for i, day in enumerate(last_7_days):
+            day_name = days_of_week[day.weekday()]  # weekday 0=Senin
             day_int = int(day.strftime("%Y%m%d"))
-            checked = "✅" if day_int in user_login["login_dates"] else "❌"
-            status_text += f"LOGIN-{7-i}: {checked} {day_name}\n"
+            checked = "✅" if day_int in login_dates_set else "❌"
+            status_text += f"LOGIN-{i+1}: {checked} {day_name}\n"
 
-        await cq.message.edit_text(status_text, reply_markup=make_keyboard("G", user_id))
-        return
+        returnreturn status_text
 
     # MENU OPEN untuk login, tombol navigasi
     elif data == "G":
@@ -916,6 +919,7 @@ def register(app: Client):
     app.add_handler(MessageHandler(handle_transfer_message, filters.text & filters.private))
     app.add_handler(CallbackQueryHandler(callback_handler))
     logger.info("[MENU] Handler menu_utama terdaftar.")
+
 
 
 
