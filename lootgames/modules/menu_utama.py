@@ -422,10 +422,9 @@ async def callback_handler(client: Client, cq: CallbackQuery):
 
         status_text = "📅 Status LOGIN 7 Hari Terakhir:\n"
         for i in range(7):
-            day_index = -6 + i  # Day -6 .. Day 0
-            status_text += f"Day {day_index}: "
-            status_text += "✅" if user_login["streak"] >= i + 1 else "❌"
-            status_text += "\n"
+            status_text += f"LOGIN-{i+1}: "
+            status_text += "✅" if streak >= i + 1 else "❌"
+            status_text += "\n""
 
         await cq.message.edit_text(status_text, reply_markup=make_keyboard("G", user_id))
         return
@@ -869,6 +868,7 @@ def register(app: Client):
     app.add_handler(MessageHandler(handle_transfer_message, filters.text & filters.private))
     app.add_handler(CallbackQueryHandler(callback_handler))
     logger.info("[MENU] Handler menu_utama terdaftar.")
+
 
 
 
