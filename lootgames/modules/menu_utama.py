@@ -839,31 +839,46 @@ def get_today_int() -> int:
     return int(date.today().strftime("%Y%m%d"))
 
 def init_user_login(user_id: int):
+    today_int = get_today_int()
     if user_id not in LOGIN_STATE:
         LOGIN_STATE[user_id] = {
             "last_login_day": 0,
             "streak": 0,
             "umpan_given": set(),
-            "login_dates": set()  # set of YYYYMMDD integers
+            "login_dates": set()
         }
-        last_weekday = None
-    else:
-        user = LOGIN_STATE[user_id]
-        last_login_day = user["last_login_day"]
 
-        if last_login_day != 0:
-            # parsing integer YYYYMMDD menjadi objek date
-            y = last_login_day // 10000
-            m = (last_login_day % 10000) // 100
-            d = last_login_day % 100
-            try:
-                last_date = date(y, m, d)
-                last_weekday = last_date.weekday()  # Senin=0, Minggu=6
-            except ValueError:
-                # fallback kalau tanggal invalid
-                last_weekday = None
-        else:
+    user = LOGIN_STATE[user_id]
+    last_login_day = user["last_login_day"]
+    last_weekday = None
+    if last_login_day != 0:
+        y = last_login_day // 10000
+        m = (last_login_day % 10000) // 100
+        d = last_login_day % 100
+        try:
+            last_date = date(y, m, d)
+            last_weekday = last_date.weekday()  # Senin=0 ... Minggu=6
+        except ValueError:
             last_weekday = None
+
+    today = date.today()
+    today_weekday = today.weekday()  # Senin=0 ... Minggu=6
+
+    # reset streak jika hari ini Senin dan terakhir login bukan Minggu
+    if today_weekday == 0 and last_weekday != 6:
+        user["streak"] = 0
+        user["umpan_given"] = set()
+
+    # Cek apakah user sudah login hari ini
+    if today_int not in user["login_dates"]:
+        user["login_dates"].add(today_int)
+        user["last_login_day"] = today_int
+        user["streak"] += 1
+        # beri umpan sesuai streak
+        reward = STREAK_REWARDS.get(min(user["streak"], 7), 0)
+        if reward > 0:
+            for _ in range(reward):
+                umpan.add_umpan(user_id, "A", 1)  # hanya COMMON
 
     # dapatkan weekday hari ini
     today = date.today()
@@ -893,6 +908,7 @@ def register(app: Client):
     app.add_handler(MessageHandler(handle_transfer_message, filters.text & filters.private))
     app.add_handler(CallbackQueryHandler(callback_handler))
     logger.info("[MENU] Handler menu_utama terdaftar.")
+
 
 
 
