@@ -921,26 +921,37 @@ async def show_leaderboard(cq: CallbackQuery, uid: int, page: int = 0):
     await cq.message.edit_text(text, reply_markup=make_keyboard("BBB", uid, page))
 
 # ---------------- MENU OPEN ---------------- #
+OPEN_MENU_STATE = {}  # pastikan ini ada di awal module
+
 async def open_menu(client: Client, message: Message, keyboard=None):
     uid = message.from_user.id
+
+    # Cek apakah menu sudah terbuka
     if OPEN_MENU_STATE.get(uid):
-        return await message.reply("⚠️ Menu sudah terbuka, jangan panggil lagi.")
-    
+        try:
+            await message.reply("⚠️ Menu sudah terbuka, jangan panggil lagi.")
+        except Exception as e:
+            print(f"❌ Gagal mengirim pesan: {e}")
+        return
+
     # Tandai menu user sebagai terbuka
     OPEN_MENU_STATE[uid] = True
 
-    # Kirim pesan dengan atau tanpa keyboard
-    if keyboard:
-        await message.reply("📋 Menu Utama:", reply_markup=keyboard)
-    else:
-        await message.reply("✅ Menu berhasil dibuka.")
+    # Kirim pesan menu
+    try:
+        if keyboard:
+            await message.reply("📋 Menu Utama:", reply_markup=keyboard)
+        else:
+            await message.reply("✅ Menu berhasil dibuka.")
+    except Exception as e:
+        print(f"❌ Gagal mengirim pesan: {e}")
 
-# Contoh pemanggilan:
-# Untuk menu normal
-await open_menu(client, message)
+# ---------------- CONTOH PEMANGGILAN ---------------- #
+# Menu normal
+# await open_menu(client, message)
 
-# Untuk menu PM dengan keyboard
-await open_menu(client, message, keyboard=make_keyboard("main", message.from_user.id))
+# Menu dengan keyboard
+# await open_menu(client, message, keyboard=make_keyboard("main", message.from_user.id))
 
 def get_today_int() -> int:
     """Return integer for today (YYYYMMDD)"""
@@ -1014,5 +1025,3 @@ def register(app: Client):
     app.add_handler(MessageHandler(handle_transfer_message, filters.text & filters.private))
     app.add_handler(CallbackQueryHandler(callback_handler))
     logger.info("[MENU] Handler menu_utama terdaftar.")
-
-
