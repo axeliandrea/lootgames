@@ -387,47 +387,21 @@ async def callback_handler(client: Client, cq: CallbackQuery):
     await cq.answer()
 
     # ===== LOGIN HARIAN CALLBACK =====
-    if data == "LOGIN_TODAY":
+        elif data == "LOGIN_STATUS":
         # inisialisasi user jika belum ada
         init_user_login(user_id)
-        user_login = LOGIN_STATE[user_id]  # <-- ambil state sekarang
-        today = get_today_int()            # <-- integer YYYYMMDD untuk hari ini
 
-        if today in user_login["login_dates"]:
-            await cq.answer("❌ Kamu sudah absen hari ini!", show_alert=True)
-            return
-
-        # tambahkan tanggal login hari ini
-        user_login["login_dates"].add(today)
-
-        # update streak dan hari terakhir
-        user_login["streak"] += 1
-        user_login["last_login_day"] = today
-
-        # berikan reward
-        reward = STREAK_REWARDS.get(user_login["streak"], 10)  # max 10 umpan
-        reward_key = f"COMMON_{user_login['streak']}"  # track per streak
-        if reward_key not in user_login["umpan_given"]:
-            umpan.add_umpan(user_id, "A", reward)
-            user_login["umpan_given"].add(reward_key)
-            msg = f"🎉 Absen berhasil! Kamu mendapatkan {reward} Umpan COMMON 🐛. Streak: {user_login['streak']} hari."
-        else:
-            msg = f"✅ Absen berhasil! Tapi umpan sudah diterima sebelumnya. Streak: {user_login['streak']} hari."
-
-        await cq.message.edit_text(msg, reply_markup=make_keyboard("G", user_id))
-        return
-
-    elif data == "LOGIN_STATUS":
-        # inisialisasi user jika belum ada
-        init_user_login(user_id)
-    
         # ambil login_dates
         user_login = LOGIN_STATE.get(user_id, {"login_dates": set()})
         login_dates_set = user_login.get("login_dates", set())
 
         days_of_week_id = ["SENIN", "SELASA", "RABU", "KAMIS", "JUMAT", "SABTU", "MINGGU"]
         today = date.today()
-        last_7_days = [(today - timedelta(days=i)) for i in range(6, -1, -1)]  # 6 hari lalu sampai hari ini
+
+        # hitung hari minggu terakhir
+        days_since_sunday = today.weekday() + 1 if today.weekday() != 6 else 0  # Senin=0 ... Minggu=6
+        start_of_week = today - timedelta(days=days_since_sunday)  # Senin minggu ini
+        last_7_days = [(start_of_week + timedelta(days=i)) for i in range(7)]  # Senin - Minggu
 
         status_text = "📅 Status LOGIN 7 Hari Terakhir:\n"
         for i, day in enumerate(last_7_days, start=1):
@@ -919,18 +893,4 @@ def register(app: Client):
     app.add_handler(MessageHandler(handle_transfer_message, filters.text & filters.private))
     app.add_handler(CallbackQueryHandler(callback_handler))
     logger.info("[MENU] Handler menu_utama terdaftar.")
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
