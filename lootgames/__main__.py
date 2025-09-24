@@ -77,7 +77,7 @@ async def fishing_callback_handler(client, callback_query):
 app.add_handler(CallbackQueryHandler(fishing_callback_handler))
 
 # ================= CALLBACK TREASURE CHEST ================= #
-# Ini penting agar tombol treasure chest bisa diproses
+# Handler ini penting agar tombol treasure chest bisa diproses
 from lootgames.modules.treasure_chest import chest_callback
 app.add_handler(CallbackQueryHandler(chest_callback, filters=None))
 
