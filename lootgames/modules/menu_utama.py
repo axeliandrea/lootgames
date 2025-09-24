@@ -10,6 +10,7 @@ from lootgames.modules import yapping, umpan, user_database
 from lootgames.modules import fizz_coin
 from lootgames.modules import aquarium
 from lootgames.modules.gacha_fishing import fishing_loot
+from datetime import date
 
 logger = logging.getLogger(__name__)
 OWNER_ID = 6395738130
@@ -19,6 +20,7 @@ TARGET_GROUP = -1002946278772  # ganti sesuai supergroup bot
 TRANSFER_STATE = {}       # user_id: {"jenis": "A/B/C/D"}
 TUKAR_POINT_STATE = {}    # user_id: {"step": step, "jumlah_umpan": n}
 OPEN_MENU_STATE = {}      # user_id: True jika menu aktif
+LOGIN_STATE = {}  # user_id: {"last_login_day": int, "streak": int, "umpan_given": set()}
 
 # ---------------- SELL / ITEM CONFIG ---------------- #
 # inv_key harus cocok dengan key di aquarium_data.json (nama item di DB)
@@ -259,6 +261,16 @@ for jenis in ["COMMON", "RARE", "LEGEND", "MYTHIC"]:
         ]
     }
 
+# ---------------- LOGIN / ABSEN HARIAN ---------------- #
+"G" = {
+    "title": "📋 LOGIN HARIAN",
+    "buttons": [
+        ("✅ Absen Hari Ini", "LOGIN_TODAY"),
+        ("📅 Lihat Status Login 7 Hari", "LOGIN_STATUS"),
+        ("⬅️ Kembali", "main")
+    ]
+}
+
 # ---------------- Helper untuk normalisasi key ---------------- #
 
 def normalize_key(key: str) -> str:
@@ -366,34 +378,59 @@ def make_keyboard(menu_key: str, user_id=None, page: int = 0) -> InlineKeyboardM
 
     return InlineKeyboardMarkup(buttons)
 
+# LOGIN HARIAN
+if data == "LOGIN_TODAY":
+    init_user_login(user_id)
+    today = get_today_int()
+    user_login = LOGIN_STATE[user_id]
+
+    if user_login["last_login_day"] == today:
+        await cq.answer("❌ Kamu sudah absen hari ini!", show_alert=True)
+        return
+
+    # update streak
+    user_login["streak"] += 1
+    user_login["last_login_day"] = today
+
+    # berikan 1 umpan COMMON A jika belum dapat
+    if "COMMON_A" not in user_login["umpan_given"]:
+        umpan.add_umpan(user_id, "A", 1)
+        user_login["umpan_given"].add("COMMON_A")
+        msg = f"🎉 Absen berhasil! Kamu mendapatkan 1 Umpan COMMON 🐛. Streak: {user_login['streak']} hari."
+    else:
+        msg = f"✅ Absen berhasil! Tapi umpan sudah diterima sebelumnya. Streak: {user_login['streak']} hari."
+
+    await cq.message.edit_text(msg, reply_markup=make_keyboard("G", user_id))
+    return
+
+if data == "LOGIN_STATUS":
+    init_user_login(user_id)
+    user_login = LOGIN_STATE[user_id]
+    streak = user_login["streak"]
+    last_day = user_login["last_login_day"]
+
+    # buat text 7 hari
+    status_text = "📅 Status LOGIN 7 Hari Terakhir:\n"
+    for i in range(7):
+        status_text += f"Day {-6 + i}: "
+        status_text += "✅" if streak >= i + 1 else "❌"
+        status_text += "\n"
+
+    await cq.message.edit_text(status_text, reply_markup=make_keyboard("G", user_id))
+    return
+
+elif menu_key == "G" and user_id:
+    buttons = []
+    buttons.append([InlineKeyboardButton("✅ Absen Hari Ini", callback_data="LOGIN_TODAY")])
+    buttons.append([InlineKeyboardButton("📅 Lihat Status Login 7 Hari", callback_data="LOGIN_STATUS")])
+    buttons.append([InlineKeyboardButton("⬅️ Kembali", callback_data="main")])
+    return InlineKeyboardMarkup(buttons)
+
 # ---------------- CALLBACK HANDLER ---------------- #
 async def callback_handler(client: Client, cq: CallbackQuery):
     data, user_id = cq.data, cq.from_user.id
     logger.info(f"[DEBUG] callback -> user:{user_id}, data:{data}")
     await cq.answer()
-
-    # ---------------- SYSTEM LOGIN ---------------- #
-    if data.startswith("G_"):
-        uid = cq.from_user.id
-        login_db = yapping.load_login()
-
-        if data == "G_LOGIN":
-            login_db[str(uid)] = True
-            yapping.save_login(login_db)
-            await cq.message.edit_text("✅ Login berhasil!", reply_markup=make_keyboard("G", uid))
-            return
-
-        if data == "G_LOGOUT":
-            login_db[str(uid)] = False
-            yapping.save_login(login_db)
-            await cq.message.edit_text("✅ Logout berhasil!", reply_markup=make_keyboard("G", uid))
-            return
-
-        if data == "G_STATUS":
-            status = login_db.get(str(uid), False)
-            text = f"🔐 Status login kamu: {'✅ Login aktif' if status else '❌ Tidak login'}"
-            await cq.message.edit_text(text, reply_markup=make_keyboard("G", uid))
-            return
 
     # ---------------- REGISTER FLOW ---------------- #
     if data == "REGISTER_YES":
@@ -801,6 +838,18 @@ async def open_menu_pm(client: Client, message: Message):
     OPEN_MENU_STATE[uid] = True
     await message.reply("📋 Menu Utama:", reply_markup=make_keyboard("main", uid))
 
+def get_today_int() -> int:
+    """Return integer for today (YYYYMMDD)"""
+    return int(date.today().strftime("%Y%m%d"))
+
+def init_user_login(user_id: int):
+    if user_id not in LOGIN_STATE:
+        LOGIN_STATE[user_id] = {
+            "last_login_day": 0,
+            "streak": 0,
+            "umpan_given": set()
+        }
+
 # ---------------- REGISTER HANDLERS ---------------- #
 def register(app: Client):
     # register handlers already expected by your app:
@@ -810,41 +859,3 @@ def register(app: Client):
     app.add_handler(MessageHandler(handle_transfer_message, filters.text & filters.private))
     app.add_handler(CallbackQueryHandler(callback_handler))
     logger.info("[MENU] Handler menu_utama terdaftar.")
-
-# =============== MENU G / SYSTEM LOGIN =============== #
-MENU_STRUCTURE["G"] = {
-    "title": "🔐 System Login",
-    "buttons": [
-        ("LOGIN", "G_LOGIN"),
-        ("LOGOUT", "G_LOGOUT"),
-        ("STATUS LOGIN", "G_STATUS"),
-        ("⬅️ Kembali", "main")
-    ]
-}
-
-# ---------------- SYSTEM LOGIN ---------------- #
-if data.startswith("G_"):
-    uid = cq.from_user.id
-    login_db = yapping.load_login()  # asumsi DB login mirip load_points(), dictionary user_id -> status
-
-    if data == "G_LOGIN":
-        login_db[str(uid)] = True
-        yapping.save_login(login_db)
-        await cq.message.edit_text("✅ Login berhasil!", reply_markup=make_keyboard("G", uid))
-        return
-
-    if data == "G_LOGOUT":
-        login_db[str(uid)] = False
-        yapping.save_login(login_db)
-        await cq.message.edit_text("✅ Logout berhasil!", reply_markup=make_keyboard("G", uid))
-        return
-
-    if data == "G_STATUS":
-        status = login_db.get(str(uid), False)
-        text = f"🔐 Status login kamu: {'✅ Login aktif' if status else '❌ Tidak login'}"
-        await cq.message.edit_text(text, reply_markup=make_keyboard("G", uid))
-        return
-
-
-
-
