@@ -22,6 +22,8 @@ TUKAR_POINT_STATE = {}    # user_id: {"step": step, "jumlah_umpan": n}
 OPEN_MENU_STATE = {}      # user_id: True jika menu aktif
 LOGIN_STATE = {}  # user_id: {"last_login_day": int, "streak": int, "umpan_given": set()}
 STREAK_REWARDS = {1: 4, 2: 5, 3: 6, 4: 7, 5: 8, 6: 9, 7: 10}
+login_status = [False, False, False, True, False, False, False]
+print(generate_login_status(login_status))
 
 
 # ---------------- SELL / ITEM CONFIG ---------------- #
@@ -892,6 +894,7 @@ def register(app: Client):
     app.add_handler(MessageHandler(handle_transfer_message, filters.text & filters.private))
     app.add_handler(CallbackQueryHandler(callback_handler))
     logger.info("[MENU] Handler menu_utama terdaftar.")
+
 
 
 
