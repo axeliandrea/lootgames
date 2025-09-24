@@ -634,7 +634,9 @@ async def callback_handler(client: Client, cq: CallbackQuery):
         normalized_inv = {}
         for k, v in user_inv.items():
             norm = normalize_key(k)
-            normalized_inv[norm] = (k, v)
+            if norm not in normalized_inv:
+                normalized_inv[norm] = []
+            normalized_inv[norm].append((k, v))
 
         target_norm = normalize_key(item["inv_key"])  # normalisasi inv_key
         # cek alias mapping juga
@@ -896,10 +898,14 @@ def init_user_login(user_id: int):
         day = start_of_week + timedelta(days=i)
         login_days.append(day.strftime("%A"))
 
-    # Reset streak jika hari ini Senin dan terakhir bukan Minggu
-    if today_weekday == 0 and last_weekday != 6:
-        LOGIN_STATE[user_id]["streak"] = 0
-        LOGIN_STATE[user_id]["umpan_given"] = set()
+    # Reset streak jika hari ini Senin dan terakhir login bukan Minggu
+    if today_weekday == 0:
+        if last_weekday is not None and last_weekday != 6:
+            LOGIN_STATE[user_id]["streak"] = 0
+            LOGIN_STATE[user_id]["umpan_given"] = set()
+        elif last_weekday is None:
+            LOGIN_STATE[user_id]["streak"] = 0
+            LOGIN_STATE[user_id]["umpan_given"] = set()
 
 # ---------------- REGISTER HANDLERS ---------------- #
 def register(app: Client):
@@ -910,6 +916,7 @@ def register(app: Client):
     app.add_handler(MessageHandler(handle_transfer_message, filters.text & filters.private))
     app.add_handler(CallbackQueryHandler(callback_handler))
     logger.info("[MENU] Handler menu_utama terdaftar.")
+
 
 
 
