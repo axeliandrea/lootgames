@@ -10,7 +10,7 @@ from lootgames.modules import yapping, umpan, user_database
 from lootgames.modules import fizz_coin
 from lootgames.modules import aquarium
 from lootgames.modules.gacha_fishing import fishing_loot
-from datetime import date
+from datetime import datetime, date
 
 logger = logging.getLogger(__name__)
 OWNER_ID = 6395738130
@@ -390,12 +390,16 @@ async def callback_handler(client: Client, cq: CallbackQuery):
     if data == "LOGIN_TODAY":
         # inisialisasi user jika belum ada
         init_user_login(user_id)
+        reset_weekly_streak_if_needed(user_id)   # <--- panggil di sini
         today = get_today_int()
         user_login = LOGIN_STATE[user_id]
 
         if user_login["last_login_day"] == today:
             await cq.answer("❌ Kamu sudah absen hari ini!", show_alert=True)
             return
+
+        # reset mingguan jika perlu
+        reset_weekly_streak_if_needed(user_id)
 
         # update streak dan hari terakhir
         user_login["streak"] += 1
@@ -859,6 +863,29 @@ def init_user_login(user_id: int):
             "umpan_given": set()
         }
 
+# ---------------- RESET MINGGUAN ---------------- #
+def reset_weekly_streak_if_needed(user_id: int):
+    """Reset streak jika user tidak absen di minggu yang sama."""
+    if user_id not in LOGIN_STATE:
+        init_user_login(user_id)
+        return
+
+    user_login = LOGIN_STATE[user_id]
+    last_day = user_login["last_login_day"]
+    if last_day == 0:
+        return
+
+    last_date = datetime.strptime(str(last_day), "%Y%m%d").date()
+    today_date = date.today()
+
+    # cek nomor minggu ISO
+    last_week = last_date.isocalendar()[1]
+    this_week = today_date.isocalendar()[1]
+
+    if this_week != last_week:
+        user_login["streak"] = 0
+        user_login["umpan_given"].clear()
+
 # ---------------- REGISTER HANDLERS ---------------- #
 def register(app: Client):
     # register handlers already expected by your app:
@@ -868,6 +895,7 @@ def register(app: Client):
     app.add_handler(MessageHandler(handle_transfer_message, filters.text & filters.private))
     app.add_handler(CallbackQueryHandler(callback_handler))
     logger.info("[MENU] Handler menu_utama terdaftar.")
+
 
 
 
