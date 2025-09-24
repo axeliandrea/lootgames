@@ -888,6 +888,7 @@ def init_user_login(user_id: int):
 
     # dapatkan weekday hari ini
     today = date.today()
+    today_weekday = today.weekday()  # <-- tambahkan ini
     start_of_week = today - timedelta(days=today.weekday())  # Senin minggu ini
 
     login_days = []
@@ -909,6 +910,7 @@ def register(app: Client):
     app.add_handler(MessageHandler(handle_transfer_message, filters.text & filters.private))
     app.add_handler(CallbackQueryHandler(callback_handler))
     logger.info("[MENU] Handler menu_utama terdaftar.")
+
 
 
 
