@@ -407,8 +407,9 @@ async def callback_handler(client: Client, cq: CallbackQuery):
     logger.info(f"[DEBUG] callback -> user:{user_id}, data:{data}")
     await cq.answer()
 
-    # ===== LOGIN HARIAN =====
+    # ===== LOGIN HARIAN CALLBACK =====
     if data == "LOGIN_TODAY":
+        # inisialisasi user jika belum ada
         init_user_login(user_id)
         today = get_today_int()
         user_login = LOGIN_STATE[user_id]
@@ -417,11 +418,11 @@ async def callback_handler(client: Client, cq: CallbackQuery):
             await cq.answer("❌ Kamu sudah absen hari ini!", show_alert=True)
             return
 
-        # update streak
+        # update streak dan hari terakhir
         user_login["streak"] += 1
         user_login["last_login_day"] = today
 
-        # berikan 1 umpan COMMON A jika belum dapat
+        # berikan 1 Umpan COMMON A jika belum pernah diterima
         if "COMMON_A" not in user_login["umpan_given"]:
             umpan.add_umpan(user_id, "A", 1)
             user_login["umpan_given"].add("COMMON_A")
@@ -431,7 +432,34 @@ async def callback_handler(client: Client, cq: CallbackQuery):
 
         await cq.message.edit_text(msg, reply_markup=make_keyboard("G", user_id))
         return
-    
+
+    elif data == "LOGIN_STATUS":
+        # tampilkan 7 hari terakhir streak user
+        init_user_login(user_id)
+        user_login = LOGIN_STATE[user_id]
+        streak = user_login["streak"]
+
+        status_text = "📅 Status LOGIN 7 Hari Terakhir:\n"
+        for i in range(7):
+            status_text += f"Day {-6 + i}: "
+            status_text += "✅" if streak >= i + 1 else "❌"
+            status_text += "\n"
+
+        await cq.message.edit_text(status_text, reply_markup=make_keyboard("G", user_id))
+        return
+
+    # MENU OPEN untuk login, tombol navigasi
+    elif data == "G":
+        # tampilkan menu LOGIN HARIAN
+        buttons = [
+            [InlineKeyboardButton("✅ Absen Hari Ini", callback_data="LOGIN_TODAY")],
+            [InlineKeyboardButton("📅 Lihat Status Login 7 Hari", callback_data="LOGIN_STATUS")],
+            [InlineKeyboardButton("⬅️ Kembali", callback_data="main")]
+        ]
+        kb = InlineKeyboardMarkup(buttons)
+        await cq.message.edit_text("📋 LOGIN HARIAN", reply_markup=kb)
+        return
+
     # ---------------- REGISTER FLOW ---------------- #
     if data == "REGISTER_YES":
         uname = cq.from_user.username or "TanpaUsername"
@@ -859,5 +887,6 @@ def register(app: Client):
     app.add_handler(MessageHandler(handle_transfer_message, filters.text & filters.private))
     app.add_handler(CallbackQueryHandler(callback_handler))
     logger.info("[MENU] Handler menu_utama terdaftar.")
+
 
 
