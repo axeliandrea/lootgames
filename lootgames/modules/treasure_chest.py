@@ -1,23 +1,29 @@
+# lootgames/modules/treasure_chest.py
 import logging
 import random
-from pyrogram import Client, filters
-from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
+from pyrogram import filters, Client
+from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery
 
-from lootgames.modules import umpan
+from lootgames.modules.umpan import add_umpan
 
 logger = logging.getLogger(__name__)
 
 OWNER_ID = 6395738130
-TARGET_GROUP = -1002946278772  # ganti sesuai ID group
-clicked_users = set()  # user yang sudah klik chest
+TARGET_GROUP = -1002946278772  # Ganti sesuai ID group
+clicked_users = set()  # Track user yang sudah buka chest
 
 def register(app: Client):
     logger.info("[CHEST] Registering treasure_chest module...")
 
-    # ================= PRIVATE COMMAND OWNER ================= #
-    @app.on_message(filters.user(OWNER_ID) & filters.command("treasurechest", prefixes=["."]))
-    async def treasure_handler(client, message):
-        logger.info(f"[CHEST] Command diterima dari {message.from_user.id}")
+    # ================= COMMAND OWNER ================= #
+    @app.on_message(
+        filters.user(OWNER_ID) &
+        filters.command("treasurechest", prefixes=["."]) &
+        (filters.private | filters.group)
+    )
+    async def treasure_handler(client: Client, message):
+        logger.info(f"[CHEST] .treasurechest command diterima dari {message.from_user.id}")
+
         await message.reply("⏳ Preparing kirim treasure chest...")
 
         keyboard = InlineKeyboardMarkup(
@@ -31,13 +37,16 @@ def register(app: Client):
                 reply_markup=keyboard
             )
             await message.reply(f"✅ Berhasil kirim treasure chest ke group {TARGET_GROUP}")
+            # Reset clicked_users setiap chest baru
+            clicked_users.clear()
+            logger.info("[CHEST] clicked_users di-reset untuk chest baru")
         except Exception as e:
             logger.error(f"[CHEST] Gagal kirim chest: {e}")
             await message.reply(f"❌ Gagal kirim chest: {e}")
 
-    # ================= CALLBACK QUERY UNTUK SEMUA USER ================= #
+    # ================= CALLBACK UNTUK USER ================= #
     @app.on_callback_query(filters.regex("^open_treasure$"))
-    async def chest_callback(client, cq):
+    async def chest_callback(client: Client, cq: CallbackQuery):
         user = cq.from_user
         if user.id in clicked_users:
             await cq.answer("⚠️ Kamu sudah membuka chest ini!", show_alert=True)
@@ -46,16 +55,17 @@ def register(app: Client):
         clicked_users.add(user.id)
         logger.info(f"[CHEST] User {user.id} ({user.first_name}) klik chest")
 
-        # Random reward
+        # Tentukan hadiah
         chance = random.randint(1, 100)
-        if chance <= 10:
-            # User menang umpan tipe A
-            umpan.init_user_if_missing(user.id, user.username)
-            umpan.add_umpan(user.id, "A", 1)
-            await cq.answer("🎉 Selamat! Kamu mendapatkan 1 umpan tipe A!", show_alert=True)
-            logger.info(f"[CHEST] User {user.id} mendapatkan 1 umpan tipe A")
-        else:
+        if chance <= 90:
             # Zonk
-            await cq.answer("💀 Zonk! Tidak ada reward kali ini.", show_alert=True)
-            logger.info(f"[CHEST] User {user.id} zonk")
-
+            text = "💀 Zonk! Kamu tidak mendapatkan apa-apa."
+            await cq.answer(text, show_alert=True)
+            logger.info(f"[CHEST] User {user.id} dapat ZONK")
+        else:
+            # 10% chance dapat umpan tipe A
+            jumlah_umpan = random.randint(1, 3)  # Bisa ubah jumlah
+            add_umpan(user.id, "A", jumlah_umpan)
+            text = f"🎉 Selamat! Kamu mendapatkan {jumlah_umpan} umpan tipe A."
+            await cq.answer(text, show_alert=True)
+            logger.info(f"[CHEST] User {user.id} dapat {jumlah_umpan} umpan tipe A")
