@@ -4,6 +4,7 @@ import logging
 import os
 from pyrogram import Client
 from pyrogram.handlers import CallbackQueryHandler
+from pyrogram import filters
 
 # ================= IMPORT MODULES ================= #
 from lootgames.modules import (
@@ -12,7 +13,7 @@ from lootgames.modules import (
     user_database,
     gacha_fishing,
     aquarium,
-    treasure_chest  # <<< TREASURE CHEST MODULE
+    treasure_chest  # TREASURE CHEST MODULE
 )
 from lootgames.config import (
     API_ID,
@@ -38,9 +39,9 @@ app = Client(
 
 # ================= REGISTER MODULES ================= #
 yapping.register(app)
-menu_utama.register(app)
+menu_utama.register(app)         # termasuk .menufish command
 user_database.register(app)
-treasure_chest.register(app)   # <<< REGISTER TREASURE CHEST MODULE
+treasure_chest.register(app)     # treasure chest command & callback
 
 # ================= CALLBACK FISHING ================= #
 async def fishing_callback_handler(client, callback_query):
@@ -54,6 +55,7 @@ async def fishing_callback_handler(client, callback_query):
         jenis = data.replace("FISH_CONFIRM_", "")
         username = callback_query.from_user.username or f"user{user_id}"
 
+        # Ambil TARGET_GROUP dari menu_utama
         from lootgames.modules.menu_utama import TARGET_GROUP
 
         # Feedback ke user
@@ -71,7 +73,13 @@ async def fishing_callback_handler(client, callback_query):
         except Exception as e:
             logger.error(f"Gagal proses fishing_loot: {e}")
 
+# Daftarkan handler callback fishing
 app.add_handler(CallbackQueryHandler(fishing_callback_handler))
+
+# ================= CALLBACK TREASURE CHEST ================= #
+# Tombol treasure chest
+from lootgames.modules.treasure_chest import register_chest_callback
+register_chest_callback(app)  # Pastikan di treasure_chest.py ada fungsi ini
 
 # ================= MAIN BOT ================= #
 async def main():
@@ -88,8 +96,15 @@ async def main():
     except Exception as e:
         logger.error(f"Gagal kirim notifikasi start: {e}")
 
+    # Bot berjalan terus
     await asyncio.Event().wait()
 
 # ================= ENTRY POINT ================= #
 if __name__ == "__main__":
+    try:
+        import nest_asyncio
+        nest_asyncio.apply()
+    except ImportError:
+        pass
+
     asyncio.run(main())
