@@ -301,19 +301,6 @@ def make_keyboard(menu_key: str, user_id=None, page: int = 0) -> InlineKeyboardM
     # ... (sama persis seperti versi sebelumnya, handling leaderboard, umpan, store, inventory) ...
     return InlineKeyboardMarkup(buttons)
 
-def get_today_int() -> int:
-    today = date.today()
-    return today.year * 10000 + today.month * 100 + today.day
-
-def init_user_login(user_id: int):
-    if user_id not in LOGIN_STATE:
-        LOGIN_STATE[user_id] = {
-            "streak": 0,
-            "last_login_day": 0,
-            "umpan_given": set(),
-            "login_days": set()
-        }
-
 def mark_login_today(user_id: int):
     init_user_login(user_id)
     today_int = get_today_int()
@@ -934,19 +921,26 @@ async def show_leaderboard(cq: CallbackQuery, uid: int, page: int = 0):
     await cq.message.edit_text(text, reply_markup=make_keyboard("BBB", uid, page))
 
 # ---------------- MENU OPEN ---------------- #
-async def open_menu(client: Client, message: Message):
+async def open_menu(client: Client, message: Message, keyboard=None):
     uid = message.from_user.id
     if OPEN_MENU_STATE.get(uid):
         return await message.reply("⚠️ Menu sudah terbuka, jangan panggil lagi.")
+    
+    # Tandai menu user sebagai terbuka
     OPEN_MENU_STATE[uid] = True
-    await message.reply(MENU_STRUCTURE["main"]["title"], reply_markup=make_keyboard("main", uid))
 
-async def open_menu_pm(client: Client, message: Message):
-    uid = message.from_user.id
-    if OPEN_MENU_STATE.get(uid):
-        return await message.reply("⚠️ Menu sudah terbuka, jangan panggil lagi.")
-    OPEN_MENU_STATE[uid] = True
-    await message.reply("📋 Menu Utama:", reply_markup=make_keyboard("main", uid))
+    # Kirim pesan dengan atau tanpa keyboard
+    if keyboard:
+        await message.reply("📋 Menu Utama:", reply_markup=keyboard)
+    else:
+        await message.reply("✅ Menu berhasil dibuka.")
+
+# Contoh pemanggilan:
+# Untuk menu normal
+await open_menu(client, message)
+
+# Untuk menu PM dengan keyboard
+await open_menu(client, message, keyboard=make_keyboard("main", message.from_user.id))
 
 def get_today_int() -> int:
     """Return integer for today (YYYYMMDD)"""
@@ -1020,4 +1014,5 @@ def register(app: Client):
     app.add_handler(MessageHandler(handle_transfer_message, filters.text & filters.private))
     app.add_handler(CallbackQueryHandler(callback_handler))
     logger.info("[MENU] Handler menu_utama terdaftar.")
+
 
