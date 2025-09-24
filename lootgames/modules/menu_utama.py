@@ -418,25 +418,27 @@ async def callback_handler(client: Client, cq: CallbackQuery):
 
     # ===== LOGIN HARIAN CALLBACK =====
     if data == "LOGIN_TODAY":
-        # inisialisasi user jika belum ada
+        # Inisialisasi user jika belum ada
         init_user_login(user_id)
         today = get_today_int()
         user_login = LOGIN_STATE[user_id]
 
-        if user_login["last_login_day"] == today:
+        # Cek apakah user sudah login hari ini
+        if user_login.get("last_login_day") == today:
             await cq.answer("❌ Kamu sudah absen hari ini!", show_alert=True)
             return
 
-        # update streak dan hari terakhir
-        user_login["streak"] += 1
-        user_login["login_dates"].add(today)
+        # Update streak dan tanggal login
+        user_login["streak"] = user_login.get("streak", 0) + 1
+        user_login.setdefault("login_dates", set()).add(today)
+        user_login["last_login_day"] = today
 
-        # berikan 1 Umpan COMMON A jika belum pernah diterima
-        reward = STREAK_REWARDS.get(user_login["streak"], 10)  # max 10 umpan
-        reward_key = f"COMMON_{user_login['streak']}"  # track per streak
-        if reward_key not in user_login["umpan_given"]:
+        # Berikan reward Umpan jika belum pernah diterima
+        reward = STREAK_REWARDS.get(user_login["streak"], 10)  # default 10 umpan
+        reward_key = f"COMMON_{user_login['streak']}"  # tracking per streak
+        if reward_key not in user_login.get("umpan_given", set()):
             umpan.add_umpan(user_id, "A", reward)
-            user_login["umpan_given"].add(reward_key)
+            user_login.setdefault("umpan_given", set()).add(reward_key)
             msg = f"🎉 Absen berhasil! Kamu mendapatkan {reward} Umpan COMMON 🐛. Streak: {user_login['streak']} hari."
         else:
             msg = f"✅ Absen berhasil! Tapi umpan sudah diterima sebelumnya. Streak: {user_login['streak']} hari."
@@ -901,6 +903,7 @@ def register(app: Client):
     app.add_handler(MessageHandler(handle_transfer_message, filters.text & filters.private))
     app.add_handler(CallbackQueryHandler(callback_handler))
     logger.info("[MENU] Handler menu_utama terdaftar.")
+
 
 
 
