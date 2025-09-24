@@ -10,7 +10,7 @@ from lootgames.modules import yapping, umpan, user_database
 from lootgames.modules import fizz_coin
 from lootgames.modules import aquarium
 from lootgames.modules.gacha_fishing import fishing_loot
-from datetime import date, timedelta
+from datetime import date
 
 logger = logging.getLogger(__name__)
 OWNER_ID = 6395738130
@@ -387,35 +387,50 @@ async def callback_handler(client: Client, cq: CallbackQuery):
     await cq.answer()
 
     # ===== LOGIN HARIAN CALLBACK =====
-    if data == "LOGIN_STATUS":
+    if data == "LOGIN_TODAY":
         # inisialisasi user jika belum ada
         init_user_login(user_id)
+        today = get_today_int()
+        user_login = LOGIN_STATE[user_id]
 
-        # ambil login_dates
-        user_login = LOGIN_STATE.get(user_id, {"login_dates": set()})
-        login_dates_set = user_login.get("login_dates", set())
+        if user_login["last_login_day"] == today:
+            await cq.answer("❌ Kamu sudah absen hari ini!", show_alert=True)
+            return
 
-        days_of_week_id = ["SENIN", "SELASA", "RABU", "KAMIS", "JUMAT", "SABTU", "MINGGU"]
-        today = date.today()
+        # update streak dan hari terakhir
+        user_login["streak"] += 1
+        user_login["last_login_day"] = today
 
-        # hitung hari minggu terakhir
-        days_since_sunday = today.weekday() + 1 if today.weekday() != 6 else 0  # Senin=0 ... Minggu=6
-        start_of_week = today - timedelta(days=days_since_sunday)  # Senin minggu ini
-        last_7_days = [(start_of_week + timedelta(days=i)) for i in range(7)]  # Senin - Minggu
+        # berikan 1 Umpan COMMON A jika belum pernah diterima
+        reward = STREAK_REWARDS.get(user_login["streak"], 10)  # max 10 umpan
+        reward_key = f"COMMON_{user_login['streak']}"  # track per streak
+        if reward_key not in user_login["umpan_given"]:
+            umpan.add_umpan(user_id, "A", reward)
+            user_login["umpan_given"].add(reward_key)
+            msg = f"🎉 Absen berhasil! Kamu mendapatkan {reward} Umpan COMMON 🐛. Streak: {user_login['streak']} hari."
+        else:
+            msg = f"✅ Absen berhasil! Tapi umpan sudah diterima sebelumnya. Streak: {user_login['streak']} hari."
+
+        await cq.message.edit_text(msg, reply_markup=make_keyboard("G", user_id))
+        return
+
+    elif data == "LOGIN_STATUS":
+        # tampilkan 7 hari terakhir streak user
+        init_user_login(user_id)
+        user_login = LOGIN_STATE[user_id]
+        streak = user_login["streak"]
 
         status_text = "📅 Status LOGIN 7 Hari Terakhir:\n"
-        for i, day in enumerate(last_7_days, start=1):
-            day_name = days_of_week_id[day.weekday()]  # indeks 0=Senin
-            day_int = int(day.strftime("%Y%m%d"))
-            checked = "✅" if day_int in login_dates_set else "❌"
-            status_text += f"LOGIN-{i}: {checked} {day_name}\n"
+        for i in range(7):
+            status_text += f"LOGIN-{i+1}: "
+            status_text += "✅" if streak >= i + 1 else "❌"
+            status_text += "\n"
 
-        # tampilkan ke user
         await cq.message.edit_text(status_text, reply_markup=make_keyboard("G", user_id))
         return
 
     # MENU OPEN untuk login, tombol navigasi
-    if data == "G":
+    elif data == "G":
         # tampilkan menu LOGIN HARIAN
         buttons = [
             [InlineKeyboardButton("✅ Absen Hari Ini", callback_data="LOGIN_TODAY")],
@@ -611,9 +626,7 @@ async def callback_handler(client: Client, cq: CallbackQuery):
         normalized_inv = {}
         for k, v in user_inv.items():
             norm = normalize_key(k)
-            if norm not in normalized_inv:
-                normalized_inv[norm] = []
-            normalized_inv[norm].append((k, v))
+            normalized_inv[norm] = (k, v)
 
         target_norm = normalize_key(item["inv_key"])  # normalisasi inv_key
         # cek alias mapping juga
@@ -839,65 +852,12 @@ def get_today_int() -> int:
     return int(date.today().strftime("%Y%m%d"))
 
 def init_user_login(user_id: int):
-    today_int = get_today_int()
     if user_id not in LOGIN_STATE:
         LOGIN_STATE[user_id] = {
             "last_login_day": 0,
             "streak": 0,
-            "umpan_given": set(),
-            "login_dates": set()
+            "umpan_given": set()
         }
-
-    user = LOGIN_STATE[user_id]
-    last_login_day = user["last_login_day"]
-    last_weekday = None
-    if last_login_day != 0:
-        y = last_login_day // 10000
-        m = (last_login_day % 10000) // 100
-        d = last_login_day % 100
-        try:
-            last_date = date(y, m, d)
-            last_weekday = last_date.weekday()  # Senin=0 ... Minggu=6
-        except ValueError:
-            last_weekday = None
-
-    today = date.today()
-    today_weekday = today.weekday()  # Senin=0 ... Minggu=6
-
-    # reset streak jika hari ini Senin dan terakhir login bukan Minggu
-    if today_weekday == 0 and last_weekday != 6:
-        user["streak"] = 0
-        user["umpan_given"] = set()
-
-    # Cek apakah user sudah login hari ini
-    if today_int not in user["login_dates"]:
-        user["login_dates"].add(today_int)
-        user["last_login_day"] = today_int
-        user["streak"] += 1
-        # beri umpan sesuai streak
-        reward = STREAK_REWARDS.get(min(user["streak"], 7), 0)
-        if reward > 0:
-            for _ in range(reward):
-                umpan.add_umpan(user_id, "A", 1)  # hanya COMMON
-
-    # dapatkan weekday hari ini
-    today = date.today()
-    today_weekday = today.weekday()  # <-- tambahkan ini
-    start_of_week = today - timedelta(days=today.weekday())  # Senin minggu ini
-
-    login_days = []
-    for i in range(7):
-        day = start_of_week + timedelta(days=i)
-        login_days.append(day.strftime("%A"))
-
-    # Reset streak jika hari ini Senin dan terakhir login bukan Minggu
-    if today_weekday == 0:
-        if last_weekday is not None and last_weekday != 6:
-            LOGIN_STATE[user_id]["streak"] = 0
-            LOGIN_STATE[user_id]["umpan_given"] = set()
-        elif last_weekday is None:
-            LOGIN_STATE[user_id]["streak"] = 0
-            LOGIN_STATE[user_id]["umpan_given"] = set()
 
 # ---------------- REGISTER HANDLERS ---------------- #
 def register(app: Client):
