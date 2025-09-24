@@ -1,4 +1,4 @@
-# lootgames/modules/yapping.py (debug + perbaikan poin)
+# lootgames/modules/yapping.py
 import os, re, json
 from datetime import datetime
 from pyrogram import Client, filters
@@ -6,34 +6,34 @@ from pyrogram.types import Message
 
 # ================= CONFIG ================= #
 OWNER_ID = 6395738130
-TARGET_GROUP = -1002946278772
+TARGET_GROUP = -1002946278772   # <-- FIXED group ID
 YAPPINGPOINT_DB = "storage/chat_points.json"
 DEBUG = True
 IGNORED_USERS = ["6946903915"]
-MAX_POINT_PER_CHAT = 5
-MILESTONE_INTERVAL = 100
+MAX_POINT_PER_CHAT = 5   # maksimal point per chat bubble
+MILESTONE_INTERVAL = 100 # setiap 100 point chat beri notifikasi
 
 # ================= UTILS ================= #
 def log_debug(msg: str):
     if DEBUG:
         timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        print(f"[YAPPING][{timestamp}] {msg}")
+        print(f"[DEBUG] {timestamp} - {msg}")
 
 def load_json(file_path):
     if os.path.exists(file_path):
         try:
-            with open(file_path, "r", encoding="utf-8") as f:
+            with open(file_path, "r") as f:
                 return json.load(f)
         except json.JSONDecodeError:
-            log_debug(f"⚠️ JSON rusak: {file_path}, membuat ulang")
+            log_debug(f"JSON rusak: {file_path}, membuat ulang")
             return {}
     return {}
 
 def save_json(file_path, data):
     os.makedirs(os.path.dirname(file_path), exist_ok=True)
-    with open(file_path, "w", encoding="utf-8") as f:
-        json.dump(data, f, indent=2, ensure_ascii=False)
-    log_debug(f"💾 Data disimpan ke {file_path}")
+    with open(file_path, "w") as f:
+        json.dump(data, f, indent=2)
+    log_debug(f"Data disimpan ke {file_path}")
 
 # ================= POINTS ================= #
 def load_points() -> dict:
@@ -51,25 +51,21 @@ def add_user_if_not_exist(points, user_id, username):
             "level": 0,
             "last_milestone": 0
         }
-        log_debug(f"👤 User baru ditambahkan: {username} ({user_id})")
+        log_debug(f"User baru ditambahkan: {username} ({user_id})")
     else:
         points[user_id]["username"] = username
         points[user_id].setdefault("level", 0)
         points[user_id].setdefault("last_milestone", 0)
 
-# Perbaikan: hitung semua huruf Unicode (isalpha)
 def calculate_points_from_text(text: str) -> int:
-    if not text:
-        return 0
-    clean_text = ''.join(ch for ch in text if ch.isalpha())  # include unicode letters
-    log_debug(f"🔎 clean_text (letters only): '{clean_text}' len={len(clean_text)}")
+    clean_text = re.sub(r"[^a-zA-Z]", "", text)
     points = len(clean_text) // 5
     return min(points, MAX_POINT_PER_CHAT)
 
 def add_points(points, user_id, username, amount):
     add_user_if_not_exist(points, user_id, username)
     points[str(user_id)]["points"] += amount
-    log_debug(f"➕ {username} ({user_id}) +{amount} point | total: {points[str(user_id)]['points']}")
+    log_debug(f"{username} ({user_id}) +{amount} point | total: {points[str(user_id)]['points']}")
 
 def update_points(user_id, points_change):
     points = load_points()
@@ -78,7 +74,7 @@ def update_points(user_id, points_change):
         points[user_id] = {"username": "Unknown", "points": 0, "level": 0, "last_milestone": 0}
     points[user_id]["points"] += points_change
     save_points(points)
-    log_debug(f"🔄 Updated points for {user_id}: {points_change} change")
+    log_debug(f"Updated points for {user_id}: {points_change} change")
 
 # ================= LEVEL & BADGE ================= #
 LEVEL_EXP = {}
@@ -118,7 +114,7 @@ def get_badge(level: int) -> str:
 # ================= LEADERBOARD ================= #
 def generate_leaderboard(points: dict, top=0) -> str:
     sorted_points = sorted(points.items(), key=lambda x: x[1].get("points", 0), reverse=True)
-    if not sorted_points:
+    if not sorted_points: 
         return "Leaderboard kosong"
     text = "🏆 Leaderboard 🏆\n\n"
     for i, (uid, data) in enumerate(sorted_points, start=1):
@@ -128,80 +124,49 @@ def generate_leaderboard(points: dict, top=0) -> str:
 
 # ================= HANDLER REGISTER ================= #
 def register(app: Client):
-    log_debug(f"✅ Handler registered (Target group: {TARGET_GROUP})")
-
-    # -- DEBUG: handler global untuk cek pesan apa yg bot terima (temporary) -- #
-    @app.on_message(filters.text)
-    async def debug_all_messages(client: Client, message: Message):
-        try:
-            chat_info = f"{getattr(message.chat,'id',None)} / {getattr(message.chat,'title', getattr(message.chat,'first_name',None))}"
-            from_info = f"{getattr(message.from_user,'id',None)} / @{getattr(message.from_user,'username',None)}"
-            log_debug(f"[DEBUG_ALL] chat={chat_info} from={from_info} text={repr(message.text)}")
-        except Exception as e:
-            log_debug(f"[DEBUG_ALL] error: {e}")
+    print("[YAPPING] Handler registered ✅ (Target group:", TARGET_GROUP, ")")
 
     # ----- AUTO POINT DARI CHAT DI GROUP ----- #
     @app.on_message(filters.chat(TARGET_GROUP) & filters.text)
     async def handle_chat(client: Client, message: Message):
-        try:
-            log_debug(f"📩 Pesan masuk (handler group) dari {message.from_user.id if message.from_user else 'UNKNOWN'}: {repr(message.text)}")
-            user = message.from_user
-            if not user:
-                log_debug("⚠️ Pesan tanpa from_user, di-skip")
-                return
-            if str(user.id) in IGNORED_USERS:
-                log_debug(f"🚫 User {user.id} di-ignore")
-                return
+        log_debug(f"Pesan masuk dari {message.from_user.id if message.from_user else 'UNKNOWN'}: {message.text}")
 
-            text = message.text or ""
-            points = load_points()
-            username = user.username or user.first_name or str(user.id)
+        user = message.from_user
+        if not user or str(user.id) in IGNORED_USERS:
+            return
+        text = message.text or ""
+        points = load_points()
+        username = user.username or user.first_name or str(user.id)
 
-            amount = calculate_points_from_text(text)
-            log_debug(f"🧮 Kalkulasi poin untuk {username}: {amount}")
-            if amount > 0:
-                add_points(points, user.id, username, amount)
+        amount = calculate_points_from_text(text)
+        if amount > 0:
+            add_points(points, user.id, username, amount)
 
-                # Check level up
-                new_level = check_level_up(points[str(user.id)])
-                if new_level != -1:
-                    await message.reply_text(
-                        f"🎉 Selamat {username}, naik ke level {new_level}! {get_badge(new_level)}"
-                    )
-                    log_debug(f"⬆️ {username} naik level ke {new_level}")
+            # Check level up
+            new_level = check_level_up(points[str(user.id)])
+            if new_level != -1:
+                await message.reply_text(
+                    f"🎉 Selamat {username}, naik ke level {new_level}! {get_badge(new_level)}"
+                )
 
-                # milestone
-                total_points = points[str(user.id)]["points"]
-                last_milestone = points[str(user.id)].get("last_milestone", 0)
-                if total_points // MILESTONE_INTERVAL > last_milestone:
-                    points[str(user.id)]["last_milestone"] = total_points // MILESTONE_INTERVAL
-                    await message.reply_text(
-                        f"🏆 {username} mencapai {total_points} poin!"
-                    )
-                    log_debug(f"🏅 {username} mencapai milestone {total_points} poin")
+            # milestone
+            total_points = points[str(user.id)]["points"]
+            last_milestone = points[str(user.id)].get("last_milestone", 0)
+            if total_points // MILESTONE_INTERVAL > last_milestone:
+                points[str(user.id)]["last_milestone"] = total_points // MILESTONE_INTERVAL
+                await message.reply_text(
+                    f"🏆 {username} mencapai {total_points} poin!"
+                )
 
-                save_points(points)
-            else:
-                log_debug("ℹ️ Tidak ada poin dari pesan ini")
-        except Exception as e:
-            log_debug(f"❌ Exception di handle_chat: {e}")
+            save_points(points)
 
-    # ----- COMMAND DEBUG: tampilkan chat id ----- #
-    @app.on_message(filters.command("chatid", prefixes=["/", "."]))
-    async def chatid_cmd(client: Client, message: Message):
-        try:
-            cid = message.chat.id
-            uid = message.from_user.id if message.from_user else None
-            await message.reply_text(f"chat.id = {cid}\nfrom.id = {uid}")
-            log_debug(f"📢 /chatid dipanggil -> chat.id {cid}, from.id {uid}")
-        except Exception as e:
-            log_debug(f"❌ chatid_cmd error: {e}")
-
-    # (lainnya: rank/leaderboard/resetyapping/cpc seperti sebelumnya)
+    # ----- COMMAND DI GROUP ----- #
     @app.on_message(filters.command("rank", prefixes=["/", "."]) & filters.chat(TARGET_GROUP))
     async def rank_cmd(client: Client, message: Message):
+        user = message.from_user
+        if not user: return
         points = load_points()
-        user_data = points.get(str(message.from_user.id))
+        user_data = points.get(str(user.id))
         if not user_data:
             await message.reply_text("Kamu belum punya poin.")
             return
@@ -222,4 +187,42 @@ def register(app: Client):
             return
         save_points({})
         await message.reply_text("✅ Semua poin yapping sudah direset menjadi 0.")
-        log_debug("🗑️ Database poin yapping direset oleh OWNER")
+        log_debug("Database poin yapping direset oleh OWNER")
+
+    # ----- COMMAND CPC (HANYA PRIVATE, OWNER ONLY) ----- #
+    @app.on_message(filters.command("cpc", prefixes=[".", "/"]) & filters.private)
+    async def cheat_point_cmd(client: Client, message: Message):
+        if message.from_user.id != OWNER_ID:
+            await message.reply_text("❌ Kamu tidak punya izin untuk cheat point.")
+            return
+
+        if len(message.command) < 3:
+            await message.reply_text("⚠️ Format: .cpc @username jumlah")
+            return
+
+        target_username = message.command[1].lstrip("@")
+        try:
+            amount = int(message.command[2])
+        except ValueError:
+            await message.reply_text("⚠️ Jumlah harus angka.")
+            return
+
+        # cari user_id dari DB
+        points = load_points()
+        target_id = None
+        for uid, data in points.items():
+            if data["username"].lower() == target_username.lower():
+                target_id = uid
+                break
+
+        if not target_id:
+            await message.reply_text("❌ User tidak ditemukan di database poin.")
+            return
+
+        points[target_id]["points"] = amount
+        save_points(points)
+
+        await message.reply_text(
+            f"✅ Poin {points[target_id]['username']} berhasil di-set ke {amount}."
+        )
+        log_debug(f"OWNER set poin {points[target_id]['username']} ({target_id}) jadi {amount}")
