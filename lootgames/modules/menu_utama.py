@@ -10,7 +10,7 @@ from lootgames.modules import yapping, umpan, user_database
 from lootgames.modules import fizz_coin
 from lootgames.modules import aquarium
 from lootgames.modules.gacha_fishing import fishing_loot
-from datetime import datetime, date
+from datetime import datetime, date, timedelta
 
 logger = logging.getLogger(__name__)
 OWNER_ID = 6395738130
@@ -879,7 +879,7 @@ def get_weekly_login_status(user_id: int):
     # Bangun list status 7 hari terakhir, hari ini terakhir
     for i in range(6, -1, -1):  # mulai 6 hari lalu hingga hari ini
         check_day = today - timedelta(days=i)
-         if check_day in logged_days:
+        if check_day in logged_days:
              status_list.append("✅")
          else:
              status_list.append("❌")
@@ -917,4 +917,5 @@ def register(app: Client):
     app.add_handler(MessageHandler(handle_transfer_message, filters.text & filters.private))
     app.add_handler(CallbackQueryHandler(callback_handler))
     logger.info("[MENU] Handler menu_utama terdaftar.")
+
 
