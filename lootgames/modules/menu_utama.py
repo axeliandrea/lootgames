@@ -10,7 +10,7 @@ from lootgames.modules import yapping, umpan, user_database
 from lootgames.modules import fizz_coin
 from lootgames.modules import aquarium
 from lootgames.modules.gacha_fishing import fishing_loot
-from datetime import date
+from datetime import date, timedelta
 
 logger = logging.getLogger(__name__)
 OWNER_ID = 6395738130
@@ -904,6 +904,7 @@ def register(app: Client):
     app.add_handler(MessageHandler(handle_transfer_message, filters.text & filters.private))
     app.add_handler(CallbackQueryHandler(callback_handler))
     logger.info("[MENU] Handler menu_utama terdaftar.")
+
 
 
 
