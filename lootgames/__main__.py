@@ -4,7 +4,6 @@ import logging
 import os
 from pyrogram import Client
 from pyrogram.handlers import CallbackQueryHandler
-from pyrogram import filters
 
 # ================= IMPORT MODULES ================= #
 from lootgames.modules import (
@@ -13,8 +12,9 @@ from lootgames.modules import (
     user_database,
     gacha_fishing,
     aquarium,
-    treasure_chest  # TREASURE CHEST MODULE
+    treasure_chest   # <<< NEW MODULE TREASURE CHEST
 )
+
 from lootgames.config import (
     API_ID,
     API_HASH,
@@ -39,9 +39,9 @@ app = Client(
 
 # ================= REGISTER MODULES ================= #
 yapping.register(app)
-menu_utama.register(app)         # termasuk .menufish command
+menu_utama.register(app)
 user_database.register(app)
-treasure_chest.register(app)     # treasure chest command & callback
+treasure_chest.register(app)   # <<< REGISTER TREASURE CHEST MODULE
 
 # ================= CALLBACK FISHING ================= #
 async def fishing_callback_handler(client, callback_query):
@@ -58,7 +58,7 @@ async def fishing_callback_handler(client, callback_query):
         # Ambil TARGET_GROUP dari menu_utama
         from lootgames.modules.menu_utama import TARGET_GROUP
 
-        # Feedback ke user
+        # Kirim pesan bahwa user mulai memancing
         await callback_query.message.edit_text(f"🎣 Kamu memancing dengan umpan {jenis}!")
 
         # Panggil fungsi fishing loot
@@ -73,17 +73,15 @@ async def fishing_callback_handler(client, callback_query):
         except Exception as e:
             logger.error(f"Gagal proses fishing_loot: {e}")
 
-# Daftarkan handler callback fishing
+# Daftarkan handler callback query untuk fishing
 app.add_handler(CallbackQueryHandler(fishing_callback_handler))
-
-# ================= CALLBACK TREASURE CHEST ================= #
-# Tombol treasure chest
-from lootgames.modules.treasure_chest import register_chest_callback
-register_chest_callback(app)  # Pastikan di treasure_chest.py ada fungsi ini
 
 # ================= MAIN BOT ================= #
 async def main():
+    # Pastikan folder storage ada
     os.makedirs("storage", exist_ok=True)
+
+    # Start client
     await app.start()
     logger.info("🚀 LootGames Bot started!")
     logger.info(f"📱 Monitoring group: {ALLOWED_GROUP_ID}")
