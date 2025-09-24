@@ -39,10 +39,28 @@ app = Client(
 
 # ================= REGISTER MODULES ================= #
 # Semua handler harus diregister sebelum client start
-yapping.register(app)
-menu_utama.register(app)
+try:
+    yapping.register(app)
+except AttributeError:
+    logger.warning("Module yapping tidak memiliki fungsi register()")
+
+try:
+    menu_utama.register(app)
+except AttributeError:
+    logger.warning("Module menu_utama tidak memiliki fungsi register()")
+
+# Untuk user_database, buat dummy register() agar kompatibel
+if not hasattr(user_database, "register"):
+    def dummy_register(app):
+        logger.info("[INFO] user_database register() dummy dipanggil")
+    user_database.register = dummy_register
+
 user_database.register(app)
-treasure_chest.register(app)
+
+try:
+    treasure_chest.register(app)
+except AttributeError:
+    logger.warning("Module treasure_chest tidak memiliki fungsi register()")
 
 # ================= CALLBACK FISHING ================= #
 async def fishing_callback_handler(client, callback_query):
