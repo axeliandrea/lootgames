@@ -426,9 +426,9 @@ async def callback_handler(client: Client, cq: CallbackQuery):
 
         # loop mundur 6 hari + hari ini
         for i in range(7):
-            day_idx = (today_idx - i) % 7
+            day_idx = (today_idx - (6 - i)) % 7  # 6 hari lalu → 0..6
             day_name = days_of_week[day_idx]
-            streak_pos = 7 - i  # LOGIN-1 sampai LOGIN-7
+            streak_pos = i + 1  # LOGIN-1 = hari ini
             checked = "✅" if user_login["streak"] >= streak_pos else "❌"
             status_text += f"LOGIN-{streak_pos}: {checked} {day_name}\n"
 
@@ -901,4 +901,5 @@ def register(app: Client):
     app.add_handler(MessageHandler(handle_transfer_message, filters.text & filters.private))
     app.add_handler(CallbackQueryHandler(callback_handler))
     logger.info("[MENU] Handler menu_utama terdaftar.")
+
 
