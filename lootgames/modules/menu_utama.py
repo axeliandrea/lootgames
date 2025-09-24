@@ -429,7 +429,7 @@ async def callback_handler(client: Client, cq: CallbackQuery):
 
         # update streak dan hari terakhir
         user_login["streak"] += 1
-        user_login["last_login_day"] = today
+        user_login["login_dates"].add(today)
 
         # berikan 1 Umpan COMMON A jika belum pernah diterima
         reward = STREAK_REWARDS.get(user_login["streak"], 10)  # max 10 umpan
@@ -447,26 +447,31 @@ async def callback_handler(client: Client, cq: CallbackQuery):
     # di awal callback_handler
     days_of_week_id = ["SENIN","SELASA","RABU","KAMIS","JUMAT","SABTU","MINGGU"]
 
-    if data == "LOGIN_STATUS":
+    if data == "LOGIN_TODAY":
         init_user_login(user_id)
-        user_login = LOGIN_STATE.get(user_id, {})
+        today = get_today_int()
+        user_login = LOGIN_STATE[user_id]
 
-        # buat list 7 hari terakhir (SENIN → MINGGU)
-        now_wib = datetime.utcnow() + timedelta(hours=7)
-        start_of_week = now_wib.date() - timedelta(days=now_wib.weekday())  # Senin
-        login_dates_set = user_login.get("login_dates", set())
+        if user_login["last_login_day"] == today:
+            await cq.answer("❌ Kamu sudah absen hari ini!", show_alert=True)
+            return
 
-        login_status = []
-        for i in range(7):
-            day = start_of_week + timedelta(days=i)
-            day_int = int(day.strftime("%Y%m%d"))
-            login_status.append(day_int in login_dates_set)
+        # update streak dan hari terakhir
+        user_login["streak"] += 1
+        user_login["last_login_day"] = today
+        user_login["login_dates"].add(today)  # ✅ tambahkan ke set
 
-        # generate text seperti contoh
-        status_text = generate_login_status(login_status)
-        await cq.message.edit_text(status_text, reply_markup=make_keyboard("G", user_id))
-        return
-   
+        reward = STREAK_REWARDS.get(user_login["streak"], 10)
+        reward_key = f"COMMON_{user_login['streak']}"
+        if reward_key not in user_login["umpan_given"]:
+            umpan.add_umpan(user_id, "A", reward)
+            user_login["umpan_given"].add(reward_key)
+            msg = f"🎉 Absen berhasil! Kamu mendapatkan {reward} Umpan COMMON 🐛. Streak: {user_login['streak']} hari."
+        else:
+            msg = f"✅ Absen berhasil! Tapi umpan sudah diterima sebelumnya. Streak: {user_login['streak']} hari."
+
+        await cq.message.edit_text(msg, reply_markup=make_keyboard("G", user_id))
+
     # ---------------- REGISTER FLOW ---------------- #
     if data == "REGISTER_YES":
         uname = cq.from_user.username or "TanpaUsername"
@@ -884,6 +889,7 @@ def init_user_login(user_id: int):
             "last_login_day": 0,
             "streak": 0,
             "umpan_given": set()
+            "login_dates": set()  # tambahkan ini
         }
 
 # ---------------- REGISTER HANDLERS ---------------- #
@@ -895,6 +901,7 @@ def register(app: Client):
     app.add_handler(MessageHandler(handle_transfer_message, filters.text & filters.private))
     app.add_handler(CallbackQueryHandler(callback_handler))
     logger.info("[MENU] Handler menu_utama terdaftar.")
+
 
 
 
