@@ -63,7 +63,7 @@ MENU_STRUCTURE = {
             ("🛒STORE", "D"),
             ("FISHING", "E"),
             ("HASIL TANGKAPAN", "F"),
-            ("Menu G", "G")
+            ("LOGIN", "G")
         ]
     },
 
@@ -868,6 +868,7 @@ def register(app: Client):
     app.add_handler(MessageHandler(handle_transfer_message, filters.text & filters.private))
     app.add_handler(CallbackQueryHandler(callback_handler))
     logger.info("[MENU] Handler menu_utama terdaftar.")
+
 
 
 
