@@ -380,6 +380,29 @@ def make_keyboard(menu_key: str, user_id=None, page: int = 0) -> InlineKeyboardM
 
     return InlineKeyboardMarkup(buttons)
 
+# ================= LOGIN HARIAN ================= #
+days_of_week = ["SENIN", "SELASA", "RABU", "KAMIS", "JUMAT", "SABTU", "MINGGU"]
+login_rewards = [4, 5, 6, 7, 8, 9, 10]  # pcs Umpan common Type A per hari
+
+def get_today_wib_index():
+    """Return current weekday index (0=Senin, 6=Minggu) in WIB."""
+    now_wib = datetime.utcnow() + timedelta(hours=7)
+    return now_wib.weekday()
+
+def generate_login_status(user_login_days):
+    """
+    user_login_days: list of 7 bool, True jika login hari itu
+    """
+    status_msg = "📅 Status LOGIN 7 Hari Terakhir:\n"
+    for i, day_name in enumerate(days_of_week):
+        status_msg += f"LOGIN-{i+1}: {'✅' if user_login_days[i] else '❌'}{day_name}\n"
+
+    status_msg += "\nReward login Umpan common Type A:\n"
+    for i, reward in enumerate(login_rewards):
+        status_msg += f"{days_of_week[i]} {reward}x pcs Umpan common Type A\n"
+
+    return status_msg
+
 # ---------------- CALLBACK HANDLER ---------------- #
 async def callback_handler(client: Client, cq: CallbackQuery):
     data, user_id = cq.data, cq.from_user.id
@@ -418,40 +441,28 @@ async def callback_handler(client: Client, cq: CallbackQuery):
     days_of_week_id = ["SENIN","SELASA","RABU","KAMIS","JUMAT","SABTU","MINGGU"]
 
     if data == "LOGIN_STATUS":
-        # inisialisasi user jika belum ada
         init_user_login(user_id)
 
-        # ambil login_dates
-        user_login = LOGIN_STATE.get(user_id, {"login_dates": set()})
+        # buat list 7 hari terakhir (Senin → Minggu)
+        today_index = get_today_wib_index()
+        user_login = LOGIN_STATE.get(user_id, {})
         login_dates_set = user_login.get("login_dates", set())
 
-        # Hitung hari sekarang dalam WIB
-        now_utc = datetime.utcnow()
-        now_wib = now_utc + timedelta(hours=7)
-        today = now_wib.date()
-
-        # Senin minggu ini
-        start_of_week = today - timedelta(days=today.weekday())
-
-        # buat daftar 7 hari dari Senin → Minggu
-        last_7_days = [(start_of_week + timedelta(days=i)) for i in range(7)]
-
-        # Buat status login
-        status_text = "📅 Status LOGIN 7 Hari Terakhir:\n"
-        for i, day in enumerate(last_7_days, start=1):
+        # convert ke list bool 7 hari
+        user_login_days = []
+        now_wib = datetime.utcnow() + timedelta(hours=7)
+        start_of_week = now_wib.date() - timedelta(days=now_wib.weekday())  # Senin
+        for i in range(7):
+            day = start_of_week + timedelta(days=i)
             day_int = int(day.strftime("%Y%m%d"))
-            checked = "✅" if day_int in login_dates_set else "❌"
-            status_text += f"LOGIN-{i}: {checked}{days_of_week_id[day.weekday()]} \n"
+            user_login_days.append(day_int in login_dates_set)
 
-        # Tambahkan reward login harian
-        reward_text = "\nReward login Umpan common Type A\n"
-        for i, day_name in enumerate(days_of_week_id):
-            reward = STREAK_REWARDS.get(i+1, 0)
-            reward_text += f"{day_name} {reward}x pcs Umpan common Type A\n"
+        # generate status text
+        status_text = generate_login_status(user_login_days)
 
-        await cq.message.edit_text(status_text + reward_text, reply_markup=make_keyboard("G", user_id))
+        await cq.message.edit_text(status_text, reply_markup=make_keyboard("G", user_id))
         return
-        
+   
     # ---------------- REGISTER FLOW ---------------- #
     if data == "REGISTER_YES":
         uname = cq.from_user.username or "TanpaUsername"
@@ -880,6 +891,7 @@ def register(app: Client):
     app.add_handler(MessageHandler(handle_transfer_message, filters.text & filters.private))
     app.add_handler(CallbackQueryHandler(callback_handler))
     logger.info("[MENU] Handler menu_utama terdaftar.")
+
 
 
 
