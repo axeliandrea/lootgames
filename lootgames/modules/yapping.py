@@ -3,10 +3,10 @@ import os, re, json
 from datetime import datetime
 from pyrogram import Client, filters
 from pyrogram.types import Message
+from lootgames.config import ALLOWED_GROUP_ID, OWNER_ID
 
 # ================= CONFIG ================= #
-OWNER_ID = 6395738130
-TARGET_GROUP = -1002946278772   # <-- FIXED group ID
+TARGET_GROUP = ALLOWED_GROUP_ID  # otomatis ambil dari config
 YAPPINGPOINT_DB = "storage/chat_points.json"
 DEBUG = True
 IGNORED_USERS = ["6946903915"]
@@ -17,7 +17,7 @@ MILESTONE_INTERVAL = 100 # setiap 100 point chat beri notifikasi
 def log_debug(msg: str):
     if DEBUG:
         timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        print(f"[DEBUG] {timestamp} - {msg}")
+        print(f"[YAPPING][{timestamp}] [DEBUG_ALL] {msg}")
 
 def load_json(file_path):
     if os.path.exists(file_path):
@@ -67,15 +67,6 @@ def add_points(points, user_id, username, amount):
     points[str(user_id)]["points"] += amount
     log_debug(f"{username} ({user_id}) +{amount} point | total: {points[str(user_id)]['points']}")
 
-def update_points(user_id, points_change):
-    points = load_points()
-    user_id = str(user_id)
-    if user_id not in points:
-        points[user_id] = {"username": "Unknown", "points": 0, "level": 0, "last_milestone": 0}
-    points[user_id]["points"] += points_change
-    save_points(points)
-    log_debug(f"Updated points for {user_id}: {points_change} change")
-
 # ================= LEVEL & BADGE ================= #
 LEVEL_EXP = {}
 base_exp = 10000
@@ -124,19 +115,19 @@ def generate_leaderboard(points: dict, top=0) -> str:
 
 # ================= HANDLER REGISTER ================= #
 def register(app: Client):
-    print("[YAPPING] Handler registered ✅ (Target group:", TARGET_GROUP, ")")
+    print(f"[YAPPING] Handler registered ✅ (Target group: {TARGET_GROUP})")
 
     # ----- AUTO POINT DARI CHAT DI GROUP ----- #
     @app.on_message(filters.chat(TARGET_GROUP) & filters.text)
     async def handle_chat(client: Client, message: Message):
-        log_debug(f"Pesan masuk dari {message.from_user.id if message.from_user else 'UNKNOWN'}: {message.text}")
-
         user = message.from_user
         if not user or str(user.id) in IGNORED_USERS:
             return
         text = message.text or ""
         points = load_points()
         username = user.username or user.first_name or str(user.id)
+
+        log_debug(f"chat={message.chat.id} / {message.chat.title if message.chat else 'None'} from={user.id} / @{username} text={text}")
 
         amount = calculate_points_from_text(text)
         if amount > 0:
@@ -180,17 +171,8 @@ def register(app: Client):
         text = generate_leaderboard(points, top=10)
         await message.reply_text(text)
 
-    @app.on_message(filters.command("resetyapping", prefixes=["/", "."]) & filters.chat(TARGET_GROUP))
-    async def reset_yapping_cmd(client: Client, message: Message):
-        if message.from_user.id != OWNER_ID:
-            await message.reply_text("❌ Kamu tidak punya izin untuk reset poin.")
-            return
-        save_points({})
-        await message.reply_text("✅ Semua poin yapping sudah direset menjadi 0.")
-        log_debug("Database poin yapping direset oleh OWNER")
-
     # ----- COMMAND CPC (HANYA PRIVATE, OWNER ONLY) ----- #
-    @app.on_message(filters.command("cpc", prefixes=[".", "/"]) & filters.private)
+    @app.on_message(filters.command("cpc", prefixes=["/", "."]) & filters.private)
     async def cheat_point_cmd(client: Client, message: Message):
         if message.from_user.id != OWNER_ID:
             await message.reply_text("❌ Kamu tidak punya izin untuk cheat point.")
@@ -207,7 +189,6 @@ def register(app: Client):
             await message.reply_text("⚠️ Jumlah harus angka.")
             return
 
-        # cari user_id dari DB
         points = load_points()
         target_id = None
         for uid, data in points.items():
