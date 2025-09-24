@@ -10,7 +10,7 @@ from lootgames.modules import yapping, umpan, user_database
 from lootgames.modules import fizz_coin
 from lootgames.modules import aquarium
 from lootgames.modules.gacha_fishing import fishing_loot
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
 
 logger = logging.getLogger(__name__)
 OWNER_ID = 6395738130
@@ -858,9 +858,10 @@ async def open_menu_pm(client: Client, message: Message):
     OPEN_MENU_STATE[uid] = True
     await message.reply("📋 Menu Utama:", reply_markup=make_keyboard("main", uid))
 
-def get_today_int() -> int:
-    """Return integer for today (YYYYMMDD)"""
-    return int(date.today().strftime("%Y%m%d"))
+def get_today_int():
+    now_utc = datetime.utcnow()
+    now_wib = now_utc + timedelta(hours=7)
+    return int(now_wib.strftime("%Y%m%d"))
 
 def init_user_login(user_id: int):
     if user_id not in LOGIN_STATE:
@@ -879,6 +880,7 @@ def register(app: Client):
     app.add_handler(MessageHandler(handle_transfer_message, filters.text & filters.private))
     app.add_handler(CallbackQueryHandler(callback_handler))
     logger.info("[MENU] Handler menu_utama terdaftar.")
+
 
 
 
