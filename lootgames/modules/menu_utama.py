@@ -856,35 +856,58 @@ def get_today_int() -> int:
     return int(date.today().strftime("%Y%m%d"))
 
 def init_user_login(user_id: int):
-    if user_id not in LOGIN_STATE:
-        LOGIN_STATE[user_id] = {
-            "last_login_day": 0,
-            "streak": 0,
-            "umpan_given": set()
-        }
+    """Inisialisasi user baru."""
+    LOGIN_STATE[user_id] = {
+        "login_days": set(),
+        "streak": 0,
+        "last_login_day": 0
+    }
 
 # ---------------- RESET MINGGUAN ---------------- #
-def reset_weekly_streak_if_needed(user_id: int):
-    """Reset streak jika user tidak absen di minggu yang sama."""
+def get_weekly_login_status(user_id: int):
+    """Mengembalikan list 7 hari login terbaru, hari terakhir = hari ini."""
     if user_id not in LOGIN_STATE:
         init_user_login(user_id)
-        return
 
     user_login = LOGIN_STATE[user_id]
-    last_day = user_login["last_login_day"]
+    today = date.today()
     if last_day == 0:
-        return
+    status_list = []
 
-    last_date = datetime.strptime(str(last_day), "%Y%m%d").date()
-    today_date = date.today()
+    # Ambil semua login days user sebagai set date
+    logged_days = user_login.get("login_days", set())
 
-    # cek nomor minggu ISO
-    last_week = last_date.isocalendar()[1]
-    this_week = today_date.isocalendar()[1]
+    # Bangun list status 7 hari terakhir, hari ini terakhir
+    for i in range(6, -1, -1):  # mulai 6 hari lalu hingga hari ini
+        check_day = today - timedelta(days=i)
+         if check_day in logged_days:
+             status_list.append("✅")
+         else:
+             status_list.append("❌")
+    
+    return status_list
 
-    if this_week != last_week:
-        user_login["streak"] = 0
-        user_login["umpan_given"].clear()
+def mark_login_today(user_id: int):
+    """Tandai user login hari ini."""
+    if user_id not in LOGIN_STATE:
+        init_user_login(user_id)
+
+    today = date.today()
+    user_login = LOGIN_STATE[user_id]
+    logged_days = user_login.get("login_days", set())
+    if today not in logged_days:
+        logged_days.add(today)
+        user_login["login_days"] = logged_days
+        user_login["streak"] += 1
+        user_login["last_login_day"] = int(today.strftime("%Y%m%d"))
+
+# Contoh pemakaian
+user_id = 6621460606
+mark_login_today(user_id)
+status = get_weekly_login_status(user_id)
+print("📅 Status LOGIN 7 Hari Terakhir:")
+for i, s in enumerate(status, start=1):
+    print(f"LOGIN-{i}: {s}")
 
 # ---------------- REGISTER HANDLERS ---------------- #
 def register(app: Client):
@@ -895,6 +918,7 @@ def register(app: Client):
     app.add_handler(MessageHandler(handle_transfer_message, filters.text & filters.private))
     app.add_handler(CallbackQueryHandler(callback_handler))
     logger.info("[MENU] Handler menu_utama terdaftar.")
+
 
 
 
