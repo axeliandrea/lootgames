@@ -923,7 +923,7 @@ async def show_leaderboard(cq: CallbackQuery, uid: int, page: int = 0):
 # ---------------- MENU OPEN ---------------- #
 OPEN_MENU_STATE = {}  # pastikan ini ada di awal module
 
-async def open_menu(client: Client, message: Message, keyboard=None):
+app.add_handler(MessageHandler(open_menu, filters.command("menu") & filters.private))
     uid = message.from_user.id
 
     # Cek apakah menu sudah terbuka
@@ -1025,3 +1025,4 @@ def register(app: Client):
     app.add_handler(MessageHandler(handle_transfer_message, filters.text & filters.private))
     app.add_handler(CallbackQueryHandler(callback_handler))
     logger.info("[MENU] Handler menu_utama terdaftar.")
+
