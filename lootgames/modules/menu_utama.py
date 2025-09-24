@@ -426,11 +426,19 @@ async def callback_handler(client: Client, cq: CallbackQuery):
             status_text += "✅" if streak >= i + 1 else "❌"
             status_text += "\n"
 
-        # Hanya tombol kembali
-        kb = InlineKeyboardMarkup([
-            [InlineKeyboardButton("⬅️ Kembali", callback_data="G")]
-        ])
-        await cq.message.edit_text(text, reply_markup=kb)
+        await cq.message.edit_text(status_text, reply_markup=make_keyboard("G", user_id))
+        return
+
+    # MENU OPEN untuk login, tombol navigasi
+    elif data == "G":
+        # tampilkan menu LOGIN HARIAN
+        buttons = [
+            [InlineKeyboardButton("✅ Absen Hari Ini", callback_data="LOGIN_TODAY")],
+            [InlineKeyboardButton("📅 Lihat Status Login 7 Hari", callback_data="LOGIN_STATUS")],
+            [InlineKeyboardButton("⬅️ Kembali", callback_data="main")]
+        ]
+        kb = InlineKeyboardMarkup(buttons)
+        await cq.message.edit_text("📋 LOGIN HARIAN", reply_markup=kb)
         return
 
     # ---------------- REGISTER FLOW ---------------- #
