@@ -387,7 +387,7 @@ async def callback_handler(client: Client, cq: CallbackQuery):
     await cq.answer()
 
     # ===== LOGIN HARIAN CALLBACK =====
-        elif data == "LOGIN_STATUS":
+        if data == "LOGIN_STATUS":
         # inisialisasi user jika belum ada
         init_user_login(user_id)
 
@@ -893,4 +893,5 @@ def register(app: Client):
     app.add_handler(MessageHandler(handle_transfer_message, filters.text & filters.private))
     app.add_handler(CallbackQueryHandler(callback_handler))
     logger.info("[MENU] Handler menu_utama terdaftar.")
+
 
