@@ -21,6 +21,8 @@ TRANSFER_STATE = {}       # user_id: {"jenis": "A/B/C/D"}
 TUKAR_POINT_STATE = {}    # user_id: {"step": step, "jumlah_umpan": n}
 OPEN_MENU_STATE = {}      # user_id: True jika menu aktif
 LOGIN_STATE = {}  # user_id: {"last_login_day": int, "streak": int, "umpan_given": set()}
+STREAK_REWARDS = {1: 4, 2: 5, 3: 6, 4: 7, 5: 8, 6: 9, 7: 10}
+
 
 # ---------------- SELL / ITEM CONFIG ---------------- #
 # inv_key harus cocok dengan key di aquarium_data.json (nama item di DB)
@@ -400,10 +402,12 @@ async def callback_handler(client: Client, cq: CallbackQuery):
         user_login["last_login_day"] = today
 
         # berikan 1 Umpan COMMON A jika belum pernah diterima
-        if "COMMON_A" not in user_login["umpan_given"]:
-            umpan.add_umpan(user_id, "A", 1)
-            user_login["umpan_given"].add("COMMON_A")
-            msg = f"🎉 Absen berhasil! Kamu mendapatkan 1 Umpan COMMON 🐛. Streak: {user_login['streak']} hari."
+        reward = STREAK_REWARDS.get(user_login["streak"], 10)  # max 10 umpan
+        reward_key = f"COMMON_{user_login['streak']}"  # track per streak
+        if reward_key not in user_login["umpan_given"]:
+            umpan.add_umpan(user_id, "A", reward)
+            user_login["umpan_given"].add(reward_key)
+            msg = f"🎉 Absen berhasil! Kamu mendapatkan {reward} Umpan COMMON 🐛. Streak: {user_login['streak']} hari."
         else:
             msg = f"✅ Absen berhasil! Tapi umpan sudah diterima sebelumnya. Streak: {user_login['streak']} hari."
 
@@ -418,8 +422,9 @@ async def callback_handler(client: Client, cq: CallbackQuery):
 
         status_text = "📅 Status LOGIN 7 Hari Terakhir:\n"
         for i in range(7):
-            status_text += f"Day {-6 + i}: "
-            status_text += "✅" if streak >= i + 1 else "❌"
+            day_index = -6 + i  # Day -6 .. Day 0
+            status_text += f"Day {day_index}: "
+            status_text += "✅" if user_login["streak"] >= i + 1 else "❌"
             status_text += "\n"
 
         await cq.message.edit_text(status_text, reply_markup=make_keyboard("G", user_id))
@@ -864,6 +869,7 @@ def register(app: Client):
     app.add_handler(MessageHandler(handle_transfer_message, filters.text & filters.private))
     app.add_handler(CallbackQueryHandler(callback_handler))
     logger.info("[MENU] Handler menu_utama terdaftar.")
+
 
 
 
