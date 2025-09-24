@@ -545,17 +545,33 @@ async def callback_handler(client: Client, cq: CallbackQuery):
         await show_leaderboard(cq, user_id, page)
         return
 
-#handler yapping
-async def handle_yapping_points(client, message):
+# ---------------- HANDLER YAPPING / CHAT POINT ---------------- #
+async def handle_yapping_points(client, message: Message):
     user_id = message.from_user.id
     if str(user_id) in yapping.IGNORED_USERS:
         return
+
+    text = (message.text or "").strip()
+    # Skip jika pesan diawali command
+    if not text or text.startswith("/") or text.startswith("."):
+        return
+
     username = message.from_user.username or f"user{user_id}"
+
+    # load poin
     pts = yapping.load_points()
-    amount = yapping.calculate_points_from_text(message.text)
+    # hitung poin dari text (misal panjang pesan, kata, dsb.)
+    amount = yapping.calculate_points_from_text(text)
+
     if amount > 0:
+        # tambahkan poin
         yapping.add_points(pts, user_id, username, amount)
-        yapping.save_points(pts)    
+        # simpan DB
+        yapping.save_points(pts)
+        # opsional: debug log
+        if yapping.DEBUG:
+            logger.info(f"[YAPPING] {username} ({user_id}) mendapat {amount} poin.")
+   
 
     # POIN PRIBADI
     if data == "BB":
@@ -895,6 +911,7 @@ def register(app: Client):
     app.add_handler(CallbackQueryHandler(callback_handler))
     app.add_handler(MessageHandler(handle_yapping_points, filters.text & filters.group & filters.chat(TARGET_GROUP)))
     logger.info("[MENU] Handler menu_utama terdaftar.")
+
 
 
 
