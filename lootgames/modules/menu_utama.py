@@ -10,7 +10,7 @@ from lootgames.modules import yapping, umpan, user_database
 from lootgames.modules import fizz_coin
 from lootgames.modules import aquarium
 from lootgames.modules.gacha_fishing import fishing_loot
-from datetime import datetime, timedelta, date
+from datetime import date, timedelta
 
 logger = logging.getLogger(__name__)
 OWNER_ID = 6395738130
@@ -22,8 +22,6 @@ TUKAR_POINT_STATE = {}    # user_id: {"step": step, "jumlah_umpan": n}
 OPEN_MENU_STATE = {}      # user_id: True jika menu aktif
 LOGIN_STATE = {}  # user_id: {"last_login_day": int, "streak": int, "umpan_given": set()}
 STREAK_REWARDS = {1: 4, 2: 5, 3: 6, 4: 7, 5: 8, 6: 9, 7: 10}
-now_wib = datetime.utcnow() + timedelta(hours=7)
-login_date_int = int(now_wib.strftime("%Y%m%d"))
 
 
 # ---------------- SELL / ITEM CONFIG ---------------- #
@@ -388,7 +386,7 @@ async def callback_handler(client: Client, cq: CallbackQuery):
     logger.info(f"[DEBUG] callback -> user:{user_id}, data:{data}")
     await cq.answer()
 
-# ===== LOGIN HARIAN CALLBACK =====
+    # ===== LOGIN HARIAN CALLBACK =====
     if data == "LOGIN_STATUS":
         # inisialisasi user jika belum ada
         init_user_login(user_id)
@@ -398,26 +396,23 @@ async def callback_handler(client: Client, cq: CallbackQuery):
         login_dates_set = user_login.get("login_dates", set())
 
         days_of_week_id = ["SENIN", "SELASA", "RABU", "KAMIS", "JUMAT", "SABTU", "MINGGU"]
-
-        # ambil waktu sekarang UTC dari VPS, lalu tambah 7 jam untuk WIB
-        now_utc = datetime.utcnow()
-        now_wib = now_utc + timedelta(hours=7)
-        today = now_wib.date()
+        today = date.today()
 
         # hitung hari minggu terakhir
-        start_of_week = today - timedelta(days=today.weekday())  # Senin = 0
-        last_7_days = [start_of_week + timedelta(days=i) for i in range(7)]
+        days_since_sunday = today.weekday() + 1 if today.weekday() != 6 else 0  # Senin=0 ... Minggu=6
+        start_of_week = today - timedelta(days=days_since_sunday)  # Senin minggu ini
+        last_7_days = [(start_of_week + timedelta(days=i)) for i in range(7)]  # Senin - Minggu
 
         status_text = "📅 Status LOGIN 7 Hari Terakhir:\n"
         for i, day in enumerate(last_7_days, start=1):
-            day_name = days_of_week_id[day.weekday()]
-            checked = "✅" if int(day.strftime("%Y%m%d")) in login_dates_set else "❌"
+            day_name = days_of_week_id[day.weekday()]  # indeks 0=Senin
+            day_int = int(day.strftime("%Y%m%d"))
+            checked = "✅" if day_int in login_dates_set else "❌"
             status_text += f"LOGIN-{i}: {checked} {day_name}\n"
 
         # tampilkan ke user
         await cq.message.edit_text(status_text, reply_markup=make_keyboard("G", user_id))
         return
-
 
     # MENU OPEN untuk login, tombol navigasi
     if data == "G":
@@ -879,11 +874,11 @@ def init_user_login(user_id: int):
         user["login_dates"].add(today_int)
         user["last_login_day"] = today_int
         user["streak"] += 1
+        # beri umpan sesuai streak
         reward = STREAK_REWARDS.get(min(user["streak"], 7), 0)
         if reward > 0:
             for _ in range(reward):
                 umpan.add_umpan(user_id, "A", 1)  # hanya COMMON
-
 
     # dapatkan weekday hari ini
     today = date.today()
@@ -913,12 +908,3 @@ def register(app: Client):
     app.add_handler(MessageHandler(handle_transfer_message, filters.text & filters.private))
     app.add_handler(CallbackQueryHandler(callback_handler))
     logger.info("[MENU] Handler menu_utama terdaftar.")
-
-
-
-
-
-
-
-
-
