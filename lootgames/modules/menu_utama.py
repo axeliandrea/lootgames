@@ -378,31 +378,6 @@ def make_keyboard(menu_key: str, user_id=None, page: int = 0) -> InlineKeyboardM
 
     return InlineKeyboardMarkup(buttons)
 
-# LOGIN HARIAN
-if data == "LOGIN_TODAY":
-    init_user_login(user_id)
-    today = get_today_int()
-    user_login = LOGIN_STATE[user_id]
-
-    if user_login["last_login_day"] == today:
-        await cq.answer("❌ Kamu sudah absen hari ini!", show_alert=True)
-        return
-
-    # update streak
-    user_login["streak"] += 1
-    user_login["last_login_day"] = today
-
-    # berikan 1 umpan COMMON A jika belum dapat
-    if "COMMON_A" not in user_login["umpan_given"]:
-        umpan.add_umpan(user_id, "A", 1)
-        user_login["umpan_given"].add("COMMON_A")
-        msg = f"🎉 Absen berhasil! Kamu mendapatkan 1 Umpan COMMON 🐛. Streak: {user_login['streak']} hari."
-    else:
-        msg = f"✅ Absen berhasil! Tapi umpan sudah diterima sebelumnya. Streak: {user_login['streak']} hari."
-
-    await cq.message.edit_text(msg, reply_markup=make_keyboard("G", user_id))
-    return
-
 if data == "LOGIN_STATUS":
     init_user_login(user_id)
     user_login = LOGIN_STATE[user_id]
@@ -432,6 +407,31 @@ async def callback_handler(client: Client, cq: CallbackQuery):
     logger.info(f"[DEBUG] callback -> user:{user_id}, data:{data}")
     await cq.answer()
 
+    # ===== LOGIN HARIAN =====
+    if data == "LOGIN_TODAY":
+        init_user_login(user_id)
+        today = get_today_int()
+        user_login = LOGIN_STATE[user_id]
+
+        if user_login["last_login_day"] == today:
+            await cq.answer("❌ Kamu sudah absen hari ini!", show_alert=True)
+            return
+
+        # update streak
+        user_login["streak"] += 1
+        user_login["last_login_day"] = today
+
+        # berikan 1 umpan COMMON A jika belum dapat
+        if "COMMON_A" not in user_login["umpan_given"]:
+            umpan.add_umpan(user_id, "A", 1)
+            user_login["umpan_given"].add("COMMON_A")
+            msg = f"🎉 Absen berhasil! Kamu mendapatkan 1 Umpan COMMON 🐛. Streak: {user_login['streak']} hari."
+        else:
+            msg = f"✅ Absen berhasil! Tapi umpan sudah diterima sebelumnya. Streak: {user_login['streak']} hari."
+
+        await cq.message.edit_text(msg, reply_markup=make_keyboard("G", user_id))
+        return
+    
     # ---------------- REGISTER FLOW ---------------- #
     if data == "REGISTER_YES":
         uname = cq.from_user.username or "TanpaUsername"
@@ -859,4 +859,5 @@ def register(app: Client):
     app.add_handler(MessageHandler(handle_transfer_message, filters.text & filters.private))
     app.add_handler(CallbackQueryHandler(callback_handler))
     logger.info("[MENU] Handler menu_utama terdaftar.")
+
 
