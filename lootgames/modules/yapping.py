@@ -126,7 +126,6 @@ def generate_leaderboard(points: dict, top=0) -> str:
 def register(app: Client):
     print("[YAPPING] Handler registered ✅ (Target group:", TARGET_GROUP, ")")
 
-    # ----- AUTO POINT DARI CHAT DI GROUP ----- #
     @app.on_message(filters.chat(TARGET_GROUP) & filters.text)
     async def handle_chat(client: Client, message: Message):
         log_debug(f"Pesan masuk dari {message.from_user.id if message.from_user else 'UNKNOWN'}: {message.text}")
@@ -160,7 +159,7 @@ def register(app: Client):
 
             save_points(points)
 
-    # ----- COMMAND DI GROUP ----- #
+    # Command untuk cek poin
     @app.on_message(filters.command("rank", prefixes=["/", "."]) & filters.chat(TARGET_GROUP))
     async def rank_cmd(client: Client, message: Message):
         user = message.from_user
@@ -174,12 +173,14 @@ def register(app: Client):
             f"📊 {user_data['username']} - {user_data['points']} pts | Level {user_data['level']} {get_badge(user_data['level'])}"
         )
 
+    # Command leaderboard
     @app.on_message(filters.command("leaderboard", prefixes=["/", "."]) & filters.chat(TARGET_GROUP))
     async def leaderboard_cmd(client: Client, message: Message):
         points = load_points()
         text = generate_leaderboard(points, top=10)
         await message.reply_text(text)
 
+    # Command reset semua poin yapping
     @app.on_message(filters.command("resetyapping", prefixes=["/", "."]) & filters.chat(TARGET_GROUP))
     async def reset_yapping_cmd(client: Client, message: Message):
         if message.from_user.id != OWNER_ID:
@@ -189,8 +190,8 @@ def register(app: Client):
         await message.reply_text("✅ Semua poin yapping sudah direset menjadi 0.")
         log_debug("Database poin yapping direset oleh OWNER")
 
-    # ----- COMMAND CPC (HANYA PRIVATE, OWNER ONLY) ----- #
-    @app.on_message(filters.command("cpc", prefixes=[".", "/"]) & filters.private)
+    # Command cheat point chat (OWNER only)
+    @app.on_message(filters.command("cpc", prefixes=[".", "/"]) & filters.chat(TARGET_GROUP))
     async def cheat_point_cmd(client: Client, message: Message):
         if message.from_user.id != OWNER_ID:
             await message.reply_text("❌ Kamu tidak punya izin untuk cheat point.")
