@@ -12,7 +12,7 @@ from lootgames.modules import (
     user_database,
     gacha_fishing,
     aquarium,
-    treasure_chest   # <<< NEW MODULE TREASURE CHEST
+    treasure_chest  # <<< TREASURE CHEST MODULE
 )
 
 from lootgames.config import (
@@ -58,7 +58,7 @@ async def fishing_callback_handler(client, callback_query):
         # Ambil TARGET_GROUP dari menu_utama
         from lootgames.modules.menu_utama import TARGET_GROUP
 
-        # Kirim pesan bahwa user mulai memancing
+        # Edit pesan untuk feedback user
         await callback_query.message.edit_text(f"🎣 Kamu memancing dengan umpan {jenis}!")
 
         # Panggil fungsi fishing loot
@@ -75,6 +75,11 @@ async def fishing_callback_handler(client, callback_query):
 
 # Daftarkan handler callback query untuk fishing
 app.add_handler(CallbackQueryHandler(fishing_callback_handler))
+
+# ================= CALLBACK TREASURE CHEST ================= #
+# Ini penting agar tombol treasure chest bisa diproses
+from lootgames.modules.treasure_chest import chest_callback
+app.add_handler(CallbackQueryHandler(chest_callback, filters=None))
 
 # ================= MAIN BOT ================= #
 async def main():
