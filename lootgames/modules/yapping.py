@@ -6,7 +6,7 @@ from pyrogram.types import Message
 
 # ================= CONFIG ================= #
 OWNER_ID = 6395738130
-TARGET_GROUP = -1002946278772
+TARGET_GROUP = -1002946278772  # ID group langsung ditulis
 YAPPINGPOINT_DB = "storage/chat_points.json"
 DEBUG = True
 IGNORED_USERS = ["6946903915"]
