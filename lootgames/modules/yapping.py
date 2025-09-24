@@ -6,12 +6,12 @@ from pyrogram.types import Message
 
 # ================= CONFIG ================= #
 OWNER_ID = 6395738130
-TARGET_GROUP = -1002946278772   # <-- FIXED group ID
+TARGET_GROUP = -1002946278772
 YAPPINGPOINT_DB = "storage/chat_points.json"
 DEBUG = True
 IGNORED_USERS = ["6946903915"]
-MAX_POINT_PER_CHAT = 5   # maksimal point per chat bubble
-MILESTONE_INTERVAL = 100 # setiap 100 point chat beri notifikasi
+MAX_POINT_PER_CHAT = 5
+MILESTONE_INTERVAL = 100
 
 # ================= UTILS ================= #
 def log_debug(msg: str):
@@ -45,12 +45,7 @@ def save_points(data):
 def add_user_if_not_exist(points, user_id, username):
     user_id = str(user_id)
     if user_id not in points:
-        points[user_id] = {
-            "username": username,
-            "points": 0,
-            "level": 0,
-            "last_milestone": 0
-        }
+        points[user_id] = {"username": username, "points": 0, "level": 0, "last_milestone": 0}
         log_debug(f"User baru ditambahkan: {username} ({user_id})")
     else:
         points[user_id]["username"] = username
@@ -114,7 +109,7 @@ def get_badge(level: int) -> str:
 # ================= LEADERBOARD ================= #
 def generate_leaderboard(points: dict, top=0) -> str:
     sorted_points = sorted(points.items(), key=lambda x: x[1].get("points", 0), reverse=True)
-    if not sorted_points: 
+    if not sorted_points:
         return "Leaderboard kosong"
     text = "🏆 Leaderboard 🏆\n\n"
     for i, (uid, data) in enumerate(sorted_points, start=1):
@@ -124,32 +119,36 @@ def generate_leaderboard(points: dict, top=0) -> str:
 
 # ================= HANDLER REGISTER ================= #
 def register(app: Client):
-    print("[YAPPING] Handler registered ✅ (Target group:", TARGET_GROUP, ")")
+    print(f"[YAPPING] Handler registered ✅ (Target group: {TARGET_GROUP})")
 
     # ----- AUTO POINT DARI CHAT DI GROUP ----- #
     @app.on_message(filters.chat(TARGET_GROUP) & filters.text)
     async def handle_chat(client: Client, message: Message):
-        log_debug(f"Pesan masuk dari {message.from_user.id if message.from_user else 'UNKNOWN'}: {message.text}")
-
         user = message.from_user
-        if not user or str(user.id) in IGNORED_USERS:
-            return
         text = message.text or ""
-        points = load_points()
-        username = user.username or user.first_name or str(user.id)
+        user_id = user.id if user else "UNKNOWN"
+        username = user.username or user.first_name or str(user_id)
 
+        log_debug(f"Pesan masuk dari {username} ({user_id}): {text}")
+
+        if not user or str(user.id) in IGNORED_USERS:
+            log_debug(f"User {username} di-ignored, skip point")
+            return
+
+        points = load_points()
         amount = calculate_points_from_text(text)
+
         if amount > 0:
             add_points(points, user.id, username, amount)
 
-            # Check level up
+            # Level up
             new_level = check_level_up(points[str(user.id)])
             if new_level != -1:
                 await message.reply_text(
                     f"🎉 Selamat {username}, naik ke level {new_level}! {get_badge(new_level)}"
                 )
 
-            # milestone
+            # Milestone
             total_points = points[str(user.id)]["points"]
             last_milestone = points[str(user.id)].get("last_milestone", 0)
             if total_points // MILESTONE_INTERVAL > last_milestone:
@@ -159,6 +158,8 @@ def register(app: Client):
                 )
 
             save_points(points)
+        else:
+            log_debug(f"Pesan dari {username} ({user_id}) tidak menghasilkan point")
 
     # ----- COMMAND DI GROUP ----- #
     @app.on_message(filters.command("rank", prefixes=["/", "."]) & filters.chat(TARGET_GROUP))
@@ -207,7 +208,6 @@ def register(app: Client):
             await message.reply_text("⚠️ Jumlah harus angka.")
             return
 
-        # cari user_id dari DB
         points = load_points()
         target_id = None
         for uid, data in points.items():
@@ -221,8 +221,5 @@ def register(app: Client):
 
         points[target_id]["points"] = amount
         save_points(points)
-
-        await message.reply_text(
-            f"✅ Poin {points[target_id]['username']} berhasil di-set ke {amount}."
-        )
+        await message.reply_text(f"✅ Poin {points[target_id]['username']} berhasil di-set ke {amount}.")
         log_debug(f"OWNER set poin {points[target_id]['username']} ({target_id}) jadi {amount}")
