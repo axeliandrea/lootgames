@@ -14,7 +14,6 @@ from lootgames.modules import (
     aquarium,
     treasure_chest  # <<< TREASURE CHEST MODULE
 )
-
 from lootgames.config import (
     API_ID,
     API_HASH,
@@ -55,10 +54,9 @@ async def fishing_callback_handler(client, callback_query):
         jenis = data.replace("FISH_CONFIRM_", "")
         username = callback_query.from_user.username or f"user{user_id}"
 
-        # Ambil TARGET_GROUP dari menu_utama
         from lootgames.modules.menu_utama import TARGET_GROUP
 
-        # Edit pesan untuk feedback user
+        # Feedback ke user
         await callback_query.message.edit_text(f"🎣 Kamu memancing dengan umpan {jenis}!")
 
         # Panggil fungsi fishing loot
@@ -73,20 +71,11 @@ async def fishing_callback_handler(client, callback_query):
         except Exception as e:
             logger.error(f"Gagal proses fishing_loot: {e}")
 
-# Daftarkan handler callback query untuk fishing
 app.add_handler(CallbackQueryHandler(fishing_callback_handler))
-
-# ================= CALLBACK TREASURE CHEST ================= #
-# Ini penting agar tombol treasure chest bisa diproses
-from lootgames.modules.treasure_chest import chest_callback
-app.add_handler(CallbackQueryHandler(chest_callback, filters=None))
 
 # ================= MAIN BOT ================= #
 async def main():
-    # Pastikan folder storage ada
     os.makedirs("storage", exist_ok=True)
-
-    # Start client
     await app.start()
     logger.info("🚀 LootGames Bot started!")
     logger.info(f"📱 Monitoring group: {ALLOWED_GROUP_ID}")
@@ -99,15 +88,8 @@ async def main():
     except Exception as e:
         logger.error(f"Gagal kirim notifikasi start: {e}")
 
-    # Bot berjalan terus
     await asyncio.Event().wait()
 
 # ================= ENTRY POINT ================= #
 if __name__ == "__main__":
-    try:
-        import nest_asyncio
-        nest_asyncio.apply()
-    except ImportError:
-        pass
-
     asyncio.run(main())
