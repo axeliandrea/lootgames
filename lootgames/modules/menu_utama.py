@@ -11,7 +11,6 @@ from lootgames.modules import fizz_coin
 from lootgames.modules import aquarium
 from lootgames.modules.gacha_fishing import fishing_loot
 from datetime import date
-from lootgames.modules import yapping
 
 logger = logging.getLogger(__name__)
 OWNER_ID = 6395738130
@@ -545,37 +544,6 @@ async def callback_handler(client: Client, cq: CallbackQuery):
         await show_leaderboard(cq, user_id, page)
         return
 
-# ---------------- HANDLER YAPPING / CHAT POINT ---------------- #
-async def handle_yapping_points(client, message: Message):
-    user_id = message.from_user.id
-    if str(user_id) in yapping.IGNORED_USERS:
-        return
-
-    text = (message.text or "").strip()
-    
-    # **Hanya chat biasa, skip jika pesan diawali / atau .**
-    if not text or text.startswith("/") or text.startswith("."):
-        if yapping.DEBUG:
-            logger.debug(f"[YAPPING] Pesan dari {user_id} di-skip karena command: {text}")
-        return
-
-    username = message.from_user.username or f"user{user_id}"
-
-    # load poin
-    pts = yapping.load_points()
-    # hitung poin dari text (misal panjang pesan, kata, dsb.)
-    amount = yapping.calculate_points_from_text(text)
-
-    if amount > 0:
-        # tambahkan poin
-        yapping.add_points(pts, user_id, username, amount)
-        # simpan DB
-        yapping.save_points(pts)
-        # debug log
-        if yapping.DEBUG:
-            logger.debug(f"[YAPPING] {username} ({user_id}) mendapat {amount} poin | total: {pts.get(str(user_id), 0)}")
-   
-
     # POIN PRIBADI
     if data == "BB":
         pts = yapping.load_points()
@@ -912,11 +880,6 @@ def register(app: Client):
     # this handler will also handle SELL amount input because SELL_WAITING is checked inside
     app.add_handler(MessageHandler(handle_transfer_message, filters.text & filters.private))
     app.add_handler(CallbackQueryHandler(callback_handler))
-    app.add_handler(MessageHandler(handle_yapping_points, filters.text & filters.group & filters.chat(TARGET_GROUP)))
     logger.info("[MENU] Handler menu_utama terdaftar.")
-
-
-
-
 
 
