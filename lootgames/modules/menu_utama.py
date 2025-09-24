@@ -414,9 +414,9 @@ async def callback_handler(client: Client, cq: CallbackQuery):
         await cq.message.edit_text(msg, reply_markup=make_keyboard("G", user_id))
         return
 
-    # ... di callback_handler, ganti bagian LOGIN_STATUS
+    # di awal callback_handler
     days_of_week_id = ["SENIN","SELASA","RABU","KAMIS","JUMAT","SABTU","MINGGU"]
-    
+
     if data == "LOGIN_STATUS":
         # inisialisasi user jika belum ada
         init_user_login(user_id)
@@ -424,9 +424,6 @@ async def callback_handler(client: Client, cq: CallbackQuery):
         # ambil login_dates
         user_login = LOGIN_STATE.get(user_id, {"login_dates": set()})
         login_dates_set = user_login.get("login_dates", set())
-
-        # list hari
-        days_of_week_id = ["SENIN","SELASA","RABU","KAMIS","JUMAT","SABTU","MINGGU"]
 
         # Hitung hari sekarang dalam WIB
         now_utc = datetime.utcnow()
@@ -446,15 +443,15 @@ async def callback_handler(client: Client, cq: CallbackQuery):
             checked = "✅" if day_int in login_dates_set else "❌"
             status_text += f"LOGIN-{i}: {checked}{days_of_week_id[day.weekday()]} \n"
 
-    # Tambahkan reward login harian
-    reward_text = "\nReward login Umpan common Type A\n"
-    for i, day_name in enumerate(days_of_week_id):
-        reward = STREAK_REWARDS.get(i+1, 0)
-        reward_text += f"{day_name} {reward}x pcs Umpan common Type A\n"
+        # Tambahkan reward login harian
+        reward_text = "\nReward login Umpan common Type A\n"
+        for i, day_name in enumerate(days_of_week_id):
+            reward = STREAK_REWARDS.get(i+1, 0)
+            reward_text += f"{day_name} {reward}x pcs Umpan common Type A\n"
 
-    await cq.message.edit_text(status_text + reward_text, reply_markup=make_keyboard("G", user_id))
-    return
-
+        await cq.message.edit_text(status_text + reward_text, reply_markup=make_keyboard("G", user_id))
+        return
+        
     # ---------------- REGISTER FLOW ---------------- #
     if data == "REGISTER_YES":
         uname = cq.from_user.username or "TanpaUsername"
@@ -882,5 +879,6 @@ def register(app: Client):
     app.add_handler(MessageHandler(handle_transfer_message, filters.text & filters.private))
     app.add_handler(CallbackQueryHandler(callback_handler))
     logger.info("[MENU] Handler menu_utama terdaftar.")
+
 
 
