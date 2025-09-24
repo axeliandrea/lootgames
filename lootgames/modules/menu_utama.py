@@ -389,19 +389,23 @@ def get_today_wib_index():
     now_wib = datetime.utcnow() + timedelta(hours=7)
     return now_wib.weekday()
 
-def generate_login_status(user_login_days):
+def generate_login_status(login_status: list[bool]) -> str:
     """
-    user_login_days: list of 7 bool, True jika login hari itu
+    login_status: list 7 bool (False=tidak login, True=login)
     """
-    status_msg = "📅 Status LOGIN 7 Hari Terakhir:\n"
-    for i, day_name in enumerate(days_of_week):
-        status_msg += f"LOGIN-{i+1}: {'✅' if user_login_days[i] else '❌'}{day_name}\n"
+    days = ["SENIN","SELASA","RABU","KAMIS","JUMAT","SABTU","MINGGU"]
+    rewards = [4,5,6,7,8,9,10]  # reward per hari
 
-    status_msg += "\nReward login Umpan common Type A:\n"
-    for i, reward in enumerate(login_rewards):
-        status_msg += f"{days_of_week[i]} {reward}x pcs Umpan common Type A\n"
+    status_text = "📅 Status LOGIN 7 Hari Terakhir:\n"
+    for i, day in enumerate(days):
+        status = "✅" if login_status[i] else "❌"
+        status_text += f"LOGIN-{i+1}: {status}{day}\n"
 
-    return status_msg
+    status_text += "\nReward login Umpan common Type A:\n"
+    for day, reward in zip(days, rewards):
+        status_text += f"{day} {reward}x pcs Umpan common Type A\n"
+
+    return status_text
 
 # ---------------- CALLBACK HANDLER ---------------- #
 async def callback_handler(client: Client, cq: CallbackQuery):
@@ -442,24 +446,21 @@ async def callback_handler(client: Client, cq: CallbackQuery):
 
     if data == "LOGIN_STATUS":
         init_user_login(user_id)
-
-        # buat list 7 hari terakhir (Senin → Minggu)
-        today_index = get_today_wib_index()
         user_login = LOGIN_STATE.get(user_id, {})
-        login_dates_set = user_login.get("login_dates", set())
 
-        # convert ke list bool 7 hari
-        user_login_days = []
+        # buat list 7 hari terakhir (SENIN → MINGGU)
         now_wib = datetime.utcnow() + timedelta(hours=7)
         start_of_week = now_wib.date() - timedelta(days=now_wib.weekday())  # Senin
+        login_dates_set = user_login.get("login_dates", set())
+
+        login_status = []
         for i in range(7):
             day = start_of_week + timedelta(days=i)
             day_int = int(day.strftime("%Y%m%d"))
-            user_login_days.append(day_int in login_dates_set)
+            login_status.append(day_int in login_dates_set)
 
-        # generate status text
-        status_text = generate_login_status(user_login_days)
-
+        # generate text seperti contoh
+        status_text = generate_login_status(login_status)
         await cq.message.edit_text(status_text, reply_markup=make_keyboard("G", user_id))
         return
    
@@ -891,6 +892,7 @@ def register(app: Client):
     app.add_handler(MessageHandler(handle_transfer_message, filters.text & filters.private))
     app.add_handler(CallbackQueryHandler(callback_handler))
     logger.info("[MENU] Handler menu_utama terdaftar.")
+
 
 
 
