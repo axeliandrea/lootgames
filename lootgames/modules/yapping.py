@@ -176,3 +176,15 @@ def register(app: Client):
         save_points({})
         await message.reply_text("✅ Semua poin yapping sudah direset menjadi 0.")
         log_debug("Database poin yapping direset oleh OWNER")
+
+# Tambahkan di bagian register(app: Client) di bawah handler utama
+
+    # ----- DEBUG CATCH-ALL UNTUK SEMUA GROUP ----- #
+    @app.on_message(filters.group & filters.text)
+    async def debug_all_groups(client: Client, message: Message):
+        user = message.from_user
+        text = message.text or ""
+        user_id = user.id if user else "UNKNOWN"
+        username = user.username or user.first_name or str(user_id)
+        chat_id = message.chat.id
+        log_debug(f"[CATCH-ALL] Group {chat_id} | {username} ({user_id}) : {text}")
