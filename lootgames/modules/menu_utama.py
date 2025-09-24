@@ -10,8 +10,7 @@ from lootgames.modules import yapping, umpan, user_database
 from lootgames.modules import fizz_coin
 from lootgames.modules import aquarium
 from lootgames.modules.gacha_fishing import fishing_loot
-from datetime import datetime, date, timedelta
-from lootgames.modules.user_database import reset_weekly_streak_if_needed
+from datetime import date
 
 logger = logging.getLogger(__name__)
 OWNER_ID = 6395738130
@@ -23,7 +22,6 @@ TUKAR_POINT_STATE = {}    # user_id: {"step": step, "jumlah_umpan": n}
 OPEN_MENU_STATE = {}      # user_id: True jika menu aktif
 LOGIN_STATE = {}  # user_id: {"last_login_day": int, "streak": int, "umpan_given": set()}
 STREAK_REWARDS = {1: 4, 2: 5, 3: 6, 4: 7, 5: 8, 6: 9, 7: 10}
-USER_DB_FILE = "storage/user_data.json"
 
 
 # ---------------- SELL / ITEM CONFIG ---------------- #
@@ -392,7 +390,6 @@ async def callback_handler(client: Client, cq: CallbackQuery):
     if data == "LOGIN_TODAY":
         # inisialisasi user jika belum ada
         init_user_login(user_id)
-        reset_weekly_streak_if_needed(user_id)   # <--- panggil di sini
         today = get_today_int()
         user_login = LOGIN_STATE[user_id]
 
@@ -400,36 +397,24 @@ async def callback_handler(client: Client, cq: CallbackQuery):
             await cq.answer("❌ Kamu sudah absen hari ini!", show_alert=True)
             return
 
-        # Update streak: +1 jika berturut-turut, reset 1 jika tidak
-        yesterday_int = today - 1  # asumsi sederhana YYYYMMDD int
-        if user_login["last_login_day"] == yesterday_int:
-            user_login["streak"] += 1
-        else:
-            user_login["streak"] = 1
-
+        # update streak dan hari terakhir
+        user_login["streak"] += 1
         user_login["last_login_day"] = today
 
-        # Pastikan "umpan_given" adalah set
-        if not isinstance(user_login.get("umpan_given"), set):
-            user_login["umpan_given"] = set(user_login.get("umpan_given", []))
+        # berikan 1 Umpan COMMON A jika belum pernah diterima
+        reward = STREAK_REWARDS.get(user_login["streak"], 10)  # max 10 umpan
+        reward_key = f"COMMON_{user_login['streak']}"  # track per streak
+        if reward_key not in user_login["umpan_given"]:
+            umpan.add_umpan(user_id, "A", reward)
+            user_login["umpan_given"].add(reward_key)
+            msg = f"🎉 Absen berhasil! Kamu mendapatkan {reward} Umpan COMMON 🐛. Streak: {user_login['streak']} hari."
+        else:
+            msg = f"✅ Absen berhasil! Tapi umpan sudah diterima sebelumnya. Streak: {user_login['streak']} hari."
 
-    # Tentukan reward sesuai streak, max streak 7
-    streak_for_reward = min(user_login["streak"], 7)
-    reward = STREAK_REWARDS.get(streak_for_reward, 10)
-    reward_key = f"streak_{user_login['streak']}"
+        await cq.message.edit_text(msg, reply_markup=make_keyboard("G", user_id))
+        return
 
-    if reward_key not in user_login["umpan_given"]:
-        # Berikan reward
-        umpan.add_umpan(user_id, "A", reward)
-        user_login["umpan_given"].add(reward_key)
-        msg = f"🎉 Absen berhasil! Kamu mendapatkan {reward} Umpan COMMON 🐛.\nStreak: {user_login['streak']} hari."
-    else:
-        msg = f"✅ Absen berhasil! Tapi Umpan COMMON sudah diterima sebelumnya.\nStreak: {user_login['streak']} hari."
-
-    await cq.message.edit_text(msg, reply_markup=make_keyboard("G", user_id))
-    return
-
-    if data == "LOGIN_STATUS":
+    elif data == "LOGIN_STATUS":
         # tampilkan 7 hari terakhir streak user
         init_user_login(user_id)
         user_login = LOGIN_STATE[user_id]
@@ -864,66 +849,15 @@ async def open_menu_pm(client: Client, message: Message):
 
 def get_today_int() -> int:
     """Return integer for today (YYYYMMDD)"""
-    today = date.today()
-    return today.year * 10000 + today.month * 100 + today.day
+    return int(date.today().strftime("%Y%m%d"))
 
 def init_user_login(user_id: int):
     if user_id not in LOGIN_STATE:
         LOGIN_STATE[user_id] = {
-            "streak": 0,
             "last_login_day": 0,
-            "umpan_given": set()   
+            "streak": 0,
+            "umpan_given": set()
         }
-
-# ---------------- RESET MINGGUAN ---------------- #
-def get_weekly_login_status(user_id: int):
-    """Mengembalikan list 7 hari login terbaru, hari terakhir = hari ini."""
-    if user_id not in LOGIN_STATE:
-        init_user_login(user_id)
-
-    user_login = LOGIN_STATE[user_id]
-    today = date.today()
-    status_list = []
-
-    # Ambil semua login days user sebagai set date
-    logged_days = user_login.get("login_days", set())
-
-    # Bangun list status 7 hari terakhir, hari ini terakhir
-    for i in range(6, -1, -1):  # mulai 6 hari lalu hingga hari ini
-        check_day = today - timedelta(days=i)
-        if check_day in logged_days:
-            status_list.append("✅")
-        else:
-            status_list.append("❌")
-            
-    return status_list
-
-def mark_login_today(user_id: int):
-    init_user_login(user_id)  # pastikan user sudah ada di LOGIN_STATE
-    today_int = get_today_int()
-    user_login = LOGIN_STATE[user_id]
-
-    if user_login["last_login_day"] == today_int:
-        # Sudah login hari ini
-        return False  # tanda tidak ada update streak
-    else:
-        # Update streak
-        yesterday_int = today_int - 1 if date.today().day > 1 else today_int
-        if user_login["last_login_day"] == yesterday_int:
-            user_login["streak"] += 1
-        else:
-            user_login["streak"] = 1  # reset streak karena terputus
-
-        user_login["last_login_day"] = today_int
-        return True  # tanda streak berhasil diperbarui
-
-# Contoh pemakaian
-user_id = 6621460606
-mark_login_today(user_id)
-status = get_weekly_login_status(user_id)
-print("📅 Status LOGIN 7 Hari Terakhir:")
-for i, s in enumerate(status, start=1):
-    print(f"LOGIN-{i}: {s}")
 
 # ---------------- REGISTER HANDLERS ---------------- #
 def register(app: Client):
@@ -934,3 +868,54 @@ def register(app: Client):
     app.add_handler(MessageHandler(handle_transfer_message, filters.text & filters.private))
     app.add_handler(CallbackQueryHandler(callback_handler))
     logger.info("[MENU] Handler menu_utama terdaftar.")
+
+
+
+
+
+
+# lootgames/modules/user_database.py
+import json
+import os
+
+DB_FILE = "lootgames/modules/user_database.json"
+
+# ================= HELPERS ================= #
+def load_db():
+    if not os.path.exists(DB_FILE):
+        return {}
+    with open(DB_FILE, "r") as f:
+        return json.load(f)
+
+def save_db(data):
+    with open(DB_FILE, "w") as f:
+        json.dump(data, f, indent=4)
+
+# ================= REGISTER FUNCTION ================= #
+def register(app):
+    """Placeholder untuk logic .join/.update user"""
+    pass
+
+# ================= USER HELPERS ================= #
+def get_user_id_by_username(username: str):
+    """Cari user_id berdasarkan username @username"""
+    db = load_db()
+    for uid, info in db.items():
+        if info.get("username", "").lower() == username.lower().lstrip("@"):
+            return int(uid)
+    return None
+
+def set_player_loot(user_id: int, status: bool = True, username: str = None):
+    """Set status user sebagai Player Loot"""
+    db = load_db()
+    str_uid = str(user_id)
+    if str_uid not in db:
+        db[str_uid] = {}
+    db[str_uid]["player_loot"] = status
+    if username:
+        db[str_uid]["username"] = username.lstrip("@")
+    save_db(db)
+
+def get_user_data(user_id: int):
+    db = load_db()
+    return db.get(str(user_id), {})
