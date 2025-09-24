@@ -38,7 +38,7 @@ app = Client(
 )
 
 # ================= REGISTER MODULES ================= #
-# Register semua handler sebelum start client
+# Semua handler harus diregister sebelum client start
 yapping.register(app)
 menu_utama.register(app)
 user_database.register(app)
@@ -72,6 +72,7 @@ app.add_handler(CallbackQueryHandler(fishing_callback_handler))
 
 # ================= MAIN BOT ================= #
 async def main():
+    # Pastikan folder storage ada
     os.makedirs("storage", exist_ok=True)
 
     # Start client
@@ -87,7 +88,8 @@ async def main():
     except Exception as e:
         logger.error(f"Gagal kirim notifikasi start: {e}")
 
-    # Bot berjalan terus
+    # Jalankan bot terus-menerus
+    print("[MAIN] Bot berjalan, tekan Ctrl+C untuk berhenti.")
     await asyncio.Event().wait()
 
 # ================= ENTRY POINT ================= #
@@ -98,5 +100,4 @@ if __name__ == "__main__":
     except ImportError:
         pass
 
-    # Gunakan run_polling agar semua handler bekerja (Pyrogram 2.x+)
     asyncio.run(main())
