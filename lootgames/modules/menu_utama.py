@@ -888,7 +888,12 @@ def init_user_login(user_id: int):
 
     # dapatkan weekday hari ini
     today = date.today()
-    today_weekday = today.weekday()
+    start_of_week = today - timedelta(days=today.weekday())  # Senin minggu ini
+
+    login_days = []
+    for i in range(7):
+        day = start_of_week + timedelta(days=i)
+        login_days.append(day.strftime("%A"))
 
     # Reset streak jika hari ini Senin dan terakhir bukan Minggu
     if today_weekday == 0 and last_weekday != 6:
@@ -904,6 +909,7 @@ def register(app: Client):
     app.add_handler(MessageHandler(handle_transfer_message, filters.text & filters.private))
     app.add_handler(CallbackQueryHandler(callback_handler))
     logger.info("[MENU] Handler menu_utama terdaftar.")
+
 
 
 
