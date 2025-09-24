@@ -17,7 +17,7 @@ MILESTONE_INTERVAL = 100 # setiap 100 point chat beri notifikasi
 def log_debug(msg: str):
     if DEBUG:
         timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        print(f"[DEBUG] {timestamp} - {msg}")
+        print(f"[YAPPING][{timestamp}] {msg}")
 
 def load_json(file_path):
     if os.path.exists(file_path):
@@ -25,7 +25,7 @@ def load_json(file_path):
             with open(file_path, "r") as f:
                 return json.load(f)
         except json.JSONDecodeError:
-            log_debug(f"JSON rusak: {file_path}, membuat ulang")
+            log_debug(f"⚠️ JSON rusak: {file_path}, membuat ulang")
             return {}
     return {}
 
@@ -33,7 +33,7 @@ def save_json(file_path, data):
     os.makedirs(os.path.dirname(file_path), exist_ok=True)
     with open(file_path, "w") as f:
         json.dump(data, f, indent=2)
-    log_debug(f"Data disimpan ke {file_path}")
+    log_debug(f"💾 Data disimpan ke {file_path}")
 
 # ================= POINTS ================= #
 def load_points() -> dict:
@@ -51,7 +51,7 @@ def add_user_if_not_exist(points, user_id, username):
             "level": 0,
             "last_milestone": 0
         }
-        log_debug(f"User baru ditambahkan: {username} ({user_id})")
+        log_debug(f"👤 User baru ditambahkan: {username} ({user_id})")
     else:
         points[user_id]["username"] = username
         points[user_id].setdefault("level", 0)
@@ -65,7 +65,7 @@ def calculate_points_from_text(text: str) -> int:
 def add_points(points, user_id, username, amount):
     add_user_if_not_exist(points, user_id, username)
     points[str(user_id)]["points"] += amount
-    log_debug(f"{username} ({user_id}) +{amount} point | total: {points[str(user_id)]['points']}")
+    log_debug(f"➕ {username} ({user_id}) +{amount} point | total: {points[str(user_id)]['points']}")
 
 def update_points(user_id, points_change):
     points = load_points()
@@ -74,7 +74,7 @@ def update_points(user_id, points_change):
         points[user_id] = {"username": "Unknown", "points": 0, "level": 0, "last_milestone": 0}
     points[user_id]["points"] += points_change
     save_points(points)
-    log_debug(f"Updated points for {user_id}: {points_change} change")
+    log_debug(f"🔄 Updated points for {user_id}: {points_change} change")
 
 # ================= LEVEL & BADGE ================= #
 LEVEL_EXP = {}
@@ -124,21 +124,27 @@ def generate_leaderboard(points: dict, top=0) -> str:
 
 # ================= HANDLER REGISTER ================= #
 def register(app: Client):
-    print("[YAPPING] Handler registered ✅ (Target group:", TARGET_GROUP, ")")
+    log_debug(f"✅ Handler registered (Target group: {TARGET_GROUP})")
 
     # ----- AUTO POINT DARI CHAT DI GROUP ----- #
     @app.on_message(filters.chat(TARGET_GROUP) & filters.text)
     async def handle_chat(client: Client, message: Message):
-        log_debug(f"Pesan masuk dari {message.from_user.id if message.from_user else 'UNKNOWN'}: {message.text}")
+        log_debug(f"📩 Pesan masuk dari {message.from_user.id if message.from_user else 'UNKNOWN'}: {message.text}")
 
         user = message.from_user
-        if not user or str(user.id) in IGNORED_USERS:
+        if not user:
+            log_debug("⚠️ Pesan tanpa from_user, di-skip")
             return
+        if str(user.id) in IGNORED_USERS:
+            log_debug(f"🚫 User {user.id} di-ignore")
+            return
+
         text = message.text or ""
         points = load_points()
         username = user.username or user.first_name or str(user.id)
 
         amount = calculate_points_from_text(text)
+        log_debug(f"🧮 Kalkulasi poin untuk {username}: {amount}")
         if amount > 0:
             add_points(points, user.id, username, amount)
 
@@ -148,6 +154,7 @@ def register(app: Client):
                 await message.reply_text(
                     f"🎉 Selamat {username}, naik ke level {new_level}! {get_badge(new_level)}"
                 )
+                log_debug(f"⬆️ {username} naik level ke {new_level}")
 
             # milestone
             total_points = points[str(user.id)]["points"]
@@ -157,12 +164,16 @@ def register(app: Client):
                 await message.reply_text(
                     f"🏆 {username} mencapai {total_points} poin!"
                 )
+                log_debug(f"🏅 {username} mencapai milestone {total_points} poin")
 
             save_points(points)
+        else:
+            log_debug("ℹ️ Tidak ada poin dari pesan ini")
 
     # ----- COMMAND DI GROUP ----- #
     @app.on_message(filters.command("rank", prefixes=["/", "."]) & filters.chat(TARGET_GROUP))
     async def rank_cmd(client: Client, message: Message):
+        log_debug(f"📢 Command /rank dipanggil oleh {message.from_user.id}")
         user = message.from_user
         if not user: return
         points = load_points()
@@ -176,22 +187,25 @@ def register(app: Client):
 
     @app.on_message(filters.command("leaderboard", prefixes=["/", "."]) & filters.chat(TARGET_GROUP))
     async def leaderboard_cmd(client: Client, message: Message):
+        log_debug(f"📢 Command /leaderboard dipanggil oleh {message.from_user.id}")
         points = load_points()
         text = generate_leaderboard(points, top=10)
         await message.reply_text(text)
 
     @app.on_message(filters.command("resetyapping", prefixes=["/", "."]) & filters.chat(TARGET_GROUP))
     async def reset_yapping_cmd(client: Client, message: Message):
+        log_debug(f"📢 Command /resetyapping dipanggil oleh {message.from_user.id}")
         if message.from_user.id != OWNER_ID:
             await message.reply_text("❌ Kamu tidak punya izin untuk reset poin.")
             return
         save_points({})
         await message.reply_text("✅ Semua poin yapping sudah direset menjadi 0.")
-        log_debug("Database poin yapping direset oleh OWNER")
+        log_debug("🗑️ Database poin yapping direset oleh OWNER")
 
     # ----- COMMAND CPC (HANYA PRIVATE, OWNER ONLY) ----- #
     @app.on_message(filters.command("cpc", prefixes=[".", "/"]) & filters.private)
     async def cheat_point_cmd(client: Client, message: Message):
+        log_debug(f"📢 Command /cpc dipanggil oleh {message.from_user.id}")
         if message.from_user.id != OWNER_ID:
             await message.reply_text("❌ Kamu tidak punya izin untuk cheat point.")
             return
