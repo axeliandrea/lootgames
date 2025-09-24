@@ -267,11 +267,15 @@ for jenis in ["COMMON", "RARE", "LEGEND", "MYTHIC"]:
 MENU_STRUCTURE["G"] = {
     "title": "📋 LOGIN HARIAN",
     "buttons": [
-        ("✅ Absen Hari Ini", "LOGIN_TODAY"),
-        ("📅 Lihat Status Login 7 Hari", "LOGIN_STATUS"),
-        ("⬅️ Kembali", "main")
+        [InlineKeyboardButton("✅ Absen Hari Ini", callback_data="LOGIN_TODAY")],
+        [InlineKeyboardButton("📅 Lihat Status Login 7 Hari", callback_data="LOGIN_STATUS")],
+        [InlineKeyboardButton("🔄 Reset Login", callback_data="LOGIN_RESET") if OWNER_ID else None],
+        [InlineKeyboardButton("⬅️ Kembali", callback_data="main")]
     ]
 }
+# Hapus tombol None jika user bukan owner
+MENU_STRUCTURE["G"]["buttons"] = [b for b in MENU_STRUCTURE["G"]["buttons"] if b is not None]
+
 
 # ---------------- Helper untuk normalisasi key ---------------- #
 
@@ -412,6 +416,15 @@ async def callback_handler(client: Client, cq: CallbackQuery):
             msg = f"✅ Absen berhasil! Tapi umpan sudah diterima sebelumnya. Streak: {user_login['streak']} hari."
 
         await cq.message.edit_text(msg, reply_markup=make_keyboard("G", user_id))
+        return
+
+    # ===== RESET LOGIN (OWNER ONLY) =====
+    if data == "LOGIN_RESET":
+        if user_id != OWNER_ID:
+            await cq.answer("❌ Hanya owner yang bisa reset login.", show_alert=True)
+            return
+        LOGIN_STATE.clear()
+        await cq.message.edit_text("✅ Semua data login harian telah direset.", reply_markup=make_keyboard("G", user_id))
         return
 
     elif data == "LOGIN_STATUS":
@@ -868,3 +881,4 @@ def register(app: Client):
     app.add_handler(MessageHandler(handle_transfer_message, filters.text & filters.private))
     app.add_handler(CallbackQueryHandler(callback_handler))
     logger.info("[MENU] Handler menu_utama terdaftar.")
+
