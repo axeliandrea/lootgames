@@ -871,7 +871,6 @@ def get_weekly_login_status(user_id: int):
 
     user_login = LOGIN_STATE[user_id]
     today = date.today()
-    if last_day == 0:
     status_list = []
 
     # Ambil semua login days user sebagai set date
@@ -918,14 +917,4 @@ def register(app: Client):
     app.add_handler(MessageHandler(handle_transfer_message, filters.text & filters.private))
     app.add_handler(CallbackQueryHandler(callback_handler))
     logger.info("[MENU] Handler menu_utama terdaftar.")
-
-
-
-
-
-
-
-
-
-
 
