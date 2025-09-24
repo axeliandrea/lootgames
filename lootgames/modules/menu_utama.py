@@ -378,29 +378,6 @@ def make_keyboard(menu_key: str, user_id=None, page: int = 0) -> InlineKeyboardM
 
     return InlineKeyboardMarkup(buttons)
 
-if data == "LOGIN_STATUS":
-    init_user_login(user_id)
-    user_login = LOGIN_STATE[user_id]
-    streak = user_login["streak"]
-    last_day = user_login["last_login_day"]
-
-    # buat text 7 hari
-    status_text = "📅 Status LOGIN 7 Hari Terakhir:\n"
-    for i in range(7):
-        status_text += f"Day {-6 + i}: "
-        status_text += "✅" if streak >= i + 1 else "❌"
-        status_text += "\n"
-
-    await cq.message.edit_text(status_text, reply_markup=make_keyboard("G", user_id))
-    return
-
-elif menu_key == "G" and user_id:
-    buttons = []
-    buttons.append([InlineKeyboardButton("✅ Absen Hari Ini", callback_data="LOGIN_TODAY")])
-    buttons.append([InlineKeyboardButton("📅 Lihat Status Login 7 Hari", callback_data="LOGIN_STATUS")])
-    buttons.append([InlineKeyboardButton("⬅️ Kembali", callback_data="main")])
-    return InlineKeyboardMarkup(buttons)
-
 # ---------------- CALLBACK HANDLER ---------------- #
 async def callback_handler(client: Client, cq: CallbackQuery):
     data, user_id = cq.data, cq.from_user.id
@@ -887,6 +864,7 @@ def register(app: Client):
     app.add_handler(MessageHandler(handle_transfer_message, filters.text & filters.private))
     app.add_handler(CallbackQueryHandler(callback_handler))
     logger.info("[MENU] Handler menu_utama terdaftar.")
+
 
 
 
