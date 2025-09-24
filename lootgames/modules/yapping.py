@@ -12,6 +12,7 @@ DEBUG = True
 IGNORED_USERS = ["6946903915"]
 MAX_POINT_PER_CHAT = 5   # maksimal point per chat bubble
 MILESTONE_INTERVAL = 100 # setiap 100 point chat beri notifikasi
+LOGIN_DB_FILE = "storage/login_data.json"
 
 # ================= UTILS ================= #
 def log_debug(msg: str):
@@ -226,3 +227,18 @@ def register(app: Client):
             f"✅ Poin {points[target_id]['username']} berhasil di-set ke {amount}."
         )
         log_debug(f"OWNER set poin {points[target_id]['username']} ({target_id}) jadi {amount}")
+
+#login
+def load_login() -> dict:
+    try:
+        with open(LOGIN_DB_FILE, "r") as f:
+            return json.load(f)
+    except Exception:
+        return {}
+
+def save_login(data: dict):
+    try:
+        with open(LOGIN_DB_FILE, "w") as f:
+            json.dump(data, f, indent=2)
+    except Exception as e:
+        print(f"Gagal simpan login DB: {e}")
