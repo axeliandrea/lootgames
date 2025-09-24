@@ -415,16 +415,22 @@ async def callback_handler(client: Client, cq: CallbackQuery):
         return
 
     elif data == "LOGIN_STATUS":
-        # tampilkan 7 hari terakhir streak user
+        # inisialisasi user jika belum ada
         init_user_login(user_id)
         user_login = LOGIN_STATE[user_id]
-        streak = user_login["streak"]
 
+        # buat daftar 7 hari terakhir dari hari ini
+        days_of_week = ["SENIN", "SELASA", "RABU", "KAMIS", "JUMAT", "SABTU", "MINGGU"]
+        today_idx = date.today().weekday()  # Senin=0, Minggu=6
         status_text = "📅 Status LOGIN 7 Hari Terakhir:\n"
+
+        # loop mundur 6 hari + hari ini
         for i in range(7):
-            status_text += f"LOGIN-{i+1}: "
-            status_text += "✅" if streak >= i + 1 else "❌"
-            status_text += "\n"
+            day_idx = (today_idx - i) % 7
+            day_name = days_of_week[day_idx]
+            streak_pos = 7 - i  # LOGIN-1 sampai LOGIN-7
+            checked = "✅" if user_login["streak"] >= streak_pos else "❌"
+            status_text += f"LOGIN-{streak_pos}: {checked} {day_name}\n"
 
         await cq.message.edit_text(status_text, reply_markup=make_keyboard("G", user_id))
         return
@@ -868,4 +874,5 @@ def register(app: Client):
     app.add_handler(MessageHandler(handle_transfer_message, filters.text & filters.private))
     app.add_handler(CallbackQueryHandler(callback_handler))
     logger.info("[MENU] Handler menu_utama terdaftar.")
+
 
