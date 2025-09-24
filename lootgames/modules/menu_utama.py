@@ -275,93 +275,24 @@ MENU_STRUCTURE["G"] = {
     ]
 }
 
-# ---------------- Helper Functions ---------------- #
+# ---------------- Helper untuk normalisasi key ---------------- #
+
 def normalize_key(key: str) -> str:
+    """
+    Normalisasi nama item dari inventory agar cocok dengan inv_key.
+    - Lowercase
+    - Hilangkan emoji dan karakter non-alnum (kecuali spasi)
+    - Trim spasi berlebih
+    """
     if not isinstance(key, str):
         return ""
+    # ubah ke lowercase
     s = key.strip().lower()
+    # replace non-alphanumeric (tetap simpan spasi)
     s = re.sub(r"[^0-9a-z\s]", "", s)
+    # collapse multiple spaces
     s = re.sub(r"\s+", " ", s)
     return s.strip()
-
-def canonical_inv_key_from_any(key: str) -> str:
-    if not key:
-        return ""
-    norm = normalize_key(key)
-    if norm in INV_KEY_ALIASES:
-        return INV_KEY_ALIASES[norm]
-    for cfg in ITEM_PRICES.values():
-        canon = cfg.get("inv_key")
-        if normalize_key(canon) == norm:
-            return canon
-    return key
-
-def make_keyboard(menu_key: str, user_id=None, page: int = 0) -> InlineKeyboardMarkup:
-    buttons = []
-    # ... (sama persis seperti versi sebelumnya, handling leaderboard, umpan, store, inventory) ...
-    return InlineKeyboardMarkup(buttons)
-
-def mark_login_today(user_id: int):
-    init_user_login(user_id)
-    today_int = get_today_int()
-    user_login = LOGIN_STATE[user_id]
-
-    if user_login["last_login_day"] == today_int:
-        return False  # sudah login
-    else:
-        yesterday_int = today_int - 1 if date.today().day > 1 else today_int
-        if user_login["last_login_day"] == yesterday_int:
-            user_login["streak"] += 1
-        else:
-            user_login["streak"] = 1
-        user_login["last_login_day"] = today_int
-        user_login["login_days"].add(date.today())
-        return True
-
-def get_weekly_login_status(user_id: int):
-    init_user_login(user_id)
-    user_login = LOGIN_STATE[user_id]
-    today = date.today()
-    status_list = []
-    logged_days = user_login.get("login_days", set())
-    for i in range(6, -1, -1):
-        check_day = today - timedelta(days=i)
-        status_list.append("✅" if check_day in logged_days else "❌")
-    return status_list
-
-# ---------------- CALLBACK HANDLER ---------------- #
-async def callback_handler(client: Client, cq: CallbackQuery):
-    data, user_id = cq.data, cq.from_user.id
-    logger.info(f"[DEBUG] callback -> user:{user_id}, data:{data}")
-    await cq.answer()
-    # LOGIN HARIAN
-    if data == "LOGIN_TODAY":
-        init_user_login(user_id)
-        reset_weekly_streak_if_needed(user_id)
-        today = get_today_int()
-        user_login = LOGIN_STATE[user_id]
-        if user_login["last_login_day"] == today:
-            await cq.answer("❌ Kamu sudah absen hari ini!", show_alert=True)
-            return
-        streak_updated = mark_login_today(user_id)
-        reward = STREAK_REWARDS.get(user_login["streak"], 10)
-        reward_key = f"COMMON_{user_login['streak']}"
-        if reward_key not in user_login["umpan_given"]:
-            umpan.add_umpan(user_id, "A", reward)
-            user_login["umpan_given"].add(reward_key)
-            msg = f"🎉 Absen berhasil! Kamu mendapatkan {reward} Umpan COMMON 🐛.\nStreak: {user_login['streak']} hari."
-        else:
-            msg = f"✅ Absen berhasil! Tapi Umpan COMMON sudah diterima sebelumnya.\nStreak: {user_login['streak']} hari."
-        await cq.message.edit_text(msg, reply_markup=make_keyboard("G", user_id))
-        return
-    elif data == "LOGIN_STATUS":
-        init_user_login(user_id)
-        status_list = get_weekly_login_status(user_id)
-        text = "📅 Status LOGIN 7 Hari Terakhir:\n"
-        for i, s in enumerate(status_list, start=1):
-            text += f"LOGIN-{i}: {s}\n"
-        await cq.message.edit_text(text, reply_markup=make_keyboard("G", user_id))
-        return
 
 
 def canonical_inv_key_from_any(key: str) -> str:
@@ -469,40 +400,36 @@ async def callback_handler(client: Client, cq: CallbackQuery):
             await cq.answer("❌ Kamu sudah absen hari ini!", show_alert=True)
             return
 
-        # reset mingguan jika perlu
-        reset_weekly_streak_if_needed(user_id)
+        # Update streak: +1 jika berturut-turut, reset 1 jika tidak
+        yesterday_int = today - 1  # asumsi sederhana YYYYMMDD int
+        if user_login["last_login_day"] == yesterday_int:
+            user_login["streak"] += 1
+        else:
+            user_login["streak"] = 1
 
-        # update streak dan hari terakhir
-        user_login["streak"] += 1
         user_login["last_login_day"] = today
 
-        # Berikan 1 Umpan COMMON A jika belum pernah diterima untuk streak hari ini
-        reward = STREAK_REWARDS.get(user_login["streak"], 10)  # default 10 umpan jika streak tidak ada
-        reward_key = f"COMMON_{user_login['streak']}"  # key untuk track apakah reward sudah diberikan
-
-        # Pastikan "umpan_given" adalah set untuk efisiensi pengecekan
+        # Pastikan "umpan_given" adalah set
         if not isinstance(user_login.get("umpan_given"), set):
             user_login["umpan_given"] = set(user_login.get("umpan_given", []))
 
-        if reward_key not in user_login["umpan_given"]:
-            # Berikan umpan dan catat sudah diterima
-            umpan.add_umpan(user_id, "A", reward)
-            user_login["umpan_given"].add(reward_key)
-            msg = (
-                f"🎉 Absen berhasil! Kamu mendapatkan {reward} Umpan COMMON 🐛.\n"
-                f"Streak: {user_login['streak']} hari."
-            )
-        else:
-            msg = (
-                f"✅ Absen berhasil! Tapi Umpan COMMON sudah diterima sebelumnya.\n"
-                f"Streak: {user_login['streak']} hari."
-            )
+    # Tentukan reward sesuai streak, max streak 7
+    streak_for_reward = min(user_login["streak"], 7)
+    reward = STREAK_REWARDS.get(streak_for_reward, 10)
+    reward_key = f"streak_{user_login['streak']}"
 
-        # Update pesan dengan keyboard sesuai user
-        await cq.message.edit_text(msg, reply_markup=make_keyboard("G", user_id))
-        return
+    if reward_key not in user_login["umpan_given"]:
+        # Berikan reward
+        umpan.add_umpan(user_id, "A", reward)
+        user_login["umpan_given"].add(reward_key)
+        msg = f"🎉 Absen berhasil! Kamu mendapatkan {reward} Umpan COMMON 🐛.\nStreak: {user_login['streak']} hari."
+    else:
+        msg = f"✅ Absen berhasil! Tapi Umpan COMMON sudah diterima sebelumnya.\nStreak: {user_login['streak']} hari."
 
-    elif data == "LOGIN_STATUS":
+    await cq.message.edit_text(msg, reply_markup=make_keyboard("G", user_id))
+    return
+
+    if data == "LOGIN_STATUS":
         # tampilkan 7 hari terakhir streak user
         init_user_login(user_id)
         user_login = LOGIN_STATE[user_id]
@@ -921,37 +848,19 @@ async def show_leaderboard(cq: CallbackQuery, uid: int, page: int = 0):
     await cq.message.edit_text(text, reply_markup=make_keyboard("BBB", uid, page))
 
 # ---------------- MENU OPEN ---------------- #
-OPEN_MENU_STATE = {}  # pastikan ini ada di awal module
-
-app.add_handler(MessageHandler(open_menu, filters.command("menu") & filters.private))
+async def open_menu(client: Client, message: Message):
     uid = message.from_user.id
-
-    # Cek apakah menu sudah terbuka
     if OPEN_MENU_STATE.get(uid):
-        try:
-            await message.reply("⚠️ Menu sudah terbuka, jangan panggil lagi.")
-        except Exception as e:
-            print(f"❌ Gagal mengirim pesan: {e}")
-        return
-
-    # Tandai menu user sebagai terbuka
+        return await message.reply("⚠️ Menu sudah terbuka, jangan panggil lagi.")
     OPEN_MENU_STATE[uid] = True
+    await message.reply(MENU_STRUCTURE["main"]["title"], reply_markup=make_keyboard("main", uid))
 
-    # Kirim pesan menu
-    try:
-        if keyboard:
-            await message.reply("📋 Menu Utama:", reply_markup=keyboard)
-        else:
-            await message.reply("✅ Menu berhasil dibuka.")
-    except Exception as e:
-        print(f"❌ Gagal mengirim pesan: {e}")
-
-# ---------------- CONTOH PEMANGGILAN ---------------- #
-# Menu normal
-# await open_menu(client, message)
-
-# Menu dengan keyboard
-# await open_menu(client, message, keyboard=make_keyboard("main", message.from_user.id))
+async def open_menu_pm(client: Client, message: Message):
+    uid = message.from_user.id
+    if OPEN_MENU_STATE.get(uid):
+        return await message.reply("⚠️ Menu sudah terbuka, jangan panggil lagi.")
+    OPEN_MENU_STATE[uid] = True
+    await message.reply("📋 Menu Utama:", reply_markup=make_keyboard("main", uid))
 
 def get_today_int() -> int:
     """Return integer for today (YYYYMMDD)"""
@@ -1025,4 +934,3 @@ def register(app: Client):
     app.add_handler(MessageHandler(handle_transfer_message, filters.text & filters.private))
     app.add_handler(CallbackQueryHandler(callback_handler))
     logger.info("[MENU] Handler menu_utama terdaftar.")
-
