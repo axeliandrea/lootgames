@@ -1,4 +1,4 @@
-# lootgames/modules/menu_utama.py FIXXXXXXXXXXX
+# lootgames/modules/menu_utama.py
 import logging
 import asyncio
 import re
@@ -19,6 +19,7 @@ TARGET_GROUP = -1002946278772  # ganti sesuai supergroup bot
 TRANSFER_STATE = {}       # user_id: {"jenis": "A/B/C/D"}
 TUKAR_POINT_STATE = {}    # user_id: {"step": step, "jumlah_umpan": n}
 OPEN_MENU_STATE = {}      # user_id: True jika menu aktif
+
 
 # ---------------- SELL / ITEM CONFIG ---------------- #
 # inv_key harus cocok dengan key di aquarium_data.json (nama item di DB)
@@ -787,4 +788,121 @@ def register(app: Client):
     app.add_handler(MessageHandler(handle_transfer_message, filters.text & filters.private))
     app.add_handler(CallbackQueryHandler(callback_handler))
     logger.info("[MENU] Handler menu_utama terdaftar.")
+
+
+# ---------------- STATE ---------------- #
+TRANSFER_STATE = {}       # user_id: {"jenis": "A/B/C/D"}
+TUKAR_POINT_STATE = {}    # user_id: {"step": step, "jumlah_umpan": n}
+OPEN_MENU_STATE = {}      # user_id: True jika menu aktif
+
+# ---------------- SELL / ITEM CONFIG ---------------- #
+ITEM_PRICES = {
+    "SELL_SMALLFISH": {"name": "𓆝 Small Fish", "price": 1, "inv_key": "Small Fish"},
+    "SELL_SNAIL":     {"name": "🐌 Snail",       "price": 2, "inv_key": "Snail"},
+    "SELL_OCTOPUS":   {"name": "🐙 Octopus",    "price": 3, "inv_key": "Octopus"},
+    "SELL_PUFFER":    {"name": "🐡 Pufferfish", "price": 5, "inv_key": "Pufferfish"},
+}
+
+SELL_WAITING = {}  # user_id: item_code
+
+INV_KEY_ALIASES = {
+    "🤧 Zonk": "Zonk",
+    "zonk": "zonk",
+    "𓆝 Small Fish": "Small Fish",
+    "small fish": "Small Fish",
+    "🐌 snail": "Snail",
+    "snail": "Snail",
+    "🐙 octopus": "Octopus",
+    "octopus": "Octopus",
+    "🐡 Pufferfish": "Pufferfish",
+    "pufferfish": "Pufferfish",
+}
+
+# ---------------- KEYBOARD / MENU STRUCTURE ---------------- #
+MENU_STRUCTURE = {
+    "main": {"title": "📋 [Menu Utama]",
+             "buttons": [("UMPAN", "A"), ("YAPPING", "B"), ("REGISTER", "C"),
+                         ("🛒STORE", "D"), ("FISHING", "E"), ("HASIL TANGKAPAN", "F"), ("Menu G", "G")]},
+    
+    "A": {"title": "📋 Menu UMPAN",
+          "buttons": [("COMMON 🐛", "AA_COMMON"), ("RARE 🐌", "AA_RARE"),
+                      ("LEGENDARY 🧇", "AA_LEGEND"), ("MYTHIC 🐟", "AA_MYTHIC"),
+                      ("⬅️ Kembali", "main")]},
+
+    # Tambahan menu UMPAN confirm
+    "AA_COMMON": {"title": "📋 TRANSFER UMPAN KE (Common)", "buttons":[("Klik OK untuk transfer","TRANSFER_COMMON_OK"),("⬅️ Kembali","A")]},
+    "AA_RARE":   {"title": "📋 TRANSFER UMPAN KE (Rare)",   "buttons":[("Klik OK untuk transfer","TRANSFER_RARE_OK"),("⬅️ Kembali","A")]},
+    "AA_LEGEND": {"title": "📋 TRANSFER UMPAN KE (Legend)", "buttons":[("Klik OK untuk transfer","TRANSFER_LEGEND_OK"),("⬅️ Kembali","A")]},
+    "AA_MYTHIC": {"title": "📋 TRANSFER UMPAN KE (Mythic)", "buttons":[("Klik OK untuk transfer","TRANSFER_MYTHIC_OK"),("⬅️ Kembali","A")]},
+
+    "E": {"title": "🎣 FISHING", "buttons":[("PILIH UMPAN","EE"), ("⬅️ Kembali","main")]},
+    "EE":{"title":"📋 PILIH UMPAN","buttons":[("Lanjut Pilih Jenis","EEE"),("⬅️ Kembali","E")]},
+    "EEE":{"title":"📋 Pilih Jenis Umpan","buttons":[("COMMON 🐛","EEE_COMMON"),("RARE 🐌","EEE_RARE"),("LEGENDARY 🧇","EEE_LEGEND"),("MYTHIC 🐟","EEE_MYTHIC"),("⬅️ Kembali","EE")]},
+
+    "C":{"title":"📋 MENU REGISTER","buttons":[("LANJUT","CC"),("⬅️ Kembali","main")]},
+    "CC":{"title":"📋 APAKAH KAMU YAKIN INGIN MENJADI PLAYER LOOT?","buttons":[("PILIH OPSI","CCC"),("⬅️ Kembali","C")]},
+    "CCC":{"title":"📋 PILIH OPSI:","buttons":[("YA","REGISTER_YES"),("TIDAK","REGISTER_NO")]},
+
+    "D":{"title":"🛒STORE","buttons":[("BUY UMPAN","D1"),("SELL ITEM","D2"),("TUKAR POINT","D3"),("⬅️ Kembali","main")]},
+    "D1":{"title":"📋 BUY UMPAN","buttons":[("D1A","D1A"),("⬅️ Kembali","D")]},
+    "D2":{"title":"📋 SELL ITEM","buttons":[("💰 CEK COIN","D2C"),("📦 CEK INVENTORY","D2A"),("💰 DAFTAR HARGA","D2B"),("⬅️ Kembali","D")]},
+    "D2B":{"title":"💰 DAFTAR HARGA","buttons":[("𓆝 Small Fish","SELL_DETAIL:SELL_SMALLFISH"),("🐌 Snail","SELL_DETAIL:SELL_SNAIL"),("🐙 Octopus","SELL_DETAIL:SELL_OCTOPUS"),("🐡 Pufferfish","SELL_DETAIL:SELL_PUFFER"),("⬅️ Kembali","D2")]},
+    "D3":{"title":"📋 TUKAR POINT","buttons":[("Lihat Poin & Tukar","D3A"),("⬅️ Kembali","D")]},
+    "D3A":{"title":"📋 🔄 POINT CHAT","buttons":[("TUKAR 🔄 UMPAN COMMON 🐛","TUKAR_POINT"),("⬅️ Kembali","D3")]},
+
+    "B":{"title":"📋 YAPPING","buttons":[("Poin Pribadi","BB"),("➡️ Leaderboard","BBB"),("⬅️ Kembali","main")]},
+    "BB":{"title":"📋 Poin Pribadi","buttons":[("⬅️ Kembali","B")]},
+    "BBB":{"title":"📋 Leaderboard Yapping","buttons":[("⬅️ Kembali","B")]},
+
+    "F":{"title":"📋 HASIL TANGKAPAN","buttons":[("CEK INVENTORY","FF"),("⬅️ Kembali","main")]},
+    "FF":{"title":"📋 CEK INVENTORY","buttons":[("LIHAT HASIL TANGKAPAN","FFF"),("⬅️ Kembali","F")]}
+}
+
+# Tambahan confirm untuk fishing otomatis
+for jenis in ["COMMON","RARE","LEGEND","MYTHIC"]:
+    MENU_STRUCTURE[f"EEE_{jenis}"] = {"title":f"📋 Apakah kamu ingin memancing menggunakan umpan {jenis}?",
+                                      "buttons":[("✅ YA", f"FISH_CONFIRM_{jenis}"),("❌ TIDAK","EEE")]}
+
+def normalize_key(key: str) -> str:
+    if not isinstance(key, str):
+        return ""
+    s = key.strip().lower()
+    s = re.sub(r"[^0-9a-z\s]", "", s)
+    s = re.sub(r"\s+", " ", s)
+    return s.strip()
+
+def canonical_inv_key_from_any(key: str) -> str:
+    if not key:
+        return ""
+    norm = normalize_key(key)
+    if norm in INV_KEY_ALIASES:
+        return INV_KEY_ALIASES[norm]
+    for cfg in ITEM_PRICES.values():
+        canon = cfg.get("inv_key")
+        if normalize_key(canon) == norm:
+            return canon
+    return key
+
+def make_keyboard(menu_key: str, user_id=None, page: int = 0) -> InlineKeyboardMarkup:
+    buttons = []
+
+    # LEADERBOARD
+    if menu_key == "BBB" and user_id:
+        points = yapping.load_points()
+        sorted_pts = sorted(points.items(), key=lambda x: x[1]["points"], reverse=True)
+        total_pages = max((len(sorted_pts)-1)//10,0)
+        nav = []
+        if page>0: nav.append(InlineKeyboardButton("⬅️ Prev", callback_data=f"BBB_PAGE_{page-1}"))
+        if page<total_pages: nav.append(InlineKeyboardButton("➡️ Next", callback_data=f"BBB_PAGE_{page+1}"))
+        if nav: buttons.append(nav)
+        buttons.append([InlineKeyboardButton("⬅️ Kembali", callback_data="B")])
+    
+    # DEFAULT MENU BUTTONS
+    else:
+        for text, cb in MENU_STRUCTURE.get(menu_key, {}).get("buttons", []):
+            buttons.append([InlineKeyboardButton(text, callback_data=cb)])
+        if not buttons:
+            buttons.append([InlineKeyboardButton("⬅️ Kembali", callback_data="main")])
+
+    return InlineKeyboardMarkup(buttons)
 
