@@ -366,6 +366,14 @@ def make_keyboard(menu_key: str, user_id=None, page: int = 0) -> InlineKeyboardM
 
     return InlineKeyboardMarkup(buttons)
 
+elif menu_key == "G" and user_id:
+    login_db = yapping.load_login()
+    status = login_db.get(str(user_id), False)
+    buttons.append([InlineKeyboardButton(f"LOGIN {'✅' if status else '❌'}", callback_data="G_LOGIN")])
+    buttons.append([InlineKeyboardButton("LOGOUT", callback_data="G_LOGOUT")])
+    buttons.append([InlineKeyboardButton("STATUS LOGIN", callback_data="G_STATUS")])
+    buttons.append([InlineKeyboardButton("⬅️ Kembali", callback_data="main")])
+
 # ---------------- CALLBACK HANDLER ---------------- #
 async def callback_handler(client: Client, cq: CallbackQuery):
     data, user_id = cq.data, cq.from_user.id
@@ -752,14 +760,6 @@ async def handle_transfer_message(client: Client, message: Message):
             await message.reply("Format salah. Masukkan angka jumlah umpan.")
         return
 
-elif menu_key == "G" and user_id:
-    login_db = yapping.load_login()
-    status = login_db.get(str(user_id), False)
-    buttons.append([InlineKeyboardButton(f"LOGIN {'✅' if status else '❌'}", callback_data="G_LOGIN")])
-    buttons.append([InlineKeyboardButton("LOGOUT", callback_data="G_LOGOUT")])
-    buttons.append([InlineKeyboardButton("STATUS LOGIN", callback_data="G_STATUS")])
-    buttons.append([InlineKeyboardButton("⬅️ Kembali", callback_data="main")])
-
 # ---------------- SHOW LEADERBOARD ---------------- #
 async def show_leaderboard(cq: CallbackQuery, uid: int, page: int = 0):
     pts = yapping.load_points()
@@ -829,4 +829,5 @@ if data.startswith("G_"):
         text = f"🔐 Status login kamu: {'✅ Login aktif' if status else '❌ Tidak login'}"
         await cq.message.edit_text(text, reply_markup=make_keyboard("G", uid))
         return
+
 
