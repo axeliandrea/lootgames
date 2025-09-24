@@ -12,7 +12,7 @@ from lootgames.modules import (
     user_database,
     gacha_fishing,
     aquarium,
-    treasure_chest   # <<< NEW MODULE TREASURE CHEST
+    treasure_chest
 )
 
 from lootgames.config import (
@@ -38,16 +38,14 @@ app = Client(
 )
 
 # ================= REGISTER MODULES ================= #
+# Register semua handler sebelum start client
 yapping.register(app)
 menu_utama.register(app)
 user_database.register(app)
-treasure_chest.register(app)   # <<< REGISTER TREASURE CHEST MODULE
+treasure_chest.register(app)
 
 # ================= CALLBACK FISHING ================= #
 async def fishing_callback_handler(client, callback_query):
-    """
-    Handler untuk callback FISH_CONFIRM_ dari menu fishing.
-    """
     data = callback_query.data
     user_id = callback_query.from_user.id
 
@@ -55,13 +53,10 @@ async def fishing_callback_handler(client, callback_query):
         jenis = data.replace("FISH_CONFIRM_", "")
         username = callback_query.from_user.username or f"user{user_id}"
 
-        # Ambil TARGET_GROUP dari menu_utama
         from lootgames.modules.menu_utama import TARGET_GROUP
 
-        # Kirim pesan bahwa user mulai memancing
         await callback_query.message.edit_text(f"🎣 Kamu memancing dengan umpan {jenis}!")
 
-        # Panggil fungsi fishing loot
         try:
             await gacha_fishing.fishing_loot(
                 client,
@@ -73,12 +68,10 @@ async def fishing_callback_handler(client, callback_query):
         except Exception as e:
             logger.error(f"Gagal proses fishing_loot: {e}")
 
-# Daftarkan handler callback query untuk fishing
 app.add_handler(CallbackQueryHandler(fishing_callback_handler))
 
 # ================= MAIN BOT ================= #
 async def main():
-    # Pastikan folder storage ada
     os.makedirs("storage", exist_ok=True)
 
     # Start client
@@ -105,4 +98,5 @@ if __name__ == "__main__":
     except ImportError:
         pass
 
+    # Gunakan run_polling agar semua handler bekerja (Pyrogram 2.x+)
     asyncio.run(main())
