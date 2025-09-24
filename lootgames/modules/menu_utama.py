@@ -10,7 +10,7 @@ from lootgames.modules import yapping, umpan, user_database
 from lootgames.modules import fizz_coin
 from lootgames.modules import aquarium
 from lootgames.modules.gacha_fishing import fishing_loot
-from datetime import date
+from datetime import datetime, timedelta
 
 logger = logging.getLogger(__name__)
 OWNER_ID = 6395738130
@@ -414,32 +414,44 @@ async def callback_handler(client: Client, cq: CallbackQuery):
         await cq.message.edit_text(msg, reply_markup=make_keyboard("G", user_id))
         return
 
-    elif data == "LOGIN_STATUS":
-        # tampilkan 7 hari terakhir streak user
+    # ... di callback_handler, ganti bagian LOGIN_STATUS
+    if data == "LOGIN_STATUS":
+        # inisialisasi user jika belum ada
         init_user_login(user_id)
-        user_login = LOGIN_STATE[user_id]
-        streak = user_login["streak"]
 
+        # ambil login_dates
+        user_login = LOGIN_STATE.get(user_id, {"login_dates": set()})
+        login_dates_set = user_login.get("login_dates", set())
+
+        # list hari
+        days_of_week_id = ["SENIN","SELASA","RABU","KAMIS","JUMAT","SABTU","MINGGU"]
+
+        # Hitung hari sekarang dalam WIB
+        now_utc = datetime.utcnow()
+        now_wib = now_utc + timedelta(hours=7)
+        today = now_wib.date()
+
+        # Senin minggu ini
+        start_of_week = today - timedelta(days=today.weekday())
+
+        # buat daftar 7 hari dari Senin → Minggu
+        last_7_days = [(start_of_week + timedelta(days=i)) for i in range(7)]
+
+        # Buat status login
         status_text = "📅 Status LOGIN 7 Hari Terakhir:\n"
-        for i in range(7):
-            status_text += f"LOGIN-{i+1}: "
-            status_text += "✅" if streak >= i + 1 else "❌"
-            status_text += "\n"
+        for i, day in enumerate(last_7_days, start=1):
+            day_int = int(day.strftime("%Y%m%d"))
+            checked = "✅" if day_int in login_dates_set else "❌"
+            status_text += f"LOGIN-{i}: {checked}{days_of_week_id[day.weekday()]} \n"
 
-        await cq.message.edit_text(status_text, reply_markup=make_keyboard("G", user_id))
-        return
+    # Tambahkan reward login harian
+    reward_text = "\nReward login Umpan common Type A\n"
+    for i, day_name in enumerate(days_of_week_id):
+        reward = STREAK_REWARDS.get(i+1, 0)
+        reward_text += f"{day_name} {reward}x pcs Umpan common Type A\n"
 
-    # MENU OPEN untuk login, tombol navigasi
-    elif data == "G":
-        # tampilkan menu LOGIN HARIAN
-        buttons = [
-            [InlineKeyboardButton("✅ Absen Hari Ini", callback_data="LOGIN_TODAY")],
-            [InlineKeyboardButton("📅 Lihat Status Login 7 Hari", callback_data="LOGIN_STATUS")],
-            [InlineKeyboardButton("⬅️ Kembali", callback_data="main")]
-        ]
-        kb = InlineKeyboardMarkup(buttons)
-        await cq.message.edit_text("📋 LOGIN HARIAN", reply_markup=kb)
-        return
+    await cq.message.edit_text(status_text + reward_text, reply_markup=make_keyboard("G", user_id))
+    return
 
     # ---------------- REGISTER FLOW ---------------- #
     if data == "REGISTER_YES":
@@ -868,3 +880,4 @@ def register(app: Client):
     app.add_handler(MessageHandler(handle_transfer_message, filters.text & filters.private))
     app.add_handler(CallbackQueryHandler(callback_handler))
     logger.info("[MENU] Handler menu_utama terdaftar.")
+
