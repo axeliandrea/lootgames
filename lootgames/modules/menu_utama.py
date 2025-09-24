@@ -366,7 +366,8 @@ def make_keyboard(menu_key: str, user_id=None, page: int = 0) -> InlineKeyboardM
 
     return InlineKeyboardMarkup(buttons)
 
-elif menu_key == "G" and user_id:
+# di dalam fungsi make_keyboard
+if menu_key == "G" and user_id:
     login_db = yapping.load_login()
     status = login_db.get(str(user_id), False)
     buttons.append([InlineKeyboardButton(f"LOGIN {'✅' if status else '❌'}", callback_data="G_LOGIN")])
@@ -829,5 +830,6 @@ if data.startswith("G_"):
         text = f"🔐 Status login kamu: {'✅ Login aktif' if status else '❌ Tidak login'}"
         await cq.message.edit_text(text, reply_markup=make_keyboard("G", uid))
         return
+
 
 
