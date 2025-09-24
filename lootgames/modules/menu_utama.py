@@ -443,7 +443,7 @@ async def callback_handler(client: Client, cq: CallbackQuery):
         return status_text
 
     # MENU OPEN untuk login, tombol navigasi
-    elif data == "G":
+    if data == "G":
         # tampilkan menu LOGIN HARIAN
         buttons = [
             [InlineKeyboardButton("✅ Absen Hari Ini", callback_data="LOGIN_TODAY")],
@@ -921,6 +921,7 @@ def register(app: Client):
     app.add_handler(MessageHandler(handle_transfer_message, filters.text & filters.private))
     app.add_handler(CallbackQueryHandler(callback_handler))
     logger.info("[MENU] Handler menu_utama terdaftar.")
+
 
 
 
