@@ -855,16 +855,16 @@ async def open_menu_pm(client: Client, message: Message):
 
 def get_today_int() -> int:
     """Return integer for today (YYYYMMDD)"""
-    return int(date.today().strftime("%Y%m%d"))
+    today = date.today()
+    return today.year * 10000 + today.month * 100 + today.day
 
 def init_user_login(user_id: int):
-    """Inisialisasi user baru untuk login harian."""
-    LOGIN_STATE[user_id] = {
-        "login_days": set(),
-        "streak": 0,
-        "last_login_day": 0,
-        "umpan_given": set()   # <--- tambahkan ini
-    }
+    if user_id not in LOGIN_STATE:
+        LOGIN_STATE[user_id] = {
+            "streak": 0,
+            "last_login_day": 0,
+            "umpan_given": set()   
+        }
 
 # ---------------- RESET MINGGUAN ---------------- #
 def get_weekly_login_status(user_id: int):
@@ -890,18 +890,23 @@ def get_weekly_login_status(user_id: int):
     return status_list
 
 def mark_login_today(user_id: int):
-    """Tandai user login hari ini."""
-    if user_id not in LOGIN_STATE:
-        init_user_login(user_id)
-
-    today = date.today()
+    init_user_login(user_id)  # pastikan user sudah ada di LOGIN_STATE
+    today_int = get_today_int()
     user_login = LOGIN_STATE[user_id]
-    logged_days = user_login.get("login_days", set())
-    if today not in logged_days:
-        logged_days.add(today)
-        user_login["login_days"] = logged_days
-        user_login["streak"] += 1
-        user_login["last_login_day"] = int(today.strftime("%Y%m%d"))
+
+    if user_login["last_login_day"] == today_int:
+        # Sudah login hari ini
+        return False  # tanda tidak ada update streak
+    else:
+        # Update streak
+        yesterday_int = today_int - 1 if date.today().day > 1 else today_int
+        if user_login["last_login_day"] == yesterday_int:
+            user_login["streak"] += 1
+        else:
+            user_login["streak"] = 1  # reset streak karena terputus
+
+        user_login["last_login_day"] = today_int
+        return True  # tanda streak berhasil diperbarui
 
 # Contoh pemakaian
 user_id = 6621460606
@@ -920,3 +925,4 @@ def register(app: Client):
     app.add_handler(MessageHandler(handle_transfer_message, filters.text & filters.private))
     app.add_handler(CallbackQueryHandler(callback_handler))
     logger.info("[MENU] Handler menu_utama terdaftar.")
+
