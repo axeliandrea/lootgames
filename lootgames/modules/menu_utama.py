@@ -267,15 +267,15 @@ for jenis in ["COMMON", "RARE", "LEGEND", "MYTHIC"]:
 MENU_STRUCTURE["G"] = {
     "title": "📋 LOGIN HARIAN",
     "buttons": [
-        [InlineKeyboardButton("✅ Absen Hari Ini", callback_data="LOGIN_TODAY")],
-        [InlineKeyboardButton("📅 Lihat Status Login 7 Hari", callback_data="LOGIN_STATUS")],
-        [InlineKeyboardButton("🔄 Reset Login", callback_data="LOGIN_RESET") if OWNER_ID else None],
-        [InlineKeyboardButton("⬅️ Kembali", callback_data="main")]
+        ("✅ Absen Hari Ini", "LOGIN_TODAY"),
+        ("📅 Lihat Status Login 7 Hari", "LOGIN_STATUS"),
+        ("🔄 Reset Login", "LOGIN_RESET") if OWNER_ID else None,
+        ("⬅️ Kembali", "main")
     ]
 }
-# Hapus tombol None jika user bukan owner
-MENU_STRUCTURE["G"]["buttons"] = [b for b in MENU_STRUCTURE["G"]["buttons"] if b is not None]
 
+# hapus None
+MENU_STRUCTURE["G"]["buttons"] = [b for b in MENU_STRUCTURE["G"]["buttons"] if b is not None]
 
 # ---------------- Helper untuk normalisasi key ---------------- #
 
@@ -881,4 +881,5 @@ def register(app: Client):
     app.add_handler(MessageHandler(handle_transfer_message, filters.text & filters.private))
     app.add_handler(CallbackQueryHandler(callback_handler))
     logger.info("[MENU] Handler menu_utama terdaftar.")
+
 
