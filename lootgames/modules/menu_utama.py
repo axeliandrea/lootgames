@@ -420,28 +420,23 @@ async def callback_handler(client: Client, cq: CallbackQuery):
     elif data == "LOGIN_STATUS":
         # inisialisasi user jika belum ada
         init_user_login(user_id)
-        user_login = LOGIN_STATE[user_id]
 
-        # daftar 7 hari terakhir dari hari ini, dari paling lama → hari ini
-        def get_login_status(user_id):
-            days_of_week = ["SENIN", "SELASA", "RABU", "KAMIS", "JUMAT", "SABTU", "MINGGU"]
-            today = date.today()
+        # buat list status login 7 hari terakhir
+        days_of_week = ["SENIN", "SELASA", "RABU", "KAMIS", "JUMAT", "SABTU", "MINGGU"]
+        today = date.today()
+        last_7_days = [(today - timedelta(days=i)) for i in range(6, -1, -1)]  # 6 hari lalu → hari ini
 
-            # ambil tanggal 7 hari terakhir
-            last_7_days = [(today - timedelta(days=i)) for i in range(6, -1, -1)]  # 6 hari lalu → hari ini
+        user_login = LOGIN_STATE.get(user_id, {"login_dates": set()})
+        login_dates_set = user_login.get("login_dates", set())
 
-            # buat list login berdasarkan urutan Senin→Minggu
-            status_text = "📅 Status LOGIN 7 Hari Terakhir:\n"
-            user_login = LOGIN_STATE.get(user_id, {"login_dates": set()})
-            login_dates_set = user_login.get("login_dates", set())
+        status_text = "📅 Status LOGIN 7 Hari Terakhir:\n"
+        for i, day in enumerate(last_7_days):
+            day_name = days_of_week[day.weekday()]  # weekday 0=Senin
+            day_int = int(day.strftime("%Y%m%d"))
+            checked = "✅" if day_int in login_dates_set else "❌"
+            status_text += f"LOGIN-{i+1}: {checked} {day_name}\n"
 
-            for i, day in enumerate(last_7_days):
-                day_name = days_of_week[day.weekday()]  # weekday 0=Senin
-                day_int = int(day.strftime("%Y%m%d"))
-                checked = "✅" if day_int in login_dates_set else "❌"
-                status_text += f"LOGIN-{i+1}: {checked} {day_name}\n"
-
-            return status_text
+        await cq.message.edit_text(status_text, reply_markup=make_keyboard("G", user_id))
 
     # MENU OPEN untuk login, tombol navigasi
     elif data == "G":
@@ -922,6 +917,7 @@ def register(app: Client):
     app.add_handler(MessageHandler(handle_transfer_message, filters.text & filters.private))
     app.add_handler(CallbackQueryHandler(callback_handler))
     logger.info("[MENU] Handler menu_utama terdaftar.")
+
 
 
 
