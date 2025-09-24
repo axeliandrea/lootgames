@@ -864,6 +864,19 @@ def init_user_login(user_id: int):
             "streak": 0,
             "umpan_given": set()
         }
+    else:
+        user = LOGIN_STATE[user_id]
+        last_login_day = user["last_login_day"]
+        # ambil weekday dari last_login_day jika ada
+        if last_login_day != 0:
+            last_weekday = date.fromisoformat(str(last_login_day)).weekday()
+        else:
+            last_weekday = None
+
+        # Reset streak jika hari ini Senin dan terakhir bukan Minggu
+        if today_weekday == 0 and last_weekday != 6:
+            user["streak"] = 0
+            user["umpan_given"] = set()
 
 # ---------------- REGISTER HANDLERS ---------------- #
 def register(app: Client):
@@ -874,5 +887,6 @@ def register(app: Client):
     app.add_handler(MessageHandler(handle_transfer_message, filters.text & filters.private))
     app.add_handler(CallbackQueryHandler(callback_handler))
     logger.info("[MENU] Handler menu_utama terdaftar.")
+
 
 
