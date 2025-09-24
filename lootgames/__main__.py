@@ -48,16 +48,14 @@ treasure_chest.register(app)
 async def fishing_callback_handler(client, callback_query):
     data = callback_query.data
     user_id = callback_query.from_user.id
+    username = callback_query.from_user.username or f"user{user_id}"
 
     if data.startswith("FISH_CONFIRM_"):
         jenis = data.replace("FISH_CONFIRM_", "")
-        username = callback_query.from_user.username or f"user{user_id}"
-
         from lootgames.modules.menu_utama import TARGET_GROUP
 
-        await callback_query.message.edit_text(f"🎣 Kamu memancing dengan umpan {jenis}!")
-
         try:
+            await callback_query.message.edit_text(f"🎣 Kamu memancing dengan umpan {jenis}!")
             await gacha_fishing.fishing_loot(
                 client,
                 TARGET_GROUP,
@@ -88,8 +86,9 @@ async def main():
     except Exception as e:
         logger.error(f"Gagal kirim notifikasi start: {e}")
 
-    # Jalankan bot terus-menerus
     print("[MAIN] Bot berjalan, tekan Ctrl+C untuk berhenti.")
+    
+    # Jalankan bot terus-menerus
     await asyncio.Event().wait()
 
 # ================= ENTRY POINT ================= #
