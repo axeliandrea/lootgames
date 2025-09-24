@@ -399,8 +399,8 @@ async def callback_handler(client: Client, cq: CallbackQuery):
         today = date.today()
 
         # hitung hari minggu terakhir
-        days_since_sunday = today.weekday() + 1 if today.weekday() != 6 else 0  # Senin=0 ... Minggu=6
-        start_of_week = today - timedelta(days=days_since_sunday)  # Senin minggu ini
+        today = date.today()
+        start_of_week = today - timedelta(days=today.weekday())  # Senin minggu ini
         last_7_days = [(start_of_week + timedelta(days=i)) for i in range(7)]  # Senin - Minggu
 
         status_text = "📅 Status LOGIN 7 Hari Terakhir:\n"
@@ -908,6 +908,7 @@ def register(app: Client):
     app.add_handler(MessageHandler(handle_transfer_message, filters.text & filters.private))
     app.add_handler(CallbackQueryHandler(callback_handler))
     logger.info("[MENU] Handler menu_utama terdaftar.")
+
 
 
 
