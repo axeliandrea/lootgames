@@ -386,33 +386,33 @@ async def callback_handler(client: Client, cq: CallbackQuery):
     logger.info(f"[DEBUG] callback -> user:{user_id}, data:{data}")
     await cq.answer()
 
-# ===== LOGIN HARIAN CALLBACK =====
-if data == "LOGIN_STATUS":
-    # inisialisasi user jika belum ada
-    init_user_login(user_id)
+    # ===== LOGIN HARIAN CALLBACK =====
+    if data == "LOGIN_STATUS":
+        # inisialisasi user jika belum ada
+        init_user_login(user_id)
 
-    # ambil login_dates
-    user_login = LOGIN_STATE.get(user_id, {"login_dates": set()})
-    login_dates_set = user_login.get("login_dates", set())
+        # ambil login_dates
+        user_login = LOGIN_STATE.get(user_id, {"login_dates": set()})
+        login_dates_set = user_login.get("login_dates", set())
 
-    days_of_week_id = ["SENIN", "SELASA", "RABU", "KAMIS", "JUMAT", "SABTU", "MINGGU"]
-    today = date.today()
+        days_of_week_id = ["SENIN", "SELASA", "RABU", "KAMIS", "JUMAT", "SABTU", "MINGGU"]
+        today = date.today()
 
-    # hitung hari minggu terakhir
-    days_since_sunday = today.weekday() + 1 if today.weekday() != 6 else 0  # Senin=0 ... Minggu=6
-    start_of_week = today - timedelta(days=days_since_sunday)  # Senin minggu ini
-    last_7_days = [(start_of_week + timedelta(days=i)) for i in range(7)]  # Senin - Minggu
+        # hitung hari minggu terakhir
+        days_since_sunday = today.weekday() + 1 if today.weekday() != 6 else 0  # Senin=0 ... Minggu=6
+        start_of_week = today - timedelta(days=days_since_sunday)  # Senin minggu ini
+        last_7_days = [(start_of_week + timedelta(days=i)) for i in range(7)]  # Senin - Minggu
 
-    status_text = "📅 Status LOGIN 7 Hari Terakhir:\n"
-    for i, day in enumerate(last_7_days, start=1):
-        day_name = days_of_week_id[day.weekday()]  # indeks 0=Senin
-        day_int = int(day.strftime("%Y%m%d"))
-        checked = "✅" if day_int in login_dates_set else "❌"
-        status_text += f"LOGIN-{i}: {checked} {day_name}\n"
+        status_text = "📅 Status LOGIN 7 Hari Terakhir:\n"
+        for i, day in enumerate(last_7_days, start=1):
+            day_name = days_of_week_id[day.weekday()]  # indeks 0=Senin
+            day_int = int(day.strftime("%Y%m%d"))
+            checked = "✅" if day_int in login_dates_set else "❌"
+            status_text += f"LOGIN-{i}: {checked} {day_name}\n"
 
-    # tampilkan ke user
-    await cq.message.edit_text(status_text, reply_markup=make_keyboard("G", user_id))
-    return
+        # tampilkan ke user
+        await cq.message.edit_text(status_text, reply_markup=make_keyboard("G", user_id))
+        return
 
     # MENU OPEN untuk login, tombol navigasi
     if data == "G":
@@ -893,6 +893,7 @@ def register(app: Client):
     app.add_handler(MessageHandler(handle_transfer_message, filters.text & filters.private))
     app.add_handler(CallbackQueryHandler(callback_handler))
     logger.info("[MENU] Handler menu_utama terdaftar.")
+
 
 
 
