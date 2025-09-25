@@ -237,3 +237,14 @@ def save_login(data: dict):
             json.dump(data, f, indent=2)
     except Exception as e:
         log_debug(f"Gagal simpan login DB: {e}")
+
+# lootgames/modules/yapping.py
+def update_points(user_id: int, amount: int):
+    data = load_points()
+    uid = str(user_id)
+    if uid not in data:
+        data[uid] = {"points": 0}
+    data[uid]["points"] += amount
+    if data[uid]["points"] < 0:
+        data[uid]["points"] = 0  # jangan negatif
+    save_points(data)
