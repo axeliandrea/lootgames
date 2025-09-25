@@ -568,23 +568,23 @@ async def callback_handler(client: Client, cq: CallbackQuery):
         await cq.message.reply("Masukkan jumlah umpan COMMON 🐛 yang ingin ditukar (100 poin = 1 umpan):")
         return
 
-    if data == "TUKAR_CONFIRM":
-        info = TUKAR_POINT_STATE.get(user_id)
+    if data.startswith("TUKAR_CONFIRM"):
+        uid_from_cb = int(data.split(":")[1])
+        info = TUKAR_POINT_STATE.get(uid_from_cb)
         if not info or info.get("step") != 2:
             await cq.answer("❌ Proses tidak valid.", show_alert=True)
             return
-        jml = info["jumlah_umpan"]
-        pts = yapping.load_points().get(str(user_id), {}).get("points", 0)
-        if pts < jml * 100:
+        jumlah = info["jumlah_umpan"]
+        pts = yapping.load_points().get(str(uid_from_cb), {}).get("points", 0)
+        if pts < jumlah * 100:
             await cq.answer("❌ Point tidak cukup.", show_alert=True)
-            TUKAR_POINT_STATE.pop(user_id, None)
+            TUKAR_POINT_STATE.pop(uid_from_cb, None)
             return
-        yapping.update_points(user_id, -jml * 100)
-        umpan.add_umpan(user_id, "A", jml)  # ✅ hanya COMMON
+        yapping.update_points(uid_from_cb, -jumlah * 100)
+        umpan.add_umpan(uid_from_cb, "A", jumlah)
         kb = InlineKeyboardMarkup([[InlineKeyboardButton("⬅️ Kembali", callback_data="D3A")]])
-        await cq.message.edit_text(f"✅ Tukar berhasil! {jml} umpan COMMON 🐛 ditambahkan ke akunmu.", reply_markup=kb)
-        TUKAR_POINT_STATE.pop(user_id, None)
-        return
+        await cq.message.edit_text(f"✅ Tukar berhasil! {jumlah} umpan COMMON 🐛 ditambahkan ke akunmu.", reply_markup=kb)
+        TUKAR_POINT_STATE.pop(uid_from_cb, None)
 
     # SELL FLOW: DETAIL -> START -> CONFIRM / CANCEL
     # data format: SELL_DETAIL:<code> , SELL_START:<code> , SELL_CONFIRM:<code>:<amount> , SELL_CANCEL
@@ -880,6 +880,9 @@ def register(app: Client):
     # this handler will also handle SELL amount input because SELL_WAITING is checked inside
     app.add_handler(MessageHandler(handle_transfer_message, filters.text & filters.private))
     app.add_handler(CallbackQueryHandler(callback_handler))
+    app.add_handler(MessageHandler(handle_transfer_message, filters.text & filters.private))
+
     logger.info("[MENU] Handler menu_utama terdaftar.")
+
 
 
