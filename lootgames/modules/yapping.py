@@ -19,10 +19,10 @@ logger = logging.getLogger(__name__)
 if DEBUG:
     logger.setLevel(logging.DEBUG)
 
-# ================= UTILS ================= #
 def log_debug(msg: str):
     logger.debug(msg)
 
+# ================= JSON UTILS ================= #
 def load_json(file_path):
     if os.path.exists(file_path):
         try:
@@ -46,34 +46,12 @@ def load_points() -> dict:
 def save_points(data):
     save_json(YAPPINGPOINT_DB, data)
 
-def add_user_if_not_exist(points, user_id, username):
-    user_id = str(user_id)
-    if user_id not in points:
-        points[user_id] = {
-            "username": username,
-            "points": 0,
-            "level": 0,
-            "last_milestone": 0
-        }
-        log_debug(f"User baru ditambahkan: {username} ({user_id})")
-    else:
-        points[user_id]["username"] = username
-        points[user_id].setdefault("level", 0)
-        points[user_id].setdefault("last_milestone", 0)
-
 def calculate_points_from_text(text: str) -> int:
-    # Hitung hanya huruf A-Z/a-z
     letters_only = re.sub(r"[^a-zA-Z]", "", text)
     if len(letters_only) < 5:
-        return 0  # chat terlalu pendek, tidak dapat point
+        return 0
     points = len(letters_only) // 5
     return min(points, MAX_POINT_PER_CHAT)
-
-def add_points(points, user_id, username, amount):
-    add_user_if_not_exist(points, user_id, username)
-    points[str(user_id)]["points"] += amount
-    log_debug(f"{username} ({user_id}) +{amount} point | total: {points[str(user_id)]['points']}")
-    save_points(points)
 
 # ================= LEVEL & BADGE ================= #
 LEVEL_EXP = {}
@@ -110,6 +88,34 @@ def get_badge(level: int) -> str:
     elif level <= 89: return "🐉 VIP 9"
     else: return "🏆 MAX VIP"
 
+# ================= UPDATE POINTS ================= #
+def update_points(user_id: int, amount: int, username: str = None):
+    data = load_points()
+    uid = str(user_id)
+
+    if uid not in data:
+        data[uid] = {
+            "username": username or str(user_id),
+            "points": 0,
+            "level": 0,
+            "last_milestone": 0
+        }
+
+    if username:
+        data[uid]["username"] = username
+
+    data[uid]["points"] += amount
+    if data[uid]["points"] < 0:
+        data[uid]["points"] = 0
+
+    # cek level up
+    new_level = check_level_up(data[uid])
+    if new_level != -1:
+        log_debug(f"User {data[uid]['username']} naik ke level {new_level}")
+
+    save_points(data)
+    return new_level
+
 # ================= LEADERBOARD ================= #
 def generate_leaderboard(points: dict, top=0) -> str:
     sorted_points = sorted(points.items(), key=lambda x: x[1].get("points", 0), reverse=True)
@@ -134,14 +140,14 @@ def register(app: Client):
         text = message.text or ""
         log_debug(f"[CHAT] Dari {user.id} ({user.username}) → {text}")
 
-        points = load_points()
         username = user.username or user.first_name or str(user.id)
 
         amount = calculate_points_from_text(text)
-        add_points(points, user.id, username, amount)
+        if amount <= 0:
+            return
 
-        # Check level up
         new_level = update_points(user.id, amount, username)
+
         if new_level != -1:
             try:
                 await message.reply_text(
@@ -150,7 +156,8 @@ def register(app: Client):
             except Exception as e:
                 log_debug(f"Gagal kirim level up: {e}")
 
-        # Milestone
+        # milestone
+        points = load_points()
         total_points = points[str(user.id)]["points"]
         last_milestone = points[str(user.id)].get("last_milestone", 0)
         if total_points // MILESTONE_INTERVAL > last_milestone:
@@ -237,33 +244,3 @@ def save_login(data: dict):
             json.dump(data, f, indent=2)
     except Exception as e:
         log_debug(f"Gagal simpan login DB: {e}")
-
-# ================= UPDATE POINTS (FIXED) ================= #
-def update_points(user_id: int, amount: int, username: str = None):
-    data = load_points()
-    uid = str(user_id)
-
-    if uid not in data:
-        data[uid] = {
-            "username": username or str(user_id),
-            "points": 0,
-            "level": 0,
-            "last_milestone": 0
-        }
-
-    # Update username jika ada
-    if username:
-        data[uid]["username"] = username
-
-    # Tambah poin
-    data[uid]["points"] += amount
-    if data[uid]["points"] < 0:
-        data[uid]["points"] = 0  # jangan negatif
-
-    # Cek level up
-    new_level = check_level_up(data[uid])
-    if new_level != -1:
-        log_debug(f"User {data[uid]['username']} naik ke level {new_level}")
-
-    save_points(data)
-    return new_level
