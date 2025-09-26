@@ -968,6 +968,32 @@ def init_user_login(user_id: int):
             "umpan_given": set()
         }
 
+# ================== TREASURE CHEST STATE ==================
+CHEST_STATE = {
+    "active": False,       # True jika chest sudah dikirim
+    "claimed_users": set() # user_id yang sudah claim
+}
+
+async def treasure_chest_callback(client: Client, cq: CallbackQuery):
+    uid = cq.from_user.id
+    if not CHEST_STATE["active"]:
+        await cq.answer("❌ Chest belum aktif.", show_alert=True)
+        return
+
+    if uid in CHEST_STATE["claimed_users"]:
+        await cq.answer("❌ Kamu sudah claim chest ini.", show_alert=True)
+        return
+
+    # gacha item
+    item = random.choices(["ZONK", "Umpan Common Type A"], weights=[90,10])[0]
+
+    # jika umpan, tambahkan ke user
+    if item != "ZONK":
+        umpan.add_umpan(uid, "A", 1)
+
+    CHEST_STATE["claimed_users"].add(uid)
+    await cq.answer(f"📦 Kamu mendapatkan: {item}", show_alert=True)
+
 # ---------------- REGISTER HANDLERS ---------------- #
 def register(app: Client):
     # register handlers already expected by your app:
@@ -979,3 +1005,4 @@ def register(app: Client):
     app.add_handler(MessageHandler(handle_transfer_message, filters.text & filters.private))
 
     logger.info("[MENU] Handler menu_utama terdaftar.")
+
