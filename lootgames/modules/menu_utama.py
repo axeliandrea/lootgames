@@ -497,12 +497,10 @@ async def handle_treasure_chest(client: Client, cq: CallbackQuery):
     
 # ================== TREASURE CHEST OWNER ==================
 if data == "TREASURE_SEND_NOW":
-    global LAST_TREASURE_MSG_ID
     if user_id != OWNER_ID:
         await cq.answer("❌ Hanya owner yang bisa akses menu ini.", show_alert=True)
         return
 
-    global LAST_TREASURE_MSG_ID  # <-- Pindahkan ke sini
     # 🔹 RESET CLAIM USER
     CLAIMED_CHEST_USERS.clear()
 
@@ -1027,6 +1025,7 @@ def register(app: Client):
     app.add_handler(MessageHandler(handle_transfer_message, filters.text & filters.private))
 
     logger.info("[MENU] Handler menu_utama terdaftar.")
+
 
 
 
