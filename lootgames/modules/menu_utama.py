@@ -437,7 +437,7 @@ async def callback_handler(client: Client, cq: CallbackQuery):
         user_id = cq.from_user.id
         await cq.answer("📦 Kamu membuka Treasure Chest!", show_alert=True)
     
-        # delay 1 detik
+        # delay 3 detik
         await asyncio.sleep(3)
     
         # random drop
@@ -1000,3 +1000,4 @@ def register(app: Client):
     app.add_handler(MessageHandler(handle_transfer_message, filters.text & filters.private))
 
     logger.info("[MENU] Handler menu_utama terdaftar.")
+
