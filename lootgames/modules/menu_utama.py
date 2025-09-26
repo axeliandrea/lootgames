@@ -492,7 +492,7 @@ async def callback_handler(client: Client, cq: CallbackQuery):
                 )
             )
             # simpan message_id baru
-            LAST_TREASURE_MSG_ID = msg.message_id
+            LAST_TREASURE_MSG_ID = msg.id  # <- ganti message_id jadi id
         except Exception as e:
             logger.error(f"Gagal kirim Treasure Chest: {e}")
             return
@@ -1000,6 +1000,7 @@ def register(app: Client):
     app.add_handler(MessageHandler(handle_transfer_message, filters.text & filters.private))
 
     logger.info("[MENU] Handler menu_utama terdaftar.")
+
 
 
 
