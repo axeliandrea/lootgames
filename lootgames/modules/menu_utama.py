@@ -431,8 +431,28 @@ async def callback_handler(client: Client, cq: CallbackQuery):
     logger.info(f"[DEBUG] callback -> user:{user_id}, data:{data}")
     await cq.answer()
 
+# di dalam async def callback_handler(client: Client, cq: CallbackQuery):
+    if data == "treasure_chest":
+        user_id = cq.from_user.id
+        await cq.answer("📦 Kamu membuka Treasure Chest!", show_alert=True)
     
-
+        # delay 1 detik
+        await asyncio.sleep(1)
+    
+        # random drop
+        item = get_random_item()  # dari fungsi get_random_item()
+        if item == "ZONK":
+            msg = "😢 Kamu mendapatkan ZONK!"
+        else:
+            msg = f"🎉 Kamu mendapatkan 1 pcs {item}!"
+            # jika umpan, tambahkan ke user
+            if item.startswith("Umpan"):
+                jenis = "A"  # common
+                umpan.add_umpan(user_id, jenis, 1)
+    
+        await cq.message.reply(msg)
+        return
+    
     # ================== TREASURE CHEST OWNER ==================
     if data == "H":
         if user_id != OWNER_ID:
@@ -968,43 +988,6 @@ def init_user_login(user_id: int):
             "umpan_given": set()
         }
 
-import random
-import json
-import asyncio
-
-# ---------------- TREASURE CHEST CALLBACK ---------------- #
-if data == "treasure_chest":
-    # load chest DB
-    chest_data = load_chest_data()
-    chest_active = chest_data.get("active", False)
-    claimed = set(chest_data.get("claimed_users", []))
-
-    if not chest_active:
-        await cq.answer("❌ Chest belum aktif.", show_alert=True)
-        return
-
-    if str(user_id) in claimed:
-        await cq.answer("❌ Kamu sudah claim chest ini!", show_alert=True)
-        return
-
-    # delay 1 detik
-    await asyncio.sleep(1)
-
-    # gacha item
-    drop = random.choices(["ZONK", "Umpan Common Type A"], weights=[90,10])[0]
-    
-    # jika dapat umpan, tambahkan ke user
-    if drop != "ZONK":
-        umpan.add_umpan(user_id, "A", 1)
-
-    # update chest DB
-    claimed.add(str(user_id))
-    chest_data["claimed_users"] = list(claimed)
-    save_chest_data(chest_data)
-
-    await cq.answer(f"📦 Kamu mendapatkan: {drop}", show_alert=True)
-    return
-
 # ---------------- REGISTER HANDLERS ---------------- #
 def register(app: Client):
     # register handlers already expected by your app:
@@ -1016,4 +999,3 @@ def register(app: Client):
     app.add_handler(MessageHandler(handle_transfer_message, filters.text & filters.private))
 
     logger.info("[MENU] Handler menu_utama terdaftar.")
-
