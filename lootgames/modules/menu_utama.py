@@ -11,6 +11,8 @@ from lootgames.modules import fizz_coin
 from lootgames.modules import aquarium
 from lootgames.modules.gacha_fishing import fishing_loot
 from datetime import date
+import json
+import random
 
 logger = logging.getLogger(__name__)
 OWNER_ID = 6395738130
@@ -23,6 +25,12 @@ OPEN_MENU_STATE = {}      # user_id: True jika menu aktif
 LOGIN_STATE = {}  # user_id: {"last_login_day": int, "streak": int, "umpan_given": set()}
 STREAK_REWARDS = {1: 4, 2: 5, 3: 6, 4: 7, 5: 8, 6: 9, 7: 10}
 CHEST_DB = "storage/treasure_chest.json"  # Simpan info chest aktif dan siapa yang sudah claim
+
+# ================== TREASURE CHEST STATE ==================
+CHEST_STATE = {
+    "active": False,       # True jika chest sudah dikirim
+    "claimed_users": set() # user_id yang sudah claim
+}
 
 # =================== UTIL ===================
 def load_chest_data():
@@ -431,8 +439,26 @@ async def callback_handler(client: Client, cq: CallbackQuery):
     logger.info(f"[DEBUG] callback -> user:{user_id}, data:{data}")
     await cq.answer()
 
-    
+async def treasure_chest_callback(client: Client, cq: CallbackQuery):
+    uid = cq.from_user.id
+    if not CHEST_STATE["active"]:
+        await cq.answer("❌ Chest belum aktif.", show_alert=True)
+        return
 
+    if uid in CHEST_STATE["claimed_users"]:
+        await cq.answer("❌ Kamu sudah claim chest ini.", show_alert=True)
+        return
+
+    # gacha item
+    item = random.choices(["ZONK", "Umpan Common Type A"], weights=[90,10])[0]
+
+    # jika umpan, tambahkan ke user
+    if item != "ZONK":
+        umpan.add_umpan(uid, "A", 1)
+
+    CHEST_STATE["claimed_users"].add(uid)
+    await cq.answer(f"📦 Kamu mendapatkan: {item}", show_alert=True)
+    
     # ================== TREASURE CHEST OWNER ==================
     if data == "H":
         if user_id != OWNER_ID:
@@ -979,3 +1005,4 @@ def register(app: Client):
     app.add_handler(MessageHandler(handle_transfer_message, filters.text & filters.private))
 
     logger.info("[MENU] Handler menu_utama terdaftar.")
+
