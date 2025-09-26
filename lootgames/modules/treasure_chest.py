@@ -1,59 +1,67 @@
 # lootgames/modules/treasure_chest.py
-import logging
 import random
+import logging
 from pyrogram import Client, filters
-from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
-from lootgames.modules.umpan import add_umpan
+from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery, Message
+
+from lootgames.config import OWNER_ID, ALLOWED_GROUP_ID
+from lootgames.modules import umpan
 
 logger = logging.getLogger(__name__)
 
-OWNER_ID = 6395738130
-TARGET_GROUP = -1002946278772
-clicked_users = set()
+CHEST_BUTTON = InlineKeyboardMarkup(
+    [[InlineKeyboardButton("💎 TREASURE CHEST", callback_data="TREASURE_CHEST")]]
+)
 
-def register(app: Client):
-    """
-    Register command .treasurechest dan callback tombol treasure chest.
-    Bisa dipanggil langsung dari main.py:
-    treasure_chest.register(app)
-    """
-    logger.info("[CHEST] Registering treasure_chest module...")
+# ================= SPAWN CHEST ================= #
+async def spawn_chest(client: Client, message: Message):
+    """Owner kirim .treasure_chest di private untuk spawn di grup"""
+    if message.from_user.id != OWNER_ID:
+        return await message.reply("❌ Kamu bukan owner!")
 
-    # ================= COMMAND TREASURE CHEST ================= #
-    @app.on_message(filters.private & filters.command("treasurechest", prefixes=["."]))
-    async def treasure_handler(client, message):
-        if message.from_user.id != OWNER_ID:
-            await message.reply("❌ Kamu bukan owner.")
-            return
-
-        keyboard = InlineKeyboardMarkup(
-            [[InlineKeyboardButton("💎 Buka Treasure Chest", callback_data="open_treasure")]]
+    try:
+        await client.send_message(
+            ALLOWED_GROUP_ID,
+            "🎁 **TREASURE CHEST SPAWN!** 🎁\nKlik tombol untuk klaim!",
+            reply_markup=CHEST_BUTTON
         )
+        await message.reply("✅ Chest berhasil dikirim ke group!")
+        logger.info("[TREASURE] Chest spawned di group.")
+    except Exception as e:
+        logger.error(f"Gagal spawn chest: {e}")
+        await message.reply(f"❌ Error spawn chest: {e}")
 
-        try:
-            await client.send_message(
-                TARGET_GROUP,
-                "🎁 **TREASURE CHEST SPAWNED!**\nKlik tombol di bawah untuk mendapatkan reward!",
-                reply_markup=keyboard
-            )
-            await message.reply("✅ Treasure chest berhasil dikirim ke group.")
-        except Exception as e:
-            await message.reply(f"❌ Gagal kirim chest: {e}")
-            logger.error(f"[CHEST] Gagal kirim chest: {e}")
+# ================= CALLBACK ================= #
+async def chest_callback(client: Client, callback_query: CallbackQuery):
+    user = callback_query.from_user
+    user_id = user.id
+    username = user.username or user.first_name or str(user_id)
 
-    # ================= CALLBACK TREASURE CHEST ================= #
-    @app.on_callback_query(filters.regex("^open_treasure$"))
-    async def chest_callback(client, cq):
-        user = cq.from_user
-        if user.id in clicked_users:
-            await cq.answer("⚠️ Kamu sudah membuka chest ini!", show_alert=True)
-            return
+    # Random drop
+    roll = random.randint(1, 100)
+    if roll <= 10:
+        # Dapat umpan type A
+        umpan.init_user_if_missing(user_id, username)
+        umpan.add_umpan(user_id, "A", 1)
+        msg = f"🎉 {username} membuka chest dan mendapat **Umpan Common (A)**!"
+    else:
+        msg = f"💨 {username} membuka chest, tapi isinya kosong (Zonk)."
 
-        clicked_users.add(user.id)
-        reward = random.choices(["ZONK", "UMPAN_A"], weights=[90, 10])[0]
+    try:
+        await callback_query.answer("Chest dibuka!", show_alert=False)
+        await callback_query.message.reply(msg)
+    except Exception as e:
+        logger.error(f"Gagal proses chest callback: {e}")
 
-        if reward == "UMPAN_A":
-            add_umpan(user.id, "A", 1)
-            await cq.answer("🎉 Selamat! Kamu dapat 1 umpan tipe A!", show_alert=True)
-        else:
-            await cq.answer("😢 Zonkk! Tidak ada yang kamu dapat.", show_alert=True)
+# ================= REGISTER ================= #
+def register(app: Client):
+    # Command owner
+    app.add_handler(
+        filters.create(lambda _, __, msg: msg.text and msg.text.lower().startswith(".treasure_chest"))
+        (spawn_chest)
+    )
+    # Callback
+    app.add_handler(
+        filters.create(lambda _, __, cb: cb.data == "TREASURE_CHEST")
+        (chest_callback)
+    )
