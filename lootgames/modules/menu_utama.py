@@ -475,7 +475,7 @@ async def callback_handler(client: Client, cq: CallbackQuery):
         try:
             await cq._client.send_message(
                 TARGET_GROUP,
-                "📦 Treasure Chest dikirim oleh OWNER! Sekarang semua user bisa claim lagi.",
+                "📦 Treasure Chest dikirim oleh OWNER!",
                 reply_markup=InlineKeyboardMarkup(
                     [[InlineKeyboardButton("TREASURE CHEST", callback_data="treasure_chest")]]
                 )
@@ -986,6 +986,7 @@ def register(app: Client):
     app.add_handler(MessageHandler(handle_transfer_message, filters.text & filters.private))
 
     logger.info("[MENU] Handler menu_utama terdaftar.")
+
 
 
 
