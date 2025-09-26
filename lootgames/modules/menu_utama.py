@@ -437,13 +437,14 @@ def make_keyboard(menu_key: str, user_id=None, page: int = 0) -> InlineKeyboardM
 async def callback_handler(client: Client, cq: CallbackQuery):
     data = cq.data
     user_id = cq.from_user.id
+    uname = cq.from_user.username or f"user{user_id}"
     logger.info(f"[DEBUG] callback -> user:{user_id}, data:{data}")
     
     await cq.answer()  # jawab callback default
-    
+
     global LAST_TREASURE_MSG_ID, TREASURE_LOOP_RUNNING, TREASURE_LOOP_TASK
 
-    # TREASURE SEND NOW
+    # ================= TREASURE CHEST =================
     if data == "TREASURE_SEND_NOW":
         if user_id != OWNER_ID:
             await cq.answer("❌ Hanya owner yang bisa akses menu ini.", show_alert=True)
@@ -469,6 +470,9 @@ async def callback_handler(client: Client, cq: CallbackQuery):
                         )
                     )
                     LAST_TREASURE_MSG_ID = msg.id
+                    if 'TREASURE_CLAIMS' not in globals():
+                        global TREASURE_CLAIMS
+                        TREASURE_CLAIMS = {}
                     TREASURE_CLAIMS[LAST_TREASURE_MSG_ID] = set()
                 except Exception as e:
                     logger.error(f"Gagal kirim Treasure Chest: {e}")
@@ -484,6 +488,36 @@ async def callback_handler(client: Client, cq: CallbackQuery):
             )
         except Exception as e:
             logger.warning(f"Gagal edit pesan: {e}")
+        return
+
+    elif data == "treasure_chest":
+        # ---------------- CLAIM TREASURE ----------------
+        msg_id = cq.message.id
+
+        if 'TREASURE_CLAIMS' not in globals():
+            global TREASURE_CLAIMS
+            TREASURE_CLAIMS = {}
+
+        if msg_id not in TREASURE_CLAIMS:
+            TREASURE_CLAIMS[msg_id] = set()
+
+        if user_id in TREASURE_CLAIMS[msg_id]:
+            await cq.answer("❌ Kamu sudah mengklaim Treasure Chest ini sebelumnya!", show_alert=True)
+            return
+
+        await asyncio.sleep(3)
+
+        item = get_random_item()
+        if item == "ZONK":
+            msg = f"😢 @{uname} mendapatkan ZONK!"
+        else:
+            msg = f"🎉 @{uname} mendapatkan 1 pcs {item}!"
+            if item.startswith("Umpan"):
+                jenis = "A"
+                umpan.add_umpan(user_id, jenis, 1)
+
+        TREASURE_CLAIMS[msg_id].add(user_id)
+        await cq.message.reply(msg)
         return
 
 # Claim treasure chest
@@ -983,5 +1017,6 @@ def register(app: Client):
     app.add_handler(MessageHandler(handle_transfer_message, filters.text & filters.private))
 
     logger.info("[MENU] Handler menu_utama terdaftar.")
+
 
 
