@@ -11,8 +11,7 @@ from lootgames.modules import (
     menu_utama,
     user_database,
     gacha_fishing,
-    aquarium,
-    treasure_chest
+    aquarium
 )
 
 from lootgames.config import (
@@ -59,7 +58,6 @@ if not hasattr(user_database, "register"):
         logger.info("[INFO] user_database register() dummy dipanggil")
     user_database.register = dummy_register
 user_database.register(app)
-safe_register(treasure_chest, "treasure_chest")
 
 # ================= CALLBACK FISHING ================= #
 async def fishing_callback_handler(client, callback_query):
@@ -117,4 +115,3 @@ if __name__ == "__main__":
         pass
 
     asyncio.run(main())
-
