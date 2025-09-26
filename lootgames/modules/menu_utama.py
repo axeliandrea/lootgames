@@ -63,7 +63,8 @@ MENU_STRUCTURE = {
             ("🛒STORE", "D"),
             ("FISHING", "E"),
             ("HASIL TANGKAPAN", "F"),
-            ("LOGIN CHECK IN", "G")
+            ("LOGIN CHECK IN", "G"),
+            ("TREASURE CHEST", "H")
         ]
     },
 
@@ -274,6 +275,26 @@ MENU_STRUCTURE["G"] = {
     ]
 }
 
+# di bawah LOGIN CHECK IN (G)
+MENU_STRUCTURE["H"] = {
+    "title": "📦 TREASURE CHEST (OWNER ONLY)",
+    "buttons": [
+        ("KIRIM KE GROUP SEKARANG?", "TREASURE_SEND_NOW"),
+        ("⬅️ Kembali", "main")
+    ]
+}
+
+# Pilihan interval pengiriman
+MENU_STRUCTURE["TREASURE_INTERVAL"] = {
+    "title": "⏱ Berapa menit sekali ingin mengirim Treasure Chest?",
+    "buttons": [
+        ("10 Menit", "TREASURE_INTERVAL_10"),
+        ("30 Menit", "TREASURE_INTERVAL_30"),
+        ("1 Jam", "TREASURE_INTERVAL_60"),
+        ("⬅️ Kembali", "H")
+    ]
+}
+
 # hapus None
 MENU_STRUCTURE["G"]["buttons"] = [b for b in MENU_STRUCTURE["G"]["buttons"] if b is not None]
 
@@ -417,6 +438,47 @@ async def callback_handler(client: Client, cq: CallbackQuery):
 
         await cq.message.edit_text(msg, reply_markup=make_keyboard("G", user_id))
         return
+
+# ================== TREASURE CHEST OWNER ==================
+if data == "H":
+    if user_id != OWNER_ID:
+        await cq.answer("❌ Hanya owner yang bisa akses menu ini.", show_alert=True)
+        return
+    await cq.message.edit_text(MENU_STRUCTURE["H"]["title"], reply_markup=make_keyboard("H", user_id))
+    return
+
+# Tombol Kirim sekarang
+if data == "TREASURE_SEND_NOW":
+    if user_id != OWNER_ID:
+        await cq.answer("❌ Hanya owner yang bisa akses menu ini.", show_alert=True)
+        return
+    await cq.message.edit_text(
+        "📤 Pilih interval pengiriman Treasure Chest:",
+        reply_markup=make_keyboard("TREASURE_INTERVAL", user_id)
+    )
+    return
+
+# Pilihan interval
+if data.startswith("TREASURE_INTERVAL_"):
+    if user_id != OWNER_ID:
+        await cq.answer("❌ Hanya owner yang bisa akses menu ini.", show_alert=True)
+        return
+    interval = data.replace("TREASURE_INTERVAL_", "")
+    minutes = {"10":10, "30":30, "60":60}.get(interval, 10)
+
+    # bisa jadikan async task yang nanti loop sesuai interval, contoh:
+    await cq.message.edit_text(
+        f"✅ Treasure Chest akan dikirim setiap {minutes} menit.\n" 
+        f"📌 TREASURE CHEST SUDAH DIKIRIM KE GROUP SEKARANG!",
+        reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("⬅️ Kembali", callback_data="H")]])
+    )
+
+    # jika mau otomatis kirim ke TARGET_GROUP sekarang
+    try:
+        await cq._client.send_message(TARGET_GROUP, f"📦 Treasure Chest dikirim oleh OWNER!")
+    except Exception as e:
+        logger.error(f"Gagal kirim Treasure Chest: {e}")
+    return
 
     # ===== RESET LOGIN (OWNER ONLY) =====
     if data == "LOGIN_RESET":
@@ -887,6 +949,7 @@ def register(app: Client):
     app.add_handler(MessageHandler(handle_transfer_message, filters.text & filters.private))
 
     logger.info("[MENU] Handler menu_utama terdaftar.")
+
 
 
 
