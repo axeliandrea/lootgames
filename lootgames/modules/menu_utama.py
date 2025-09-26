@@ -462,47 +462,46 @@ async def callback_handler(client: Client, cq: CallbackQuery):
         await cq.message.edit_text(MENU_STRUCTURE["H"]["title"], reply_markup=make_keyboard("H", user_id))
         return
 
-    # ================= STATE ================= #
-LAST_TREASURE_MSG_ID = None  # simpan message_id treasure chest terakhir
 
-# Tombol Kirim sekarang
-if data == "TREASURE_SEND_NOW":
-    if user_id != OWNER_ID:
-        await cq.answer("❌ Hanya owner yang bisa akses menu ini.", show_alert=True)
-        return
 
-    # 🔹 RESET CLAIM USER
-    CLAIMED_CHEST_USERS.clear()
+    # Tombol Kirim sekarang
+    if data == "TREASURE_SEND_NOW":
+        if user_id != OWNER_ID:
+            await cq.answer("❌ Hanya owner yang bisa akses menu ini.", show_alert=True)
+            return
 
-    global LAST_TREASURE_MSG_ID
+        global LAST_TREASURE_MSG_ID  # << harus di sini, sebelum dipakai
 
-    # Hapus pesan treasure chest lama jika ada
-    if LAST_TREASURE_MSG_ID:
+        # 🔹 RESET CLAIM USER
+        CLAIMED_CHEST_USERS.clear()
+
+        # Hapus pesan treasure chest lama jika ada
+        if LAST_TREASURE_MSG_ID:
+            try:
+                await cq._client.delete_messages(TARGET_GROUP, LAST_TREASURE_MSG_ID)
+            except Exception as e:
+                logger.warning(f"Gagal hapus pesan treasure chest lama: {e}")
+
+        # Kirim pesan treasure chest baru
         try:
-            await cq._client.delete_messages(TARGET_GROUP, LAST_TREASURE_MSG_ID)
-        except Exception as e:
-            logger.warning(f"Gagal hapus pesan treasure chest lama: {e}")
-
-    # Kirim pesan treasure chest baru
-    try:
-        msg = await cq._client.send_message(
-            TARGET_GROUP,
-            "📦 Treasure Chest dikirim oleh OWNER!",
-            reply_markup=InlineKeyboardMarkup(
-                [[InlineKeyboardButton("TREASURE CHEST", callback_data="treasure_chest")]]
+            msg = await cq._client.send_message(
+                TARGET_GROUP,
+                "📦 Treasure Chest dikirim oleh OWNER!",
+                reply_markup=InlineKeyboardMarkup(
+                    [[InlineKeyboardButton("TREASURE CHEST", callback_data="treasure_chest")]]
+                )
             )
-        )
-        # simpan message_id baru
-        LAST_TREASURE_MSG_ID = msg.message_id
-    except Exception as e:
-        logger.error(f"Gagal kirim Treasure Chest: {e}")
-        return
+            # simpan message_id baru
+            LAST_TREASURE_MSG_ID = msg.message_id
+        except Exception as e:
+            logger.error(f"Gagal kirim Treasure Chest: {e}")
+            return
 
-    await cq.message.edit_text(
-        "✅ Treasure Chest berhasil dikirim ke group!",
-        reply_markup=make_keyboard("H", user_id)
-    )
-    return
+        await cq.message.edit_text(
+            "✅ Treasure Chest berhasil dikirim ke group!",
+            reply_markup=make_keyboard("H", user_id)
+        )
+        return
 
     # ===== LOGIN HARIAN CALLBACK =====
     if data == "LOGIN_TODAY":
@@ -1001,6 +1000,7 @@ def register(app: Client):
     app.add_handler(MessageHandler(handle_transfer_message, filters.text & filters.private))
 
     logger.info("[MENU] Handler menu_utama terdaftar.")
+
 
 
 
