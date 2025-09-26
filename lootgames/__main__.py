@@ -98,12 +98,11 @@ async def restart_handler(client, message):
     await message.reply_text("♻️ Bot sedang direstart... Tunggu sebentar.")
     logger.info(f"⚡ Restart dipanggil oleh {username} ({user_id})")
 
-    try:
-        await app.stop()
-    except Exception as e:
-        logger.warning(f"Gagal stop normal sebelum restart: {e}")
+    # Pakai asyncio.create_task agar tidak block handler
+    asyncio.create_task(do_restart())
 
-    # Restart ulang proses Python
+async def do_restart():
+    await app.stop()
     os.execv(sys.executable, [sys.executable] + sys.argv)
 
 # ================= MAIN BOT ================= #
