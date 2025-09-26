@@ -41,7 +41,7 @@ def get_random_item():
     # 90% ZONK, 10% Umpan
     return random.choices(
         ["ZONK", "Umpan Common Type A"],
-        weights=[90, 10],
+        weights=[50, 50],
         k=1
     )[0]
 
@@ -433,40 +433,27 @@ async def callback_handler(client: Client, cq: CallbackQuery):
     await cq.answer()
 
 # di dalam async def callback_handler(client: Client, cq: CallbackQuery):
-    # simpan state siapa yang sudah claim chest
-    claimed_chests = set()  # set berisi user_id yang sudah claim
-
-    async def callback_handler(client: Client, cq: CallbackQuery):
-        data = cq.data
-        if data == "treasure_chest":
-            user_id = cq.from_user.id
-        
-            # cek apakah user sudah claim
-            if user_id in claimed_chests:
-                await cq.answer("⚠️ Kamu sudah membuka chest sebelumnya!", show_alert=True)
-                return
-        
-            # tandai user sudah claim
-            claimed_chests.add(user_id)
-
-            await cq.answer("📦 Kamu membuka Treasure Chest!", show_alert=True)
+    if data == "treasure_chest":
+        user_id = cq.from_user.id
+        await cq.answer("📦 Kamu membuka Treasure Chest!", show_alert=True)
     
-            # delay 1 detik
-            await asyncio.sleep(1)
+        # delay 1 detik
+        await asyncio.sleep(3)
     
-            # random drop
-            item = get_random_item()  # dari fungsi get_random_item()
-            if item == "ZONK":
-                msg = "😢 Kamu mendapatkan ZONK!"
-            else:
-                msg = f"🎉 Kamu mendapatkan 1 pcs {item}!"
-                # jika umpan, tambahkan ke user
-                if item.startswith("Umpan"):
-                    jenis = "A"  # common
-                    umpan.add_umpan(user_id, jenis, 1)
+        # random drop
+        item = get_random_item()  # dari fungsi get_random_item()
+        if item == "ZONK":
+            msg = "😢 Kamu mendapatkan ZONK!"
+        else:
+            msg = f"🎉 Kamu mendapatkan 1 pcs {item}!"
+            # jika umpan, tambahkan ke user
+            if item.startswith("Umpan"):
+                jenis = "A"  # common
+                umpan.add_umpan(user_id, jenis, 1)
     
-            await cq.message.reply(msg)
-
+        await cq.message.reply(msg)
+        return
+    
     # ================== TREASURE CHEST OWNER ==================
     if data == "H":
         if user_id != OWNER_ID:
@@ -1013,5 +1000,3 @@ def register(app: Client):
     app.add_handler(MessageHandler(handle_transfer_message, filters.text & filters.private))
 
     logger.info("[MENU] Handler menu_utama terdaftar.")
-
-
