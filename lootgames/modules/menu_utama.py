@@ -23,10 +23,6 @@ OPEN_MENU_STATE = {}      # user_id: True jika menu aktif
 LOGIN_STATE = {}  # user_id: {"last_login_day": int, "streak": int, "umpan_given": set()}
 STREAK_REWARDS = {1: 4, 2: 5, 3: 6, 4: 7, 5: 8, 6: 9, 7: 10}
 CHEST_DB = "storage/treasure_chest.json"  # Simpan info chest aktif dan siapa yang sudah claim
-current_chest_id = None
-claimed_users = set()
-
-
 
 # =================== UTIL ===================
 def load_chest_data():
@@ -474,60 +470,28 @@ async def callback_handler(client: Client, cq: CallbackQuery):
         )
 
         # Kirim ke TARGET_GROUP dengan inline keyboard tombol TREASURE CHEST
-        async def send_treasure_chest(bot, owner_id, chat_id):
-            global current_chest_id, claimed_users
-            current_chest_id = random.randint(1000, 9999)  # ID unik chest
-            claimed_users = set()  # reset klaim
-
-            keyboard = InlineKeyboardMarkup(
-                [[InlineKeyboardButton("🎁 TREASURE CHEST", callback_data=f"chest_{current_chest_id}")]]
-            )
-
-            await bot.send_message(
-                chat_id,
+        try:
+            await cq._client.send_message(
+                TARGET_GROUP,
                 "📦 Treasure Chest dikirim oleh OWNER!",
-                reply_markup=keyboard
+                reply_markup=InlineKeyboardMarkup(
+                    [[InlineKeyboardButton("TREASURE CHEST", callback_data="treasure_chest")]]
+                )
             )
+        except Exception as e:
+            logger.error(f"Gagal kirim Treasure Chest: {e}")
+        return
 
-        @Client.on_callback_query(filters.regex(r"^chest_(\d+)$"))
-        async def claim_chest(bot, query: CallbackQuery):
-            global current_chest_id, claimed_users
+    # ===== LOGIN HARIAN CALLBACK =====
+    if data == "LOGIN_TODAY":
+        # inisialisasi user jika belum ada
+        init_user_login(user_id)
+        today = get_today_int()
+        user_login = LOGIN_STATE[user_id]
 
-            chest_id = int(query.data.split("_")[1])
-            user_id = query.from_user.id
-
-            if chest_id != current_chest_id:
-                return await query.answer("❌ Chest ini sudah kadaluarsa!", show_alert=True)
-
-            if user_id in claimed_users:
-                return await query.answer("❌ Kamu sudah ambil dari chest ini.", show_alert=True)
-
-            claimed_users.add(user_id)
-
-            # Roll reward
-            reward = random.choices(
-                ["zonk", "umpan"],
-                weights=[90, 10],
-                k=1
-            )[0]
-
-            if reward == "zonk":
-                await query.answer("💨 Kamu dapat ZONK!", show_alert=True)
-            else:
-                # tambah umpan ke database
-                umpan.add_bait(user_id, "Common Type A", 1)
-                await query.answer("🎣 Kamu dapat 1 Umpan Common Type A!", show_alert=True)
-
-            # ===== LOGIN HARIAN CALLBACK =====
-            if data == "LOGIN_TODAY":
-                # inisialisasi user jika belum ada
-                init_user_login(user_id)
-                today = get_today_int()
-                user_login = LOGIN_STATE[user_id]
-
-                if user_login["last_login_day"] == today:
-                    await cq.answer("❌ Kamu sudah absen hari ini!", show_alert=True)
-                    return
+        if user_login["last_login_day"] == today:
+            await cq.answer("❌ Kamu sudah absen hari ini!", show_alert=True)
+            return
 
         # update streak dan hari terakhir
         user_login["streak"] += 1
@@ -1015,5 +979,3 @@ def register(app: Client):
     app.add_handler(MessageHandler(handle_transfer_message, filters.text & filters.private))
 
     logger.info("[MENU] Handler menu_utama terdaftar.")
-
-
