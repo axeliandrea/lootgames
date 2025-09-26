@@ -521,7 +521,7 @@ async def callback_handler(client: Client, cq: CallbackQuery):
         return
 
 # Claim treasure chest
-if data == "treasure_chest":
+elif data == "treasure_chest":
     msg_id = cq.message.id
     user_id = cq.from_user.id
     uname = cq.from_user.username or f"user{user_id}"
@@ -1017,6 +1017,7 @@ def register(app: Client):
     app.add_handler(MessageHandler(handle_transfer_message, filters.text & filters.private))
 
     logger.info("[MENU] Handler menu_utama terdaftar.")
+
 
 
 
