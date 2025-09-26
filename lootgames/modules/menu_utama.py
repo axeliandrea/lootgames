@@ -1,4 +1,4 @@
-# lootgames/modules/menu_utama.py tester 2
+# lootgames/modules/menu_utama.py tester 3
 import logging
 import asyncio
 import re
@@ -990,6 +990,7 @@ def register(app: Client):
     app.add_handler(MessageHandler(handle_transfer_message, filters.text & filters.private))
 
     logger.info("[MENU] Handler menu_utama terdaftar.")
+
 
 
 
