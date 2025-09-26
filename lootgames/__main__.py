@@ -1,8 +1,9 @@
-# lootgames/__main__.py tester 2
+# lootgames/__main__.py
 import asyncio
 import logging
 import os
-from pyrogram import Client
+import sys
+from pyrogram import Client, filters
 from pyrogram.handlers import CallbackQueryHandler
 
 # ================= IMPORT MODULES ================= #
@@ -83,6 +84,28 @@ async def fishing_callback_handler(client, callback_query):
 
 app.add_handler(CallbackQueryHandler(fishing_callback_handler))
 
+# ================= COMMAND RESTART ================= #
+@app.on_message(filters.command("restart"))
+async def restart_handler(client, message):
+    user_id = message.from_user.id
+    username = message.from_user.username or f"user{user_id}"
+
+    if user_id != OWNER_ID:
+        await message.reply_text("❌ Kamu tidak punya izin untuk merestart bot ini.")
+        logger.warning(f"[RESTART] User bukan owner mencoba restart: {username} ({user_id})")
+        return
+
+    await message.reply_text("♻️ Bot sedang direstart... Tunggu sebentar.")
+    logger.info(f"⚡ Restart dipanggil oleh {username} ({user_id})")
+
+    try:
+        await app.stop()
+    except Exception as e:
+        logger.warning(f"Gagal stop normal sebelum restart: {e}")
+
+    # Restart ulang proses Python
+    os.execv(sys.executable, [sys.executable] + sys.argv)
+
 # ================= MAIN BOT ================= #
 async def main():
     # Pastikan folder storage ada
@@ -115,4 +138,3 @@ if __name__ == "__main__":
         pass
 
     asyncio.run(main())
-
