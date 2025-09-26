@@ -446,10 +446,10 @@ async def callback_handler(client: Client, cq: CallbackQuery):
             await cq.answer("❌ Hanya owner yang bisa akses menu ini.", show_alert=True)
             return
 
-        # Reset user yang klaim
+       # 🔹 RESET CLAIM USER
         CLAIMED_CHEST_USERS.clear()
 
-        # Hapus treasure lama kalau ada
+        # 🔹 Hapus Treasure Chest lama jika ada
         if LAST_TREASURE_MSG_ID is not None:
             try:
                 await cq._client.delete_messages(TARGET_GROUP, LAST_TREASURE_MSG_ID)
@@ -1007,6 +1007,7 @@ def register(app: Client):
     app.add_handler(MessageHandler(handle_transfer_message, filters.text & filters.private))
 
     logger.info("[MENU] Handler menu_utama terdaftar.")
+
 
 
 
