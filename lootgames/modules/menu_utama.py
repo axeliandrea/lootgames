@@ -438,6 +438,50 @@ async def callback_handler(client: Client, cq: CallbackQuery):
     data, user_id = cq.data, cq.from_user.id
     logger.info(f"[DEBUG] callback -> user:{user_id}, data:{data}")
     await cq.answer()
+    global LAST_TREASURE_MSG_ID, TREASURE_LOOP_RUNNING, TREASURE_LOOP_TASK
+
+    data, user_id = cq.data, cq.from_user.id
+    logger.info(f"[DEBUG] callback -> user:{user_id}, data:{data}")
+    await cq.answer()
+
+    if data == "TREASURE_SEND_NOW":
+        if user_id != OWNER_ID:
+            await cq.answer("❌ Hanya owner yang bisa akses menu ini.", show_alert=True)
+            return
+
+        CLAIMED_CHEST_USERS.clear()
+
+        if LAST_TREASURE_MSG_ID is not None:
+            try:
+                await cq._client.delete_messages(TARGET_GROUP, LAST_TREASURE_MSG_ID)
+            except Exception as e:
+                logger.warning(f"Gagal hapus Treasure Chest lama: {e}")
+
+        TREASURE_LOOP_RUNNING = True
+
+        async def treasure_loop():
+            while TREASURE_LOOP_RUNNING:
+                try:
+                    msg = await cq._client.send_message(
+                        TARGET_GROUP,
+                        "📦 Treasure Chest dikirim oleh OWNER!",
+                        reply_markup=InlineKeyboardMarkup(
+                            [[InlineKeyboardButton("TREASURE CHEST", callback_data="treasure_chest")]]
+                        )
+                    )
+                    global LAST_TREASURE_MSG_ID
+                    LAST_TREASURE_MSG_ID = msg.id
+                except Exception as e:
+                    logger.error(f"Gagal kirim Treasure Chest: {e}")
+                await asyncio.sleep(60)
+
+        TREASURE_LOOP_TASK = asyncio.create_task(treasure_loop())
+
+        await cq.message.edit_text(
+            "✅ Treasure Chest berhasil dikirim ke group! (akan dikirim ulang tiap 1 menit)",
+            reply_markup=make_keyboard("H", user_id)
+        )
+        return
 
     # di dalam async def callback_handler(client: Client, cq: CallbackQuery):
     if data == "treasure_chest":
@@ -466,47 +510,6 @@ async def callback_handler(client: Client, cq: CallbackQuery):
 
         await cq.message.reply(msg)
         return
-    
-# ================== TREASURE CHEST OWNER ==================
-if data == "TREASURE_SEND_NOW":
-    global LAST_TREASURE_MSG_ID, TREASURE_LOOP_RUNNING, TREASURE_LOOP_TASK
-    if user_id != OWNER_ID:
-        await cq.answer("❌ Hanya owner yang bisa akses menu ini.", show_alert=True)
-        return
-
-    CLAIMED_CHEST_USERS.clear()
-
-    if LAST_TREASURE_MSG_ID is not None:
-        try:
-            await cq._client.delete_messages(TARGET_GROUP, LAST_TREASURE_MSG_ID)
-        except Exception as e:
-            logger.warning(f"Gagal hapus Treasure Chest lama: {e}")
-
-    TREASURE_LOOP_RUNNING = True
-
-    async def treasure_loop():
-        while TREASURE_LOOP_RUNNING:
-            try:
-                msg = await cq._client.send_message(
-                    TARGET_GROUP,
-                    "📦 Treasure Chest dikirim oleh OWNER!",
-                    reply_markup=InlineKeyboardMarkup(
-                        [[InlineKeyboardButton("TREASURE CHEST", callback_data="treasure_chest")]]
-                    )
-                )
-                global LAST_TREASURE_MSG_ID
-                LAST_TREASURE_MSG_ID = msg.id
-            except Exception as e:
-                logger.error(f"Gagal kirim Treasure Chest: {e}")
-            await asyncio.sleep(60)
-
-    TREASURE_LOOP_TASK = asyncio.create_task(treasure_loop())
-
-    await cq.message.edit_text(
-        "✅ Treasure Chest berhasil dikirim ke group! (akan dikirim ulang tiap 1 menit)",
-        reply_markup=make_keyboard("H", user_id)
-    )
-    return
 
     # ===== LOGIN HARIAN CALLBACK =====
     if data == "LOGIN_TODAY":
@@ -999,6 +1002,7 @@ def register(app: Client):
     app.add_handler(MessageHandler(handle_transfer_message, filters.text & filters.private))
 
     logger.info("[MENU] Handler menu_utama terdaftar.")
+
 
 
 
