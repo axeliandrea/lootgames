@@ -26,6 +26,9 @@ STREAK_REWARDS = {1: 4, 2: 5, 3: 6, 4: 7, 5: 8, 6: 9, 7: 10}
 CHEST_DB = "storage/treasure_chest.json"  # Simpan info chest aktif dan siapa yang sudah claim
 CLAIMED_CHEST_USERS = set()  # user_id yang sudah claim treasure chest saat ini
 LAST_TREASURE_MSG_ID = None
+TREASURE_LOOP_RUNNING = False
+TREASURE_LOOP_TASK = None  # simpan task loop agar bisa cancel
+
 
 # =================== UTIL ===================
 def load_chest_data():
@@ -315,6 +318,7 @@ MENU_STRUCTURE["H"] = {
     "title": "📦 TREASURE CHEST (OWNER ONLY)",
     "buttons": [
         ("KIRIM KE GROUP SEKARANG?", "TREASURE_SEND_NOW"),
+        ("STOP TREASURE", "TREASURE_STOP"),
         ("⬅️ Kembali", "main")
     ]
 }
@@ -465,23 +469,23 @@ async def callback_handler(client: Client, cq: CallbackQuery):
     
 # ================== TREASURE CHEST OWNER ==================
 if data == "TREASURE_SEND_NOW":
-    global LAST_TREASURE_MSG_ID
+    global LAST_TREASURE_MSG_ID, TREASURE_LOOP_RUNNING, TREASURE_LOOP_TASK
     if user_id != OWNER_ID:
         await cq.answer("❌ Hanya owner yang bisa akses menu ini.", show_alert=True)
         return
 
-    # 🔹 RESET CLAIM USER
     CLAIMED_CHEST_USERS.clear()
 
-    # 🔹 Hapus Treasure Chest lama jika ada
     if LAST_TREASURE_MSG_ID is not None:
         try:
             await cq._client.delete_messages(TARGET_GROUP, LAST_TREASURE_MSG_ID)
         except Exception as e:
             logger.warning(f"Gagal hapus Treasure Chest lama: {e}")
 
+    TREASURE_LOOP_RUNNING = True
+
     async def treasure_loop():
-        while True:
+        while TREASURE_LOOP_RUNNING:
             try:
                 msg = await cq._client.send_message(
                     TARGET_GROUP,
@@ -494,9 +498,9 @@ if data == "TREASURE_SEND_NOW":
                 LAST_TREASURE_MSG_ID = msg.id
             except Exception as e:
                 logger.error(f"Gagal kirim Treasure Chest: {e}")
-            await asyncio.sleep(60)  # delay 1 menit
+            await asyncio.sleep(60)
 
-    asyncio.create_task(treasure_loop())
+    TREASURE_LOOP_TASK = asyncio.create_task(treasure_loop())
 
     await cq.message.edit_text(
         "✅ Treasure Chest berhasil dikirim ke group! (akan dikirim ulang tiap 1 menit)",
@@ -995,6 +999,7 @@ def register(app: Client):
     app.add_handler(MessageHandler(handle_transfer_message, filters.text & filters.private))
 
     logger.info("[MENU] Handler menu_utama terdaftar.")
+
 
 
 
