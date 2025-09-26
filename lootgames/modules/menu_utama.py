@@ -24,11 +24,7 @@ OPEN_MENU_STATE = {}      # user_id: True jika menu aktif
 LOGIN_STATE = {}  # user_id: {"last_login_day": int, "streak": int, "umpan_given": set()}
 STREAK_REWARDS = {1: 4, 2: 5, 3: 6, 4: 7, 5: 8, 6: 9, 7: 10}
 CHEST_DB = "storage/treasure_chest.json"  # Simpan info chest aktif dan siapa yang sudah claim
-
-# ---------------- STATE ---------------- #
 CLAIMED_CHEST_USERS = set()  # user_id yang sudah claim treasure chest saat ini
-CURRENT_CHEST_MESSAGE_ID = None  # id pesan treasure chest terakhir
-CURRENT_CHEST_CHAT_ID = None
 
 # =================== UTIL ===================
 def load_chest_data():
@@ -312,9 +308,11 @@ MENU_STRUCTURE["H"] = {
 
 # Pilihan interval pengiriman
 MENU_STRUCTURE["TREASURE_INTERVAL"] = {
-    "title": "⏱ Pilihan Treasure Chest",
+    "title": "⏱ Berapa menit sekali ingin mengirim Treasure Chest?",
     "buttons": [
-        ("TRIAL", "TREASURE_INTERVAL_TRIAL"),
+        ("10 Menit", "TREASURE_INTERVAL_10"),
+        ("30 Menit", "TREASURE_INTERVAL_30"),
+        ("1 Jam", "TREASURE_INTERVAL_60"),
         ("⬅️ Kembali", "H")
     ]
 }
@@ -437,6 +435,7 @@ async def callback_handler(client: Client, cq: CallbackQuery):
 
     # di dalam async def callback_handler(client: Client, cq: CallbackQuery):
     if data == "treasure_chest":
+        user_id = cq.from_user.id
         uname = cq.from_user.username or f"user{user_id}"
 
         # cek apakah sudah claim
@@ -455,8 +454,9 @@ async def callback_handler(client: Client, cq: CallbackQuery):
             msg = f"😢 @{uname} mendapatkan ZONK!"
         else:
             msg = f"🎉 @{uname} mendapatkan 1 pcs {item}!"
+            # jika umpan, tambahkan ke user
             if item.startswith("Umpan"):
-                jenis = "A"
+                jenis = "A"  # common
                 umpan.add_umpan(user_id, jenis, 1)
 
         # tandai user sudah claim
@@ -464,52 +464,55 @@ async def callback_handler(client: Client, cq: CallbackQuery):
 
         await cq.message.reply(msg)
         return
+    
+    # ================== TREASURE CHEST OWNER ==================
+    if data == "H":
+        if user_id != OWNER_ID:
+            await cq.answer("❌ Hanya owner yang bisa akses menu ini.", show_alert=True)
+            return
+        await cq.message.edit_text(MENU_STRUCTURE["H"]["title"], reply_markup=make_keyboard("H", user_id))
+        return
 
-# Fungsi kirim treasure chest ke group
-async def send_treasure_chest(client: Client, chat_id: int):
-    global CLAIMED_CHEST_USERS, CURRENT_CHEST_MESSAGE_ID, CURRENT_CHEST_CHAT_ID
-
-    CLAIMED_CHEST_USERS.clear()
-
-    keyboard = InlineKeyboardMarkup(
-        [[InlineKeyboardButton("Buka Treasure Chest 🎁", callback_data="treasure_chest")]]
-    )
-    msg = await client.send_message(chat_id, "📦 Treasure Chest baru! Klik tombol untuk membuka!", reply_markup=keyboard)
-
-    CURRENT_CHEST_MESSAGE_ID = msg.message_id
-    CURRENT_CHEST_CHAT_ID = chat_id
-
-    # hapus tombol setelah 3 menit
-    await asyncio.sleep(180)
-    try:
-        await client.edit_message_reply_markup(chat_id, msg.message_id, reply_markup=None)
-    except Exception as e:
-        logger.warning(f"Gagal hapus tombol: {e}")
-
-    # Pilihan interval (TRIAL saja)
+    # Tombol Kirim sekarang
     if data == "TREASURE_SEND_NOW":
         if user_id != OWNER_ID:
-            await cq.answer("❌ Hanya owner yang bisa mengirim Treasure Chest.", show_alert=True)
+            await cq.answer("❌ Hanya owner yang bisa akses menu ini.", show_alert=True)
             return
-
-        await send_treasure_chest(client, TARGET_GROUP)
         await cq.message.edit_text(
-            "✅ Treasure Chest telah dikirim ke group!",
-            reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("⬅️ Kembali", callback_data="H")]])
+            "📤 Pilih interval pengiriman Treasure Chest:",
+            reply_markup=make_keyboard("TREASURE_INTERVAL", user_id)
         )
         return
 
-        # Kirim ke TARGET_GROUP dengan tombol Buka Treasure Chest
+    # Pilihan interval
+    if data.startswith("TREASURE_INTERVAL_"):
+        if user_id != OWNER_ID:
+            await cq.answer("❌ Hanya owner yang bisa akses menu ini.", show_alert=True)
+            return
+        interval = data.replace("TREASURE_INTERVAL_", "")
+        minutes = {"10":10, "30":30, "60":60}.get(interval, 10)
+
+        # Edit message menu interval
+        await cq.message.edit_text(
+            f"✅ Treasure Chest akan dikirim setiap {minutes} menit.\n" 
+            f"📌 TREASURE CHEST SUDAH DIKIRIM KE GROUP SEKARANG!",
+            reply_markup=InlineKeyboardMarkup(
+                [[InlineKeyboardButton("⬅️ Kembali", callback_data="H")]]
+            )
+        )
+
+        # Kirim ke TARGET_GROUP dengan inline keyboard tombol TREASURE CHEST
         try:
             await cq._client.send_message(
                 TARGET_GROUP,
-                "📦 Treasure Chest TRIAL dikirim oleh OWNER!",
+                "📦 Treasure Chest dikirim oleh OWNER!",
                 reply_markup=InlineKeyboardMarkup(
-                    [[InlineKeyboardButton("Buka Treasure Chest 🎁", callback_data="treasure_chest")]]
+                    [[InlineKeyboardButton("TREASURE CHEST", callback_data="treasure_chest")]]
                 )
             )
         except Exception as e:
             logger.error(f"Gagal kirim Treasure Chest: {e}")
+        return
 
     # ===== LOGIN HARIAN CALLBACK =====
     if data == "LOGIN_TODAY":
@@ -1005,10 +1008,7 @@ def register(app: Client):
     # this handler will also handle SELL amount input because SELL_WAITING is checked inside
     app.add_handler(MessageHandler(handle_transfer_message, filters.text & filters.private))
     app.add_handler(CallbackQueryHandler(callback_handler))
+    app.add_handler(MessageHandler(handle_transfer_message, filters.text & filters.private))
 
     logger.info("[MENU] Handler menu_utama terdaftar.")
-
-
-
-
 
