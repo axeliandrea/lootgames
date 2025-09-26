@@ -478,10 +478,27 @@ async def callback_handler(client: Client, cq: CallbackQuery):
         if user_id != OWNER_ID:
             await cq.answer("❌ Hanya owner yang bisa akses menu ini.", show_alert=True)
             return
+
+        # 🔹 RESET CLAIM USER
+        CLAIMED_CHEST_USERS.clear()
+
         await cq.message.edit_text(
             "📤 Pilih interval pengiriman Treasure Chest:",
             reply_markup=make_keyboard("TREASURE_INTERVAL", user_id)
         )
+
+        interval = 10  # default
+        # Kirim ke TARGET_GROUP dengan inline keyboard tombol TREASURE CHEST
+        try:
+            await cq._client.send_message(
+                TARGET_GROUP,
+                "📦 Treasure Chest dikirim oleh OWNER! Sekarang semua user bisa claim lagi.",
+                reply_markup=InlineKeyboardMarkup(
+                    [[InlineKeyboardButton("TREASURE CHEST", callback_data="treasure_chest")]]
+                )
+            )
+        except Exception as e:
+            logger.error(f"Gagal kirim Treasure Chest: {e}")
         return
 
     # Pilihan interval
@@ -1011,4 +1028,5 @@ def register(app: Client):
     app.add_handler(MessageHandler(handle_transfer_message, filters.text & filters.private))
 
     logger.info("[MENU] Handler menu_utama terdaftar.")
+
 
