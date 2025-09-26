@@ -1,4 +1,4 @@
-# lootgames/__main__.py
+# lootgames/__main__.py tester 1
 import asyncio
 import logging
 import os
@@ -117,3 +117,4 @@ if __name__ == "__main__":
         pass
 
     asyncio.run(main())
+
