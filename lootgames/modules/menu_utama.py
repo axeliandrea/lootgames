@@ -28,6 +28,7 @@ CLAIMED_CHEST_USERS = set()  # user_id yang sudah claim treasure chest saat ini
 LAST_TREASURE_MSG_ID = None
 TREASURE_LOOP_RUNNING = False
 TREASURE_LOOP_TASK = None  # simpan task loop agar bisa cancel
+TREASURE_CLAIMS = {}  # Contoh penyimpanan klaim
 
 
 # =================== UTIL ===================
@@ -495,10 +496,6 @@ if data == "treasure_chest":
     msg_id = cq.message.id
     user_id = cq.from_user.id
     uname = cq.from_user.username or f"user{user_id}"
-
-    if 'TREASURE_CLAIMS' not in globals():
-        global TREASURE_CLAIMS
-        TREASURE_CLAIMS = {}
 
     if msg_id not in TREASURE_CLAIMS:
         TREASURE_CLAIMS[msg_id] = set()
@@ -986,6 +983,7 @@ def register(app: Client):
     app.add_handler(MessageHandler(handle_transfer_message, filters.text & filters.private))
 
     logger.info("[MENU] Handler menu_utama terdaftar.")
+
 
 
 
