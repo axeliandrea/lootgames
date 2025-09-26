@@ -24,6 +24,7 @@ OPEN_MENU_STATE = {}      # user_id: True jika menu aktif
 LOGIN_STATE = {}  # user_id: {"last_login_day": int, "streak": int, "umpan_given": set()}
 STREAK_REWARDS = {1: 4, 2: 5, 3: 6, 4: 7, 5: 8, 6: 9, 7: 10}
 CHEST_DB = "storage/treasure_chest.json"  # Simpan info chest aktif dan siapa yang sudah claim
+CLAIMED_CHEST_USERS = set()  # user_id yang sudah claim treasure chest saat ini
 
 # =================== UTIL ===================
 def load_chest_data():
@@ -432,25 +433,35 @@ async def callback_handler(client: Client, cq: CallbackQuery):
     logger.info(f"[DEBUG] callback -> user:{user_id}, data:{data}")
     await cq.answer()
 
-# di dalam async def callback_handler(client: Client, cq: CallbackQuery):
+    # di dalam async def callback_handler(client: Client, cq: CallbackQuery):
     if data == "treasure_chest":
         user_id = cq.from_user.id
+        uname = cq.from_user.username or f"user{user_id}"
+
+        # cek apakah sudah claim
+        if user_id in CLAIMED_CHEST_USERS:
+            await cq.answer("❌ Kamu sudah mengklaim Treasure Chest ini sebelumnya!", show_alert=True)
+            return
+
         await cq.answer("📦 Kamu membuka Treasure Chest!", show_alert=True)
-    
+
         # delay 3 detik
         await asyncio.sleep(3)
-    
+
         # random drop
-        item = get_random_item()  # dari fungsi get_random_item()
+        item = get_random_item()
         if item == "ZONK":
-            msg = "😢 Kamu mendapatkan ZONK!"
+            msg = f"😢 @{uname} mendapatkan ZONK!"
         else:
-            msg = f"🎉 Kamu mendapatkan 1 pcs {item}!"
+            msg = f"🎉 @{uname} mendapatkan 1 pcs {item}!"
             # jika umpan, tambahkan ke user
             if item.startswith("Umpan"):
                 jenis = "A"  # common
                 umpan.add_umpan(user_id, jenis, 1)
-    
+
+        # tandai user sudah claim
+        CLAIMED_CHEST_USERS.add(user_id)
+
         await cq.message.reply(msg)
         return
     
@@ -1000,4 +1011,5 @@ def register(app: Client):
     app.add_handler(MessageHandler(handle_transfer_message, filters.text & filters.private))
 
     logger.info("[MENU] Handler menu_utama terdaftar.")
+
 
