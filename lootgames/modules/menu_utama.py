@@ -465,20 +465,17 @@ async def callback_handler(client: Client, cq: CallbackQuery):
         await cq.message.reply(msg)
         return
 
-    # ---------------- FUNCTION UNTUK KIRIM TREASURE CHEST ---------------- #
+# Fungsi kirim treasure chest ke group
 async def send_treasure_chest(client: Client, chat_id: int):
     global CLAIMED_CHEST_USERS, CURRENT_CHEST_MESSAGE_ID, CURRENT_CHEST_CHAT_ID
 
-    # reset claim user
     CLAIMED_CHEST_USERS.clear()
 
-    # kirim pesan dengan tombol
     keyboard = InlineKeyboardMarkup(
         [[InlineKeyboardButton("Buka Treasure Chest 🎁", callback_data="treasure_chest")]]
     )
     msg = await client.send_message(chat_id, "📦 Treasure Chest baru! Klik tombol untuk membuka!", reply_markup=keyboard)
 
-    # simpan info pesan terakhir
     CURRENT_CHEST_MESSAGE_ID = msg.message_id
     CURRENT_CHEST_CHAT_ID = chat_id
 
@@ -1032,8 +1029,8 @@ def register(app: Client):
     # this handler will also handle SELL amount input because SELL_WAITING is checked inside
     app.add_handler(MessageHandler(handle_transfer_message, filters.text & filters.private))
     app.add_handler(CallbackQueryHandler(callback_handler))
-    app.add_handler(MessageHandler(handle_transfer_message, filters.text & filters.private))
 
     logger.info("[MENU] Handler menu_utama terdaftar.")
+
 
 
