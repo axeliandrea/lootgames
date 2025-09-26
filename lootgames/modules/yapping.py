@@ -1,4 +1,4 @@
-# lootgames/modules/yapping.py
+# lootgames/modules/yapping.py tester 1
 import os, re, json
 import logging
 from datetime import datetime
