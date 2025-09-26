@@ -141,7 +141,7 @@ def register(app: Client):
         add_points(points, user.id, username, amount)
 
         # Check level up
-        new_level = check_level_up(points[str(user.id)])
+        new_level = update_points(user.id, amount, username)
         if new_level != -1:
             try:
                 await message.reply_text(
@@ -238,13 +238,32 @@ def save_login(data: dict):
     except Exception as e:
         log_debug(f"Gagal simpan login DB: {e}")
 
-# lootgames/modules/yapping.py
-def update_points(user_id: int, amount: int):
+# ================= UPDATE POINTS (FIXED) ================= #
+def update_points(user_id: int, amount: int, username: str = None):
     data = load_points()
     uid = str(user_id)
+
     if uid not in data:
-        data[uid] = {"points": 0}
+        data[uid] = {
+            "username": username or str(user_id),
+            "points": 0,
+            "level": 0,
+            "last_milestone": 0
+        }
+
+    # Update username jika ada
+    if username:
+        data[uid]["username"] = username
+
+    # Tambah poin
     data[uid]["points"] += amount
     if data[uid]["points"] < 0:
         data[uid]["points"] = 0  # jangan negatif
+
+    # Cek level up
+    new_level = check_level_up(data[uid])
+    if new_level != -1:
+        log_debug(f"User {data[uid]['username']} naik ke level {new_level}")
+
     save_points(data)
+    return new_level
