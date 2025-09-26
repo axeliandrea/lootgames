@@ -487,19 +487,17 @@ async def send_treasure_chest(client: Client, chat_id: int):
         logger.warning(f"Gagal hapus tombol: {e}")
 
     # Pilihan interval (TRIAL saja)
-    if data == "TREASURE_INTERVAL_TRIAL":
+    if data == "TREASURE_SEND_NOW":
         if user_id != OWNER_ID:
-            await cq.answer("❌ Hanya owner yang bisa akses menu ini.", show_alert=True)
+            await cq.answer("❌ Hanya owner yang bisa mengirim Treasure Chest.", show_alert=True)
             return
 
-        # Edit message menu interval
+        await send_treasure_chest(client, TARGET_GROUP)
         await cq.message.edit_text(
-            "✅ Treasure Chest dikirim dalam mode TRIAL.\n"
-            "📌 TREASURE CHEST SUDAH DIKIRIM KE GROUP SEKARANG!",
-            reply_markup=InlineKeyboardMarkup(
-                [[InlineKeyboardButton("⬅️ Kembali", callback_data="H")]]
-            )
+            "✅ Treasure Chest telah dikirim ke group!",
+            reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("⬅️ Kembali", callback_data="H")]])
         )
+        return
 
         # Kirim ke TARGET_GROUP dengan tombol Buka Treasure Chest
         try:
@@ -1009,6 +1007,7 @@ def register(app: Client):
     app.add_handler(CallbackQueryHandler(callback_handler))
 
     logger.info("[MENU] Handler menu_utama terdaftar.")
+
 
 
 
