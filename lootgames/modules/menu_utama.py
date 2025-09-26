@@ -56,6 +56,7 @@ ITEM_PRICES = {
     "SELL_PUFFER":   {"name": "🐡 Pufferfish",         "price": 5,  "inv_key": "Pufferfish"},
     "SELL_JELLYFISH":   {"name": "ଳ Jelly Fish",         "price": 6,  "inv_key": "JELLYFISH"},
     "SELL_ORCA":   {"name": "🐋 Orca",         "price": 10,  "inv_key": "ORCA"},
+    "SELL_BABYDRAGON":   {"name": "ଳ Baby Dragon",         "price": 50,  "inv_key": "BABYDRAGON"},
 }
 # sementara user -> item_code waiting for amount input (chat)
 SELL_WAITING = {}  # user_id: item_code
@@ -77,6 +78,8 @@ INV_KEY_ALIASES = {
     "jelly fish": "Jelly Fish",
     "🐋 Orca": "Orca",
     "orca": "Orca",
+    "🐉 Baby Dragon": "Baby Dragon"
+    "baby dragon": "Baby Dragon"
     # tambahkan sesuai kebutuhan 
 }
 
@@ -228,6 +231,7 @@ MENU_STRUCTURE = {
             ("ଳ Jelly Fish", "SELL_DETAIL:SELL_JELLYFISH"),
             ("🐡 Pufferfish", "SELL_DETAIL:SELL_PUFFER"),
             ("🐋 Orca", "SELL_DETAIL:SELL_ORCA"),
+            ("🐉 Baby Dragon", "SELL_DETAIL:SELL_BABYDRAGON"),
             ("⬅️ Kembali", "D2"),
         ]
     },
@@ -990,6 +994,7 @@ def register(app: Client):
     app.add_handler(MessageHandler(handle_transfer_message, filters.text & filters.private))
 
     logger.info("[MENU] Handler menu_utama terdaftar.")
+
 
 
 
