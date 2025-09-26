@@ -959,16 +959,12 @@ async def show_leaderboard(cq: CallbackQuery, uid: int, page: int = 0):
 # ---------------- MENU OPEN ---------------- #
 async def open_menu(client: Client, message: Message):
     uid = message.from_user.id
-    if OPEN_MENU_STATE.get(uid):
-        return await message.reply("⚠️ Menu sudah terbuka, jangan panggil lagi.")
-    OPEN_MENU_STATE[uid] = True
+    # hapus pengecekan OPEN_MENU_STATE
     await message.reply(MENU_STRUCTURE["main"]["title"], reply_markup=make_keyboard("main", uid))
 
 async def open_menu_pm(client: Client, message: Message):
     uid = message.from_user.id
-    if OPEN_MENU_STATE.get(uid):
-        return await message.reply("⚠️ Menu sudah terbuka, jangan panggil lagi.")
-    OPEN_MENU_STATE[uid] = True
+    # hapus pengecekan OPEN_MENU_STATE
     await message.reply("📋 Menu Utama:", reply_markup=make_keyboard("main", uid))
 
 def get_today_int() -> int:
@@ -994,6 +990,7 @@ def register(app: Client):
     app.add_handler(MessageHandler(handle_transfer_message, filters.text & filters.private))
 
     logger.info("[MENU] Handler menu_utama terdaftar.")
+
 
 
 
