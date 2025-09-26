@@ -490,7 +490,6 @@ async def callback_handler(client: Client, cq: CallbackQuery):
             logger.warning(f"Gagal edit pesan: {e}")
         return
 
-    elif data == "treasure_chest":
         # ---------------- CLAIM TREASURE ----------------
         msg_id = cq.message.id
 
@@ -526,6 +525,10 @@ elif data == "treasure_chest":
     user_id = cq.from_user.id
     uname = cq.from_user.username or f"user{user_id}"
 
+    if 'TREASURE_CLAIMS' not in globals():
+        global TREASURE_CLAIMS
+        TREASURE_CLAIMS = {}
+
     if msg_id not in TREASURE_CLAIMS:
         TREASURE_CLAIMS[msg_id] = set()
 
@@ -533,10 +536,7 @@ elif data == "treasure_chest":
         await cq.answer("❌ Kamu sudah mengklaim Treasure Chest ini sebelumnya!", show_alert=True)
         return
 
-    # delay 3 detik
     await asyncio.sleep(3)
-
-    # random drop
     item = get_random_item()
     if item == "ZONK":
         msg = f"😢 @{uname} mendapatkan ZONK!"
@@ -546,9 +546,7 @@ elif data == "treasure_chest":
             jenis = "A"
             umpan.add_umpan(user_id, jenis, 1)
 
-    # tandai user sudah claim untuk pesan ini
     TREASURE_CLAIMS[msg_id].add(user_id)
-
     await cq.message.reply(msg)
     return
 
@@ -1017,6 +1015,7 @@ def register(app: Client):
     app.add_handler(MessageHandler(handle_transfer_message, filters.text & filters.private))
 
     logger.info("[MENU] Handler menu_utama terdaftar.")
+
 
 
 
