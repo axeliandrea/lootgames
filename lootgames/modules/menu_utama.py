@@ -502,6 +502,7 @@ if data == "TREASURE_SEND_NOW":
         await cq.answer("❌ Hanya owner yang bisa akses menu ini.", show_alert=True)
         return
 
+    global LAST_TREASURE_MSG_ID  # <-- Pindahkan ke sini
     # 🔹 RESET CLAIM USER
     CLAIMED_CHEST_USERS.clear()
 
@@ -522,7 +523,6 @@ if data == "TREASURE_SEND_NOW":
                         [[InlineKeyboardButton("TREASURE CHEST", callback_data="treasure_chest")]]
                     )
                 )
-                global LAST_TREASURE_MSG_ID
                 LAST_TREASURE_MSG_ID = msg.id
             except Exception as e:
                 logger.error(f"Gagal kirim Treasure Chest: {e}")
@@ -1027,5 +1027,6 @@ def register(app: Client):
     app.add_handler(MessageHandler(handle_transfer_message, filters.text & filters.private))
 
     logger.info("[MENU] Handler menu_utama terdaftar.")
+
 
 
