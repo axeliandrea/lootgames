@@ -427,13 +427,9 @@ async def callback_handler(client: Client, cq: CallbackQuery):
     if data == "treasure_chest":
         user_id = cq.from_user.id
         uname = cq.from_user.username or f"user{user_id}"
-
-        # cek apakah sudah claim
         if user_id in CLAIMED_CHEST_USERS:
             await cq.answer("❌ Kamu sudah mengklaim Treasure Chest ini sebelumnya!", show_alert=True)
             return
-
-        await cq.answer("📦 Kamu membuka Treasure Chest!", show_alert=True)
 
         # delay 3 detik
         await asyncio.sleep(3)
@@ -456,8 +452,8 @@ async def callback_handler(client: Client, cq: CallbackQuery):
         return
     
 # ================== TREASURE CHEST OWNER ==================
-if data == "TREASURE_SEND_NOW":
-        global LAST_TREASURE_MSG_ID  # <--- deklarasikan di awal
+    if data == "TREASURE_SEND_NOW":
+        global LAST_TREASURE_MSG_ID
         if user_id != OWNER_ID:
             await cq.answer("❌ Hanya owner yang bisa akses menu ini.", show_alert=True)
             return
@@ -493,11 +489,9 @@ if data == "TREASURE_SEND_NOW":
 
     # ===== LOGIN HARIAN CALLBACK =====
     if data == "LOGIN_TODAY":
-        # inisialisasi user jika belum ada
         init_user_login(user_id)
         today = get_today_int()
         user_login = LOGIN_STATE[user_id]
-
         if user_login["last_login_day"] == today:
             await cq.answer("❌ Kamu sudah absen hari ini!", show_alert=True)
             return
@@ -988,6 +982,7 @@ def register(app: Client):
     app.add_handler(MessageHandler(handle_transfer_message, filters.text & filters.private))
 
     logger.info("[MENU] Handler menu_utama terdaftar.")
+
 
 
 
