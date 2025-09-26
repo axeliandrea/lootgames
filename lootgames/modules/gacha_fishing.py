@@ -17,8 +17,9 @@ FISH_LOOT = {
     "🐙 Octopus": 4.0,   
     "🐡 Pufferfish": 1.0,
     "Lost cip": 5.0,
+    "ଳ Jelly Fish": 2.0,
     "🐋 Orca": 0.5,
-    "ଳ Jelly Fish": 2.0
+    "🐉 Baby Dragon": 0.001
 }
 
 # Buff rate berdasarkan umpan
