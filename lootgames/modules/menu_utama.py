@@ -306,17 +306,6 @@ MENU_STRUCTURE["H"] = {
     ]
 }
 
-# Pilihan interval pengiriman
-MENU_STRUCTURE["TREASURE_INTERVAL"] = {
-    "title": "⏱ Berapa menit sekali ingin mengirim Treasure Chest?",
-    "buttons": [
-        ("10 Menit", "TREASURE_INTERVAL_10"),
-        ("30 Menit", "TREASURE_INTERVAL_30"),
-        ("1 Jam", "TREASURE_INTERVAL_60"),
-        ("⬅️ Kembali", "H")
-    ]
-}
-
 # hapus None
 MENU_STRUCTURE["G"]["buttons"] = [b for b in MENU_STRUCTURE["G"]["buttons"] if b is not None]
 
@@ -482,12 +471,6 @@ async def callback_handler(client: Client, cq: CallbackQuery):
         # 🔹 RESET CLAIM USER
         CLAIMED_CHEST_USERS.clear()
 
-        await cq.message.edit_text(
-            "📤 Pilih interval pengiriman Treasure Chest:",
-            reply_markup=make_keyboard("TREASURE_INTERVAL", user_id)
-        )
-
-        interval = 10  # default
         # Kirim ke TARGET_GROUP dengan inline keyboard tombol TREASURE CHEST
         try:
             await cq._client.send_message(
@@ -499,36 +482,11 @@ async def callback_handler(client: Client, cq: CallbackQuery):
             )
         except Exception as e:
             logger.error(f"Gagal kirim Treasure Chest: {e}")
-        return
 
-    # Pilihan interval
-    if data.startswith("TREASURE_INTERVAL_"):
-        if user_id != OWNER_ID:
-            await cq.answer("❌ Hanya owner yang bisa akses menu ini.", show_alert=True)
-            return
-        interval = data.replace("TREASURE_INTERVAL_", "")
-        minutes = {"10":10, "30":30, "60":60}.get(interval, 10)
-
-        # Edit message menu interval
         await cq.message.edit_text(
-            f"✅ Treasure Chest akan dikirim setiap {minutes} menit.\n" 
-            f"📌 TREASURE CHEST SUDAH DIKIRIM KE GROUP SEKARANG!",
-            reply_markup=InlineKeyboardMarkup(
-                [[InlineKeyboardButton("⬅️ Kembali", callback_data="H")]]
-            )
+            "✅ Treasure Chest berhasil dikirim ke group!",
+            reply_markup=make_keyboard("H", user_id)
         )
-
-        # Kirim ke TARGET_GROUP dengan inline keyboard tombol TREASURE CHEST
-        try:
-            await cq._client.send_message(
-                TARGET_GROUP,
-                "📦 Treasure Chest dikirim oleh OWNER!",
-                reply_markup=InlineKeyboardMarkup(
-                    [[InlineKeyboardButton("TREASURE CHEST", callback_data="treasure_chest")]]
-                )
-            )
-        except Exception as e:
-            logger.error(f"Gagal kirim Treasure Chest: {e}")
         return
 
     # ===== LOGIN HARIAN CALLBACK =====
@@ -1028,5 +986,6 @@ def register(app: Client):
     app.add_handler(MessageHandler(handle_transfer_message, filters.text & filters.private))
 
     logger.info("[MENU] Handler menu_utama terdaftar.")
+
 
 
