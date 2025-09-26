@@ -54,6 +54,8 @@ ITEM_PRICES = {
     "SELL_SNAIL":    {"name": "🐌 Snail",              "price": 2,  "inv_key": "Snail"},
     "SELL_OCTOPUS":  {"name": "🐙 Octopus",            "price": 3, "inv_key": "Octopus"},
     "SELL_PUFFER":   {"name": "🐡 Pufferfish",         "price": 5,  "inv_key": "Pufferfish"},
+    "SELL_JELLYFISH":   {"name": "ଳ Jelly Fish",         "price": 6,  "inv_key": "JELLYFISH"},
+    "SELL_ORCA":   {"name": "🐋 Orca",         "price": 10,  "inv_key": "ORCA"},
 }
 # sementara user -> item_code waiting for amount input (chat)
 SELL_WAITING = {}  # user_id: item_code
@@ -71,6 +73,10 @@ INV_KEY_ALIASES = {
     "octopus": "Octopus",
     "🐡 Pufferfish": "Pufferfish",
     "pufferfish": "Pufferfish",
+    "ଳ Jelly Fish": "Jelly Fish",
+    "jelly fish": "Jelly Fish"
+    "🐋 Orca": "Orca",
+    "orca": "Orca",
     # tambahkan sesuai kebutuhan 
 }
 
@@ -219,7 +225,9 @@ MENU_STRUCTURE = {
             ("𓆝 Small Fish", "SELL_DETAIL:SELL_SMALLFISH"),
             ("🐌 Snail", "SELL_DETAIL:SELL_SNAIL"),
             ("🐙 Octopus", "SELL_DETAIL:SELL_OCTOPUS"),
+            ("ଳ Jelly Fish", "SELL_DETAIL:SELL_JELLYFISH"),
             ("🐡 Pufferfish", "SELL_DETAIL:SELL_PUFFER"),
+            ("🐋 Orca", "SELL_DETAIL:SELL_ORCA"),
             ("⬅️ Kembali", "D2"),
         ]
     },
@@ -982,6 +990,7 @@ def register(app: Client):
     app.add_handler(MessageHandler(handle_transfer_message, filters.text & filters.private))
 
     logger.info("[MENU] Handler menu_utama terdaftar.")
+
 
 
 
