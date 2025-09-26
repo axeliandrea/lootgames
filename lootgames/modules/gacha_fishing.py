@@ -1,4 +1,4 @@
-# lootgames/modules/gacha_fishing.py tester 1
+# lootgames/modules/gacha_fishing.py
 import random
 import asyncio
 import logging
@@ -9,21 +9,24 @@ from lootgames.modules import aquarium, umpan
 logger = logging.getLogger(__name__)
 
 # ---------------- LOOT TABLE ---------------- #
+# Persentase bisa desimal, misal 0.5%
 FISH_LOOT = {
-    "🤧 Zonk": 78,
-    "𓆝 Small Fish": 10,
-    "🐌 snail": 4,
-    "🐙 octopus": 2,   
-    "🐡 Pufferfish": 1,
-    "lost cip": 5
+    "🤧 Zonk": 70.0,
+    "𓆝 Small Fish": 12.0,
+    "🐌 Snail": 5.5,
+    "🐙 Octopus": 4.0,   
+    "🐡 Pufferfish": 1.0,
+    "Lost cip": 5.0,
+    "🐋 Orca": 0.5,
+    "ଳ Jelly Fish": 2.0
 }
 
 # Buff rate berdasarkan umpan
 BUFF_RATE = {
-    "COMMON": 0,
-    "RARE": 5,
-    "LEGEND": 15,
-    "MYTHIC": 25
+    "COMMON": 0.0,
+    "RARE": 5.0,
+    "LEGEND": 15.0,
+    "MYTHIC": 25.0
 }
 
 # ---------------- FISHING FUNCTION ---------------- #
@@ -32,18 +35,15 @@ async def fishing_loot(client: Client, target_chat: int, username: str, user_id:
     Menentukan loot fishing dan menyimpan ke database aquarium.py
     Mengembalikan loot item agar bisa dikirim ke group
     """
-    buff = BUFF_RATE.get(umpan_type, 0)
+    buff = BUFF_RATE.get(umpan_type, 0.0)
     loot_item = roll_loot(buff)
     
     logger.info(f"[FISHING] {username} ({user_id}) memancing dengan {umpan_type}, mendapatkan: {loot_item}")
     
-    # Simulasi animasi dan kirim pesan ke group
     try:
         await asyncio.sleep(2)  # delay animasi awal
         if target_chat:
-            # Kirim pesan langsung ke group, menggantikan pesan ⬛ lama
             await client.send_message(target_chat, f"@{username} mendapatkan {loot_item}!")
-        # Simpan loot ke database aquarium
         aquarium.add_fish(user_id, loot_item, 1)
     except Exception as e:
         logger.error(f"Error fishing loot untuk {username}: {e}")
@@ -51,15 +51,15 @@ async def fishing_loot(client: Client, target_chat: int, username: str, user_id:
     return loot_item
 
 # ---------------- HELPERS ---------------- #
-def roll_loot(buff: int) -> str:
+def roll_loot(buff: float) -> str:
     """
     Roll loot berdasarkan persentase dan buff.
-    Chance dihitung: jika roll <= chance + buff, item keluar
+    Chance dihitung: chance + buff, bisa desimal.
+    Menggunakan random.choices agar probabilitas akurat.
     """
-    items = list(FISH_LOOT.items())
-    random.shuffle(items)
-    for item, chance in items:
-        roll = random.randint(1, 100)
-        if roll <= chance + buff:
-            return item
-    return "🤧 Zonk"
+    items = list(FISH_LOOT.keys())
+    chances = [chance + buff for chance in FISH_LOOT.values()]
+    
+    # random.choices mendukung weight float
+    loot_item = random.choices(items, weights=chances, k=1)[0]
+    return loot_item
