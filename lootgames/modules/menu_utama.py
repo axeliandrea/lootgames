@@ -461,12 +461,12 @@ if data == "TREASURE_SEND_NOW":
         await cq.answer("❌ Hanya owner yang bisa akses menu ini.", show_alert=True)
         return
 
+    global LAST_TREASURE_MSG_ID  # <--- Pindahkan ke sini, sebelum baca/assign
     # 🔹 RESET CLAIM USER
     CLAIMED_CHEST_USERS.clear()
 
     # 🔹 Hapus Treasure Chest lama jika ada
-    global LAST_TREASURE_MSG_ID
-    if 'LAST_TREASURE_MSG_ID' in globals() and LAST_TREASURE_MSG_ID is not None:
+    if LAST_TREASURE_MSG_ID is not None:
         try:
             await cq._client.delete_messages(TARGET_GROUP, LAST_TREASURE_MSG_ID)
         except Exception as e:
@@ -483,7 +483,6 @@ if data == "TREASURE_SEND_NOW":
         )
         # Simpan message_id terbaru
         LAST_TREASURE_MSG_ID = msg.id
-
     except Exception as e:
         logger.error(f"Gagal kirim Treasure Chest: {e}")
 
@@ -492,7 +491,6 @@ if data == "TREASURE_SEND_NOW":
         reply_markup=make_keyboard("H", user_id)
     )
     return
-
 
     # ===== LOGIN HARIAN CALLBACK =====
     if data == "LOGIN_TODAY":
