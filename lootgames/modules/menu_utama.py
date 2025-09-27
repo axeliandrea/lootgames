@@ -56,7 +56,7 @@ ITEM_PRICES = {
     "SELL_PUFFER":   {"name": "🐡 Pufferfish",         "price": 5,  "inv_key": "Pufferfish"},
     "SELL_JELLYFISH":   {"name": "ଳ Jelly Fish",         "price": 6,  "inv_key": "JELLYFISH"},
     "SELL_ORCA":   {"name": "🐋 Orca",         "price": 10,  "inv_key": "ORCA"},
-    "SELL_BABYDRAGON":   {"name": "ଳ Baby Dragon",         "price": 50,  "inv_key": "BABYDRAGON"},
+    "SELL_BABYDRAGON":   {"name": "🐉 Baby Dragon",         "price": 50,  "inv_key": "BABYDRAGON"},
 }
 # sementara user -> item_code waiting for amount input (chat)
 SELL_WAITING = {}  # user_id: item_code
@@ -451,11 +451,11 @@ async def callback_handler(client: Client, cq: CallbackQuery):
         if item == "ZONK":
             msg = f"😢 @{uname} mendapatkan ZONK!"
         else:
-            msg = f"🎉 @{uname} mendapatkan 1 pcs {item}!"
+            msg = f"🎉 @{uname} mendapatkan 3 pcs 🐛{item}!"
             # jika umpan, tambahkan ke user
             if item.startswith("Umpan"):
                 jenis = "A"  # common
-                umpan.add_umpan(user_id, jenis, 1)
+                umpan.add_umpan(user_id, jenis, 3)
 
         # tandai user sudah claim
         CLAIMED_CHEST_USERS.add(user_id)
@@ -990,6 +990,7 @@ def register(app: Client):
     app.add_handler(MessageHandler(handle_transfer_message, filters.text & filters.private))
 
     logger.info("[MENU] Handler menu_utama terdaftar.")
+
 
 
 
