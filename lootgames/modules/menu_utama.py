@@ -1,4 +1,4 @@
-# lootgames/modules/menu_utama.py tester 3
+# lootgames/modules/menu_utama.py tester 2
 import logging
 import asyncio
 import re
@@ -464,45 +464,40 @@ async def callback_handler(client: Client, cq: CallbackQuery):
         return
     
 # ================== TREASURE CHEST OWNER ==================
-if data == "TREASURE_SEND_NOW":
-    global LAST_TREASURE_MSG_ID
-    if user_id != OWNER_ID:
-        await cq.answer("❌ Hanya owner yang bisa akses menu ini.", show_alert=True)
-        return
+    if data == "TREASURE_SEND_NOW":
+        global LAST_TREASURE_MSG_ID
+        if user_id != OWNER_ID:
+            await cq.answer("❌ Hanya owner yang bisa akses menu ini.", show_alert=True)
+            return
 
-    # 🔹 RESET CLAIM USER
-    CLAIMED_CHEST_USERS.clear()
+        # 🔹 RESET CLAIM USER
+        CLAIMED_CHEST_USERS.clear()
 
-    # 🔹 Hapus Treasure Chest lama jika ada
-    if LAST_TREASURE_MSG_ID is not None:
-        try:
-            await cq._client.delete_messages(TARGET_GROUP, LAST_TREASURE_MSG_ID)
-        except Exception as e:
-            logger.warning(f"Gagal hapus Treasure Chest lama: {e}")
-
-    async def treasure_loop():
-        while True:
+        # 🔹 Hapus Treasure Chest lama jika ada
+        if LAST_TREASURE_MSG_ID is not None:
             try:
-                msg = await cq._client.send_message(
-                    TARGET_GROUP,
-                    "📦 Treasure Chest dikirim oleh OWNER!",
-                    reply_markup=InlineKeyboardMarkup(
-                        [[InlineKeyboardButton("TREASURE CHEST", callback_data="treasure_chest")]]
-                    )
-                )
-                global LAST_TREASURE_MSG_ID
-                LAST_TREASURE_MSG_ID = msg.id
+                await cq._client.delete_messages(TARGET_GROUP, LAST_TREASURE_MSG_ID)
             except Exception as e:
-                logger.error(f"Gagal kirim Treasure Chest: {e}")
-            await asyncio.sleep(60)  # delay 1 menit
+                logger.warning(f"Gagal hapus Treasure Chest lama: {e}")
 
-    asyncio.create_task(treasure_loop())
+        # 🔹 Kirim Treasure Chest baru
+        try:
+            msg = await cq._client.send_message(
+                TARGET_GROUP,
+                "📦 Treasure Chest dikirim oleh OWNER!",
+                reply_markup=InlineKeyboardMarkup(
+                    [[InlineKeyboardButton("TREASURE CHEST", callback_data="treasure_chest")]]
+                )
+            )
+            LAST_TREASURE_MSG_ID = msg.id
+        except Exception as e:
+            logger.error(f"Gagal kirim Treasure Chest: {e}")
 
-    await cq.message.edit_text(
-        "✅ Treasure Chest berhasil dikirim ke group! (akan dikirim ulang tiap 1 menit)",
-        reply_markup=make_keyboard("H", user_id)
-    )
-    return
+        await cq.message.edit_text(
+            "✅ Treasure Chest berhasil dikirim ke group!",
+            reply_markup=make_keyboard("H", user_id)
+        )
+        return
 
     # ===== LOGIN HARIAN CALLBACK =====
     if data == "LOGIN_TODAY":
@@ -964,12 +959,16 @@ async def show_leaderboard(cq: CallbackQuery, uid: int, page: int = 0):
 # ---------------- MENU OPEN ---------------- #
 async def open_menu(client: Client, message: Message):
     uid = message.from_user.id
-    # hapus pengecekan OPEN_MENU_STATE
+    if OPEN_MENU_STATE.get(uid):
+        return await message.reply("⚠️ Menu sudah terbuka, jangan panggil lagi.")
+    OPEN_MENU_STATE[uid] = True
     await message.reply(MENU_STRUCTURE["main"]["title"], reply_markup=make_keyboard("main", uid))
 
 async def open_menu_pm(client: Client, message: Message):
     uid = message.from_user.id
-    # hapus pengecekan OPEN_MENU_STATE
+    if OPEN_MENU_STATE.get(uid):
+        return await message.reply("⚠️ Menu sudah terbuka, jangan panggil lagi.")
+    OPEN_MENU_STATE[uid] = True
     await message.reply("📋 Menu Utama:", reply_markup=make_keyboard("main", uid))
 
 def get_today_int() -> int:
@@ -995,5 +994,4 @@ def register(app: Client):
     app.add_handler(MessageHandler(handle_transfer_message, filters.text & filters.private))
 
     logger.info("[MENU] Handler menu_utama terdaftar.")
-
 
