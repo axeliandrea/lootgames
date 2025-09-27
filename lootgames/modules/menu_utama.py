@@ -54,8 +54,14 @@ def get_random_item():
 ITEM_PRICES = {
     "SELL_SMALLFISH":{"name": "𓆝 Small Fish",        "price": 1,  "inv_key": "Small Fish"},
     "SELL_SNAIL":    {"name": "🐌 Snail",              "price": 2,  "inv_key": "Snail"},
+    "SELL_FROG":  {"name": "🐸 Frog",            "price": 2, "inv_key": "FROG"},
     "SELL_OCTOPUS":  {"name": "🐙 Octopus",            "price": 3, "inv_key": "Octopus"},
+    "SELL_CLOWNFISH":  {"name": "🐟 Clownfish",            "price": 4, "inv_key": "CLOWNFISH"},
+    "SELL_DORYFISH":  {"name": "🐟 Doryfish",            "price": 4, "inv_key": "DORYFISH"},
+    "SELL_BANNERFISH":  {"name": "🐟 Bannerfish",            "price": 4, "inv_key": "BANNERFISH"},
+    "SELL_ANGLERFISH":  {"name": "🐟 Anglerfish",            "price": 4, "inv_key": "ANGLERFISH"},
     "SELL_JELLYFISH":   {"name": "ଳ Jelly Fish",         "price": 4,  "inv_key": "JELLYFISH"},
+    "SELL_GIANTCLAM":  {"name": "🦪 Giant Clam",            "price": 5, "inv_key": "GIANTCLAM"},
     "SELL_PUFFER":   {"name": "🐡 Pufferfish",         "price": 5,  "inv_key": "Pufferfish"},
     "SELL_LUCKYJEWEL":   {"name": "📿 Lucky Jewel",         "price": 7,  "inv_key": "LUCKYJEWEL"},
     "SELL_ORCA":   {"name": "🐋 Orca",         "price": 10,  "inv_key": "ORCA"},
@@ -90,7 +96,19 @@ INV_KEY_ALIASES = {
     "🐉 Skull Dragon": "Skull Dragon",
     "skull dragon": "Skull Dragon",
     "🐉 Blue Dragon": "Blue Dragon",
-    "blue dragon": "Blue Dragon"
+    "blue dragon": "Blue Dragon",
+    "🐸 Frog": "Frog",
+    "Frog": "Frog",
+    "🐟 Clownfish": "Clownfish",
+    "clownfish": "Clownfish",
+    "🐟 Doryfish":"Doryfish",
+    "doryfish": "Doryfish"
+    "🐟 Bannerfish": "Bannerfish",
+    "bannerfish": "Bannerfish",
+    "🐟 Anglerfish": "Anglerfish",
+    "anglerfish": "Anglerfish",
+    "🦪 Giant Clam": "Giant Clam",
+    "giant clam": "Giant Clam"
     # tambahkan sesuai kebutuhan 
 }
 
@@ -238,8 +256,14 @@ MENU_STRUCTURE = {
         "buttons": [
             ("𓆝 Small Fish", "SELL_DETAIL:SELL_SMALLFISH"),
             ("🐌 Snail", "SELL_DETAIL:SELL_SNAIL"),
+            ("🐸 Frog", "SELL_DETAIL:SELL_FROG"),
             ("🐙 Octopus", "SELL_DETAIL:SELL_OCTOPUS"),
+            ("🐟 Clownfish", "SELL_DETAIL:SELL_CLOWNFISH),
+            ("🐟 Doryfish", "SELL_DETAIL:SELL_DORYFISH"),
+            ("🐟 Bannerfish", "SELL_DETAIL:SELL_BANNERFISH"),
+            ("🐟 Anglerfish", "SELL_DETAIL:SELL_ANGLERFISH"),
             ("ଳ Jelly Fish", "SELL_DETAIL:SELL_JELLYFISH"),
+            ("🦪 Giant Clam", "SELL_DETAIL:SELL_GIANTCLAM"),
             ("🐡 Pufferfish", "SELL_DETAIL:SELL_PUFFER"),
             ("📿 Lucky Jewel", "SELL_DETAIL:SELL_LUCKYJEWEL"),
             ("🐋 Orca", "SELL_DETAIL:SELL_ORCA"),
@@ -1019,6 +1043,7 @@ def register(app: Client):
     app.add_handler(MessageHandler(handle_transfer_message, filters.text & filters.private))
 
     logger.info("[MENU] Handler menu_utama terdaftar.")
+
 
 
 
