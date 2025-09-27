@@ -521,8 +521,8 @@ async def callback_handler(client: Client, cq: CallbackQuery):
             "⛔ Treasure Chest dihentikan.",
             reply_markup=make_keyboard("H", user_id)
         )
-        return   
-
+        return
+   
     # ===== LOGIN HARIAN CALLBACK =====
     if data == "LOGIN_TODAY":
         init_user_login(user_id)
@@ -1014,5 +1014,6 @@ def register(app: Client):
     app.add_handler(MessageHandler(handle_transfer_message, filters.text & filters.private))
 
     logger.info("[MENU] Handler menu_utama terdaftar.")
+
 
 
