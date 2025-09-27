@@ -26,6 +26,8 @@ STREAK_REWARDS = {1: 4, 2: 5, 3: 6, 4: 7, 5: 8, 6: 9, 7: 10}
 CHEST_DB = "storage/treasure_chest.json"  # Simpan info chest aktif dan siapa yang sudah claim
 CLAIMED_CHEST_USERS = set()  # user_id yang sudah claim treasure chest saat ini
 LAST_TREASURE_MSG_ID = None
+USER_CLAIM_LOCKS = {}               # map user_id -> asyncio.Lock()
+USER_CLAIM_LOCKS_LOCK = asyncio.Lock()  # lock untuk pembuatan lock per-user
 
 # =================== UTIL ===================
 def load_chest_data():
@@ -441,6 +443,11 @@ def make_keyboard(menu_key: str, user_id=None, page: int = 0) -> InlineKeyboardM
 
     return InlineKeyboardMarkup(buttons)
 
+# di bagian global module (atas file)
+CLAIMED_CHEST_USERS = set()
+USER_CLAIM_LOCKS = {}               # map user_id -> asyncio.Lock()
+USER_CLAIM_LOCKS_LOCK = asyncio.Lock()  # lock untuk pembuatan lock per-user
+
 # ---------------- CALLBACK HANDLER ---------------- #
 async def callback_handler(client: Client, cq: CallbackQuery):
     data, user_id = cq.data, cq.from_user.id
@@ -451,29 +458,39 @@ async def callback_handler(client: Client, cq: CallbackQuery):
     if data == "treasure_chest":
         user_id = cq.from_user.id
         uname = cq.from_user.username or f"user{user_id}"
-        if user_id in CLAIMED_CHEST_USERS:
-            await cq.answer("❌ Kamu sudah mengklaim Treasure Chest ini sebelumnya!", show_alert=True)
+
+        # pastikan ada lock untuk user ini (pembuatan lock dibungkus agar tidak race)
+        async with USER_CLAIM_LOCKS_LOCK:
+            lock = USER_CLAIM_LOCKS.get(user_id)
+            if lock is None:
+                lock = asyncio.Lock()
+                USER_CLAIM_LOCKS[user_id] = lock
+
+        # jalankan proses klaim di dalam lock per-user -> serialisasi
+        async with lock:
+            if user_id in CLAIMED_CHEST_USERS:
+                await cq.answer("❌ Kamu sudah mengklaim Treasure Chest ini sebelumnya!", show_alert=True)
+                return
+
+            # delay 3 detik (tampilan dramatis atau animasi)
+            await asyncio.sleep(3)
+
+            # random drop (hanya satu hasil)
+            item = get_random_item()
+            if item == "ZONK":
+                msg = f"😢 @{uname} mendapatkan ZONK!"
+            else:
+                msg = f"🎉 @{uname} mendapatkan 3 pcs 🐛{item}!"
+                # jika umpan, tambahkan ke user
+                if item.startswith("Umpan"):
+                    jenis = "A"  # common
+                    umpan.add_umpan(user_id, jenis, 3)
+
+            # tandai user sudah claim (setelah sukses)
+            CLAIMED_CHEST_USERS.add(user_id)
+
+            await cq.message.reply(msg)
             return
-
-        # delay 3 detik
-        await asyncio.sleep(3)
-
-        # random drop
-        item = get_random_item()
-        if item == "ZONK":
-            msg = f"😢 @{uname} mendapatkan ZONK!"
-        else:
-            msg = f"🎉 @{uname} mendapatkan 3 pcs 🐛{item}!"
-            # jika umpan, tambahkan ke user
-            if item.startswith("Umpan"):
-                jenis = "A"  # common
-                umpan.add_umpan(user_id, jenis, 3)
-
-        # tandai user sudah claim
-        CLAIMED_CHEST_USERS.add(user_id)
-
-        await cq.message.reply(msg)
-        return
     
 # ================== TREASURE CHEST OWNER ==================
     if data == "TREASURE_SEND_NOW":
@@ -1002,6 +1019,7 @@ def register(app: Client):
     app.add_handler(MessageHandler(handle_transfer_message, filters.text & filters.private))
 
     logger.info("[MENU] Handler menu_utama terdaftar.")
+
 
 
 
