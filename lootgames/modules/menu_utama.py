@@ -1,4 +1,4 @@
-# lootgames/modules/menu_utama.py tester 2
+# lootgames/modules/menu_utama.py tester 1
 import logging
 import asyncio
 import re
@@ -53,10 +53,13 @@ ITEM_PRICES = {
     "SELL_SMALLFISH":{"name": "𓆝 Small Fish",        "price": 1,  "inv_key": "Small Fish"},
     "SELL_SNAIL":    {"name": "🐌 Snail",              "price": 2,  "inv_key": "Snail"},
     "SELL_OCTOPUS":  {"name": "🐙 Octopus",            "price": 3, "inv_key": "Octopus"},
+    "SELL_JELLYFISH":   {"name": "ଳ Jelly Fish",         "price": 4,  "inv_key": "JELLYFISH"},
     "SELL_PUFFER":   {"name": "🐡 Pufferfish",         "price": 5,  "inv_key": "Pufferfish"},
-    "SELL_JELLYFISH":   {"name": "ଳ Jelly Fish",         "price": 6,  "inv_key": "JELLYFISH"},
+    "SELL_LUCKYJEWEL":   {"name": "📿 Lucky Jewel",         "price": 7,  "inv_key": "LUCKYJEWEL"},
     "SELL_ORCA":   {"name": "🐋 Orca",         "price": 10,  "inv_key": "ORCA"},
     "SELL_BABYDRAGON":   {"name": "🐉 Baby Dragon",         "price": 50,  "inv_key": "BABYDRAGON"},
+    "SELL_SKULLDRAGON":   {"name": "🐉 Skull Dragon",         "price": 100,  "inv_key": "SKULLDRAGON"},
+    "SELL_BLUEDRAGON":   {"name": "🐉 Blue Dragon",         "price": 100,  "inv_key": "BLUEDRAGON"},
 }
 # sementara user -> item_code waiting for amount input (chat)
 SELL_WAITING = {}  # user_id: item_code
@@ -80,6 +83,12 @@ INV_KEY_ALIASES = {
     "orca": "Orca",
     "🐉 Baby Dragon": "Baby Dragon",
     "baby dragon": "Baby Dragon",
+    "📿 Lucky Jewel": "Lucky Jewel",
+    "lucky jewel": "Lucky Jewel",
+    "🐉 Skull Dragon": "Skull Dragon",
+    "skull dragon": "Skull Dragon"
+    "🐉 Blue Dragon": "Blue Dragon",
+    "blue dragon": "Blue Dragon"
     # tambahkan sesuai kebutuhan 
 }
 
@@ -230,8 +239,11 @@ MENU_STRUCTURE = {
             ("🐙 Octopus", "SELL_DETAIL:SELL_OCTOPUS"),
             ("ଳ Jelly Fish", "SELL_DETAIL:SELL_JELLYFISH"),
             ("🐡 Pufferfish", "SELL_DETAIL:SELL_PUFFER"),
+            ("📿 Lucky Jewel", "SELL_DETAIL:SELL_LUCKYJEWEL"),
             ("🐋 Orca", "SELL_DETAIL:SELL_ORCA"),
             ("🐉 Baby Dragon", "SELL_DETAIL:SELL_BABYDRAGON"),
+            ("🐉 Skull Dragon", "SELL_DETAIL:SELL_SKULLDRAGON"),
+            ("🐉 Blue Dragon", "SELL_DETAIL:SELL_BLUEDRAGON"),
             ("⬅️ Kembali", "D2"),
         ]
     },
@@ -990,6 +1002,7 @@ def register(app: Client):
     app.add_handler(MessageHandler(handle_transfer_message, filters.text & filters.private))
 
     logger.info("[MENU] Handler menu_utama terdaftar.")
+
 
 
 
