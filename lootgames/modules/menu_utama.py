@@ -88,7 +88,7 @@ INV_KEY_ALIASES = {
     "📿 Lucky Jewel": "Lucky Jewel",
     "lucky jewel": "Lucky Jewel",
     "🐉 Skull Dragon": "Skull Dragon",
-    "skull dragon": "Skull Dragon"
+    "skull dragon": "Skull Dragon",
     "🐉 Blue Dragon": "Blue Dragon",
     "blue dragon": "Blue Dragon"
     # tambahkan sesuai kebutuhan 
@@ -1019,6 +1019,7 @@ def register(app: Client):
     app.add_handler(MessageHandler(handle_transfer_message, filters.text & filters.private))
 
     logger.info("[MENU] Handler menu_utama terdaftar.")
+
 
 
 
