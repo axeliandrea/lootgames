@@ -65,9 +65,10 @@ ITEM_PRICES = {
     "SELL_PUFFER":   {"name": "🐡 Pufferfish",         "price": 5,  "inv_key": "Pufferfish"},
     "SELL_LUCKYJEWEL":   {"name": "📿 Lucky Jewel",         "price": 7,  "inv_key": "LUCKYJEWEL"},
     "SELL_ORCA":   {"name": "🐋 Orca",         "price": 10,  "inv_key": "ORCA"},
-    "SELL_BABYDRAGON":   {"name": "🐉 Baby Dragon",         "price": 50,  "inv_key": "BABYDRAGON"},
-    "SELL_SKULLDRAGON":   {"name": "🐉 Skull Dragon",         "price": 100,  "inv_key": "SKULLDRAGON"},
-    "SELL_BLUEDRAGON":   {"name": "🐉 Blue Dragon",         "price": 100,  "inv_key": "BLUEDRAGON"},
+    "SELL_BABYDRAGON":   {"name": "🐉 Baby Dragon",         "price": 100,  "inv_key": "BABYDRAGON"},
+    "SELL_SKULLDRAGON":   {"name": "🐉 Skull Dragon",         "price": 500,  "inv_key": "SKULLDRAGON"},
+    "SELL_BLUEDRAGON":   {"name": "🐉 Blue Dragon",         "price": 500,  "inv_key": "BLUEDRAGON"},
+    "SELL_BLUEDRAGON":   {"name": "🐉 Cupid Dragon",         "price": 1000,  "inv_key": "CUPIDDRAGON"},
 }
 # sementara user -> item_code waiting for amount input (chat)
 SELL_WAITING = {}  # user_id: item_code
@@ -97,6 +98,8 @@ INV_KEY_ALIASES = {
     "skull dragon": "Skull Dragon",
     "🐉 Blue Dragon": "Blue Dragon",
     "blue dragon": "Blue Dragon",
+    "🐉 Cupid Dragon": "Cupid Dragon",
+    "cupid dragon": "Cupid Dragon",
     "🐸 Frog": "Frog",
     "Frog": "Frog",
     "🐟 Clownfish": "Clownfish",
@@ -270,6 +273,7 @@ MENU_STRUCTURE = {
             ("🐉 Baby Dragon", "SELL_DETAIL:SELL_BABYDRAGON"),
             ("🐉 Skull Dragon", "SELL_DETAIL:SELL_SKULLDRAGON"),
             ("🐉 Blue Dragon", "SELL_DETAIL:SELL_BLUEDRAGON"),
+            ("🐉 Cupid Dragon", "SELL_DETAIL:SELL_CUPIDDRAGON"),
             ("⬅️ Kembali", "D2"),
         ]
     },
@@ -1043,6 +1047,7 @@ def register(app: Client):
     app.add_handler(MessageHandler(handle_transfer_message, filters.text & filters.private))
 
     logger.info("[MENU] Handler menu_utama terdaftar.")
+
 
 
 
