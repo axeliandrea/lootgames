@@ -68,7 +68,7 @@ ITEM_PRICES = {
     "SELL_BABYDRAGON":   {"name": "🐉 Baby Dragon",         "price": 100,  "inv_key": "BABYDRAGON"},
     "SELL_SKULLDRAGON":   {"name": "🐉 Skull Dragon",         "price": 500,  "inv_key": "SKULLDRAGON"},
     "SELL_BLUEDRAGON":   {"name": "🐉 Blue Dragon",         "price": 500,  "inv_key": "BLUEDRAGON"},
-    "SELL_BLUEDRAGON":   {"name": "🐉 Cupid Dragon",         "price": 1000,  "inv_key": "CUPIDDRAGON"},
+    "SELL_CUPIDDRAGON":   {"name": "🐉 Cupid Dragon",         "price": 1000,  "inv_key": "CUPIDDRAGON"},
 }
 # sementara user -> item_code waiting for amount input (chat)
 SELL_WAITING = {}  # user_id: item_code
@@ -1047,6 +1047,7 @@ def register(app: Client):
     app.add_handler(MessageHandler(handle_transfer_message, filters.text & filters.private))
 
     logger.info("[MENU] Handler menu_utama terdaftar.")
+
 
 
 
