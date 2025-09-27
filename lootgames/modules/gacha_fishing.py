@@ -24,6 +24,7 @@ FISH_LOOT = {
     "🐉 Baby Dragon": 0.0001,
     "🐉 Skull Dragon": 0.0001,
     "🐉 Blue Dragon": 0.0001,
+    "🐉 Cupid Dragon": 0.00001,
     "🐸 Frog": 4.00,
     "🐟 Clownfish": 4.00,
     "🐟 Doryfish": 4.00,
