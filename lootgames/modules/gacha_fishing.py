@@ -11,18 +11,25 @@ logger = logging.getLogger(__name__)
 # ---------------- LOOT TABLE ---------------- #
 # Persentase bisa desimal, misal 0.5%
 FISH_LOOT = {
-    "🤧 Zonk": 69.4488,
-    "𓆝 Small Fish": 12.0,
-    "🐌 Snail": 5.5,
-    "🐙 Octopus": 4.0,   
-    "🐡 Pufferfish": 1.0,
-    "Lost cip": 5.0,
-    "ଳ Jelly Fish": 2.0,
-    "📿 Lucky Jewel": 1.0,
-    "🐋 Orca": 0.05,
-    "🐉 Baby Dragon": 0.001,
+    # Old drops (rounded, scaled)
+    "🤧 Zonk": 56.00,
+    "𓆝 Small Fish": 9.68,
+    "🐌 Snail": 4.44,
+    "🐙 Octopus": 3.23,
+    "🐡 Pufferfish": 0.81,
+    "Lost cip": 4.03,
+    "ଳ Jelly Fish": 1.61,
+    "📿 Lucky Jewel": 0.81,
+    "🐋 Orca": 0.04,
+    "🐉 Baby Dragon": 0.0001,
     "🐉 Skull Dragon": 0.0001,
-    "🐉 Blue Dragon": 0.0001
+    "🐉 Blue Dragon": 0.0001,
+    "🐸 Frog": 4.00,
+    "🐟 Clownfish": 4.00,
+    "🐟 Doryfish": 4.00,
+    "🐟 Bannerfish": 4.00,
+    "🐟 Anglerfish": 4.00,
+    "🦪 Giant Clam": 4.00
 }
 
 # Buff rate berdasarkan umpan
