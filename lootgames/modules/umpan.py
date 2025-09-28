@@ -1,9 +1,8 @@
-# lootgames/modules/umpan.py tester 0
+# lootgames/modules/umpan.py
 import json
 import os
 from threading import Lock
 from pyrogram import Client
-from pyrogram.types import Message
 
 OWNER_ID = 6395738130
 
@@ -153,42 +152,6 @@ def transfer_umpan(sender_id: int, recipient_id: int, jenis: str, jumlah: int):
     save_db(db_recipient, jenis)
 
     return True, f"Transfer {jumlah} umpan tipe {jenis} berhasil"
-
-# ---------------- COMMAND TOPUP ---------------- #
-async def topup_umpan(client: Client, message: Message):
-    try:
-        parts = message.text.strip().split()
-        if len(parts) != 4 or parts[0].lower() != ".topup":
-            await message.reply("Format salah. Gunakan: .topup @username <jumlah> <type: A/B/C/D>")
-            return
-
-        target_username = parts[1].lstrip("@")
-        jumlah = int(parts[2])
-        jenis = parts[3].upper()
-        if jenis not in ["A","B","C","D"]:
-            await message.reply("Jenis umpan salah! Gunakan A/B/C/D")
-            return
-        if jumlah <= 0:
-            await message.reply("Jumlah umpan harus > 0")
-            return
-
-        # Cari user
-        user_id, _ = find_user_by_username(target_username)
-        if user_id is None:
-            user_id = max([int(k) for k in get_user_ids()], default=1000)+1
-            init_user(user_id, target_username)
-
-        add_umpan(user_id, jenis, jumlah)
-        total = get_user(user_id)[jenis]["umpan"]
-        await message.reply(f"✅ Topup {jumlah} umpan tipe {jenis} ke @{target_username} berhasil!\nTotal sekarang: {total}")
-    except Exception as e:
-        await message.reply(f"❌ Terjadi error: {e}")
-
-# ---------------- REGISTER ---------------- #
-def register_topup(app: Client):
-    # .topup @username jumlah type
-    from pyrogram import handlers, filters
-    app.add_handler(handlers.MessageHandler(topup_umpan, filters.regex(r"^\.topup\s+@\w+\s+\d+\s+[A-Da-d]$")))
 
 # ---------------- UTILS ---------------- #
 def get_user_ids():
