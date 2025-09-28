@@ -12,7 +12,6 @@ from lootgames.modules import (
     user_database,
     gacha_fishing,
     aquarium,
-    topup
 )
 
 from lootgames.config import (
@@ -52,7 +51,6 @@ def safe_register(module, name: str):
 
 safe_register(yapping, "yapping")
 safe_register(menu_utama, "menu_utama")
-safe_register(topup, "topup")
 
 # Dummy register untuk user_database jika tidak ada
 if not hasattr(user_database, "register"):
@@ -117,5 +115,6 @@ if __name__ == "__main__":
         pass
 
     asyncio.run(main())
+
 
 
