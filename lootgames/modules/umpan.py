@@ -1,4 +1,4 @@
-# lootgames/modules/umpan.py tester 1
+# lootgames/modules/umpan.py tester 0
 import json
 import os
 from threading import Lock
