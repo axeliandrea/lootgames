@@ -28,6 +28,7 @@ CLAIMED_CHEST_USERS = set()  # user_id yang sudah claim treasure chest saat ini
 LAST_TREASURE_MSG_ID = None
 USER_CLAIM_LOCKS = {}               # map user_id -> asyncio.Lock()
 USER_CLAIM_LOCKS_LOCK = asyncio.Lock()  # lock untuk pembuatan lock per-user
+user_waiting_for_link = {}  # Menyimpan state user
 
 # =================== UTIL ===================
 def load_chest_data():
@@ -410,22 +411,26 @@ def canonical_inv_key_from_any(key: str) -> str:
     # fallback - return original key (caller harus tetap handle absence)
     return key
 
-#pseudo-code handler Pyrogram:
-@Client.on_message(filters.private & filters.text)
-async def handle_payment_link(client, message):
-    user_id = message.from_user.id
-    text = message.text
+# Callback button handler
+@Client.on_callback_query()
+async def callback_handler(client: Client, cq: CallbackQuery):
+    if cq.data == "kirim_bukti":
+        user_waiting_for_link[cq.from_user.id] = True
+        await cq.message.edit_text(
+            "📌 Silahkan masukkan link chat bukti pembayaran:\n[ tombol kembali ]"
+        )
+        await cq.answer()
 
-    if text.startswith("https://t.me/c/"):  # validasi link chat bukti
-        # Tambah 5x Common Type A ke inventory user
-        user_inventory = load_inventory(user_id)
-        user_inventory["common_type_a"] = user_inventory.get("common_type_a", 0) + 5
-        save_inventory(user_id, user_inventory)
-
-        await message.reply("✅ Pembayaran terverifikasi! Kamu mendapatkan 5× Umpan Common Type A.")
-    else:
-        await message.reply("❌ Link tidak valid. Pastikan mengirim link chat bukti pembayaran.")
-
+# Message handler untuk menangkap input user
+@Client.on_message(filters.text)
+async def handle_link_input(client: Client, message: Message):
+    if user_waiting_for_link.get(message.from_user.id):
+        link = message.text
+        # Lakukan validasi atau scan link di sini
+        await message.reply(f"✅ Link diterima: {link}")
+        # Hapus state user
+        user_waiting_for_link.pop(message.from_user.id)
+        
 # ---------------- KEYBOARD BUILDER ---------------- #
 def make_keyboard(menu_key: str, user_id=None, page: int = 0) -> InlineKeyboardMarkup:
     buttons = []
@@ -1071,4 +1076,5 @@ def register(app: Client):
     logger.info("[MENU] Handler menu_utama terdaftar.")
 
 #MENU UTAMA FIX JAM 23:19
+
 
