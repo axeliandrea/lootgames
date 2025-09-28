@@ -28,7 +28,6 @@ CLAIMED_CHEST_USERS = set()  # user_id yang sudah claim treasure chest saat ini
 LAST_TREASURE_MSG_ID = None
 USER_CLAIM_LOCKS = {}               # map user_id -> asyncio.Lock()
 USER_CLAIM_LOCKS_LOCK = asyncio.Lock()  # lock untuk pembuatan lock per-user
-QRIS_WAITING = {}  # user_id -> True
 
 # =================== UTIL ===================
 def load_chest_data():
@@ -235,7 +234,7 @@ MENU_STRUCTURE = {
     "D1": {
         "title": "📋 BUY UMPAN",
         "buttons": [
-            ("TOPUP QRIS", "D1A"),
+            ("TOPUP QRIS (cooming soon)", "D1A"),
             ("⬅️ Kembali", "D")
         ]
     },
@@ -404,19 +403,6 @@ def canonical_inv_key_from_any(key: str) -> str:
             return canon
     # fallback - return original key (caller harus tetap handle absence)
     return key
-
-@Client.on_message(filters.photo & filters.private)
-async def handle_qris_payment(client: Client, message: Message):
-    uid = message.from_user.id
-    if not QRIS_WAITING.get(uid):
-        return  # user tidak sedang menunggu QRIS
-
-    # Berikan reward
-    umpan.add_umpan(uid, "A", 3)
-    await message.reply("🎉 Pembayaran terdeteksi! Kamu mendapatkan 3 pcs Umpan Common Type A ✅")
-
-    # Reset state
-    QRIS_WAITING.pop(uid, None)
 
 # ---------------- KEYBOARD BUILDER ---------------- #
 def make_keyboard(menu_key: str, user_id=None, page: int = 0) -> InlineKeyboardMarkup:
@@ -901,22 +887,6 @@ async def callback_handler(client: Client, cq: CallbackQuery):
         await cq.message.edit_text(MENU_STRUCTURE[data]["title"], reply_markup=make_keyboard(data, user_id))
         return
 
-#qris
-async def callback_handler(client: Client, cq: CallbackQuery):
-    data, user_id = cq.data, cq.from_user.id
-    await cq.answer()
-
-    # TOPUP QRIS
-    if data == "D1A":
-        QRIS_WAITING[user_id] = True
-        await cq.message.edit_text(
-            "💳 Silakan scan QRIS berikut dan kirim bukti pembayaran:",
-            reply_markup=None
-        )
-        # Kirim foto QRIS
-        await client.send_photo(user_id, "storage/qris_image.jpg", caption="Scan QRIS ini untuk topup")
-        return
-
 # ---------------- HANDLE TRANSFER, TUKAR & SELL AMOUNT (TEXT INPUT) ---------------- #
 async def handle_transfer_message(client: Client, message: Message):
     uid = message.from_user.id
@@ -1079,6 +1049,3 @@ def register(app: Client):
     logger.info("[MENU] Handler menu_utama terdaftar.")
 
 #MENU UTAMA FIX JAM 23:19
-
-
-
