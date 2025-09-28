@@ -172,29 +172,25 @@ MENU_STRUCTURE = {
         ]
     },
 
-    # =============== FISHING =============== #
-    "E": {
-        "title": "🎣 FISHING",
+    # =============== YAPPING =============== #
+    "B": {
+        "title": "📋 YAPPING",
         "buttons": [
-            ("PILIH UMPAN", "EE"),
+            ("Poin Pribadi", "BB"),
+            ("➡️ Leaderboard", "BBB"),
             ("⬅️ Kembali", "main")
         ]
     },
-    "EE": {
-        "title": "📋 PILIH UMPAN",
+    "BB": {
+        "title": "📋 Poin Pribadi",
         "buttons": [
-            ("Lanjut Pilih Jenis", "EEE"),
-            ("⬅️ Kembali", "E")
+            ("⬅️ Kembali", "B")
         ]
     },
-    "EEE": {
-        "title": "📋 Pilih Jenis Umpan",
+    "BBB": {
+        "title": "📋 Leaderboard Yapping",
         "buttons": [
-            ("COMMON 🐛", "EEE_COMMON"),
-            ("RARE 🐌", "EEE_RARE"),
-            ("LEGENDARY 🧇", "EEE_LEGEND"),
-            ("MYTHIC 🐟", "EEE_MYTHIC"),
-            ("⬅️ Kembali", "EE")
+            ("⬅️ Kembali", "B")
         ]
     },
 
@@ -234,7 +230,7 @@ MENU_STRUCTURE = {
     "D1": {
         "title": "📋 BUY UMPAN",
         "buttons": [
-            ("D1A", "D1A"),
+            ("KIRIM BUKTI", "D1A"),
             ("⬅️ Kembali", "D")
         ]
     },
@@ -291,26 +287,30 @@ MENU_STRUCTURE = {
             ("⬅️ Kembali", "D3")
         ]
     },
-
-    # =============== YAPPING =============== #
-    "B": {
-        "title": "📋 YAPPING",
+    
+    # =============== FISHING =============== #
+    "E": {
+        "title": "🎣 FISHING",
         "buttons": [
-            ("Poin Pribadi", "BB"),
-            ("➡️ Leaderboard", "BBB"),
+            ("PILIH UMPAN", "EE"),
             ("⬅️ Kembali", "main")
         ]
     },
-    "BB": {
-        "title": "📋 Poin Pribadi",
+    "EE": {
+        "title": "📋 PILIH UMPAN",
         "buttons": [
-            ("⬅️ Kembali", "B")
+            ("Lanjut Pilih Jenis", "EEE"),
+            ("⬅️ Kembali", "E")
         ]
     },
-    "BBB": {
-        "title": "📋 Leaderboard Yapping",
+    "EEE": {
+        "title": "📋 Pilih Jenis Umpan",
         "buttons": [
-            ("⬅️ Kembali", "B")
+            ("COMMON 🐛", "EEE_COMMON"),
+            ("RARE 🐌", "EEE_RARE"),
+            ("LEGENDARY 🧇", "EEE_LEGEND"),
+            ("MYTHIC 🐟", "EEE_MYTHIC"),
+            ("⬅️ Kembali", "EE")
         ]
     },
 
@@ -404,6 +404,71 @@ def canonical_inv_key_from_any(key: str) -> str:
     # fallback - return original key (caller harus tetap handle absence)
     return key
 
+# Handler ketika user pilih KIRIM BUKTI
+@Client.on_callback_query(filters.regex("^D1A$"))
+async def kirim_bukti(c: Client, cq):
+    await cq.message.edit(
+        "📎 Masukkan link bukti pembayaran:",
+        reply_markup=InlineKeyboardMarkup(
+            [[InlineKeyboardButton("Kirim", callback_data="submit_link")]]
+        )
+    )
+    # Simpan state user menunggu input link
+    user_id = cq.from_user.id
+    USER_STATE[user_id] = "awaiting_link"
+
+# Handler ketika user mengirim link
+@Client.on_message(filters.private)
+async def process_link(c: Client, m: Message):
+    user_id = m.from_user.id
+    if USER_STATE.get(user_id) == "awaiting_link":
+        link = m.text.strip()
+        
+        if link in USED_LINKS_DB:
+            await m.reply("⚠️ Link ini sudah digunakan sebelumnya.")
+            return
+        
+        # Ambil chat_id dan msg_id dari link Telegram
+        # Format: https://t.me/c/<chat_id>/<msg_id>
+        parts = link.split("/")
+        chat_id = int("-100" + parts[-2])  # convert channel id
+        msg_id = int(parts[-1])
+        
+        # Ambil pesan dari Telegram
+        try:
+            msg = await c.get_messages(chat_id, msg_id)
+        except:
+            await m.reply("❌ Link tidak valid atau pesan tidak ditemukan.")
+            return
+        
+        if msg.from_user.id != 5796879502:
+            await m.reply("❌ Pesan bukan dari bot resmi.")
+            return
+        
+        # Ambil nominal dari pesan
+        # Misal pesan format: "Transfer berhasil: 300"
+        match = re.search(r"(\d+)", msg.text)
+        if not match:
+            await m.reply("❌ Tidak bisa membaca nominal transfer.")
+            return
+        
+        nominal = int(match.group(1))
+        if nominal < 250:
+            await m.reply("⚠️ Minimal transfer 250.")
+            return
+        
+        # Hitung jumlah umpan
+        umpan = nominal // 50
+        await m.reply(f"✅ Transfer diterima! Anda mendapatkan {umpan} umpan.")
+        
+        # Masukkan link ke DB
+        USED_LINKS_DB.add(link)
+        # Tambahkan umpan ke user
+        USER_UMPAN[user_id] = USER_UMPAN.get(user_id, 0) + umpan
+        
+        # Reset state
+        USER_STATE[user_id] = None
+        
 # ---------------- KEYBOARD BUILDER ---------------- #
 def make_keyboard(menu_key: str, user_id=None, page: int = 0) -> InlineKeyboardMarkup:
     buttons = []
