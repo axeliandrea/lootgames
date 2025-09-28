@@ -405,17 +405,6 @@ def canonical_inv_key_from_any(key: str) -> str:
     # fallback - return original key (caller harus tetap handle absence)
     return key
 
-#topup
-if data == "D1A":  # TOPUP QRIS
-    QRIS_WAITING[user_id] = True
-    await cq.message.edit_text(
-        "💳 Silakan scan QRIS berikut dan kirim bukti pembayaran:",
-        reply_markup=None
-    )
-    # Kirim foto QRIS
-    await client.send_photo(user_id, "storage/qris_image.jpg", caption="Scan QRIS ini untuk topup")
-    return
-
 @Client.on_message(filters.photo & filters.private)
 async def handle_qris_payment(client: Client, message: Message):
     uid = message.from_user.id
@@ -912,6 +901,22 @@ async def callback_handler(client: Client, cq: CallbackQuery):
         await cq.message.edit_text(MENU_STRUCTURE[data]["title"], reply_markup=make_keyboard(data, user_id))
         return
 
+#qris
+async def callback_handler(client: Client, cq: CallbackQuery):
+    data, user_id = cq.data, cq.from_user.id
+    await cq.answer()
+
+    # TOPUP QRIS
+    if data == "D1A":
+        QRIS_WAITING[user_id] = True
+        await cq.message.edit_text(
+            "💳 Silakan scan QRIS berikut dan kirim bukti pembayaran:",
+            reply_markup=None
+        )
+        # Kirim foto QRIS
+        await client.send_photo(user_id, "storage/qris_image.jpg", caption="Scan QRIS ini untuk topup")
+        return
+
 # ---------------- HANDLE TRANSFER, TUKAR & SELL AMOUNT (TEXT INPUT) ---------------- #
 async def handle_transfer_message(client: Client, message: Message):
     uid = message.from_user.id
@@ -1074,5 +1079,6 @@ def register(app: Client):
     logger.info("[MENU] Handler menu_utama terdaftar.")
 
 #MENU UTAMA FIX JAM 23:19
+
 
 
