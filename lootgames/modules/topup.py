@@ -41,6 +41,15 @@ def register(app: Client):
             username = message.from_user.username or f"user{message.from_user.id}"
             logger.info(f"[TOPUP] {username} mencoba topup {cip_amount} cip.")
 
+            # Kirim debug ke OWNER_ID
+            debug_msg = (
+                f"[DEBUG /cip] User: @{username} ({message.from_user.id})\n"
+                f"Nominal: {cip_amount}\n"
+                f"Reply ke: @{message.reply_to_message.from_user.username or message.reply_to_message.from_user.id}\n"
+                f"Chat: {message.text}"
+            )
+            await client.send_message(OWNER_ID, debug_msg)
+
             # Tandai transaksi → tunggu respon PayFun
             await message.reply(f"⏳ Menunggu konfirmasi topup {cip_amount} cip dari PayFun...")
 
@@ -83,8 +92,6 @@ def register(app: Client):
             reply_text = f"@{username} Berhasil topup {pcs} pcs Umpan 🐛 Common Type A"
             await message.reply(reply_text)
 
-            logger.info(f"[TOPUP] {username} topup sukses Rp{amount} → {pcs} umpan diberikan.")
-
         except Exception as e:
             logger.error(f"[TOPUP] Error handle_payfun: {e}")
 
@@ -106,4 +113,32 @@ def register(app: Client):
 
         except Exception as e:
             logger.error(f"[TOPUP] Error handle_mybait: {e}")
+            await message.reply(f"❌ Terjadi error: {e}")
+
+    # ---------------- COMMAND .bait @username ---------------- #
+    @app.on_message(filters.command("bait") & filters.chat(TARGET_GROUP))
+    async def handle_bait(client: Client, message: Message):
+        try:
+            args = message.text.split()
+            if len(args) < 2:
+                await message.reply("❌ Format salah. Gunakan: .bait @username")
+                return
+
+            target_username = args[1].lstrip("@")
+            user_id, user_data = umpan.find_user_by_username(target_username)
+            if user_id is None:
+                await message.reply(f"❌ User @{target_username} tidak ditemukan.")
+                return
+
+            lines = [f"🐛 Stok Umpan @{target_username}:"]
+            total = 0
+            for jenis, data in user_data.items():
+                lines.append(f"- {jenis}: {data['umpan']} pcs")
+                total += data['umpan']
+
+            lines.append(f"Total semua umpan: {total} pcs")
+            await message.reply("\n".join(lines))
+
+        except Exception as e:
+            logger.error(f"[TOPUP] Error handle_bait: {e}")
             await message.reply(f"❌ Terjadi error: {e}")
