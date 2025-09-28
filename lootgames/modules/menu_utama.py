@@ -29,6 +29,14 @@ LAST_TREASURE_MSG_ID = None
 USER_CLAIM_LOCKS = {}               # map user_id -> asyncio.Lock()
 USER_CLAIM_LOCKS_LOCK = asyncio.Lock()  # lock untuk pembuatan lock per-user
 
+# ---------------- CONFIG ----------------
+USER_STATE = {}  # state sementara user input link
+USED_LINKS_DB = set()  # link yang sudah dipakai, bisa diganti dengan load/save JSON
+USER_UMPAN = {}  # jumlah umpan per user, bisa diganti dengan load/save JSON
+BOT_ID = 5796879502  # ID bot resmi
+MIN_TRANSFER = 250
+UMPAN_VALUE = 50
+
 # =================== UTIL ===================
 def load_chest_data():
     try:
@@ -383,7 +391,6 @@ def normalize_key(key: str) -> str:
     s = re.sub(r"\s+", " ", s)
     return s.strip()
 
-
 def canonical_inv_key_from_any(key: str) -> str:
     """Coba konversi nama key inventory (dari DB) menjadi bentuk canonical yang dipakai di ITEM_PRICES.
     Menggunakan INV_KEY_ALIASES dulu, jika tidak ditemukan, coba normalisasi dan cocokkan dengan
@@ -404,70 +411,91 @@ def canonical_inv_key_from_any(key: str) -> str:
     # fallback - return original key (caller harus tetap handle absence)
     return key
 
-# Handler ketika user pilih KIRIM BUKTI
+# ---------------- CALLBACK HANDLER ----------------
 @Client.on_callback_query(filters.regex("^D1A$"))
-async def kirim_bukti(c: Client, cq):
+async def kirim_bukti(c: Client, cq: CallbackQuery):
+    user_id = cq.from_user.id
+    # Edit pesan untuk minta link
     await cq.message.edit(
-        "📎 Masukkan link bukti pembayaran:",
+        "📎 Masukkan link bukti pembayaran di chat ini.\n"
+        "Pastikan link dari bot resmi.\n"
+        "Setelah mengetik link, klik tombol KIRIM untuk memproses.",
         reply_markup=InlineKeyboardMarkup(
-            [[InlineKeyboardButton("Kirim", callback_data="submit_link")]]
+            [[InlineKeyboardButton("KIRIM", callback_data="submit_link")]]
         )
     )
-    # Simpan state user menunggu input link
-    user_id = cq.from_user.id
+    # Simpan state user
     USER_STATE[user_id] = "awaiting_link"
+    await cq.answer()
 
-# Handler ketika user mengirim link
+# ---------------- SUBMIT LINK HANDLER ----------------
+@Client.on_callback_query(filters.regex("^submit_link$"))
+async def submit_link(c: Client, cq: CallbackQuery):
+    user_id = cq.from_user.id
+    if USER_STATE.get(user_id) != "awaiting_link":
+        await cq.answer("⚠️ Anda belum memasukkan link.", show_alert=True)
+        return
+
+    await cq.answer("⌛ Proses link, tunggu sebentar...")
+
+# ---------------- MESSAGE HANDLER UNTUK LINK ----------------
 @Client.on_message(filters.private)
 async def process_link(c: Client, m: Message):
     user_id = m.from_user.id
-    if USER_STATE.get(user_id) == "awaiting_link":
-        link = m.text.strip()
-        
-        if link in USED_LINKS_DB:
-            await m.reply("⚠️ Link ini sudah digunakan sebelumnya.")
-            return
-        
-        # Ambil chat_id dan msg_id dari link Telegram
-        # Format: https://t.me/c/<chat_id>/<msg_id>
+    if USER_STATE.get(user_id) != "awaiting_link":
+        return  # bukan user yang sedang input link
+
+    link = m.text.strip()
+
+    # cek duplikasi link
+    if link in USED_LINKS_DB:
+        await m.reply("⚠️ Link ini sudah digunakan sebelumnya.")
+        return
+
+    # parse chat_id & msg_id dari link
+    try:
         parts = link.split("/")
-        chat_id = int("-100" + parts[-2])  # convert channel id
+        chat_id = int("-100" + parts[-2])
         msg_id = int(parts[-1])
-        
-        # Ambil pesan dari Telegram
-        try:
-            msg = await c.get_messages(chat_id, msg_id)
-        except:
-            await m.reply("❌ Link tidak valid atau pesan tidak ditemukan.")
-            return
-        
-        if msg.from_user.id != 5796879502:
-            await m.reply("❌ Pesan bukan dari bot resmi.")
-            return
-        
-        # Ambil nominal dari pesan
-        # Misal pesan format: "Transfer berhasil: 300"
-        match = re.search(r"(\d+)", msg.text)
-        if not match:
-            await m.reply("❌ Tidak bisa membaca nominal transfer.")
-            return
-        
-        nominal = int(match.group(1))
-        if nominal < 250:
-            await m.reply("⚠️ Minimal transfer 250.")
-            return
-        
-        # Hitung jumlah umpan
-        umpan = nominal // 50
-        await m.reply(f"✅ Transfer diterima! Anda mendapatkan {umpan} umpan.")
-        
-        # Masukkan link ke DB
-        USED_LINKS_DB.add(link)
-        # Tambahkan umpan ke user
-        USER_UMPAN[user_id] = USER_UMPAN.get(user_id, 0) + umpan
-        
-        # Reset state
-        USER_STATE[user_id] = None
+    except Exception:
+        await m.reply("❌ Format link tidak valid.")
+        return
+
+    # ambil pesan dari Telegram
+    try:
+        msg = await c.get_messages(chat_id, msg_id)
+    except Exception:
+        await m.reply("❌ Link tidak valid atau pesan tidak ditemukan.")
+        return
+
+    # cek pengirim
+    if msg.from_user.id != BOT_ID:
+        await m.reply("❌ Pesan bukan dari bot resmi.")
+        return
+
+    # ambil nominal
+    match = re.search(r"(\d+)", msg.text)
+    if not match:
+        await m.reply("❌ Tidak bisa membaca nominal transfer.")
+        return
+
+    nominal = int(match.group(1))
+    if nominal < MIN_TRANSFER:
+        await m.reply(f"⚠️ Minimal transfer {MIN_TRANSFER}.")
+        return
+
+    # hitung jumlah umpan
+    umpan = nominal // UMPAN_VALUE
+    await m.reply(f"✅ Transfer diterima! Anda mendapatkan {umpan} umpan.")
+
+    # update DB
+    USED_LINKS_DB.add(link)
+    USER_UMPAN[user_id] = USER_UMPAN.get(user_id, 0) + umpan
+
+    # reset state
+    USER_STATE[user_id] = None
+
+    # TODO: save USED_LINKS_DB & USER_UMPAN ke JSON supaya persistent
         
 # ---------------- KEYBOARD BUILDER ---------------- #
 def make_keyboard(menu_key: str, user_id=None, page: int = 0) -> InlineKeyboardMarkup:
@@ -1113,3 +1141,4 @@ def register(app: Client):
 
     logger.info("[MENU] Handler menu_utama terdaftar.")
     #MENU UTAMA FIX JAM 23:19
+
