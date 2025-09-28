@@ -42,7 +42,7 @@ def save_chest_data(data):
         json.dump(data, f)
 
 def get_random_item():
-    # 50% ZONK, 50% Umpan
+    # 90% ZONK, 10% Umpan
     return random.choices(
         ["ZONK", "Umpan Common Type A"],
         weights=[50, 50],
@@ -220,19 +220,7 @@ MENU_STRUCTURE = {
             ("TIDAK", "REGISTER_NO")
         ]
     },
-    
-MENU_STRUCTURE = {
-    # MAIN MENU
-    "main": { ... },
-    "A": { ... },
-    ...
-    # menu baru untuk input bukti pembayaran
-    "D1A_LINK": {
-        "title": "📌 Silahkan masukkan link chat bukti pembayaran:",
-        "buttons": [
-            [("⬅️ Kembali", "D1")]
-        ]
-    },
+
     # =============== STORE =============== #
     "D": {
         "title": "🛒STORE",
@@ -248,6 +236,12 @@ MENU_STRUCTURE = {
         "buttons": [
             ("BAYAR NOW", "D1A"),
             ("⬅️ Kembali", "D")
+        ]
+    },
+    "D1A": {
+        "title": "📌 Silahkan masukkan link chat bukti pembayaran:",
+        "buttons": [
+            ("⬅️ Kembali", "D1")
         ]
     },
     "D2": {
@@ -415,24 +409,6 @@ def canonical_inv_key_from_any(key: str) -> str:
             return canon
     # fallback - return original key (caller harus tetap handle absence)
     return key
-
-#handler bayar
-async def handle_payment_link(client: Client, message: Message):
-    user_id = message.from_user.id
-    text = message.text.strip()
-    
-    # sederhana validasi link Telegram
-    if not re.match(r"^https://t\.me/c/\d+/\d+$", text):
-        await message.reply("❌ Link tidak valid. Pastikan format: https://t.me/c/2946278772/262203")
-        return
-    
-    # simpan link ke DB atau file, misal dict sementara
-    if "PAYMENT_LINKS" not in globals():
-        global PAYMENT_LINKS
-        PAYMENT_LINKS = {}
-    PAYMENT_LINKS[user_id] = text
-    
-    await message.reply(f"✅ Link pembayaran diterima!\n{str(text)}")
 
 # ---------------- KEYBOARD BUILDER ---------------- #
 def make_keyboard(menu_key: str, user_id=None, page: int = 0) -> InlineKeyboardMarkup:
@@ -1075,11 +1051,7 @@ def register(app: Client):
     app.add_handler(MessageHandler(handle_transfer_message, filters.text & filters.private))
     app.add_handler(CallbackQueryHandler(callback_handler))
     app.add_handler(MessageHandler(handle_transfer_message, filters.text & filters.private))
-    app.add_handler(MessageHandler(handle_payment_link, filters.private & ~filters.command))
 
     logger.info("[MENU] Handler menu_utama terdaftar.")
 
 #MENU UTAMA FIX JAM 23:19
-
-
-
