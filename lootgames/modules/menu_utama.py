@@ -239,7 +239,6 @@ MENU_STRUCTURE = {
         "title": "📋 BUY UMPAN",
         "buttons": [
             ("KIRIM BUKTI", "D1A"),
-            ("Masukan link chat", "D1B"),
             ("⬅️ Kembali", "D")
         ]
     },
@@ -433,6 +432,7 @@ async def kirim_bukti(c: Client, cq: CallbackQuery):
     except Exception as e:
         await cq.answer(f"❌ Gagal membuka chat pribadi: {e}", show_alert=True)
 
+
 # ---------------- SUBMIT LINK HANDLER ----------------
 @Client.on_callback_query(filters.regex("^submit_link$"))
 async def submit_link(c: Client, cq: CallbackQuery):
@@ -443,20 +443,16 @@ async def submit_link(c: Client, cq: CallbackQuery):
 
     await cq.answer("⌛ Proses link, tunggu sebentar...")
 
-    # Ambil pesan terakhir user sebagai link
-    chat = cq.message.chat
-    last_messages = await c.get_history(chat.id, limit=5)
-    link_msg = None
-    for msg in last_messages:
-        if msg.from_user and msg.from_user.id == user_id:
-            link_msg = msg
-            break
+    # Ambil pesan terakhir user di chat pribadi
+    last_messages = await c.get_history(user_id, limit=5)
+    link_msg = next((msg for msg in last_messages if msg.from_user.id == user_id), None)
 
     if not link_msg:
         await c.send_message(user_id, "❌ Tidak menemukan link yang dikirim.")
         return
 
-    await process_link(c, link_msg)  # panggil function process_link
+    await process_link(c, link_msg)
+
 
 # ---------------- FUNCTION UNTUK PROSES LINK ----------------
 async def process_link(c: Client, m):
@@ -514,7 +510,7 @@ async def process_link(c: Client, m):
     USER_STATE[user_id] = None
 
     # TODO: save USED_LINKS_DB & USER_UMPAN ke JSON supaya persistent
-        
+
 # ---------------- KEYBOARD BUILDER ---------------- #
 def make_keyboard(menu_key: str, user_id=None, page: int = 0) -> InlineKeyboardMarkup:
     buttons = []
@@ -1159,6 +1155,7 @@ def register(app: Client):
 
     logger.info("[MENU] Handler menu_utama terdaftar.")
     #MENU UTAMA FIX JAM 23:19
+
 
 
 
