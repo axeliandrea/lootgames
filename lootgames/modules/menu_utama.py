@@ -28,7 +28,7 @@ CLAIMED_CHEST_USERS = set()  # user_id yang sudah claim treasure chest saat ini
 LAST_TREASURE_MSG_ID = None
 USER_CLAIM_LOCKS = {}               # map user_id -> asyncio.Lock()
 USER_CLAIM_LOCKS_LOCK = asyncio.Lock()  # lock untuk pembuatan lock per-user
-user_waiting_for_link = {}  # Menyimpan state user
+waiting_for_link = set()
 
 # =================== UTIL ===================
 def load_chest_data():
@@ -421,15 +421,31 @@ async def callback_handler(client: Client, cq: CallbackQuery):
         )
         await cq.answer()
 
-# Message handler untuk menangkap input user
+# Callback tombol "Kirim Bukti"
+@Client.on_callback_query()
+async def callback_handler(client: Client, cq: CallbackQuery):
+    if cq.data == "kirim_bukti":
+        waiting_for_link.add(cq.from_user.id)
+        await cq.message.edit_text(
+            "✍️ Masukkan format link:\nContoh: https://t.me/c/2946278772/262309"
+        )
+        await cq.answer()
+
+# Handler untuk menangkap pesan link
 @Client.on_message(filters.text)
-async def handle_link_input(client: Client, message: Message):
-    if user_waiting_for_link.get(message.from_user.id):
-        link = message.text
-        # Lakukan validasi atau scan link di sini
+async def handle_link(client: Client, message: Message):
+    if message.from_user.id in waiting_for_link:
+        link = message.text.strip()
+        # Validasi format link
+        if not re.match(r"https://t\.me/c/\d+/\d+", link):
+            await message.reply("❌ Format link salah, contoh: https://t.me/c/2946278772/262309")
+            return
+
+        # Proses link di sini
         await message.reply(f"✅ Link diterima: {link}")
+
         # Hapus state user
-        user_waiting_for_link.pop(message.from_user.id)
+        waiting_for_link.remove(message.from_user.id)
         
 # ---------------- KEYBOARD BUILDER ---------------- #
 def make_keyboard(menu_key: str, user_id=None, page: int = 0) -> InlineKeyboardMarkup:
@@ -1076,5 +1092,6 @@ def register(app: Client):
     logger.info("[MENU] Handler menu_utama terdaftar.")
 
 #MENU UTAMA FIX JAM 23:19
+
 
 
