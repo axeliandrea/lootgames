@@ -410,6 +410,22 @@ def canonical_inv_key_from_any(key: str) -> str:
     # fallback - return original key (caller harus tetap handle absence)
     return key
 
+#pseudo-code handler Pyrogram:
+@Client.on_message(filters.private & filters.text)
+async def handle_payment_link(client, message):
+    user_id = message.from_user.id
+    text = message.text
+
+    if text.startswith("https://t.me/c/"):  # validasi link chat bukti
+        # Tambah 5x Common Type A ke inventory user
+        user_inventory = load_inventory(user_id)
+        user_inventory["common_type_a"] = user_inventory.get("common_type_a", 0) + 5
+        save_inventory(user_id, user_inventory)
+
+        await message.reply("✅ Pembayaran terverifikasi! Kamu mendapatkan 5× Umpan Common Type A.")
+    else:
+        await message.reply("❌ Link tidak valid. Pastikan mengirim link chat bukti pembayaran.")
+
 # ---------------- KEYBOARD BUILDER ---------------- #
 def make_keyboard(menu_key: str, user_id=None, page: int = 0) -> InlineKeyboardMarkup:
     buttons = []
@@ -1055,3 +1071,4 @@ def register(app: Client):
     logger.info("[MENU] Handler menu_utama terdaftar.")
 
 #MENU UTAMA FIX JAM 23:19
+
