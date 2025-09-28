@@ -415,8 +415,9 @@ def canonical_inv_key_from_any(key: str) -> str:
 @Client.on_callback_query(filters.regex("^D1A$"))
 async def kirim_bukti(c: Client, cq: CallbackQuery):
     user_id = cq.from_user.id
-    # Edit pesan untuk minta link
-    await cq.message.edit(
+    # Kirim pesan baru (bukan edit), agar terlihat menu baru
+    await c.send_message(
+        user_id,
         "📎 Masukkan link bukti pembayaran di chat ini.\n"
         "Pastikan link dari bot resmi.\n"
         "Setelah mengetik link, klik tombol KIRIM untuk memproses.",
@@ -438,16 +439,29 @@ async def submit_link(c: Client, cq: CallbackQuery):
 
     await cq.answer("⌛ Proses link, tunggu sebentar...")
 
-# ---------------- MESSAGE HANDLER UNTUK LINK ----------------
-@Client.on_message(filters.private)
-async def process_link(c: Client, m: Message):
+    # Ambil pesan terakhir user sebagai link
+    chat = cq.message.chat
+    last_messages = await c.get_history(chat.id, limit=5)
+    link_msg = None
+    for msg in last_messages:
+        if msg.from_user and msg.from_user.id == user_id:
+            link_msg = msg
+            break
+
+    if not link_msg:
+        await c.send_message(user_id, "❌ Tidak menemukan link yang dikirim.")
+        return
+
+    await process_link(c, link_msg)  # panggil function process_link
+
+# ---------------- FUNCTION UNTUK PROSES LINK ----------------
+async def process_link(c: Client, m):
     user_id = m.from_user.id
     if USER_STATE.get(user_id) != "awaiting_link":
-        return  # bukan user yang sedang input link
+        return
 
     link = m.text.strip()
 
-    # cek duplikasi link
     if link in USED_LINKS_DB:
         await m.reply("⚠️ Link ini sudah digunakan sebelumnya.")
         return
@@ -1141,4 +1155,5 @@ def register(app: Client):
 
     logger.info("[MENU] Handler menu_utama terdaftar.")
     #MENU UTAMA FIX JAM 23:19
+
 
