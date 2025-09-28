@@ -69,9 +69,11 @@ ITEM_PRICES = {
     "SELL_CROCODILE":  {"name": "🐊 Crocodile",            "price": 10, "inv_key": "CROCODILE"},
     "SELL_LUCKYJEWEL":   {"name": "📿 Lucky Jewel",         "price": 7,  "inv_key": "LUCKYJEWEL"},
     "SELL_ORCA":   {"name": "🐋 Orca",         "price": 15,  "inv_key": "ORCA"},
+    "SELL_DOLPHIN":   {"name": "🐬 Dolphin",         "price": 15,  "inv_key": "DOLPHIN"},
     "SELL_BABYDRAGON":   {"name": "🐉 Baby Dragon",         "price": 100,  "inv_key": "BABYDRAGON"},
     "SELL_SKULLDRAGON":   {"name": "🐉 Skull Dragon",         "price": 500,  "inv_key": "SKULLDRAGON"},
     "SELL_BLUEDRAGON":   {"name": "🐉 Blue Dragon",         "price": 500,  "inv_key": "BLUEDRAGON"},
+    "SELL_BLACKDRAGON":   {"name": "🐉 Black Dragon",         "price": 500,  "inv_key": "BLACKDRAGON"},
     "SELL_MERMAIDBOY":   {"name": "🧜‍♀️ Mermaid Boy",         "price": 500,  "inv_key": "MERMAIDBOY"},
     "SELL_MERMAIDGIRL":   {"name": "🧜‍♀️ Mermaid Girl",         "price": 500,  "inv_key": "MERMAIDGIRL"},
     "SELL_CUPIDDRAGON":   {"name": "🐉 Cupid Dragon",         "price": 1000,  "inv_key": "CUPIDDRAGON"},
@@ -98,6 +100,8 @@ INV_KEY_ALIASES = {
     "jelly fish": "Jelly Fish",
     "🐋 Orca": "Orca",
     "orca": "Orca",
+    "🐬 Dolphin": "Dolphin",
+    "dolphin": "Dolphin",
     "🐉 Baby Dragon": "Baby Dragon",
     "baby dragon": "Baby Dragon",
     "📿 Lucky Jewel": "Lucky Jewel",
@@ -105,6 +109,8 @@ INV_KEY_ALIASES = {
     "🐉 Skull Dragon": "Skull Dragon",
     "skull dragon": "Skull Dragon",
     "🐉 Blue Dragon": "Blue Dragon",
+    "🐉 Black Dragon": "Black Dragon",
+    "black dragon": "Black Dragon",
     "blue dragon": "Blue Dragon",
     "🐉 Cupid Dragon": "Cupid Dragon",
     "cupid dragon": "Cupid Dragon",
@@ -292,9 +298,11 @@ MENU_STRUCTURE = {
             ("🐊 Crocodile", "SELL_DETAIL:SELL_CROCODILE"),
             ("📿 Lucky Jewel", "SELL_DETAIL:SELL_LUCKYJEWEL"),
             ("🐋 Orca", "SELL_DETAIL:SELL_ORCA"),
+            ("🐬 Dolphin", "SELL_DETAIL:SELL_DOLPHIN"),
             ("🐉 Baby Dragon", "SELL_DETAIL:SELL_BABYDRAGON"),
             ("🐉 Skull Dragon", "SELL_DETAIL:SELL_SKULLDRAGON"),
             ("🐉 Blue Dragon", "SELL_DETAIL:SELL_BLUEDRAGON"),
+            ("🐉 Black Dragon", "SELL_DETAIL:SELL_BLACKDRAGON"),
             ("🧜‍♀️ Mermaid Boy", "SELL_DETAIL:SELL_MERMAIDBOY"),
             ("🧜‍♀️ Mermaid Girl", "SELL_DETAIL:SELL_MERMAIDGIRL"),
             ("🐉 Cupid Dragon", "SELL_DETAIL:SELL_CUPIDDRAGON"),
@@ -1073,6 +1081,7 @@ def register(app: Client):
     logger.info("[MENU] Handler menu_utama terdaftar.")
 
 #MENU UTAMA FIX JAM 23:19
+
 
 
 
