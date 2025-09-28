@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 # Persentase bisa desimal, misal 0.5%
 FISH_LOOT = {
     # Drop fish
-    "🤧 Zonk": 55.11,  
+    "🤧 Zonk": 54.11,  
     "𓆝 Small Fish": 30.52,
     "🐌 Snail": 4.50,
     "🐚 Hermit Crab": 3.00,
