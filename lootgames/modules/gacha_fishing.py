@@ -11,25 +11,31 @@ logger = logging.getLogger(__name__)
 # ---------------- LOOT TABLE ---------------- #
 # Persentase bisa desimal, misal 0.5%
 FISH_LOOT = {
-    # Common drops
-    "🤧 Zonk": 65.00, 
-    "𓆝 Small Fish": 12.00,
+    # Drop fish
+    "🤧 Zonk": 70.01, 
+    "𓆝 Small Fish": 10.00,
     "🐌 Snail": 4.50,
+    "🐚 Hermit Crab": 3.00,
     "🐙 Octopus": 3.25,
     "🐡 Pufferfish": 0.80,
     "Lost cip": 2.00,
     "ଳ Jelly Fish": 1.60,
+    "🐟 Seahorse": 1.00,
     "📿 Lucky Jewel": 0.80,
-    "🐸 Frog": 1.00,
-    "🐟 Clownfish": 1.00,
-    "🐟 Doryfish": 1.00,
-    "🐟 Bannerfish": 1.00,
-    "🐟 Anglerfish": 1.00,
-    "🦪 Giant Clam": 1.00,
+    "🐸 Frog": 0.50,
+    "🐟 Clownfish": 0.50,
+    "🐟 Doryfish": 0.50,
+    "🐟 Bannerfish": 0.50,
+    "🐟 Anglerfish": 0.50,
+    "🦪 Giant Clam": 0.50,
+    "🐟 Shark": 0.50,
+    "🐊 Crocodile": 0.50,
     "🐋 Orca": 0.04,
     "🐉 Baby Dragon": 0.0001,
     "🐉 Skull Dragon": 0.0001,
     "🐉 Blue Dragon": 0.0001,
+    "🧜‍♀️ Mermaid Boy": 0.0001,
+    "🧜‍♀️ Mermaid Girl": 0.0001,
     "🐉 Cupid Dragon": 0.00001,
 }
 
