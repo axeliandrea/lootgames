@@ -234,7 +234,6 @@ MENU_STRUCTURE = {
     "D1": {
         "title": "📋 BUY UMPAN",
         "buttons": [
-            ("KIRIM BUKTI", "SEND_PROOF"),
             ("D1A", "D1A"),
             ("⬅️ Kembali", "D")
         ]
@@ -404,22 +403,6 @@ def canonical_inv_key_from_any(key: str) -> str:
             return canon
     # fallback - return original key (caller harus tetap handle absence)
     return key
-
-# ---------------- CALLBACK HANDLER ---------------- #
-async def callback_handler(client: Client, cq: CallbackQuery):
-    data, user_id = cq.data, cq.from_user.id
-    logger.info(f"[DEBUG] callback -> user:{user_id}, data:{data}")
-    await cq.answer()
-
-    # ===== MENU KIRIM BUKTI =====
-    if data == "SEND_PROOF":
-        # tandai user sedang input bukti
-        OPEN_MENU_STATE[user_id] = "SEND_PROOF"
-        await cq.message.edit_text(
-            "📌 Silahkan masukan link bukti pembayaran",
-            reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("⬅️ Kembali", callback_data="D")]])
-        )
-        return
 
 # ---------------- KEYBOARD BUILDER ---------------- #
 def make_keyboard(menu_key: str, user_id=None, page: int = 0) -> InlineKeyboardMarkup:
@@ -1066,4 +1049,3 @@ def register(app: Client):
     logger.info("[MENU] Handler menu_utama terdaftar.")
 
 #MENU UTAMA FIX JAM 23:19
-
