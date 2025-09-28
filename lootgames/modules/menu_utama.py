@@ -413,19 +413,21 @@ def canonical_inv_key_from_any(key: str) -> str:
 
 # ---------------- CALLBACK HANDLER ----------------
 @Client.on_callback_query(filters.regex("^D1A$"))
-async def kirim_bukti(c: Client, cq):
+async def kirim_bukti(c: Client, cq: CallbackQuery):
     user_id = cq.from_user.id
     try:
-        # Kirim menu baru ke private chat user
+        # Kirim menu baru di private chat user
         await c.send_message(
             chat_id=user_id,
-            text="📎 Masukkan link bukti pembayaran di chat ini.\nPastikan link dari bot resmi.",
+            text="📎 Masukkan link bukti pembayaran di chat ini.\n"
+                 "Pastikan link dari bot resmi.",
             reply_markup=InlineKeyboardMarkup(
                 [[InlineKeyboardButton("KIRIM", callback_data="submit_link")]]
             )
         )
         # Tandai state user
         USER_STATE[user_id] = "awaiting_link"
+        # beri notifikasi bahwa menu muncul
         await cq.answer("✅ Cek chat pribadi untuk melanjutkan.", show_alert=True)
     except Exception as e:
         await cq.answer(f"❌ Gagal membuka chat pribadi: {e}", show_alert=True)
@@ -1156,6 +1158,7 @@ def register(app: Client):
 
     logger.info("[MENU] Handler menu_utama terdaftar.")
     #MENU UTAMA FIX JAM 23:19
+
 
 
 
