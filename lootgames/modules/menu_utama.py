@@ -29,37 +29,6 @@ LAST_TREASURE_MSG_ID = None
 USER_CLAIM_LOCKS = {}               # map user_id -> asyncio.Lock()
 USER_CLAIM_LOCKS_LOCK = asyncio.Lock()  # lock untuk pembuatan lock per-user
 
-#--- payment scan ---#
-PAYFUN_ID = 5796879502
-PAYMENT_DB = "storage/payment_links.json"
-UMPAN_DB = "storage/umpan.json"
-
-# ============== UTIL =================
-def load_payment_db():
-    if not os.path.exists(PAYMENT_DB):
-        return {}
-    with open(PAYMENT_DB, "r") as f:
-        return json.load(f)
-
-def save_payment_db(data):
-    with open(PAYMENT_DB, "w") as f:
-        json.dump(data, f, indent=2)
-
-def load_umpan_db():
-    if not os.path.exists(UMPAN_DB):
-        return {}
-    with open(UMPAN_DB, "r") as f:
-        return json.load(f)
-
-def save_umpan_db(data):
-    with open(UMPAN_DB, "w") as f:
-        json.dump(data, f, indent=2)
-
-def add_umpan(user_id, jumlah=5):
-    db = load_umpan_db()
-    db[str(user_id)] = db.get(str(user_id), 0) + jumlah
-    save_umpan_db(db)
-
 # =================== UTIL ===================
 def load_chest_data():
     try:
@@ -587,68 +556,6 @@ async def callback_handler(client: Client, cq: CallbackQuery):
         )
         return
 
-# ============== HANDLER =================
-@Client.on_callback_query(filters.regex("D1A"))
-async def kirim_bukti_payment_menu(client: Client, cq):
-    await cq.answer()
-    await cq.message.reply_text(
-        "Silahkan masukan link chat bukti pembayaran yang sudah dikirim ke @axeliandrea.\n\n"
-        "Contoh link: https://t.me/c/2946278772/262171\n\n"
-        "Bot akan scan link dan validasi apakah berasal dari bot PayFun.\n"
-        "1 link hanya bisa dipakai 1x."
-    )
-
-@Client.on_message(filters.private & filters.text)
-async def cek_bukti_payment(client: Client, message: Message):
-    link = message.text.strip()
-
-    # Validasi format link
-    if not link.startswith("https://t.me/c/"):
-        return await message.reply_text("Link tidak valid!")
-
-    # Ambil chat_id dan message_id dari link
-    try:
-        parts = link.rstrip("/").split("/")
-        chat_id_part = int(parts[-2])
-        message_id = int(parts[-1])
-    except Exception:
-        return await message.reply_text("Format link salah!")
-
-    payment_db = load_payment_db()
-    if str(message_id) in payment_db:
-        return await message.reply_text("Link ini sudah pernah digunakan!")
-
-    # Ambil pesan
-    try:
-        msg = await client.get_messages(chat_id_part, message_id)
-    except Exception:
-        return await message.reply_text("Gagal mengambil pesan dari link!")
-
-    # Cek pengirim
-    if msg.from_user and msg.from_user.id == PAYFUN_ID:
-        text = msg.text or ""
-        import re
-        match = re.search(r"Berhasil Tip Rp(\d+) ke @(\w+)", text)
-        if match:
-            amount = int(match.group(1))
-            user_id = message.from_user.id
-            # Simpan ke DB
-            payment_db[str(message_id)] = {
-                "user_id": user_id,
-                "amount": amount,
-                "link": link,
-                "timestamp": datetime.now().isoformat()
-            }
-            save_payment_db(payment_db)
-            # Tambahkan umpan common type A
-            add_umpan(user_id, 5)
-            return await message.reply_text(
-                f"Pembayaran valid! {amount} berhasil ditransfer.\n"
-                "Umpan Common Type A x5 telah ditambahkan ke akun Anda."
-            )
-
-    return await message.reply_text("Bukti pembayaran tidak valid, silahkan masukkan link yang benar.")
-    
     # ===== LOGIN HARIAN CALLBACK =====
     if data == "LOGIN_TODAY":
         init_user_login(user_id)
@@ -1140,30 +1047,4 @@ def register(app: Client):
     app.add_handler(MessageHandler(handle_transfer_message, filters.text & filters.private))
 
     logger.info("[MENU] Handler menu_utama terdaftar.")
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    #MENU UTAMA FIX JAM 23:19
