@@ -35,7 +35,7 @@ FISH_LOOT = {
     "🐉 Baby Dragon": 0.0001,
     "🐉 Skull Dragon": 0.0001,
     "🐉 Blue Dragon": 0.0001,
-    "🐉 Black Dragon: 0.0001,
+    "🐉 Black Dragon": 0.0001,
     "🧜‍♀️ Mermaid Boy": 0.0001,
     "🧜‍♀️ Mermaid Girl": 0.0001,
     "🐉 Cupid Dragon": 0.00001,
