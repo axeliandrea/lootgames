@@ -29,14 +29,6 @@ LAST_TREASURE_MSG_ID = None
 USER_CLAIM_LOCKS = {}               # map user_id -> asyncio.Lock()
 USER_CLAIM_LOCKS_LOCK = asyncio.Lock()  # lock untuk pembuatan lock per-user
 
-# ---------------- CONFIG ----------------
-USER_STATE = {}  # state sementara user input link
-USED_LINKS_DB = set()  # link yang sudah dipakai, bisa diganti dengan load/save JSON
-USER_UMPAN = {}  # jumlah umpan per user, bisa diganti dengan load/save JSON
-BOT_ID = 5796879502  # ID bot resmi
-MIN_TRANSFER = 250
-UMPAN_VALUE = 50
-
 # =================== UTIL ===================
 def load_chest_data():
     try:
@@ -180,25 +172,29 @@ MENU_STRUCTURE = {
         ]
     },
 
-    # =============== YAPPING =============== #
-    "B": {
-        "title": "📋 YAPPING",
+    # =============== FISHING =============== #
+    "E": {
+        "title": "🎣 FISHING",
         "buttons": [
-            ("Poin Pribadi", "BB"),
-            ("➡️ Leaderboard", "BBB"),
+            ("PILIH UMPAN", "EE"),
             ("⬅️ Kembali", "main")
         ]
     },
-    "BB": {
-        "title": "📋 Poin Pribadi",
+    "EE": {
+        "title": "📋 PILIH UMPAN",
         "buttons": [
-            ("⬅️ Kembali", "B")
+            ("Lanjut Pilih Jenis", "EEE"),
+            ("⬅️ Kembali", "E")
         ]
     },
-    "BBB": {
-        "title": "📋 Leaderboard Yapping",
+    "EEE": {
+        "title": "📋 Pilih Jenis Umpan",
         "buttons": [
-            ("⬅️ Kembali", "B")
+            ("COMMON 🐛", "EEE_COMMON"),
+            ("RARE 🐌", "EEE_RARE"),
+            ("LEGENDARY 🧇", "EEE_LEGEND"),
+            ("MYTHIC 🐟", "EEE_MYTHIC"),
+            ("⬅️ Kembali", "EE")
         ]
     },
 
@@ -238,7 +234,7 @@ MENU_STRUCTURE = {
     "D1": {
         "title": "📋 BUY UMPAN",
         "buttons": [
-            ("KIRIM BUKTI", "D1A"),
+            ("D1A", "D1A"),
             ("⬅️ Kembali", "D")
         ]
     },
@@ -295,30 +291,26 @@ MENU_STRUCTURE = {
             ("⬅️ Kembali", "D3")
         ]
     },
-    
-    # =============== FISHING =============== #
-    "E": {
-        "title": "🎣 FISHING",
+
+    # =============== YAPPING =============== #
+    "B": {
+        "title": "📋 YAPPING",
         "buttons": [
-            ("PILIH UMPAN", "EE"),
+            ("Poin Pribadi", "BB"),
+            ("➡️ Leaderboard", "BBB"),
             ("⬅️ Kembali", "main")
         ]
     },
-    "EE": {
-        "title": "📋 PILIH UMPAN",
+    "BB": {
+        "title": "📋 Poin Pribadi",
         "buttons": [
-            ("Lanjut Pilih Jenis", "EEE"),
-            ("⬅️ Kembali", "E")
+            ("⬅️ Kembali", "B")
         ]
     },
-    "EEE": {
-        "title": "📋 Pilih Jenis Umpan",
+    "BBB": {
+        "title": "📋 Leaderboard Yapping",
         "buttons": [
-            ("COMMON 🐛", "EEE_COMMON"),
-            ("RARE 🐌", "EEE_RARE"),
-            ("LEGENDARY 🧇", "EEE_LEGEND"),
-            ("MYTHIC 🐟", "EEE_MYTHIC"),
-            ("⬅️ Kembali", "EE")
+            ("⬅️ Kembali", "B")
         ]
     },
 
@@ -391,6 +383,7 @@ def normalize_key(key: str) -> str:
     s = re.sub(r"\s+", " ", s)
     return s.strip()
 
+
 def canonical_inv_key_from_any(key: str) -> str:
     """Coba konversi nama key inventory (dari DB) menjadi bentuk canonical yang dipakai di ITEM_PRICES.
     Menggunakan INV_KEY_ALIASES dulu, jika tidak ditemukan, coba normalisasi dan cocokkan dengan
@@ -410,106 +403,6 @@ def canonical_inv_key_from_any(key: str) -> str:
             return canon
     # fallback - return original key (caller harus tetap handle absence)
     return key
-
-# ---------------- CALLBACK HANDLER ----------------
-@Client.on_callback_query(filters.regex("^D1A$"))
-async def kirim_bukti(c: Client, cq: CallbackQuery):
-    user_id = cq.from_user.id
-    try:
-        # Kirim menu baru di private chat user
-        await c.send_message(
-            chat_id=user_id,
-            text="📎 Masukkan link bukti pembayaran di chat ini.\n"
-                 "Pastikan link dari bot resmi.",
-            reply_markup=InlineKeyboardMarkup(
-                [[InlineKeyboardButton("KIRIM", callback_data="submit_link")]]
-            )
-        )
-        # Tandai state user
-        USER_STATE[user_id] = "awaiting_link"
-        # beri notifikasi bahwa menu muncul
-        await cq.answer("✅ Cek chat pribadi untuk melanjutkan.", show_alert=True)
-    except Exception as e:
-        await cq.answer(f"❌ Gagal membuka chat pribadi: {e}", show_alert=True)
-
-
-# ---------------- SUBMIT LINK HANDLER ----------------
-@Client.on_callback_query(filters.regex("^submit_link$"))
-async def submit_link(c: Client, cq: CallbackQuery):
-    user_id = cq.from_user.id
-    if USER_STATE.get(user_id) != "awaiting_link":
-        await cq.answer("⚠️ Anda belum memasukkan link.", show_alert=True)
-        return
-
-    await cq.answer("⌛ Proses link, tunggu sebentar...")
-
-    # Ambil pesan terakhir user di chat pribadi
-    last_messages = await c.get_history(user_id, limit=5)
-    link_msg = next((msg for msg in last_messages if msg.from_user.id == user_id), None)
-
-    if not link_msg:
-        await c.send_message(user_id, "❌ Tidak menemukan link yang dikirim.")
-        return
-
-    await process_link(c, link_msg)
-
-
-# ---------------- FUNCTION UNTUK PROSES LINK ----------------
-async def process_link(c: Client, m):
-    user_id = m.from_user.id
-    if USER_STATE.get(user_id) != "awaiting_link":
-        return
-
-    link = m.text.strip()
-
-    if link in USED_LINKS_DB:
-        await m.reply("⚠️ Link ini sudah digunakan sebelumnya.")
-        return
-
-    # parse chat_id & msg_id dari link
-    try:
-        parts = link.split("/")
-        chat_id = int("-100" + parts[-2])
-        msg_id = int(parts[-1])
-    except Exception:
-        await m.reply("❌ Format link tidak valid.")
-        return
-
-    # ambil pesan dari Telegram
-    try:
-        msg = await c.get_messages(chat_id, msg_id)
-    except Exception:
-        await m.reply("❌ Link tidak valid atau pesan tidak ditemukan.")
-        return
-
-    # cek pengirim
-    if msg.from_user.id != BOT_ID:
-        await m.reply("❌ Pesan bukan dari bot resmi.")
-        return
-
-    # ambil nominal
-    match = re.search(r"(\d+)", msg.text)
-    if not match:
-        await m.reply("❌ Tidak bisa membaca nominal transfer.")
-        return
-
-    nominal = int(match.group(1))
-    if nominal < MIN_TRANSFER:
-        await m.reply(f"⚠️ Minimal transfer {MIN_TRANSFER}.")
-        return
-
-    # hitung jumlah umpan
-    umpan = nominal // UMPAN_VALUE
-    await m.reply(f"✅ Transfer diterima! Anda mendapatkan {umpan} umpan.")
-
-    # update DB
-    USED_LINKS_DB.add(link)
-    USER_UMPAN[user_id] = USER_UMPAN.get(user_id, 0) + umpan
-
-    # reset state
-    USER_STATE[user_id] = None
-
-    # TODO: save USED_LINKS_DB & USER_UMPAN ke JSON supaya persistent
 
 # ---------------- KEYBOARD BUILDER ---------------- #
 def make_keyboard(menu_key: str, user_id=None, page: int = 0) -> InlineKeyboardMarkup:
@@ -1154,12 +1047,5 @@ def register(app: Client):
     app.add_handler(MessageHandler(handle_transfer_message, filters.text & filters.private))
 
     logger.info("[MENU] Handler menu_utama terdaftar.")
-    #MENU UTAMA FIX JAM 23:19
 
-
-
-
-
-
-
-
+#MENU UTAMA FIX JAM 23:19
