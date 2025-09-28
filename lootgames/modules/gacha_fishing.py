@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 FISH_LOOT = {
     # Drop fish
     "🤧 Zonk": 55.11,  
-    "𓆝 Small Fish": 30.53,
+    "𓆝 Small Fish": 30.52,
     "🐌 Snail": 4.50,
     "🐚 Hermit Crab": 3.00,
     "🐙 Octopus": 3.25,
@@ -30,10 +30,12 @@ FISH_LOOT = {
     "🦪 Giant Clam": 0.050, 
     "🐟 Shark": 0.025, 
     "🐊 Crocodile": 0.025, 
-    "🐋 Orca": 0.04,
+    "🐋 Orca": 0.05,
+    "🐋 Dolphin": 0.05,
     "🐉 Baby Dragon": 0.0001,
     "🐉 Skull Dragon": 0.0001,
     "🐉 Blue Dragon": 0.0001,
+    "🐉 Black Dragon: 0.0001,
     "🧜‍♀️ Mermaid Boy": 0.0001,
     "🧜‍♀️ Mermaid Girl": 0.0001,
     "🐉 Cupid Dragon": 0.00001,
