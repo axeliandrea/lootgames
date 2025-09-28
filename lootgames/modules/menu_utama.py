@@ -234,7 +234,7 @@ MENU_STRUCTURE = {
     "D1": {
         "title": "📋 BUY UMPAN",
         "buttons": [
-            ("D1A", "D1A"),
+            ("TOPUP QRIS", "D1A"),
             ("⬅️ Kembali", "D")
         ]
     },
@@ -1049,3 +1049,4 @@ def register(app: Client):
     logger.info("[MENU] Handler menu_utama terdaftar.")
 
 #MENU UTAMA FIX JAM 23:19
+
