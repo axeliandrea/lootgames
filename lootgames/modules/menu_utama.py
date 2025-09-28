@@ -123,7 +123,7 @@ INV_KEY_ALIASES = {
     "🐟 Shark": "Shark",
     "Shark": "Shark",
     "🐟 Seahorse": "Seahorse",
-    "seahorse": "Seahorse"
+    "seahorse": "Seahorse",
     "🐊 Crocodile": "Crocodile",
     "crocodile": "Crocodile",
     "🧜‍♀️ Mermaid Boy": "Mermaid Boy",
@@ -1073,5 +1073,6 @@ def register(app: Client):
     logger.info("[MENU] Handler menu_utama terdaftar.")
 
 #MENU UTAMA FIX JAM 23:19
+
 
 
