@@ -222,12 +222,13 @@ MENU_STRUCTURE = {
     },
     
 # menu baru untuk input bukti pembayaran
-MENU_STRUCTURE["D1A_LINK"] = {
-    "title": "📌 Silahkan masukkan link chat bukti pembayaran:",
-    "buttons": [
-        [("⬅️ Kembali", "D1")]  # kembali ke BUY UMPAN
-    ]
-}
+MENU_STRUCTURE = {
+    "D1A_LINK": {
+        "title": "📌 Silahkan masukkan link chat bukti pembayaran:",
+        "buttons": [
+            [("⬅️ Kembali", "D1")]  # kembali ke BUY UMPAN
+        ]
+    },
 
     # =============== STORE =============== #
     "D": {
@@ -1076,4 +1077,5 @@ def register(app: Client):
     logger.info("[MENU] Handler menu_utama terdaftar.")
 
 #MENU UTAMA FIX JAM 23:19
+
 
