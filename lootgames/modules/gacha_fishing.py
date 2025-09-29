@@ -71,14 +71,14 @@ async def fishing_loot(client: Client, target_chat: int, username: str, user_id:
 
 # ---------------- HELPERS ---------------- #
 def roll_loot(buff: float) -> str:
-    """
-    Roll loot berdasarkan persentase dan buff.
-    Chance dihitung: chance + buff, bisa desimal.
-    Menggunakan random.choices agar probabilitas akurat.
-    """
     items = list(FISH_LOOT.keys())
-    chances = [chance + buff for chance in FISH_LOOT.values()]
-    
-    # random.choices mendukung weight float
+    chances = []
+    for item, base_chance in FISH_LOOT.items():
+        if item == "🤧 Zonk":
+            chances.append(base_chance)  # Zonk tidak kena buff
+        else:
+            # Tambahkan buff hanya ke non-Zonk
+            chances.append(base_chance + buff)
+
     loot_item = random.choices(items, weights=chances, k=1)[0]
     return loot_item
