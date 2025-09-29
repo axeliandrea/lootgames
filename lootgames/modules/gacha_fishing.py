@@ -31,7 +31,7 @@ FISH_LOOT = {
     "🐋 Orca": 0.05,
     "🐋 Dolphin": 0.05,
     "Lost cip": 0.010,
-    "🐉 Baby Dragon": 0.00002,
+    "🐉 Baby Dragon": 0.02,
     "🐉 Skull Dragon": 0.000002,
     "🐉 Blue Dragon": 0.000002,
     "🐉 Black Dragon": 0.000002,
