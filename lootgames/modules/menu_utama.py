@@ -71,12 +71,12 @@ ITEM_PRICES = {
     "SELL_ORCA":   {"name": "🐋 Orca",         "price": 15,  "inv_key": "ORCA"},
     "SELL_DOLPHIN":   {"name": "🐬 Dolphin",         "price": 15,  "inv_key": "DOLPHIN"},
     "SELL_BABYDRAGON":   {"name": "🐉 Baby Dragon",         "price": 100,  "inv_key": "BABYDRAGON"},
-    "SELL_SKULLDRAGON":   {"name": "🐉 Skull Dragon",         "price": 500,  "inv_key": "SKULLDRAGON"},
-    "SELL_BLUEDRAGON":   {"name": "🐉 Blue Dragon",         "price": 500,  "inv_key": "BLUEDRAGON"},
-    "SELL_BLACKDRAGON":   {"name": "🐉 Black Dragon",         "price": 500,  "inv_key": "BLACKDRAGON"},
-    "SELL_MERMAIDBOY":   {"name": "🧜‍♀️ Mermaid Boy",         "price": 500,  "inv_key": "MERMAIDBOY"},
-    "SELL_MERMAIDGIRL":   {"name": "🧜‍♀️ Mermaid Girl",         "price": 500,  "inv_key": "MERMAIDGIRL"},
-    "SELL_CUPIDDRAGON":   {"name": "🐉 Cupid Dragon",         "price": 1000,  "inv_key": "CUPIDDRAGON"},
+    "SELL_SKULLDRAGON":   {"name": "🐉 Skull Dragon",         "price": 200,  "inv_key": "SKULLDRAGON"},
+    "SELL_BLUEDRAGON":   {"name": "🐉 Blue Dragon",         "price": 200,  "inv_key": "BLUEDRAGON"},
+    "SELL_BLACKDRAGON":   {"name": "🐉 Black Dragon",         "price": 200,  "inv_key": "BLACKDRAGON"},
+    "SELL_MERMAIDBOY":   {"name": "🧜‍♀️ Mermaid Boy",         "price": 200,  "inv_key": "MERMAIDBOY"},
+    "SELL_MERMAIDGIRL":   {"name": "🧜‍♀️ Mermaid Girl",         "price": 200,  "inv_key": "MERMAIDGIRL"},
+    "SELL_CUPIDDRAGON":   {"name": "🐉 Cupid Dragon",         "price": 300,  "inv_key": "CUPIDDRAGON"},
 }
 # sementara user -> item_code waiting for amount input (chat)
 SELL_WAITING = {}  # user_id: item_code
@@ -1081,6 +1081,7 @@ def register(app: Client):
     logger.info("[MENU] Handler menu_utama terdaftar.")
 
 #MENU UTAMA FIX JAM 23:19
+
 
 
 
