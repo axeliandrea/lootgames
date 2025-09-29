@@ -70,6 +70,7 @@ ITEM_PRICES = {
     "SELL_LUCKYJEWEL":   {"name": "📿 Lucky Jewel",         "price": 7,  "inv_key": "LUCKYJEWEL"},
     "SELL_ORCA":   {"name": "🐋 Orca",         "price": 15,  "inv_key": "ORCA"},
     "SELL_DOLPHIN":   {"name": "🐬 Dolphin",         "price": 15,  "inv_key": "DOLPHIN"},
+    "SELL_PIKACHU":  {"name": "🐹⚡ Pikachu",            "price": 30, "inv_key": "PIKACHU"},
     "SELL_BABYDRAGON":   {"name": "🐉 Baby Dragon",         "price": 100,  "inv_key": "BABYDRAGON"},
     "SELL_SKULLDRAGON":   {"name": "🐉 Skull Dragon",         "price": 200,  "inv_key": "SKULLDRAGON"},
     "SELL_BLUEDRAGON":   {"name": "🐉 Blue Dragon",         "price": 200,  "inv_key": "BLUEDRAGON"},
@@ -130,6 +131,8 @@ INV_KEY_ALIASES = {
     "Shark": "Shark",
     "🐟 Seahorse": "Seahorse",
     "seahorse": "Seahorse",
+    "🐹⚡ Pikachu": "Pikachu",
+    "Pikachu": "Pikachu",
     "🐊 Crocodile": "Crocodile",
     "crocodile": "Crocodile",
     "🧜‍♀️ Mermaid Boy": "Mermaid Boy",
@@ -295,6 +298,7 @@ MENU_STRUCTURE = {
             ("🐡 Pufferfish", "SELL_DETAIL:SELL_PUFFER"),
             ("🐟 Shark", "SELL_DETAIL:SELL_SHARK"),
             ("🐟 Seahorse", "SELL_DETAIL:SELL_SEAHORSE"),
+            ("🐹⚡ Pikachu", "SELL_DETAIL:SELL_PIKACHU"),
             ("🐊 Crocodile", "SELL_DETAIL:SELL_CROCODILE"),
             ("📿 Lucky Jewel", "SELL_DETAIL:SELL_LUCKYJEWEL"),
             ("🐋 Orca", "SELL_DETAIL:SELL_ORCA"),
@@ -1081,6 +1085,7 @@ def register(app: Client):
     logger.info("[MENU] Handler menu_utama terdaftar.")
 
 #MENU UTAMA FIX JAM 23:19
+
 
 
 
