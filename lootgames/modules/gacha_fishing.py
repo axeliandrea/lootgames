@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 # ---------------- LOOT TABLE ---------------- #
 # Persentase bisa desimal, misal 0.5%
 FISH_LOOT = {
-    "🤧 Zonk": 33.119969,
+    "🤧 Zonk": 31.119969,
     "𓆝 Small Fish": 25.52,
     "🐌 Snail": 15.50,
     "🐚 Hermit Crab": 15.50,
@@ -28,9 +28,9 @@ FISH_LOOT = {
     "🦪 Giant Clam": 0.50,
     "🐟 Shark": 0.15,
     "🐊 Crocodile": 0.15,
-    "🐹⚡ Pikachu": 0.05,
+    "🐹⚡ Pikachu": 1.05,
     "🐋 Orca": 0.05,
-    "🐋 Dolphin": 0.05,
+    "🐋 Dolphin": 1.05,
     "Lost cip": 0.010,
     "🐉 Baby Dragon": 0.02,
     "🐉 Skull Dragon": 0.000002,
