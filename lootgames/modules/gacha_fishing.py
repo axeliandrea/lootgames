@@ -11,10 +11,10 @@ logger = logging.getLogger(__name__)
 # ---------------- LOOT TABLE ---------------- #
 # Persentase bisa desimal, misal 0.5%
 FISH_LOOT = {
-    "🤧 Zonk": 32.52,
-    "𓆝 Small Fish": 25.52,
-    "🐌 Snail": 15.50,
-    "🐚 Hermit Crab": 15.50,
+    "🤧 Zonk": 22.52,
+    "𓆝 Small Fish": 31.52,
+    "🐌 Snail": 17.50,
+    "🐚 Hermit Crab": 17.50,
     "🐙 Octopus": 3.20,
     "🐡 Pufferfish": 0.80,
     "ଳ Jelly Fish": 0.80,
