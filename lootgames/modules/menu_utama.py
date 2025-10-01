@@ -71,6 +71,7 @@ ITEM_PRICES = {
     "SELL_ORCA":   {"name": "🐋 Orca",         "price": 15,  "inv_key": "ORCA"},
     "SELL_DOLPHIN":   {"name": "🐬 Dolphin",         "price": 15,  "inv_key": "DOLPHIN"},
     "SELL_PIKACHU":  {"name": "🐹⚡ Pikachu",            "price": 30, "inv_key": "PIKACHU"},
+    "SELL_KYOGRE":  {"name": "🐋⚡ Kyogre",            "price": 30, "inv_key": "KYOGRE"},
     "SELL_BABYDRAGON":   {"name": "🐉 Baby Dragon",         "price": 100,  "inv_key": "BABYDRAGON"},
     "SELL_SKULLDRAGON":   {"name": "🐉 Skull Dragon",         "price": 200,  "inv_key": "SKULLDRAGON"},
     "SELL_BLUEDRAGON":   {"name": "🐉 Blue Dragon",         "price": 200,  "inv_key": "BLUEDRAGON"},
@@ -133,6 +134,8 @@ INV_KEY_ALIASES = {
     "seahorse": "Seahorse",
     "🐹⚡ Pikachu": "Pikachu",
     "Pikachu": "Pikachu",
+    "🐋⚡ Kyogre": "Kyogre",
+    "kyogre": "Kyogre",
     "🐊 Crocodile": "Crocodile",
     "crocodile": "Crocodile",
     "🧜‍♀️ Mermaid Boy": "Mermaid Boy",
@@ -1085,6 +1088,7 @@ def register(app: Client):
     logger.info("[MENU] Handler menu_utama terdaftar.")
 
 #MENU UTAMA FIX JAM 23:19
+
 
 
 
