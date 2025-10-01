@@ -14,7 +14,7 @@ FISH_LOOT = {
     "🤧 Zonk": 20.1680,
     "𓆝 Small Fish": 30.52,
     "🐌 Snail": 12.50,
-    "🐚 Hermit Crab": 12.65,
+    "🐚 Hermit Crab": 12.45,
     "🐸 Frog": 12.50,
     "🐙 Octopus": 2.70,
     "🐡 Pufferfish": 0.80,
@@ -29,6 +29,7 @@ FISH_LOOT = {
     "🐟 Shark": 0.25,
     "🐊 Crocodile": 0.25,
     "🐹⚡ Pikachu": 0.25,
+    "🐋⚡ Kyogre": 0.25
     "🐋 Orca": 0.25,
     "🐋 Dolphin": 0.25,
     "Lost cip": 0.10,
