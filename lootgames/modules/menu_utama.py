@@ -302,6 +302,7 @@ MENU_STRUCTURE = {
             ("🐟 Shark", "SELL_DETAIL:SELL_SHARK"),
             ("🐟 Seahorse", "SELL_DETAIL:SELL_SEAHORSE"),
             ("🐹⚡ Pikachu", "SELL_DETAIL:SELL_PIKACHU"),
+            ("🐋⚡ Kyogre", "SELL_DETAIL:SELL_KYOGRE"),
             ("🐊 Crocodile", "SELL_DETAIL:SELL_CROCODILE"),
             ("📿 Lucky Jewel", "SELL_DETAIL:SELL_LUCKYJEWEL"),
             ("🐋 Orca", "SELL_DETAIL:SELL_ORCA"),
@@ -1088,6 +1089,7 @@ def register(app: Client):
     logger.info("[MENU] Handler menu_utama terdaftar.")
 
 #MENU UTAMA FIX JAM 23:19
+
 
 
 
