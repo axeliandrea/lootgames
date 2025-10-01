@@ -1,4 +1,4 @@
-# lootgames/__main__.py tester 1
+# lootgames/__main__.py TRIAL AUTOFISHING
 import asyncio
 import logging
 import os
@@ -115,6 +115,7 @@ if __name__ == "__main__":
         pass
 
     asyncio.run(main())
+
 
 
 
