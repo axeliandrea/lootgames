@@ -29,7 +29,7 @@ FISH_LOOT = {
     "🐟 Shark": 0.25,
     "🐊 Crocodile": 0.25,
     "🐹⚡ Pikachu": 0.25,
-    "🐋⚡ Kyogre": 0.25
+    "🐋⚡ Kyogre": 0.25,
     "🐋 Orca": 0.25,
     "🐋 Dolphin": 0.25,
     "Lost cip": 0.10,
