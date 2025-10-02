@@ -17,7 +17,7 @@ from datetime import date
 
 logger = logging.getLogger(__name__)
 OWNER_ID = 6395738130
-TARGET_GROUP = -1002946278772  # ganti sesuai supergroup bot
+TARGET_GROUP = -1002904817520  # ganti sesuai supergroup bot
 
 # ---------------- STATE ---------------- #
 TRANSFER_STATE = {}       # user_id: {"jenis": "A/B/C/D"}
@@ -73,6 +73,9 @@ ITEM_PRICES = {
     "SELL_SHARK":  {"name": "🐟 Shark",            "price": 10, "inv_key": "SHARK"},
     "SELL_SEAHORSE":  {"name": "🐟 Seahorse",            "price": 10, "inv_key": "SEAHORSE"},
     "SELL_CROCODILE":  {"name": "🐊 Crocodile",            "price": 10, "inv_key": "CROCODILE"},
+    "SELL_SEAL":  {"name": "🦦 Seal",            "price": 10, "inv_key": "SEAL"},
+    "SELL_TURTLE":  {"name": "🐢 Turtle",            "price": 10, "inv_key": "TURTLE"},
+    "SELL_LOBSTER":  {"name": "🦞 Lobster"            "price": 10, "inv_key": "LOBSTER"},
     "SELL_LUCKYJEWEL":   {"name": "📿 Lucky Jewel",         "price": 7,  "inv_key": "LUCKYJEWEL"},
     "SELL_ORCA":   {"name": "🐋 Orca",         "price": 15,  "inv_key": "ORCA"},
     "SELL_DOLPHIN":   {"name": "🐬 Dolphin",         "price": 15,  "inv_key": "DOLPHIN"},
@@ -144,6 +147,12 @@ INV_KEY_ALIASES = {
     "kyogre": "Kyogre",
     "🐊 Crocodile": "Crocodile",
     "crocodile": "Crocodile",
+    "🦦 Seal": "Seal",
+    "seal": "Seal",
+    "🐢 Turtle": "🐢 Turtle",
+    "turtle": "Turtle",
+    "🦞 Lobster": "🦞 Lobster",
+    "lobster": "Lobster",
     "🧜‍♀️ Mermaid Boy": "Mermaid Boy",
     "mermaid boy": "Mermaid Boy",
     "🧜‍♀️ Mermaid Girl": "Mermaid Girl",
@@ -234,26 +243,26 @@ MENU_STRUCTURE = {
         ]
     },
 
-# =============== REGISTER =============== #
+    # =============== REGISTER =============== #
     "C": {
         "title": "📋 MENU REGISTER",
         "buttons": [
-            ("REGIS NOW", "CC"),
-            ("⬅️ Kembali", "main")
+            ("NEXT", "CC"),
+            ("⬅️ Back", "main")
         ]
     },
     "CC": {
         "title": "📋 APAKAH KAMU YAKIN INGIN MENJADI PLAYER LOOT?",
         "buttons": [
-            ("NORMAL PLAYER", "CCC"),
-            ("⬅️ Kembali", "C")
+            ("REGIS NOW!!", "CCC"),
+            ("⬅️ Back", "C")
         ]
     },
     "CCC": {
-        "title": "📋 PILIH OPSI:",
+        "title": "📋 Are You Sure?:",
         "buttons": [
-            ("YA", "REGISTER_YES"),
-            ("TIDAK", "REGISTER_NO")
+            ("YES!", "REGISTER_YES"),
+            ("NO", "REGISTER_NO")
         ]
     },
 
@@ -310,6 +319,9 @@ MENU_STRUCTURE = {
             ("🐹⚡ Pikachu", "SELL_DETAIL:SELL_PIKACHU"),
             ("🐋⚡ Kyogre", "SELL_DETAIL:SELL_KYOGRE"),
             ("🐊 Crocodile", "SELL_DETAIL:SELL_CROCODILE"),
+            ("🦦 Seal", "SELL_DETAIL:SELL_SEAL"),
+            ("🐢 Turtle", "SELL_DETAIL:SELL_TURTLE"),
+            ("🦞 Lobster", "SELL_DETAIL:SELL_LOBSTER"),
             ("📿 Lucky Jewel", "SELL_DETAIL:SELL_LUCKYJEWEL"),
             ("🐋 Orca", "SELL_DETAIL:SELL_ORCA"),
             ("🐬 Dolphin", "SELL_DETAIL:SELL_DOLPHIN"),
@@ -670,7 +682,7 @@ async def callback_handler(client: Client, cq: CallbackQuery):
         text = "🎉 Selamat kamu menjadi Player Loot!"
         kb = InlineKeyboardMarkup([
             [InlineKeyboardButton("📇 SCAN ID & USN", callback_data="REGISTER_SCAN")],
-            [InlineKeyboardButton("⬅️ Kembali", callback_data="main")]
+            [InlineKeyboardButton("⬅️ Back", callback_data="main")]
         ])
         await cq.message.edit_text(text, reply_markup=kb)
         user_database.set_player_loot(user_id, True, uname)
@@ -770,7 +782,7 @@ async def callback_handler(client: Client, cq: CallbackQuery):
             f"🎣 Kamu berhasil melempar umpan {jenis} ke kolam fishingtask#{task_id}!",
             reply_markup=InlineKeyboardMarkup([
                 [InlineKeyboardButton("🎣 Memancing Lagi", callback_data=f"FISH_CONFIRM_{jenis}")],
-                [InlineKeyboardButton("🤖 Auto [TRIAL] 5x", callback_data=f"AUTO_FISH_{jenis}")],
+                [InlineKeyboardButton("🤖 Auto Memancing 5x", callback_data=f"AUTO_FISH_{jenis}")],
                 [InlineKeyboardButton("⬅️ Back", callback_data="E")]
             ])
         )
@@ -1065,6 +1077,7 @@ async def handle_transfer_message(client: Client, message: Message):
         )
 
     # TRANSFER (existing)
+    # TRANSFER (revisi dengan delay & info ke group)
     if TRANSFER_STATE.get(uid):
         try:
             jenis = TRANSFER_STATE[uid]["jenis"]
@@ -1082,6 +1095,8 @@ async def handle_transfer_message(client: Client, message: Message):
                 await message.reply(f"❌ Username {rname} tidak ada di database!")
                 TRANSFER_STATE.pop(uid, None)
                 return
+
+            # ====== PROSES TRANSFER ====== #
             if uid == OWNER_ID:
                 umpan.add_umpan(rid, jenis, amt)
             else:
@@ -1090,14 +1105,36 @@ async def handle_transfer_message(client: Client, message: Message):
                     return await message.reply("❌ Umpan tidak cukup!")
                 umpan.remove_umpan(uid, jenis, amt)
                 umpan.add_umpan(rid, jenis, amt)
-            await message.reply(f"✅ Transfer {amt} umpan ke {rname} berhasil!",
-                                reply_markup=make_keyboard("main", uid))
+
+            # Info ke OWNER (langsung)
+            await message.reply(
+                f"✅ Transfer {amt} umpan ke {rname} berhasil!",
+                reply_markup=make_keyboard("main", uid)
+            )
+
+            # Info ke penerima (delay 0.5 detik)
             try:
-                await client.send_message(rid, f"🎁 Kamu mendapat {amt} umpan dari @{uname}")
+                await asyncio.sleep(0.5)
+                await client.send_message(
+                    rid,
+                    f"🎁 Kamu mendapat {amt} umpan dari @{uname}"
+                )
             except Exception as e:
                 logger.error(f"Gagal notif penerima {rid}: {e}")
+
+            # Info ke GROUP (delay 2 detik)
+            try:
+                await asyncio.sleep(2)
+                await client.send_message(
+                    TARGET_GROUP,
+                    f"📢 Transfer Umpan!\n👤 @{uname} memberi {amt} umpan ke {rname}"
+                )
+            except Exception as e:
+                logger.error(f"Gagal notif group: {e}")
+
         except Exception as e:
             await message.reply(f"❌ Error: {e}")
+
         TRANSFER_STATE.pop(uid, None)
         return
 
@@ -1169,6 +1206,3 @@ def register(app: Client):
     app.add_handler(MessageHandler(handle_transfer_message, filters.text & filters.private))
 
     logger.info("[MENU] Handler menu_utama terdaftar.")
-
-
-
