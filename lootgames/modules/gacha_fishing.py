@@ -1,4 +1,4 @@
-# lootgames/modules/gacha_fishing.py
+# lootgames/modules/gacha_fishing.py TRIAL AUTO FISHING
 import random
 import asyncio
 import logging
