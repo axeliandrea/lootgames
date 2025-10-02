@@ -1,4 +1,3 @@
-# lootgames/modules/gacha_fishing.py TRIAL AUTO FISHING
 import random
 import asyncio
 import logging
@@ -79,8 +78,18 @@ def roll_loot(buff: float) -> str:
         if item == "🤧 Zonk":
             chances.append(base_chance)  # Zonk tidak kena buff
         else:
-            # Tambahkan buff hanya ke non-Zonk
             chances.append(base_chance + buff)
 
     loot_item = random.choices(items, weights=chances, k=1)[0]
     return loot_item
+
+# ---------------- WORKER ---------------- #
+async def fishing_worker(app: Client):
+    """
+    Worker background untuk proses fishing periodic.
+    Saat ini hanya loop dummy tiap 60 detik.
+    """
+    logger.info("[FISHING WORKER] Worker siap berjalan...")
+    while True:
+        logger.debug("[FISHING WORKER] Tick... tidak ada aksi saat ini")
+        await asyncio.sleep(60)
