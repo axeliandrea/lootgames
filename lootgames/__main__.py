@@ -1,4 +1,4 @@
-# lootgames/__main__.py TRIAL AUTOFISHING
+# lootgames/__main__.py revisi full terbaru
 import asyncio
 import logging
 import os
@@ -26,12 +26,16 @@ from lootgames.config import (
 
 # ================= LOGGING ================= #
 if "LOG_LEVEL" not in globals():
-    LOG_LEVEL = logging.DEBUG
+    LOG_LEVEL = logging.INFO
 if "LOG_FORMAT" not in globals():
-    LOG_FORMAT = "%(asctime)s - %(levelname)s - %(message)s"
+    LOG_FORMAT = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 
 logging.basicConfig(level=LOG_LEVEL, format=LOG_FORMAT)
 logger = logging.getLogger(__name__)
+
+# Supaya log internal Pyrogram gak terlalu ramai
+logging.getLogger("pyrogram").setLevel(logging.WARNING)
+logging.getLogger("pyrogram.session").setLevel(logging.WARNING)
 
 # ================= CLIENT ================= #
 app = Client(
@@ -40,6 +44,11 @@ app = Client(
     api_hash=API_HASH,
     bot_token=BOT_TOKEN
 )
+
+# ================= STARTUP TASK ================= #
+async def startup_tasks():
+    logger.info("🔹 Menjalankan startup worker fishing...")
+    asyncio.create_task(gacha_fishing.fishing_worker(app))
 
 # ================= REGISTER MODULES ================= #
 def safe_register(module, name: str):
@@ -90,13 +99,16 @@ async def main():
 
     # Start client
     await app.start()
-    logger.info("🚀 LootGames Bot started!")
+    logger.info("🚀 TRIAL Bot started!")
     logger.info(f"📱 Monitoring group: {ALLOWED_GROUP_ID}")
     logger.info(f"👑 Owner ID: {OWNER_ID}")
 
+    # Jalankan startup worker
+    await startup_tasks()
+
     # Kirim notifikasi ke owner
     try:
-        await app.send_message(OWNER_ID, "🤖 LootGames Bot sudah aktif dan siap dipakai!")
+        await app.send_message(OWNER_ID, "🤖 TRIAL Bot sudah aktif dan siap dipakai!")
         logger.info("📢 Notifikasi start terkirim ke OWNER.")
     except Exception as e:
         logger.error(f"Gagal kirim notifikasi start: {e}")
@@ -115,7 +127,3 @@ if __name__ == "__main__":
         pass
 
     asyncio.run(main())
-
-
-
-
