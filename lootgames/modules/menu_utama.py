@@ -664,6 +664,31 @@ async def callback_handler(client: Client, cq: CallbackQuery):
         await cq.message.edit_text("📋 LOGIN HARIAN", reply_markup=kb)
         return
 
+    # ---------------- REGISTER FLOW ---------------- #
+    if data == "REGISTER_YES":
+        uname = cq.from_user.username or "TanpaUsername"
+        text = "🎉 Selamat kamu menjadi Player Loot!"
+        kb = InlineKeyboardMarkup([
+            [InlineKeyboardButton("📇 SCAN ID & USN", callback_data="REGISTER_SCAN")],
+            [InlineKeyboardButton("⬅️ Kembali", callback_data="main")]
+        ])
+        await cq.message.edit_text(text, reply_markup=kb)
+        user_database.set_player_loot(user_id, True, uname)
+        try:
+            await client.send_message(
+                OWNER_ID,
+                f"📢 [REGISTER] Player baru mendaftar!\n\n👤 Username: @{uname}\n🆔 User ID: {user_id}"
+            )
+        except Exception as e:
+            logger.error(f"Gagal kirim notif register ke owner: {e}")
+        return
+
+    if data == "REGISTER_SCAN":
+        uname = cq.from_user.username or "TanpaUsername"
+        text = f"📇 Data Player\n\n👤 Username: @{uname}\n🆔 User ID: {user_id}"
+        await cq.message.edit_text(text, reply_markup=make_keyboard("main", user_id))
+        return
+
     # TRANSFER START
     if data.startswith("TRANSFER_"):
         jenis = data.split("_")[1]
@@ -1144,5 +1169,6 @@ def register(app: Client):
     app.add_handler(MessageHandler(handle_transfer_message, filters.text & filters.private))
 
     logger.info("[MENU] Handler menu_utama terdaftar.")
+
 
 
