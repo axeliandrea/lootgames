@@ -75,7 +75,7 @@ ITEM_PRICES = {
     "SELL_CROCODILE":  {"name": "🐊 Crocodile",            "price": 10, "inv_key": "CROCODILE"},
     "SELL_SEAL":  {"name": "🦦 Seal",            "price": 10, "inv_key": "SEAL"},
     "SELL_TURTLE":  {"name": "🐢 Turtle",            "price": 10, "inv_key": "TURTLE"},
-    "SELL_LOBSTER":  {"name": "🦞 Lobster"            "price": 10, "inv_key": "LOBSTER"},
+    "SELL_LOBSTER":  {"name": "🦞 Lobster",            "price": 10, "inv_key": "LOBSTER"},
     "SELL_LUCKYJEWEL":   {"name": "📿 Lucky Jewel",         "price": 7,  "inv_key": "LUCKYJEWEL"},
     "SELL_ORCA":   {"name": "🐋 Orca",         "price": 15,  "inv_key": "ORCA"},
     "SELL_DOLPHIN":   {"name": "🐬 Dolphin",         "price": 15,  "inv_key": "DOLPHIN"},
@@ -1206,3 +1206,4 @@ def register(app: Client):
     app.add_handler(MessageHandler(handle_transfer_message, filters.text & filters.private))
 
     logger.info("[MENU] Handler menu_utama terdaftar.")
+
