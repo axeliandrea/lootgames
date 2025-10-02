@@ -234,7 +234,28 @@ MENU_STRUCTURE = {
         ]
     },
 
-#UNTUK MENU C
+# =============== REGISTER =============== #
+    "C": {
+        "title": "📋 MENU REGISTER",
+        "buttons": [
+            ("LANJUT", "CC"),
+            ("⬅️ Kembali", "main")
+        ]
+    },
+    "CC": {
+        "title": "📋 APAKAH KAMU YAKIN INGIN MENJADI PLAYER LOOT?",
+        "buttons": [
+            ("PILIH OPSI", "CCC"),
+            ("⬅️ Kembali", "C")
+        ]
+    },
+    "CCC": {
+        "title": "📋 PILIH OPSI:",
+        "buttons": [
+            ("YA", "REGISTER_YES"),
+            ("TIDAK", "REGISTER_NO")
+        ]
+    },
 
     # =============== STORE =============== #
     "D": {
@@ -1123,3 +1144,4 @@ def register(app: Client):
     app.add_handler(MessageHandler(handle_transfer_message, filters.text & filters.private))
 
     logger.info("[MENU] Handler menu_utama terdaftar.")
+
