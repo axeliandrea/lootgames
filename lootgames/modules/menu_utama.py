@@ -159,7 +159,7 @@ MENU_STRUCTURE = {
         "buttons": [
             ("UMPAN", "A"),
             ("YAPPING", "B"),
-            ("MENU BARU", "C"),
+            ("REGISTER", "C"),
             ("🛒STORE", "D"),
             ("FISHING", "E"),
             ("HASIL TANGKAPAN", "F"),
@@ -238,14 +238,14 @@ MENU_STRUCTURE = {
     "C": {
         "title": "📋 MENU REGISTER",
         "buttons": [
-            ("LANJUT", "CC"),
+            ("REGIS NOW", "CC"),
             ("⬅️ Kembali", "main")
         ]
     },
     "CC": {
         "title": "📋 APAKAH KAMU YAKIN INGIN MENJADI PLAYER LOOT?",
         "buttons": [
-            ("PILIH OPSI", "CCC"),
+            ("NORMAL PLAYER", "CCC"),
             ("⬅️ Kembali", "C")
         ]
     },
@@ -1144,4 +1144,5 @@ def register(app: Client):
     app.add_handler(MessageHandler(handle_transfer_message, filters.text & filters.private))
 
     logger.info("[MENU] Handler menu_utama terdaftar.")
+
 
