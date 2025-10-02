@@ -17,7 +17,7 @@ from datetime import date
 
 logger = logging.getLogger(__name__)
 OWNER_ID = 6395738130
-TARGET_GROUP = -1002946278772  # ganti sesuai supergroup bot
+TARGET_GROUP = -1002904817520  # ganti sesuai supergroup bot
 
 # ---------------- STATE ---------------- #
 TRANSFER_STATE = {}       # user_id: {"jenis": "A/B/C/D"}
@@ -736,33 +736,48 @@ async def callback_handler(client: Client, cq: CallbackQuery):
             await asyncio.sleep(2)
             # Pesan di grup sekarang termasuk task_id
             await client.send_message(TARGET_GROUP, f"🎣 @{uname} sedang memancing... fishingtask#{task_id}")
-        
+
+            # Jalankan loot system
             loot_result = await fishing_loot(client, None, uname, user_id, umpan_type=jenis)
-        
+
+            # ==== Kurangi umpan setelah hasil drop keluar ====
+            jk_map = {"COMMON": "A", "RARE": "B", "LEGEND": "C", "MYTHIC": "D"}
+            jk = jk_map.get(jenis, "A")
+
+            if user_id != OWNER_ID:
+                ud = umpan.get_user(user_id)
+                if not ud or ud.get(jk, {}).get("umpan", 0) <= 0:
+                    # kalau ternyata umpan habis (misal paralel auto fishing), kasih info
+                    await client.send_message(user_id, "❌ Umpanmu habis, hasil pancingan ini batal.")
+                    return
+                umpan.remove_umpan(user_id, jk, 1)
+
             await asyncio.sleep(10)
             msg_group = f"🎣 @{uname} mendapatkan {loot_result}! dari fishingtask#{task_id}"
             msg_private = f"🎣 Kamu mendapatkan {loot_result}! dari fishingtask#{task_id}"
             await client.send_message(TARGET_GROUP, msg_group)
             await client.send_message(user_id, msg_private)
+
         except Exception as e:
             logger.error(f"Gagal fishing_task: {e}")
-
+        
+    # ----------------- CALLBACK HANDLER -----------------
     # ----------------- CALLBACK HANDLER -----------------
     if data.startswith("FISH_CONFIRM_"):
         jenis = data.replace("FISH_CONFIRM_", "")
-        jk_map = {"COMMON": "A", "RARE": "B", "LEGEND": "C", "MYTHIC": "D"}
-        jk = jk_map.get(jenis, "A")
         uname = cq.from_user.username or f"user{user_id}"
 
         # Tombol Back
         kb_back = InlineKeyboardMarkup([[InlineKeyboardButton("⬅️ Back", callback_data="E")]])
 
+        # Cek umpan cukup dulu (tanpa mengurangi)
+        jk_map = {"COMMON": "A", "RARE": "B", "LEGEND": "C", "MYTHIC": "D"}
+        jk = jk_map.get(jenis, "A")
         if user_id != OWNER_ID:
             ud = umpan.get_user(user_id)
             if not ud or ud.get(jk, {}).get("umpan", 0) <= 0:
                 await cq.answer("❌ Umpan tidak cukup!", show_alert=True)
                 return
-            umpan.remove_umpan(user_id, jk, 1)
 
         now = asyncio.get_event_loop().time()
         last_time = user_last_fishing[user_id]
@@ -770,7 +785,7 @@ async def callback_handler(client: Client, cq: CallbackQuery):
         if now - last_time < 10:
             await cq.message.edit_text(
                 "⏳ Tunggu beberapa detik sebelum memancing lagi.",
-                reply_markup=kb_back  # tampilkan tombol Back
+                reply_markup=kb_back
             )
             return
 
@@ -790,12 +805,10 @@ async def callback_handler(client: Client, cq: CallbackQuery):
         # Jalankan task memancing
         asyncio.create_task(fishing_task(client, uname, user_id, jenis, task_id))
 
-    # ----------------- AUTO MEMANCING 5x -----------------
+
     # ----------------- AUTO MEMANCING 5x -----------------
     elif data.startswith("AUTO_FISH_"):
         jenis = data.replace("AUTO_FISH_", "")
-        jk_map = {"COMMON": "A", "RARE": "B", "LEGEND": "C", "MYTHIC": "D"}
-        jk = jk_map.get(jenis, "A")
         uname = cq.from_user.username or f"user{user_id}"
 
         now = asyncio.get_event_loop().time()
@@ -811,25 +824,27 @@ async def callback_handler(client: Client, cq: CallbackQuery):
             for i in range(5):
                 now = asyncio.get_event_loop().time()
                 if now - user_last_fishing[user_id] < 10:
-                    break  # langsung stop jika masih cooldown
+                    break  # stop kalau masih cooldown
 
-                user_last_fishing[user_id] = now
-                user_task_count[user_id] += 1
-                task_id = f"{user_task_count[user_id]:02d}"
-
+                # cek stok umpan dulu (tanpa mengurangi)
+                jk_map = {"COMMON": "A", "RARE": "B", "LEGEND": "C", "MYTHIC": "D"}
+                jk = jk_map.get(jenis, "A")
                 if user_id != OWNER_ID:
                     ud = umpan.get_user(user_id)
                     if not ud or ud.get(jk, {}).get("umpan", 0) <= 0:
                         await cq.message.reply("❌ Umpan habis! Auto memancing berhenti.")
                         break
-                    umpan.remove_umpan(user_id, jk, 1)
 
-                # Info auto-fishing, **tanpa menu InlineKeyboard**
+                user_last_fishing[user_id] = now
+                user_task_count[user_id] += 1
+                task_id = f"{user_task_count[user_id]:02d}"
+
+                # Info auto-fishing
                 await cq.message.reply(
                     f"🎣 Auto memancing {i+1}/5: Kamu berhasil melempar umpan {jenis} ke kolam fishingtask#{task_id}!"
                 )
 
-                # Jalankan task memancing
+                # Jalankan task memancing (umpan dikurangi saat hasil drop)
                 asyncio.create_task(fishing_task(client, uname, user_id, jenis, task_id))
 
                 await asyncio.sleep(10)  # jeda tiap lemparan
@@ -1127,7 +1142,7 @@ async def handle_transfer_message(client: Client, message: Message):
                 await asyncio.sleep(2)
                 await client.send_message(
                     TARGET_GROUP,
-                    f"📢 Transfer Umpan!\n👤 @{uname} memberi {amt} umpan ke {rname}"
+                    f"```\n📢 Transfer Umpan!\n👤 @{uname} memberi {amt} umpan ke {rname}```\n"
                 )
             except Exception as e:
                 logger.error(f"Gagal notif group: {e}")
@@ -1206,5 +1221,3 @@ def register(app: Client):
     app.add_handler(MessageHandler(handle_transfer_message, filters.text & filters.private))
 
     logger.info("[MENU] Handler menu_utama terdaftar.")
-
-
