@@ -1,8 +1,10 @@
-# lootgames/modules/menu_utama.py TRIAL AUTO FISHING
+# lootgames/modules/menu_utama.py tester 1
 import logging
 import asyncio
 import re
 import random
+import json
+from collections import defaultdict
 from pyrogram import Client, filters
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery, Message
 from pyrogram.handlers import MessageHandler, CallbackQueryHandler
@@ -29,6 +31,10 @@ LAST_TREASURE_MSG_ID = None
 USER_CLAIM_LOCKS = {}               # map user_id -> asyncio.Lock()
 USER_CLAIM_LOCKS_LOCK = asyncio.Lock()  # lock untuk pembuatan lock per-user
 
+# ----------------- INISIALISASI -----------------
+user_last_fishing = defaultdict(lambda: 0)  # cooldown 10 detik per user
+user_task_count = defaultdict(lambda: 0)   # generate task ID unik per user
+
 # =================== UTIL ===================
 def load_chest_data():
     try:
@@ -45,7 +51,7 @@ def get_random_item():
     # 90% ZONK, 10% Umpan
     return random.choices(
         ["ZONK", "Umpan Common Type A"],
-        weights=[50, 50],
+        weights=[65, 35],
         k=1
     )[0]
 
@@ -153,7 +159,7 @@ MENU_STRUCTURE = {
         "buttons": [
             ("UMPAN", "A"),
             ("YAPPING", "B"),
-            ("REGISTER", "C"),
+            ("MENU BARU", "C"),
             ("🛒STORE", "D"),
             ("FISHING", "E"),
             ("HASIL TANGKAPAN", "F"),
@@ -161,7 +167,7 @@ MENU_STRUCTURE = {
             ("TREASURE CHEST", "H")
         ]
     },
-
+    
     # =============== UMPAN =============== #
     "A": {
         "title": "📋 Menu UMPAN",
@@ -170,35 +176,35 @@ MENU_STRUCTURE = {
             ("RARE 🐌", "AA_RARE"),
             ("LEGENDARY 🧇", "AA_LEGEND"),
             ("MYTHIC 🐟", "AA_MYTHIC"),
-            ("⬅️ Kembali", "main")
+            ("⬅️ Back", "main")
         ]
     },
     "AA_COMMON": {
         "title": "📋 TRANSFER UMPAN KE (Common)",
         "buttons": [
             ("Klik OK untuk transfer", "TRANSFER_COMMON_OK"),
-            ("⬅️ Kembali", "A")
+            ("⬅️ Back", "A")
         ]
     },
     "AA_RARE": {
         "title": "📋 TRANSFER UMPAN KE (Rare)",
         "buttons": [
             ("Klik OK untuk transfer", "TRANSFER_RARE_OK"),
-            ("⬅️ Kembali", "A")
+            ("⬅️ Back", "A")
         ]
     },
     "AA_LEGEND": {
         "title": "📋 TRANSFER UMPAN KE (Legend)",
         "buttons": [
             ("Klik OK untuk transfer", "TRANSFER_LEGEND_OK"),
-            ("⬅️ Kembali", "A")
+            ("⬅️ Back", "A")
         ]
     },
     "AA_MYTHIC": {
         "title": "📋 TRANSFER UMPAN KE (Mythic)",
         "buttons": [
             ("Klik OK untuk transfer", "TRANSFER_MYTHIC_OK"),
-            ("⬅️ Kembali", "A")
+            ("⬅️ Back", "A")
         ]
     },
 
@@ -207,14 +213,14 @@ MENU_STRUCTURE = {
         "title": "🎣 FISHING",
         "buttons": [
             ("PILIH UMPAN", "EE"),
-            ("⬅️ Kembali", "main")
+            ("⬅️ Back", "main")
         ]
     },
     "EE": {
         "title": "📋 PILIH UMPAN",
         "buttons": [
             ("Lanjut Pilih Jenis", "EEE"),
-            ("⬅️ Kembali", "E")
+            ("⬅️ Back", "E")
         ]
     },
     "EEE": {
@@ -224,32 +230,11 @@ MENU_STRUCTURE = {
             ("RARE 🐌", "EEE_RARE"),
             ("LEGENDARY 🧇", "EEE_LEGEND"),
             ("MYTHIC 🐟", "EEE_MYTHIC"),
-            ("⬅️ Kembali", "EE")
+            ("⬅️ Back", "EE")
         ]
     },
 
-    # =============== REGISTER =============== #
-    "C": {
-        "title": "📋 MENU REGISTER",
-        "buttons": [
-            ("LANJUT", "CC"),
-            ("⬅️ Kembali", "main")
-        ]
-    },
-    "CC": {
-        "title": "📋 APAKAH KAMU YAKIN INGIN MENJADI PLAYER LOOT?",
-        "buttons": [
-            ("PILIH OPSI", "CCC"),
-            ("⬅️ Kembali", "C")
-        ]
-    },
-    "CCC": {
-        "title": "📋 PILIH OPSI:",
-        "buttons": [
-            ("YA", "REGISTER_YES"),
-            ("TIDAK", "REGISTER_NO")
-        ]
-    },
+#UNTUK MENU C
 
     # =============== STORE =============== #
     "D": {
@@ -258,14 +243,14 @@ MENU_STRUCTURE = {
             ("BUY UMPAN", "D1"),
             ("SELL ITEM", "D2"),
             ("TUKAR POINT", "D3"),
-            ("⬅️ Kembali", "main")
+            ("⬅️ Back", "main")
         ]
     },
     "D1": {
         "title": "📋 BUY UMPAN",
         "buttons": [
             ("TOPUP QRIS (cooming soon)", "D1A"),
-            ("⬅️ Kembali", "D")
+            ("⬅️ Back", "D")
         ]
     },
     "D2": {
@@ -274,13 +259,13 @@ MENU_STRUCTURE = {
             ("💰 CEK COIN", "D2C"),
             ("📦 CEK INVENTORY", "D2A"),
             ("💰 DAFTAR HARGA", "D2B"),
-            ("⬅️ Kembali", "D")
+            ("⬅️ Back", "D")
         ]
     },
     "D2A": {
         "title": "📦 CEK INVENTORY",
         "buttons": [
-            ("⬅️ Kembali", "D2")
+            ("⬅️ Back", "D2")
         ]
     },
     # DAFTAR HARGA -> note: callback format SELL_DETAIL:<code>
@@ -314,21 +299,21 @@ MENU_STRUCTURE = {
             ("🧜‍♀️ Mermaid Boy", "SELL_DETAIL:SELL_MERMAIDBOY"),
             ("🧜‍♀️ Mermaid Girl", "SELL_DETAIL:SELL_MERMAIDGIRL"),
             ("🐉 Cupid Dragon", "SELL_DETAIL:SELL_CUPIDDRAGON"),
-            ("⬅️ Kembali", "D2"),
+            ("⬅️ Back", "D2"),
         ]
     },
     "D3": {
         "title": "📋 TUKAR POINT",
         "buttons": [
             ("Lihat Poin & Tukar", "D3A"),
-            ("⬅️ Kembali", "D")
+            ("⬅️ Back", "D")
         ]
     },
     "D3A": {
         "title": "📋 🔄 POINT CHAT",
         "buttons": [
             ("TUKAR 🔄 UMPAN COMMON 🐛", "TUKAR_POINT"),
-            ("⬅️ Kembali", "D3")
+            ("⬅️ Back", "D3")
         ]
     },
 
@@ -338,19 +323,19 @@ MENU_STRUCTURE = {
         "buttons": [
             ("Poin Pribadi", "BB"),
             ("➡️ Leaderboard", "BBB"),
-            ("⬅️ Kembali", "main")
+            ("⬅️ Back", "main")
         ]
     },
     "BB": {
         "title": "📋 Poin Pribadi",
         "buttons": [
-            ("⬅️ Kembali", "B")
+            ("⬅️ Back", "B")
         ]
     },
     "BBB": {
         "title": "📋 Leaderboard Yapping",
         "buttons": [
-            ("⬅️ Kembali", "B")
+            ("⬅️ Back", "B")
         ]
     },
 
@@ -359,14 +344,14 @@ MENU_STRUCTURE = {
         "title": "📋 HASIL TANGKAPAN",
         "buttons": [
             ("CEK INVENTORY", "FF"),
-            ("⬅️ Kembali", "main")
+            ("⬅️ Back", "main")
         ]
     },
     "FF": {
         "title": "📋 CEK INVENTORY",
         "buttons": [
             ("LIHAT HASIL TANGKAPAN", "FFF"),
-            ("⬅️ Kembali", "F")
+            ("⬅️ Back", "F")
         ]
     }
 }
@@ -376,8 +361,8 @@ for jenis in ["COMMON", "RARE", "LEGEND", "MYTHIC"]:
     MENU_STRUCTURE[f"EEE_{jenis}"] = {
         "title": f"📋 Apakah kamu ingin memancing menggunakan umpan {jenis}?",
         "buttons": [
-            ("✅ YA", f"FISH_CONFIRM_{jenis}"),
-            ("❌ TIDAK", "EEE")
+            ("✅ YES", f"FISH_CONFIRM_{jenis}"),
+            ("❌ NO", "EEE")
         ]
     }
 
@@ -388,7 +373,7 @@ MENU_STRUCTURE["G"] = {
         ("✅ Absen Hari Ini", "LOGIN_TODAY"),
         ("📅 Lihat Status Login 7 Hari", "LOGIN_STATUS"),
         ("🔄 Reset Login (OWNER)", "LOGIN_RESET") if OWNER_ID else None,
-        ("⬅️ Kembali", "main")
+        ("⬅️ Back", "main")
     ]
 }
 
@@ -397,7 +382,7 @@ MENU_STRUCTURE["H"] = {
     "title": "📦 TREASURE CHEST (OWNER ONLY)",
     "buttons": [
         ("KIRIM KE GROUP SEKARANG?", "TREASURE_SEND_NOW"),
-        ("⬅️ Kembali", "main")
+        ("⬅️ Back", "main")
     ]
 }
 
@@ -460,7 +445,7 @@ def make_keyboard(menu_key: str, user_id=None, page: int = 0) -> InlineKeyboardM
             nav.append(InlineKeyboardButton("➡️ Next", callback_data=f"BBB_PAGE_{page+1}"))
         if nav:
             buttons.append(nav)
-        buttons.append([InlineKeyboardButton("⬅️ Kembali", callback_data="B")])
+        buttons.append([InlineKeyboardButton("⬅️ Back", callback_data="B")])
 
     # MENU UMPAN
     elif menu_key in ["A", "AA_COMMON", "AA_RARE", "AA_LEGEND", "AA_MYTHIC"] and user_id:
@@ -485,21 +470,21 @@ def make_keyboard(menu_key: str, user_id=None, page: int = 0) -> InlineKeyboardM
         for cb, (label, tkey) in map_type.items():
             jumlah = user_umpan.get(tkey, {}).get("umpan", 0)
             buttons.append([InlineKeyboardButton(f"{label} ({jumlah} pcs)", callback_data=cb)])
-        buttons.append([InlineKeyboardButton("⬅️ Kembali", callback_data="EE")])
+        buttons.append([InlineKeyboardButton("⬅️ Back", callback_data="EE")])
 
     # STORE TUKAR POINT
     elif menu_key == "D3A" and user_id:
         pts = yapping.load_points().get(str(user_id), {}).get("points", 0)
         buttons.append([InlineKeyboardButton(f"TUKAR 🔄 UMPAN COMMON 🐛 (Anda: {pts} pts)", callback_data="TUKAR_POINT")])
-        buttons.append([InlineKeyboardButton("⬅️ Kembali", callback_data="D3")])
+        buttons.append([InlineKeyboardButton("⬅️ Back", callback_data="D3")])
 
     # HASIL TANGKAPAN INVENTORY
     elif menu_key == "FFF" and user_id:
-        buttons.append([InlineKeyboardButton("⬅️ Kembali", callback_data="F")])
+        buttons.append([InlineKeyboardButton("⬅️ Back", callback_data="F")])
 
     # STORE CEK INVENTORY
     elif menu_key == "D2A" and user_id:
-        buttons.append([InlineKeyboardButton("⬅️ Kembali", callback_data="D2")])
+        buttons.append([InlineKeyboardButton("⬅️ Back", callback_data="D2")])
 
     # DEFAULT
     else:
@@ -507,7 +492,7 @@ def make_keyboard(menu_key: str, user_id=None, page: int = 0) -> InlineKeyboardM
             buttons.append([InlineKeyboardButton(text, callback_data=cb)])
         if not buttons:
             # fallback minimal supaya selalu valid
-            buttons.append([InlineKeyboardButton("⬅️ Kembali", callback_data="main")])
+            buttons.append([InlineKeyboardButton("⬅️ Back", callback_data="main")])
 
     return InlineKeyboardMarkup(buttons)
 
@@ -652,35 +637,10 @@ async def callback_handler(client: Client, cq: CallbackQuery):
         buttons = [
             [InlineKeyboardButton("✅ Absen Hari Ini", callback_data="LOGIN_TODAY")],
             [InlineKeyboardButton("📅 Lihat Status Login 7 Hari", callback_data="LOGIN_STATUS")],
-            [InlineKeyboardButton("⬅️ Kembali", callback_data="main")]
+            [InlineKeyboardButton("⬅️ Back", callback_data="main")]
         ]
         kb = InlineKeyboardMarkup(buttons)
         await cq.message.edit_text("📋 LOGIN HARIAN", reply_markup=kb)
-        return
-
-    # ---------------- REGISTER FLOW ---------------- #
-    if data == "REGISTER_YES":
-        uname = cq.from_user.username or "TanpaUsername"
-        text = "🎉 Selamat kamu menjadi Player Loot!"
-        kb = InlineKeyboardMarkup([
-            [InlineKeyboardButton("📇 SCAN ID & USN", callback_data="REGISTER_SCAN")],
-            [InlineKeyboardButton("⬅️ Kembali", callback_data="main")]
-        ])
-        await cq.message.edit_text(text, reply_markup=kb)
-        user_database.set_player_loot(user_id, True, uname)
-        try:
-            await client.send_message(
-                OWNER_ID,
-                f"📢 [REGISTER] Player baru mendaftar!\n\n👤 Username: @{uname}\n🆔 User ID: {user_id}"
-            )
-        except Exception as e:
-            logger.error(f"Gagal kirim notif register ke owner: {e}")
-        return
-
-    if data == "REGISTER_SCAN":
-        uname = cq.from_user.username or "TanpaUsername"
-        text = f"📇 Data Player\n\n👤 Username: @{uname}\n🆔 User ID: {user_id}"
-        await cq.message.edit_text(text, reply_markup=make_keyboard("main", user_id))
         return
 
     # TRANSFER START
@@ -704,7 +664,7 @@ async def callback_handler(client: Client, cq: CallbackQuery):
             if cq.message.text == text:
                 text += "\u200b"  # zero-width space untuk memaksa edit
             
-            kb = make_keyboard("D2", user_id)  # tombol kembali ke menu SELL ITEM
+            kb = make_keyboard("D2", user_id)  # tombol Back ke menu SELL ITEM
             await cq.message.edit_text(text, reply_markup=kb)
         except Exception as e:
             # fallback aman jika tetap gagal edit
@@ -712,35 +672,111 @@ async def callback_handler(client: Client, cq: CallbackQuery):
         return
     
     # FISHING
+    # ----------------- FUNGSI MEMANCING -----------------
+    async def fishing_task(client, uname, user_id, jenis, task_id):
+        try:
+            await asyncio.sleep(2)
+            # Pesan di grup sekarang termasuk task_id
+            await client.send_message(TARGET_GROUP, f"🎣 @{uname} sedang memancing... fishingtask#{task_id}")
+        
+            loot_result = await fishing_loot(client, None, uname, user_id, umpan_type=jenis)
+        
+            await asyncio.sleep(10)
+            msg_group = f"🎣 @{uname} mendapatkan {loot_result}! dari fishingtask#{task_id}"
+            msg_private = f"🎣 Kamu mendapatkan {loot_result}! dari fishingtask#{task_id}"
+            await client.send_message(TARGET_GROUP, msg_group)
+            await client.send_message(user_id, msg_private)
+        except Exception as e:
+            logger.error(f"Gagal fishing_task: {e}")
+
+    # ----------------- CALLBACK HANDLER -----------------
     if data.startswith("FISH_CONFIRM_"):
         jenis = data.replace("FISH_CONFIRM_", "")
-        jenis_map = {"COMMON": "A", "RARE": "B", "LEGEND": "C", "MYTHIC": "D"}
-        jk = jenis_map.get(jenis, "A")
+        jk_map = {"COMMON": "A", "RARE": "B", "LEGEND": "C", "MYTHIC": "D"}
+        jk = jk_map.get(jenis, "A")
         uname = cq.from_user.username or f"user{user_id}"
+
+        # Tombol Back
+        kb_back = InlineKeyboardMarkup([[InlineKeyboardButton("⬅️ Back", callback_data="E")]])
+
         if user_id != OWNER_ID:
             ud = umpan.get_user(user_id)
             if not ud or ud.get(jk, {}).get("umpan", 0) <= 0:
                 await cq.answer("❌ Umpan tidak cukup!", show_alert=True)
                 return
             umpan.remove_umpan(user_id, jk, 1)
-    
-        # Tombol kembali
-        kb_back = InlineKeyboardMarkup([[InlineKeyboardButton("⬅️ Kembali", callback_data="E")]])
-    
-        await cq.message.edit_text(f"🎣 Kamu berhasil melempar umpan {jenis} ke kolam!", reply_markup=kb_back)
 
-        async def fishing_task():
-            try:
-                await asyncio.sleep(2)
-                await client.send_message(TARGET_GROUP, f"🎣 @{uname} sedang memancing...")
-                loot_result = await fishing_loot(client, None, uname, user_id, umpan_type=jenis)
-                await asyncio.sleep(15)
-                await client.send_message(TARGET_GROUP, f"🎣 @{uname} mendapatkan {loot_result}!")
-            except Exception as e:
-                logger.error(f"Gagal fishing_task: {e}")
+        now = asyncio.get_event_loop().time()
+        last_time = user_last_fishing[user_id]
 
-        asyncio.create_task(fishing_task())
-        return
+        if now - last_time < 10:
+            await cq.message.edit_text(
+                "⏳ Tunggu beberapa detik sebelum memancing lagi.",
+                reply_markup=kb_back  # tampilkan tombol Back
+            )
+            return
+
+        user_last_fishing[user_id] = now
+        user_task_count[user_id] += 1
+        task_id = f"{user_task_count[user_id]:02d}"
+
+        await cq.message.edit_text(
+            f"🎣 Kamu berhasil melempar umpan {jenis} ke kolam fishingtask#{task_id}!",
+            reply_markup=InlineKeyboardMarkup([
+                [InlineKeyboardButton("🎣 Memancing Lagi", callback_data=f"FISH_CONFIRM_{jenis}")],
+                [InlineKeyboardButton("🤖 Auto [TRIAL] 5x", callback_data=f"AUTO_FISH_{jenis}")],
+                [InlineKeyboardButton("⬅️ Back", callback_data="E")]
+            ])
+        )
+
+        # Jalankan task memancing
+        asyncio.create_task(fishing_task(client, uname, user_id, jenis, task_id))
+
+    # ----------------- AUTO MEMANCING 5x -----------------
+    # ----------------- AUTO MEMANCING 5x -----------------
+    elif data.startswith("AUTO_FISH_"):
+        jenis = data.replace("AUTO_FISH_", "")
+        jk_map = {"COMMON": "A", "RARE": "B", "LEGEND": "C", "MYTHIC": "D"}
+        jk = jk_map.get(jenis, "A")
+        uname = cq.from_user.username or f"user{user_id}"
+
+        now = asyncio.get_event_loop().time()
+        last_time = user_last_fishing[user_id]
+
+        if now - last_time < 10:
+            await cq.answer("⏳ Tunggu cooldown 10 detik sebelum auto memancing!", show_alert=True)
+            return
+
+        await cq.answer("🤖 Auto memancing 5x mulai!")
+
+        async def auto_fishing():
+            for i in range(5):
+                now = asyncio.get_event_loop().time()
+                if now - user_last_fishing[user_id] < 10:
+                    break  # langsung stop jika masih cooldown
+
+                user_last_fishing[user_id] = now
+                user_task_count[user_id] += 1
+                task_id = f"{user_task_count[user_id]:02d}"
+
+                if user_id != OWNER_ID:
+                    ud = umpan.get_user(user_id)
+                    if not ud or ud.get(jk, {}).get("umpan", 0) <= 0:
+                        await cq.message.reply("❌ Umpan habis! Auto memancing berhenti.")
+                        break
+                    umpan.remove_umpan(user_id, jk, 1)
+
+                # Info auto-fishing, **tanpa menu InlineKeyboard**
+                await cq.message.reply(
+                    f"🎣 Auto memancing {i+1}/5: Kamu berhasil melempar umpan {jenis} ke kolam fishingtask#{task_id}!"
+                )
+
+                # Jalankan task memancing
+                asyncio.create_task(fishing_task(client, uname, user_id, jenis, task_id))
+
+                await asyncio.sleep(10)  # jeda tiap lemparan
+
+        asyncio.create_task(auto_fishing())
 
     # LEADERBOARD PAGING
     if data.startswith("BBB_PAGE_"):
@@ -787,7 +823,7 @@ async def callback_handler(client: Client, cq: CallbackQuery):
         # lakukan tukar
         yapping.update_points(user_id, -jml * 100)
         umpan.add_umpan(user_id, "A", jml)  # ✅ hanya COMMON
-        kb = InlineKeyboardMarkup([[InlineKeyboardButton("⬅️ Kembali", callback_data="D3A")]])
+        kb = InlineKeyboardMarkup([[InlineKeyboardButton("⬅️ Back", callback_data="D3A")]])
         await cq.message.edit_text(
             f"✅ Tukar berhasil! {jml} umpan COMMON 🐛 ditambahkan ke akunmu.", reply_markup=kb
         )
@@ -806,7 +842,7 @@ async def callback_handler(client: Client, cq: CallbackQuery):
         text = f"💰 Harga {item['name']}\n1x = {item['price']} coin\n\nKetik jumlah yang ingin kamu jual, atau pilih tombol untuk mulai."
         kb = InlineKeyboardMarkup([
             [InlineKeyboardButton("🛒 Jual Sekarang (ketik jumlah)", callback_data=f"SELL_START:{item_code}")],
-            [InlineKeyboardButton("⬅️ Kembali", callback_data="D2B")]
+            [InlineKeyboardButton("⬅️ Back", callback_data="D2B")]
         ])
         await cq.message.edit_text(text, reply_markup=kb)
         return
@@ -893,7 +929,7 @@ async def callback_handler(client: Client, cq: CallbackQuery):
             f"Sisa stok {item['name']}: {new_stock}",
             reply_markup=InlineKeyboardMarkup(
                 [
-                    [InlineKeyboardButton("⬅️ Kembali", callback_data="D2")]
+                    [InlineKeyboardButton("⬅️ Back", callback_data="D2")]
                 ]
             )
         )
@@ -1087,15 +1123,3 @@ def register(app: Client):
     app.add_handler(MessageHandler(handle_transfer_message, filters.text & filters.private))
 
     logger.info("[MENU] Handler menu_utama terdaftar.")
-
-#MENU UTAMA FIX JAM 23:19
-
-
-
-
-
-
-
-
-
-
