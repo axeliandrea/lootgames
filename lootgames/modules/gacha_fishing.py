@@ -11,35 +11,35 @@ logger = logging.getLogger(__name__)
 # Persentase bisa desimal, misal 0.5%
 FISH_LOOT = {
     # Common
-    "🤧 Zonk": 20.18,
-    "𓆝 Small Fish": 26.19,
-    "🐚 Hermit Crab": 11.96,
-    "🐸 Frog": 11.51,
-    "🐙 Octopus": 2.71,
-    
+    "🤧 Zonk": 25.00,
+    "𓆝 Small Fish": 32.45,
+    "🐚 Hermit Crab": 14.81,
+    "🐸 Frog": 14.26,
+    "🐙 Octopus": 3.36,
+
     # Rare
-    "🐡 Pufferfish": 0.63,
-    "ଳ Jelly Fish": 0.63,
-    "📿 Lucky Jewel": 0.63,
-    "🐟 Goldfish": 0.63,
-    "🐟 Stingrays Fish": 0.63,
-    "🐟 Seahorse": 0.63,
-    "🐟 Clownfish": 0.63,
-    "🐟 Doryfish": 0.63,
-    "🐟 Bannerfish": 0.63,
-    "🐟 Anglerfish": 0.63,
-    "🦪 Giant Clam": 0.63,
-    "🐟 Shark": 0.13,
-    "🐊 Crocodile": 0.13,
-    "🦦 Seal": 0.13,
-    "🐢 Turtle": 0.13,
-    "🦞 Lobster": 0.13,
-    "🐹⚡ Pikachu": 0.13,
-    "🐋⚡ Kyogre": 0.13,
-    "🐋 Orca": 0.13,
-    "🐋 Dolphin": 0.13,
-    "Lost cip": 0.13,
-    
+    "🐡 Pufferfish": 0.78,
+    "ଳ Jelly Fish": 0.78,
+    "📿 Lucky Jewel": 0.78,
+    "🐟 Goldfish": 0.78,
+    "🐟 Stingrays Fish": 0.78,
+    "🐟 Seahorse": 0.78,
+    "🐟 Clownfish": 0.78,
+    "🐟 Doryfish": 0.78,
+    "🐟 Bannerfish": 0.78,
+    "🐟 Anglerfish": 0.78,
+    "🦪 Giant Clam": 0.78,
+    "🐟 Shark": 0.16,
+    "🐊 Crocodile": 0.16,
+    "🦦 Seal": 0.16,
+    "🐢 Turtle": 0.16,
+    "🦞 Lobster": 0.16,
+    "🐹⚡ Pikachu": 0.16,
+    "🐋⚡ Kyogre": 0.16,
+    "🐋 Orca": 0.16,
+    "🐋 Dolphin": 0.16,
+    "Lost cip": 0.16,
+
     # Mythic
     "🐉 Baby Dragon": 0.01,
     "🐉 Baby Spirit Dragon": 0.01,
@@ -55,7 +55,7 @@ FISH_LOOT = {
 # Buff rate berdasarkan umpan
 BUFF_RATE = {
     "COMMON": 0.0,
-    "RARE": 0.50,
+    "RARE": 1.00,
     "LEGEND": 25.0,
     "MYTHIC": 35.0
 }
