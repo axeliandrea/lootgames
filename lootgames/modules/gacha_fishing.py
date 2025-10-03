@@ -47,7 +47,7 @@ FISH_LOOT = {
 # Buff rate berdasarkan umpan
 BUFF_RATE = {
     "COMMON": 0.0,
-    "RARE": 0.10,
+    "RARE": 0.50,
     "LEGEND": 25.0,
     "MYTHIC": 35.0
 }
