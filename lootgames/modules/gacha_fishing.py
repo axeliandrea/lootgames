@@ -103,8 +103,7 @@ def roll_loot(buff: float, umpan_type: str = "COMMON") -> str:
     ]
     legendary_items = [
         "🐉 Baby Dragon", "🐉 Baby Spirit Dragon", "🐉 Skull Dragon",
-        "🐉 Blue Dragon", "🐉 Black Dragon", "🐉 Yellow Dragon",
-        "🧜‍♀️ Mermaid Boy", "🧜‍♀️ Mermaid Girl"
+        "🐉 Blue Dragon", "🐉 Black Dragon", "🧜‍♀️ Mermaid Boy"
     ]
     mythic_items = ["🐉 Cupid Dragon"]
 
