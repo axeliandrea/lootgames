@@ -813,7 +813,7 @@ async def callback_handler(client: Client, cq: CallbackQuery):
             f"🎣 Kamu berhasil melempar umpan {jenis} ke kolam fishingtask#{task_id}!",
             reply_markup=InlineKeyboardMarkup([
                 [InlineKeyboardButton("🎣 Memancing Lagi", callback_data=f"FISH_CONFIRM_{jenis}")],
-                [InlineKeyboardButton("🤖 Auto Memancing 50x", callback_data=f"AUTO_FISH_{jenis}")],
+                [InlineKeyboardButton("🤖 Auto Memancing 10x", callback_data=f"AUTO_FISH_{jenis}")],
                 [InlineKeyboardButton("⬅️ Back", callback_data="E")]
             ])
         )
@@ -837,7 +837,7 @@ async def callback_handler(client: Client, cq: CallbackQuery):
         await cq.answer("🤖 Auto memancing 5x mulai!")
 
         async def auto_fishing():
-            for i in range(50):
+            for i in range(10):
                 now = asyncio.get_event_loop().time()
                 if now - user_last_fishing[user_id] < 10:
                     break  # stop kalau masih cooldown
@@ -857,7 +857,7 @@ async def callback_handler(client: Client, cq: CallbackQuery):
 
                 # Info auto-fishing
                 await cq.message.reply(
-                    f"🎣 Auto memancing {i+1}/50: Kamu berhasil melempar umpan {jenis} ke kolam fishingtask#{task_id}!"
+                    f"🎣 Auto memancing {i+1}/10: Kamu berhasil melempar umpan {jenis} ke kolam fishingtask#{task_id}!"
                 )
 
                 # Jalankan task memancing (umpan dikurangi saat hasil drop)
@@ -1237,6 +1237,7 @@ def register(app: Client):
     app.add_handler(MessageHandler(handle_transfer_message, filters.text & filters.private))
 
     logger.info("[MENU] Handler menu_utama terdaftar.")
+
 
 
 
