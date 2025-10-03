@@ -11,13 +11,12 @@ logger = logging.getLogger(__name__)
 # Persentase bisa desimal, misal 0.5%
 FISH_LOOT = {
     "🤧 Zonk": 20.1680,
-    "𓆝 Small Fish": 26.18,        # dikurangi 0.088 agar total 100%
-    "🐌 Snail": 11.60,
+    "𓆝 Small Fish": 26.179,   # sudah disesuaikan
     "🐚 Hermit Crab": 11.95,
-    "🐸 Frog": 12.50,
+    "🐸 Frog": 11.50,
     "🐙 Octopus": 2.70,
     "🐡 Pufferfish": 1.10,
-    "ଳ Jelly Fish": 0.90,
+    "ଳ Jelly Fish": 1.90,
     "📿 Lucky Jewel": 0.80,
     "🐟 Goldfish": 1.50,
     "🐟 Stingrays Fish": 1.50,
@@ -36,15 +35,16 @@ FISH_LOOT = {
     "🐋⚡ Kyogre": 0.25,
     "🐋 Orca": 0.25,
     "🐋 Dolphin": 0.25,
-    "Lost cip": 0.10,
-    "🐉 Baby Dragon": 0.30,
-    "🐉 Baby Spirit Dragon": 0.30,
-    "🐉 Skull Dragon": 0.10,
-    "🐉 Blue Dragon": 0.10,
-    "🐉 Black Dragon": 0.10,
-    "🧜‍♀️ Mermaid Boy": 0.10,
-    "🧜‍♀️ Mermaid Girl": 0.002,
-    "🐉 Cupid Dragon": 0.000001,
+    "Lost cip": 0.25,
+    "🐉 Baby Dragon": 0.05, 
+    "🐉 Baby Spirit Dragon": 0.05, 
+    "🐉 Skull Dragon": 0.05,
+    "🐉 Blue Dragon": 0.05,
+    "🐉 Black Dragon": 0.05,
+    "🐉 Yellow Dragon": 0.05,
+    "🧜‍♀️ Mermaid Boy": 0.05,
+    "🧜‍♀️ Mermaid Girl": 0.02,
+    "🐉 Cupid Dragon": 0.001,
 }
 
 # Buff rate berdasarkan umpan
