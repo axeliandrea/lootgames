@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 FISH_LOOT = {
     "🤧 Zonk": 20.1680,
     "𓆝 Small Fish": 28.52,
-    "🐌 Snail": 11.50,
+    "🐌 Snail": 11.60,
     "🐚 Hermit Crab": 11.95,
     "🐸 Frog": 12.50,
     "🐙 Octopus": 2.70,
@@ -38,7 +38,7 @@ FISH_LOOT = {
     "🐋 Dolphin": 0.25,
     "Lost cip": 0.10,
     "🐉 Baby Dragon": 0.50,
-    "🐉 Baby Spirit Dragon": 0.25
+    "🐉 Baby Spirit Dragon": 0.40,
     "🐉 Skull Dragon": 0.10,
     "🐉 Blue Dragon": 0.10,
     "🐉 Black Dragon": 0.10,
