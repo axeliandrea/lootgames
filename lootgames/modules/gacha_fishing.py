@@ -40,7 +40,7 @@ FISH_LOOT = {
     "🐋 Dolphin": 0.16,
     "Lost cip": 0.16,
 
-    # Mythic
+    # Legendary
     "🐉 Baby Dragon": 0.01,
     "🐉 Baby Spirit Dragon": 0.01,
     "🐉 Skull Dragon": 0.01,
@@ -49,6 +49,8 @@ FISH_LOOT = {
     "🐉 Yellow Dragon": 0.01,
     "🧜‍♀️ Mermaid Boy": 0.01,
     "🧜‍♀️ Mermaid Girl": 0.01,
+
+    # Mythic
     "🐉 Cupid Dragon": 0.001,
 }
 
@@ -85,7 +87,50 @@ async def fishing_loot(client: Client, target_chat: int, username: str, user_id:
 def roll_loot(buff: float, umpan_type: str = "COMMON") -> str:
     """
     Menentukan loot berdasarkan buff dan tipe umpan.
-    Rare tidak akan menghasilkan Zonk, Small Fish, atau Hermit Crab.
+    Rare hanya bisa mendapatkan Rare + Legendary.
     """
     items = []
-    chances =
+    chances = []
+
+    # List item kategori
+    common_items = ["🤧 Zonk", "𓆝 Small Fish", "🐚 Hermit Crab", "🐸 Frog", "🐙 Octopus"]
+    rare_items = [
+        "🐡 Pufferfish", "ଳ Jelly Fish", "📿 Lucky Jewel", "🐟 Goldfish",
+        "🐟 Stingrays Fish", "🐟 Seahorse", "🐟 Clownfish", "🐟 Doryfish",
+        "🐟 Bannerfish", "🐟 Anglerfish", "🦪 Giant Clam", "🐟 Shark",
+        "🐊 Crocodile", "🦦 Seal", "🐢 Turtle", "🦞 Lobster", "🐹⚡ Pikachu",
+        "🐋⚡ Kyogre", "🐋 Orca", "🐋 Dolphin", "Lost cip"
+    ]
+    legendary_items = [
+        "🐉 Baby Dragon", "🐉 Baby Spirit Dragon", "🐉 Skull Dragon",
+        "🐉 Blue Dragon", "🐉 Black Dragon", "🐉 Yellow Dragon",
+        "🧜‍♀️ Mermaid Boy", "🧜‍♀️ Mermaid Girl"
+    ]
+    mythic_items = ["🐉 Cupid Dragon"]
+
+    for item, base_chance in FISH_LOOT.items():
+        if umpan_type == "RARE":
+            # Rare hanya boleh rare + legendary
+            if item in common_items or item in mythic_items:
+                continue
+
+        items.append(item)
+        # Zonk tidak kena buff
+        if item == "🤧 Zonk":
+            chances.append(base_chance)
+        else:
+            chances.append(base_chance + buff)
+
+    loot_item = random.choices(items, weights=chances, k=1)[0]
+    return loot_item
+
+# ---------------- WORKER ---------------- #
+async def fishing_worker(app: Client):
+    """
+    Worker background untuk proses fishing periodic.
+    Saat ini hanya loop dummy tiap 60 detik.
+    """
+    logger.info("[FISHING WORKER] Worker siap berjalan...")
+    while True:
+        logger.debug("[FISHING WORKER] Tick... tidak ada aksi saat ini")
+        await asyncio.sleep(60)
