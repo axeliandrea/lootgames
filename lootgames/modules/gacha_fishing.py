@@ -9,7 +9,6 @@ from lootgames.modules import aquarium, umpan
 logger = logging.getLogger(__name__)
 
 # ---------------- LOOT TABLE ---------------- #
-# Persentase bisa desimal, misal 0.5%
 FISH_LOOT = {
     # Common
     "🤧 Zonk": 25.00,
@@ -57,8 +56,8 @@ FISH_LOOT = {
 BUFF_RATE = {
     "COMMON": 0.0,
     "RARE": 3.00,
-    "LEGEND": 25.0,
-    "MYTHIC": 35.0
+    "LEGEND": 25.00,
+    "MYTHIC": 35.00
 }
 
 # ---------------- FISHING FUNCTION ---------------- #
@@ -68,7 +67,7 @@ async def fishing_loot(client: Client, target_chat: int, username: str, user_id:
     Mengembalikan loot item agar bisa dikirim ke group
     """
     buff = BUFF_RATE.get(umpan_type, 0.0)
-    loot_item = roll_loot(buff)
+    loot_item = roll_loot(buff, umpan_type)
     
     logger.info(f"[FISHING] {username} ({user_id}) memancing dengan {umpan_type}, mendapatkan: {loot_item}")
     
@@ -83,25 +82,10 @@ async def fishing_loot(client: Client, target_chat: int, username: str, user_id:
     return loot_item
 
 # ---------------- HELPERS ---------------- #
-def roll_loot(buff: float) -> str:
-    items = list(FISH_LOOT.keys())
-    chances = []
-    for item, base_chance in FISH_LOOT.items():
-        if item == "🤧 Zonk":
-            chances.append(base_chance)  # Zonk tidak kena buff
-        else:
-            chances.append(base_chance + buff)
-
-    loot_item = random.choices(items, weights=chances, k=1)[0]
-    return loot_item
-
-# ---------------- WORKER ---------------- #
-async def fishing_worker(app: Client):
+def roll_loot(buff: float, umpan_type: str = "COMMON") -> str:
     """
-    Worker background untuk proses fishing periodic.
-    Saat ini hanya loop dummy tiap 60 detik.
+    Menentukan loot berdasarkan buff dan tipe umpan.
+    Rare tidak akan menghasilkan Zonk, Small Fish, atau Hermit Crab.
     """
-    logger.info("[FISHING WORKER] Worker siap berjalan...")
-    while True:
-        logger.debug("[FISHING WORKER] Tick... tidak ada aksi saat ini")
-        await asyncio.sleep(60)
+    items = []
+    chances =
