@@ -1,4 +1,4 @@
-# lootgames/modules/menu_utama.py #TESTING
+# lootgames/modules/menu_utama.py tester 1
 import logging
 import asyncio
 import re
@@ -17,7 +17,7 @@ from datetime import date
 
 logger = logging.getLogger(__name__)
 OWNER_ID = 6395738130
-TARGET_GROUP = -1002946278772  # ganti sesuai supergroup bot
+TARGET_GROUP = -1002904817520  # ganti sesuai supergroup bot
 
 # ---------------- STATE ---------------- #
 TRANSFER_STATE = {}       # user_id: {"jenis": "A/B/C/D"}
@@ -92,6 +92,8 @@ ITEM_PRICES = {
     "SELL_MERMAIDBOY":   {"name": "🧜‍♀️ Mermaid Boy",         "price": 200,  "inv_key": "MERMAIDBOY"},
     "SELL_MERMAIDGIRL":   {"name": "🧜‍♀️ Mermaid Girl",         "price": 200,  "inv_key": "MERMAIDGIRL"},
     "SELL_CUPIDDRAGON":   {"name": "🐉 Cupid Dragon",         "price": 300,  "inv_key": "CUPIDDRAGON"},
+    "SELL_DARKFISHWARRIOR":   {"name": "👹 Dark Fish Warrior",         "price": 2000,  "inv_key": "DARKFISHWARRIOR"},
+    
 }
 # sementara user -> item_code waiting for amount input (chat)
 SELL_WAITING = {}  # user_id: item_code
@@ -133,6 +135,8 @@ INV_KEY_ALIASES = {
     "blue dragon": "Blue Dragon",
     "🐉 Cupid Dragon": "Cupid Dragon",
     "cupid dragon": "Cupid Dragon",
+    "👹 Dark Fish Warrior": "Dark Fish Warrior",
+    "dark fish warrior": "Dark Fish Warrior",
     "🐸 Frog": "Frog",
     "Frog": "Frog",
     "🐟 Goldfish": "Goldfish",
@@ -185,7 +189,8 @@ MENU_STRUCTURE = {
             ("FISHING", "E"),
             ("HASIL TANGKAPAN", "F"),
             ("LOGIN CHECK IN", "G"),
-            ("TREASURE CHEST", "H")
+            ("TREASURE CHEST", "H"),
+            ("🧬 EVOLVE", "I")
         ]
     },
     
@@ -348,6 +353,7 @@ MENU_STRUCTURE = {
             ("🧜‍♀️ Mermaid Boy", "SELL_DETAIL:SELL_MERMAIDBOY"),
             ("🧜‍♀️ Mermaid Girl", "SELL_DETAIL:SELL_MERMAIDGIRL"),
             ("🐉 Cupid Dragon", "SELL_DETAIL:SELL_CUPIDDRAGON"),
+            ("👹 Dark Fish Warrior", "SELL_DETAIL:SELL_DARKFISHWARRIOR"),
             ("⬅️ Back", "D2"),
         ]
     },
@@ -434,7 +440,31 @@ MENU_STRUCTURE["H"] = {
         ("⬅️ Back", "main")
     ]
 }
+# di bawah definisi MENU_STRUCTURE["H"]
+MENU_STRUCTURE["I"] = {
+    "title": "🧬 [EVOLVE]",
+    "buttons": [
+        ("𓆝 Small Fish", "I_SMALLFISH"),
+        ("⬅️ Back", "main")
+    ]
+}
 
+# Submenu untuk Small Fish
+MENU_STRUCTURE["I"] = {
+    "title": "🧬 [EVOLVE]",
+    "buttons": [
+        ("𓆝 Small Fish", "I_SMALLFISH"),
+        ("⬅️ Back", "main")
+    ]
+}
+
+MENU_STRUCTURE["I_SMALLFISH"] = {
+    "title": "🧬 Evolve 𓆝 Small Fish",
+    "buttons": [
+        ("⚔️ Evolve jadi Dark Fish Warrior (-1000)", "EVOLVE_SMALLFISH_CONFIRM"),
+        ("⬅️ Back", "I")
+    ]
+}
 # hapus None
 MENU_STRUCTURE["G"]["buttons"] = [b for b in MENU_STRUCTURE["G"]["buttons"] if b is not None]
 
@@ -555,6 +585,53 @@ async def callback_handler(client: Client, cq: CallbackQuery):
     data, user_id = cq.data, cq.from_user.id
     logger.info(f"[DEBUG] callback -> user:{user_id}, data:{data}")
     await cq.answer()
+    
+    # ===== EVOLVE SMALL FISH =====
+    # ===== EVOLVE SMALL FISH CONFIRM =====
+    if data == "EVOLVE_SMALLFISH_CONFIRM":
+        inv = aquarium.get_user_fish(user_id)
+        small_fish_qty = inv.get("𓆝 Small Fish", 0)
+
+        if small_fish_qty < 1000:
+            await cq.answer("❌ Small Fish kamu kurang (butuh 1000)", show_alert=True)
+            return
+
+        # ✅ Kurangi stok Small Fish
+        inv["𓆝 Small Fish"] = small_fish_qty - 1000
+        if inv["𓆝 Small Fish"] <= 0:
+            inv.pop("𓆝 Small Fish")
+
+        # ✅ Tambahkan Dark Fish Warrior
+        inv["Dark Fish Warrior"] = inv.get("Dark Fish Warrior", 0) + 1
+
+        # ✅ Simpan kembali
+        db = aquarium.load_data()
+        db[str(user_id)] = inv
+        aquarium.save_data(db)
+
+        uname = cq.from_user.username or f"user{user_id}"
+
+        # ✅ Balasan private ke user
+        inv_text = aquarium.list_inventory(user_id)
+        await cq.message.edit_text(
+            f"✅ Evolve berhasil!\n"
+            f"𓆝 Small Fish -1000\n"
+            f"⚔️ Dark Fish Warrior +1\n\n"
+            f"📦 Inventory terbaru:\n{inv_text}",
+            reply_markup=make_keyboard("I", user_id)
+        )
+
+        # ✅ Info ke group
+        try:
+            await client.send_message(
+                TARGET_GROUP,
+                f"⚔️ @{uname} berhasil evolve!\n"
+                f"𓆝 Small Fish → 👹 Dark Fish Warrior 🎉"
+            )
+        except Exception as e:
+            logger.error(f"Gagal kirim info evolve ke group: {e}")
+
+        return
 
     # di dalam async def callback_handler(client: Client, cq: CallbackQuery):
     if data == "treasure_chest":
@@ -813,7 +890,7 @@ async def callback_handler(client: Client, cq: CallbackQuery):
             f"🎣 Kamu berhasil melempar umpan {jenis} ke kolam fishingtask#{task_id}!",
             reply_markup=InlineKeyboardMarkup([
                 [InlineKeyboardButton("🎣 Memancing Lagi", callback_data=f"FISH_CONFIRM_{jenis}")],
-                [InlineKeyboardButton("🤖 Auto Memancing 10x", callback_data=f"AUTO_FISH_{jenis}")],
+                [InlineKeyboardButton("🤖 Auto Memancing 50x", callback_data=f"AUTO_FISH_{jenis}")],
                 [InlineKeyboardButton("⬅️ Back", callback_data="E")]
             ])
         )
@@ -837,7 +914,7 @@ async def callback_handler(client: Client, cq: CallbackQuery):
         await cq.answer("🤖 Auto memancing 5x mulai!")
 
         async def auto_fishing():
-            for i in range(10):
+            for i in range(50):
                 now = asyncio.get_event_loop().time()
                 if now - user_last_fishing[user_id] < 10:
                     break  # stop kalau masih cooldown
@@ -857,7 +934,7 @@ async def callback_handler(client: Client, cq: CallbackQuery):
 
                 # Info auto-fishing
                 await cq.message.reply(
-                    f"🎣 Auto memancing {i+1}/10: Kamu berhasil melempar umpan {jenis} ke kolam fishingtask#{task_id}!"
+                    f"🎣 Auto memancing {i+1}/5: Kamu berhasil melempar umpan {jenis} ke kolam fishingtask#{task_id}!"
                 )
 
                 # Jalankan task memancing (umpan dikurangi saat hasil drop)
@@ -1237,13 +1314,3 @@ def register(app: Client):
     app.add_handler(MessageHandler(handle_transfer_message, filters.text & filters.private))
 
     logger.info("[MENU] Handler menu_utama terdaftar.")
-
-
-
-
-
-
-
-
-
-
