@@ -65,6 +65,8 @@ ITEM_PRICES = {
     "SELL_OCTOPUS":  {"name": "🐙 Octopus",            "price": 3, "inv_key": "Octopus"},
     "SELL_JELLYFISH":   {"name": "ଳ Jelly Fish",         "price": 4,  "inv_key": "JELLYFISH"},
     "SELL_GIANTCLAM":  {"name": "🦪 Giant Clam",            "price": 4, "inv_key": "GIANTCLAM"},
+    "SELL_GOLDFISH":  {"name": "🐟 Goldfish",            "price": 4, "inv_key": "GOLDFISH"},
+    "SELL_STNGRAYSFISH":  {"name": "🐟 Stingrays Fish",            "price": 4, "inv_key": "STNGRAYSFISH"},
     "SELL_CLOWNFISH":  {"name": "🐟 Clownfish",            "price": 4, "inv_key": "CLOWNFISH"},
     "SELL_DORYFISH":  {"name": "🐟 Doryfish",            "price": 4, "inv_key": "DORYFISH"},
     "SELL_BANNERFISH":  {"name": "🐟 Bannerfish",            "price": 4, "inv_key": "BANNERFISH"},
@@ -82,6 +84,7 @@ ITEM_PRICES = {
     "SELL_PIKACHU":  {"name": "🐹⚡ Pikachu",            "price": 30, "inv_key": "PIKACHU"},
     "SELL_KYOGRE":  {"name": "🐋⚡ Kyogre",            "price": 30, "inv_key": "KYOGRE"},
     "SELL_BABYDRAGON":   {"name": "🐉 Baby Dragon",         "price": 100,  "inv_key": "BABYDRAGON"},
+    "SELL_BABYSPIRITDRAGON":   {"name": "🐉 Baby spirit Dragon",         "price": 100,  "inv_key": "BABYSPIRITDRAGON"},
     "SELL_SKULLDRAGON":   {"name": "🐉 Skull Dragon",         "price": 200,  "inv_key": "SKULLDRAGON"},
     "SELL_BLUEDRAGON":   {"name": "🐉 Blue Dragon",         "price": 200,  "inv_key": "BLUEDRAGON"},
     "SELL_BLACKDRAGON":   {"name": "🐉 Black Dragon",         "price": 200,  "inv_key": "BLACKDRAGON"},
@@ -115,6 +118,8 @@ INV_KEY_ALIASES = {
     "dolphin": "Dolphin",
     "🐉 Baby Dragon": "Baby Dragon",
     "baby dragon": "Baby Dragon",
+    "🐉 Baby Spirit Dragon":, "🐉 Baby Spirit Dragon"
+    "baby spirit dragon": "Baby Spirit Dragon",
     "📿 Lucky Jewel": "Lucky Jewel",
     "lucky jewel": "Lucky Jewel",
     "🐉 Skull Dragon": "Skull Dragon",
@@ -127,6 +132,10 @@ INV_KEY_ALIASES = {
     "cupid dragon": "Cupid Dragon",
     "🐸 Frog": "Frog",
     "Frog": "Frog",
+    "🐟 Goldfish": "Goldfish",
+    "goldfish": "Goldfish",
+    "🐟 Stingrays Fish": "🐟 Stingrays Fish",
+    "stingrays fish": "Stingrays Fish",
     "🐟 Clownfish": "Clownfish",
     "clownfish": "Clownfish",
     "🐟 Doryfish":"Doryfish",
@@ -309,7 +318,9 @@ MENU_STRUCTURE = {
             ("🐙 Octopus", "SELL_DETAIL:SELL_OCTOPUS"),
             ("ଳ Jelly Fish", "SELL_DETAIL:SELL_JELLYFISH"),
             ("🦪 Giant Clam", "SELL_DETAIL:SELL_GIANTCLAM"),
+            ("🐟 Goldfish", "SELL_DETAIL:SELL_GOLDFISH"),
             ("🐟 Clownfish", "SELL_DETAIL:SELL_CLOWNFISH"),
+            ("🐟 Stingrays Fish", "SELL_DETAIL:SELL_STINGRAYSFISH"),
             ("🐟 Doryfish", "SELL_DETAIL:SELL_DORYFISH"),
             ("🐟 Bannerfish", "SELL_DETAIL:SELL_BANNERFISH"),
             ("🐟 Anglerfish", "SELL_DETAIL:SELL_ANGLERFISH"),
@@ -326,6 +337,7 @@ MENU_STRUCTURE = {
             ("🐋 Orca", "SELL_DETAIL:SELL_ORCA"),
             ("🐬 Dolphin", "SELL_DETAIL:SELL_DOLPHIN"),
             ("🐉 Baby Dragon", "SELL_DETAIL:SELL_BABYDRAGON"),
+            ("🐉 Baby Spirit Dragon", "SELL_DETAIL:SELL_BABYSPIRITDRAGON"),
             ("🐉 Skull Dragon", "SELL_DETAIL:SELL_SKULLDRAGON"),
             ("🐉 Blue Dragon", "SELL_DETAIL:SELL_BLUEDRAGON"),
             ("🐉 Black Dragon", "SELL_DETAIL:SELL_BLACKDRAGON"),
@@ -1221,5 +1233,6 @@ def register(app: Client):
     app.add_handler(MessageHandler(handle_transfer_message, filters.text & filters.private))
 
     logger.info("[MENU] Handler menu_utama terdaftar.")
+
 
 
