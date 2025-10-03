@@ -837,7 +837,7 @@ async def callback_handler(client: Client, cq: CallbackQuery):
         await cq.answer("🤖 Auto memancing 5x mulai!")
 
         async def auto_fishing():
-            for i in range(5):
+            for i in range(50):
                 now = asyncio.get_event_loop().time()
                 if now - user_last_fishing[user_id] < 10:
                     break  # stop kalau masih cooldown
@@ -1237,6 +1237,7 @@ def register(app: Client):
     app.add_handler(MessageHandler(handle_transfer_message, filters.text & filters.private))
 
     logger.info("[MENU] Handler menu_utama terdaftar.")
+
 
 
 
