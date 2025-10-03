@@ -87,6 +87,7 @@ ITEM_PRICES = {
     "SELL_BABYSPIRITDRAGON":   {"name": "🐉 Baby spirit Dragon",         "price": 100,  "inv_key": "BABYSPIRITDRAGON"},
     "SELL_SKULLDRAGON":   {"name": "🐉 Skull Dragon",         "price": 200,  "inv_key": "SKULLDRAGON"},
     "SELL_BLUEDRAGON":   {"name": "🐉 Blue Dragon",         "price": 200,  "inv_key": "BLUEDRAGON"},
+    "SELL_YELLOWDRAGON":   {"name": "🐉 Yellow Dragon",         "price": 200,  "inv_key": "YELLOWDRAGON"},
     "SELL_BLACKDRAGON":   {"name": "🐉 Black Dragon",         "price": 200,  "inv_key": "BLACKDRAGON"},
     "SELL_MERMAIDBOY":   {"name": "🧜‍♀️ Mermaid Boy",         "price": 200,  "inv_key": "MERMAIDBOY"},
     "SELL_MERMAIDGIRL":   {"name": "🧜‍♀️ Mermaid Girl",         "price": 200,  "inv_key": "MERMAIDGIRL"},
@@ -125,8 +126,10 @@ INV_KEY_ALIASES = {
     "🐉 Skull Dragon": "Skull Dragon",
     "skull dragon": "Skull Dragon",
     "🐉 Blue Dragon": "Blue Dragon",
-    "🐉 Black Dragon": "Black Dragon",
     "black dragon": "Black Dragon",
+    "🐉 Yellow Dragon": "Yellow Dragon",
+    "yellow dragon": "Yellow Dragon",
+    "🐉 Black Dragon": "Black Dragon",
     "blue dragon": "Blue Dragon",
     "🐉 Cupid Dragon": "Cupid Dragon",
     "cupid dragon": "Cupid Dragon",
@@ -340,6 +343,7 @@ MENU_STRUCTURE = {
             ("🐉 Baby Spirit Dragon", "SELL_DETAIL:SELL_BABYSPIRITDRAGON"),
             ("🐉 Skull Dragon", "SELL_DETAIL:SELL_SKULLDRAGON"),
             ("🐉 Blue Dragon", "SELL_DETAIL:SELL_BLUEDRAGON"),
+            ("🐉 Yellow Dragon", "SELL_DETAIL:SELL_YELLOWDRAGON"),
             ("🐉 Black Dragon", "SELL_DETAIL:SELL_BLACKDRAGON"),
             ("🧜‍♀️ Mermaid Boy", "SELL_DETAIL:SELL_MERMAIDBOY"),
             ("🧜‍♀️ Mermaid Girl", "SELL_DETAIL:SELL_MERMAIDGIRL"),
@@ -1233,6 +1237,7 @@ def register(app: Client):
     app.add_handler(MessageHandler(handle_transfer_message, filters.text & filters.private))
 
     logger.info("[MENU] Handler menu_utama terdaftar.")
+
 
 
 
