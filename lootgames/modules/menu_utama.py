@@ -735,7 +735,7 @@ async def callback_handler(client: Client, cq: CallbackQuery):
         try:
             await asyncio.sleep(2)
             # Pesan di grup sekarang termasuk task_id
-            await client.send_message(TARGET_GROUP, f"🎣 @{uname} sedang memancing... fishingtask#{task_id}")
+            await client.send_message(TARGET_GROUP, f"```\n🎣 @{uname} sedang memancing... fishingtask#{task_id}```\n")
 
             # Jalankan loot system
             loot_result = await fishing_loot(client, None, uname, user_id, umpan_type=jenis)
@@ -753,8 +753,8 @@ async def callback_handler(client: Client, cq: CallbackQuery):
                 umpan.remove_umpan(user_id, jk, 1)
 
             await asyncio.sleep(10)
-            msg_group = f"🎣 @{uname} mendapatkan {loot_result}! dari fishingtask#{task_id}"
-            msg_private = f"🎣 Kamu mendapatkan {loot_result}! dari fishingtask#{task_id}"
+            msg_group = f"```\n🎣 @{uname} mendapatkan {loot_result}! dari fishingtask#{task_id}```\n"
+            msg_private = f"```\n🎣 Kamu mendapatkan {loot_result}! dari fishingtask#{task_id}```\n"
             await client.send_message(TARGET_GROUP, msg_group)
             await client.send_message(user_id, msg_private)
 
@@ -1221,4 +1221,5 @@ def register(app: Client):
     app.add_handler(MessageHandler(handle_transfer_message, filters.text & filters.private))
 
     logger.info("[MENU] Handler menu_utama terdaftar.")
+
 
