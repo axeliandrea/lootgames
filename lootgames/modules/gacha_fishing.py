@@ -11,11 +11,11 @@ logger = logging.getLogger(__name__)
 # Persentase bisa desimal, misal 0.5%
 FISH_LOOT = {
     # Common
-    "🤧 Zonk": 20.17,
-    "𓆝 Small Fish": 25.18,
-    "🐚 Hermit Crab": 11.95,
-    "🐸 Frog": 11.50,
-    "🐙 Octopus": 3.70,
+    "🤧 Zonk": 20.18,
+    "𓆝 Small Fish": 26.19,
+    "🐚 Hermit Crab": 11.96,
+    "🐸 Frog": 11.51,
+    "🐙 Octopus": 2.71,
     
     # Rare
     "🐡 Pufferfish": 0.63,
@@ -41,15 +41,15 @@ FISH_LOOT = {
     "Lost cip": 0.13,
     
     # Mythic
-    "🐉 Baby Dragon": 0.01, 
-    "🐉 Baby Spirit Dragon": 0.01, 
+    "🐉 Baby Dragon": 0.01,
+    "🐉 Baby Spirit Dragon": 0.01,
     "🐉 Skull Dragon": 0.01,
     "🐉 Blue Dragon": 0.01,
     "🐉 Black Dragon": 0.01,
     "🐉 Yellow Dragon": 0.01,
     "🧜‍♀️ Mermaid Boy": 0.01,
     "🧜‍♀️ Mermaid Girl": 0.01,
-    "🐉 Cupid Dragon": 0.01,  # disamakan dengan mythic lain
+    "🐉 Cupid Dragon": 0.001,
 }
 
 # Buff rate berdasarkan umpan
