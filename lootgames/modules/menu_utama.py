@@ -440,15 +440,6 @@ MENU_STRUCTURE["H"] = {
         ("⬅️ Back", "main")
     ]
 }
-# di bawah definisi MENU_STRUCTURE["H"]
-MENU_STRUCTURE["I"] = {
-    "title": "🧬 [EVOLVE]",
-    "buttons": [
-        ("𓆝 Small Fish", "I_SMALLFISH"),
-        ("⬅️ Back", "main")
-    ]
-}
-
 # Submenu untuk Small Fish
 MENU_STRUCTURE["I"] = {
     "title": "🧬 [EVOLVE]",
@@ -462,6 +453,7 @@ MENU_STRUCTURE["I_SMALLFISH"] = {
     "title": "🧬 Evolve 𓆝 Small Fish",
     "buttons": [
         ("⚔️ Evolve jadi Dark Fish Warrior (-1000)", "EVOLVE_SMALLFISH_CONFIRM"),
+        ("COMING SOON", "COMING_SOON"),  # tombol baru
         ("⬅️ Back", "I")
     ]
 }
@@ -1314,5 +1306,4 @@ def register(app: Client):
     app.add_handler(MessageHandler(handle_transfer_message, filters.text & filters.private))
 
     logger.info("[MENU] Handler menu_utama terdaftar.")
-
 
