@@ -17,7 +17,7 @@ from datetime import date
 
 logger = logging.getLogger(__name__)
 OWNER_ID = 6395738130
-TARGET_GROUP = -1002946278772  # ganti sesuai supergroup bot
+TARGET_GROUP = -1002904817520  # ganti sesuai supergroup bot
 
 # ---------------- STATE ---------------- #
 TRANSFER_STATE = {}       # user_id: {"jenis": "A/B/C/D"}
@@ -592,17 +592,37 @@ def make_keyboard(menu_key: str, user_id=None, page: int = 0) -> InlineKeyboardM
     return InlineKeyboardMarkup(buttons)
 
 # di bagian global module (atas file)
-CLAIMED_CHEST_USERS = set()
-USER_CLAIM_LOCKS = {}               # map user_id -> asyncio.Lock()
-USER_CLAIM_LOCKS_LOCK = asyncio.Lock()  # lock untuk pembuatan lock per-user
+# 🔹 DROP TABLE
+def get_treasure_drop():
+    """
+    Menentukan drop item dan tipe umpan.
+    Return: (item_name, jenis_umpan, jumlah)
+    """
+    drop_table = [
+        ("ZONK", None, 0, 40),                  # 40% zonk
+        ("Umpan Common", "A", 2, 39),           # 39% common
+        ("Umpan Rare", "B", 1, 10),             # 10% rare
+        ("Umpan Legend", "C", 0, 0.00000000001),# 1e-11% legend
+        ("Umpan Mythic", "D", 0, 0.00000000001),# 1e-11% mythic
+    ]
+
+    total = sum(i[3] for i in drop_table)
+    roll = random.uniform(0, total)
+    current = 0
+
+    for item, jenis, jumlah, chance in drop_table:
+        current += chance
+        if roll <= current:
+            return item, jenis, jumlah
+    return "ZONK", None, 0
 
 # ---------------- CALLBACK HANDLER ---------------- #
 async def callback_handler(client: Client, cq: CallbackQuery):
-    data, user_id = cq.data, cq.from_user.id
-    logger.info(f"[DEBUG] callback -> user:{user_id}, data:{data}")
-    await cq.answer()
+    data = cq.data
+    user_id = cq.from_user.id
+    # <-- Pastikan uname didefinisikan di sini
+    uname = cq.from_user.username or f"user{user_id}"
     
-    # ===== EVOLVE SMALL FISH =====
     # ===== EVOLVE SMALL FISH CONFIRM =====
     if data == "EVOLVE_SMALLFISH_CONFIRM":
         inv = aquarium.get_user_fish(user_id)
@@ -650,54 +670,52 @@ async def callback_handler(client: Client, cq: CallbackQuery):
         return
 
     # di dalam async def callback_handler(client: Client, cq: CallbackQuery):
+    # ================== PLAYER CLAIM CHEST ==================
     if data == "treasure_chest":
-        user_id = cq.from_user.id
-        uname = cq.from_user.username or f"user{user_id}"
-
-        # pastikan ada lock untuk user ini (pembuatan lock dibungkus agar tidak race)
+        # pastikan ada lock per user
         async with USER_CLAIM_LOCKS_LOCK:
             lock = USER_CLAIM_LOCKS.get(user_id)
             if lock is None:
                 lock = asyncio.Lock()
                 USER_CLAIM_LOCKS[user_id] = lock
 
-        # jalankan proses klaim di dalam lock per-user -> serialisasi
         async with lock:
             if user_id in CLAIMED_CHEST_USERS:
                 await cq.answer("❌ Kamu sudah mengklaim Treasure Chest ini sebelumnya!", show_alert=True)
                 return
 
-            # delay 3 detik (tampilan dramatis atau animasi)
-            await asyncio.sleep(3)
+            await asyncio.sleep(3)  # efek dramatis
 
-            # random drop (hanya satu hasil)
-            item = get_random_item()
+            # 🎲 Tentukan drop
+            item, jenis, jumlah = get_treasure_drop()
+
             if item == "ZONK":
                 msg = f"😢 @{uname} mendapatkan ZONK!"
             else:
-                msg = f"🎉 @{uname} mendapatkan 3 pcs 🐛{item}!"
-                # jika umpan, tambahkan ke user
-                if item.startswith("Umpan"):
-                    jenis = "A"  # common
-                    umpan.add_umpan(user_id, jenis, 3)
+                msg = f"🎉 @{uname} mendapatkan {jumlah} pcs 🐛{item}!"
+                try:
+                    umpan.add_umpan(user_id, jenis, jumlah)
+                except Exception as e:
+                    logger.error(f"Gagal tambah umpan ke user {user_id}: {e}")
 
-            # tandai user sudah claim (setelah sukses)
+            # tandai user sudah claim
             CLAIMED_CHEST_USERS.add(user_id)
 
             await cq.message.reply(msg)
             return
-    
-# ================== TREASURE CHEST OWNER ==================
+
+    # ================== TREASURE CHEST OWNER ==================
     if data == "TREASURE_SEND_NOW":
         global LAST_TREASURE_MSG_ID
+
         if user_id != OWNER_ID:
             await cq.answer("❌ Hanya owner yang bisa akses menu ini.", show_alert=True)
             return
 
-        # 🔹 RESET CLAIM USER
+        # 🔹 Reset claim
         CLAIMED_CHEST_USERS.clear()
 
-        # 🔹 Hapus Treasure Chest lama jika ada
+        # 🔹 Hapus pesan chest lama
         if LAST_TREASURE_MSG_ID is not None:
             try:
                 await cq._client.delete_messages(TARGET_GROUP, LAST_TREASURE_MSG_ID)
@@ -708,9 +726,10 @@ async def callback_handler(client: Client, cq: CallbackQuery):
         try:
             msg = await cq._client.send_message(
                 TARGET_GROUP,
-                "📦 Treasure Chest dikirim oleh OWNER!",
+                "📦 **Treasure Chest telah dikirim oleh OWNER!**\n"
+                "Cepat klaim sebelum terlambat! 🎁",
                 reply_markup=InlineKeyboardMarkup(
-                    [[InlineKeyboardButton("TREASURE CHEST", callback_data="treasure_chest")]]
+                    [[InlineKeyboardButton("🔑 Buka Treasure Chest", callback_data="treasure_chest")]]
                 )
             )
             LAST_TREASURE_MSG_ID = msg.id
@@ -719,7 +738,9 @@ async def callback_handler(client: Client, cq: CallbackQuery):
 
         await cq.message.edit_text(
             "✅ Treasure Chest berhasil dikirim ke group!",
-            reply_markup=make_keyboard("H", user_id)
+            reply_markup=InlineKeyboardMarkup(
+                [[InlineKeyboardButton("⬅️ Kembali", callback_data="H")]]
+            )
         )
         return
 
@@ -1330,6 +1351,4 @@ def register(app: Client):
     app.add_handler(MessageHandler(handle_transfer_message, filters.text & filters.private))
 
     logger.info("[MENU] Handler menu_utama terdaftar.")
-
-
 
