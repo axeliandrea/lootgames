@@ -101,7 +101,8 @@ ITEM_PRICES = {
     "SELL_MERMAIDBOY":   {"name": "🧜‍♀️ Mermaid Boy",         "price": 200,  "inv_key": "MERMAIDBOY"},
     "SELL_MERMAIDGIRL":   {"name": "🧜‍♀️ Mermaid Girl",         "price": 200,  "inv_key": "MERMAIDGIRL"},
     "SELL_CUPIDDRAGON":   {"name": "🐉 Cupid Dragon",         "price": 300,  "inv_key": "CUPIDDRAGON"},
-    "SELL_DARKFISHWARRIOR":   {"name": "👹 Dark Fish Warrior",         "price": 2000,  "inv_key": "DARKFISHWARRIOR"},
+    "SELL_DARKFISHWARRIOR":   {"name": "👹 Dark Fish Warrior",         "price": 1000,  "inv_key": "DARKFISHWARRIOR"},
+     "SELL_QUEENOFHERMIT":   {"name": "👑 Queen Of Hermit",         "price": 2000,  "inv_key": "QUEENOFHERMIT"},
     
 }
 # sementara user -> item_code waiting for amount input (chat)
@@ -148,6 +149,8 @@ INV_KEY_ALIASES = {
     "cupid dragon": "Cupid Dragon",
     "👹 Dark Fish Warrior": "Dark Fish Warrior",
     "dark fish warrior": "Dark Fish Warrior",
+    "👑 Queen Of Hermit": "Queen Of Hermit",
+    "queen of hermit": "Queen Of Hermit",
     "🐸 Frog": "Frog",
     "Frog": "Frog",
     "🐟 Goldfish": "Goldfish",
@@ -386,6 +389,7 @@ MENU_STRUCTURE = {
             ("🧜‍♀️ Mermaid Girl", "SELL_DETAIL:SELL_MERMAIDGIRL"),
             ("🐉 Cupid Dragon", "SELL_DETAIL:SELL_CUPIDDRAGON"),
             ("👹 Dark Fish Warrior", "SELL_DETAIL:SELL_DARKFISHWARRIOR"),
+            ("👑 Queen Of Hermit", "SELL_DETAIL:SELL_QUEENOFHERMIT"),
             ("⬅️ Back", "D2"),
         ]
     },
@@ -472,20 +476,29 @@ MENU_STRUCTURE["H"] = {
         ("⬅️ Back", "main")
     ]
 }
-# Submenu untuk Small Fish
+# Submenu untuk Evolve
 MENU_STRUCTURE["I"] = {
     "title": "🧬 [EVOLVE]",
     "buttons": [
         ("𓆝 Small Fish", "I_SMALLFISH"),
+        ("🐚 Hermit Crab", "I_HERMITCRAB"),  # tombol baru untuk Hermit Crab
         ("⬅️ Back", "main")
     ]
 }
-
+# Submenu Small Fish
 MENU_STRUCTURE["I_SMALLFISH"] = {
     "title": "🧬 Evolve 𓆝 Small Fish",
     "buttons": [
-        ("⚔️ Evolve jadi Dark Fish Warrior (-1000)", "EVOLVE_SMALLFISH_CONFIRM"),
+        ("🧬 Evolve jadi Dark Fish Warrior (-1000)", "EVOLVE_SMALLFISH_CONFIRM"),
         ("COMING SOON", "COMING_SOON"),  # tombol baru
+        ("⬅️ Back", "I")
+    ]
+}
+# Submenu Hermit Crab
+MENU_STRUCTURE["I_HERMITCRAB"] = {
+    "title": "🧬 Evolve 🐚 Hermit Crab",
+    "buttons": [
+        ("🧬 Evolve jadi 👑 Queen of Hermit (-1000)", "EVOLVE_HERMITCRAB_CONFIRM"),
         ("⬅️ Back", "I")
     ]
 }
@@ -660,7 +673,7 @@ async def callback_handler(client: Client, cq: CallbackQuery):
         await cq.message.edit_text(
             f"✅ Evolve berhasil!\n"
             f"𓆝 Small Fish -1000\n"
-            f"⚔️ Dark Fish Warrior +1\n\n"
+            f"🧬 Dark Fish Warrior +1\n\n"
             f"📦 Inventory terbaru:\n{inv_text}",
             reply_markup=make_keyboard("I", user_id)
         )
@@ -669,8 +682,52 @@ async def callback_handler(client: Client, cq: CallbackQuery):
         try:
             await client.send_message(
                 TARGET_GROUP,
-                f"⚔️ @{uname} berhasil evolve!\n"
-                f" Small Fish → 👹 Dark Fish Warrior 🎉"
+                f"🧬 @{uname} berhasil evolve!\n"
+                f"🧬 Small Fish → 👹 Dark Fish Warrior  🎉"
+            )
+        except Exception as e:
+            logger.error(f"Gagal kirim info evolve ke group: {e}")
+
+        return
+
+    # ===== EVOLVE HERMIT CRAB CONFIRM =====
+    if data == "EVOLVE_HERMITCRAB_CONFIRM":
+        inv = aquarium.get_user_fish(user_id)
+        hermit_crab_qty = inv.get("🐚 Hermit Crab", 0)
+
+        if hermit_crab_qty < 1000:
+            await cq.answer("❌ Hermit Crab kamu kurang (butuh 1000)", show_alert=True)
+            return
+
+        # ✅ Kurangi stok Hermit Crab
+        inv["🐚 Hermit Crab"] = hermit_crab_qty - 1000
+        if inv["🐚 Hermit Crab"] <= 0:
+            inv.pop("🐚 Hermit Crab")
+
+        # ✅ Tambahkan 👑 Queen of Hermit
+        inv["Queen of H Crab"] = inv.get("Queen of H Crab", 0) + 1
+
+        # ✅ Simpan kembali
+        db = aquarium.load_data()
+        db[str(user_id)] = inv
+        aquarium.save_data(db)
+
+        # ✅ Balasan private ke user
+        inv_text = aquarium.list_inventory(user_id)
+        await cq.message.edit_text(
+            f"✅ Evolve berhasil!\n"
+            f"🐚 Hermit Crab -1000\n"
+            f"🧬 👑 Queen of Hermit +1\n\n"
+            f"📦 Inventory terbaru:\n{inv_text}",
+            reply_markup=make_keyboard("I", user_id)
+        )
+
+        # ✅ Info ke group
+        try:
+            await client.send_message(
+                TARGET_GROUP,
+                f"🧬 @{uname} berhasil evolve!\n"
+                f"🧬 Hermit Crab → 👑 Queen of Hermit  🎉"
             )
         except Exception as e:
             logger.error(f"Gagal kirim info evolve ke group: {e}")
@@ -1359,6 +1416,7 @@ def register(app: Client):
     app.add_handler(MessageHandler(handle_transfer_message, filters.text & filters.private))
 
     logger.info("[MENU] Handler menu_utama terdaftar.")
+
 
 
 
