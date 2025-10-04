@@ -11,14 +11,14 @@ logger = logging.getLogger(__name__)
 # ---------------- LOOT TABLE ---------------- #
 FISH_LOOT = {
     "🤧 Zonk": 25.00,
-    "𓆝 Small Fish": 34.17,
+    "𓆝 Small Fish": 30.37,
     "🐚 Hermit Crab": 14.81,
     "🐸 Frog": 14.26,
-    "🐙 Octopus": 3.36,
+    "🐙 Octopus": 6.36,
 
     # Rare
-    "🐡 Pufferfish": 0.50,
-    "ଳ Jelly Fish": 0.50,
+    "🐡 Pufferfish": 1.50,
+    "ଳ Jelly Fish": 1.50,
     "📿 Lucky Jewel": 0.50,
     "🐟 Goldfish": 0.50,
     "🐟 Stingrays Fish": 0.50,
