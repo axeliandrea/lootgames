@@ -88,6 +88,8 @@ ITEM_PRICES = {
     "SELL_DOLPHIN":   {"name": "🐬 Dolphin",         "price": 15,  "inv_key": "DOLPHIN"},
     "SELL_PIKACHU":  {"name": "🐹⚡ Pikachu",            "price": 30, "inv_key": "PIKACHU"},
     "SELL_BULBASAUR":  {"name": "🐸🍀 Bulbasaur",            "price": 30, "inv_key": "BULBASAUR"},
+    "SELL_SQUIRTLE":  {"name": "🐢💧 Squirtle",            "price": 30, "inv_key": "SQUIRTLE"},
+    "SELL_CHARMANDER":  {"name": "🐉🔥 Charmander",            "price": 30, "inv_key": "CHARMANDER"},
     "SELL_KYOGRE":  {"name": "🐋⚡ Kyogre",            "price": 30, "inv_key": "KYOGRE"},
     "SELL_BABYDRAGON":   {"name": "🐉 Baby Dragon",         "price": 100,  "inv_key": "BABYDRAGON"},
     "SELL_BABYSPIRITDRAGON":   {"name": "🐉 Baby spirit Dragon",         "price": 100,  "inv_key": "BABYSPIRITDRAGON"},
@@ -178,6 +180,10 @@ INV_KEY_ALIASES = {
     "Pikachu": "Pikachu",
     "🐸🍀 Bulbasaur": "Bulbasaur",
     "bulbasaur": "Bulbasaur",
+    "🐢💧 Squirtle": "🐢💧 Squirtle",
+    "squirtle": "Squirtle",
+    "🐉🔥 Charmander": "Charmander",
+    "charmander": "Charmander",
     "🐋⚡ Kyogre": "Kyogre",
     "kyogre": "Kyogre",
     "🐊 Crocodile": "Crocodile",
@@ -360,6 +366,8 @@ MENU_STRUCTURE = {
             ("🐟 Seahorse", "SELL_DETAIL:SELL_SEAHORSE"),
             ("🐹⚡ Pikachu", "SELL_DETAIL:SELL_PIKACHU"),
             ("🐸🍀 Bulbasaur", "SELL_DETAIL:SELL_BULBASAUR"),
+            ("🐢💧 Squirtle", "SELL_DETAIL:SELL_SQUIRTLE"),
+            ("🐉🔥 Charmander":, "SELL_DETAIL:SELL_CHARMANDER"),
             ("🐋⚡ Kyogre", "SELL_DETAIL:SELL_KYOGRE"),
             ("🐊 Crocodile", "SELL_DETAIL:SELL_CROCODILE"),
             ("🦦 Seal", "SELL_DETAIL:SELL_SEAL"),
@@ -1351,5 +1359,6 @@ def register(app: Client):
     app.add_handler(MessageHandler(handle_transfer_message, filters.text & filters.private))
 
     logger.info("[MENU] Handler menu_utama terdaftar.")
+
 
 
