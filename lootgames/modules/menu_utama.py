@@ -626,7 +626,7 @@ async def callback_handler(client: Client, cq: CallbackQuery):
             await client.send_message(
                 TARGET_GROUP,
                 f"⚔️ @{uname} berhasil evolve!\n"
-                f"𓆝 Small Fish → 👹 Dark Fish Warrior 🎉"
+                f" Small Fish → 👹 Dark Fish Warrior 🎉"
             )
         except Exception as e:
             logger.error(f"Gagal kirim info evolve ke group: {e}")
@@ -1314,4 +1314,5 @@ def register(app: Client):
     app.add_handler(MessageHandler(handle_transfer_message, filters.text & filters.private))
 
     logger.info("[MENU] Handler menu_utama terdaftar.")
+
 
