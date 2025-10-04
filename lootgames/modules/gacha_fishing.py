@@ -10,48 +10,54 @@ logger = logging.getLogger(__name__)
 
 # ---------------- LOOT TABLE ---------------- #
 FISH_LOOT = {
-    # Common
     "🤧 Zonk": 25.00,
-    "𓆝 Small Fish": 32.45,
+    "𓆝 Small Fish": 34.17,
     "🐚 Hermit Crab": 14.81,
     "🐸 Frog": 14.26,
     "🐙 Octopus": 3.36,
 
     # Rare
-    "🐡 Pufferfish": 0.78,
-    "ଳ Jelly Fish": 0.78,
-    "📿 Lucky Jewel": 0.78,
-    "🐟 Goldfish": 0.78,
-    "🐟 Stingrays Fish": 0.78,
-    "🐟 Seahorse": 0.78,
-    "🐟 Clownfish": 0.78,
-    "🐟 Doryfish": 0.78,
-    "🐟 Bannerfish": 0.78,
-    "🐟 Anglerfish": 0.78,
-    "🦪 Giant Clam": 0.78,
-    "🐟 Shark": 0.16,
-    "🐊 Crocodile": 0.16,
-    "🦦 Seal": 0.16,
-    "🐢 Turtle": 0.16,
-    "🦞 Lobster": 0.16,
-    "🐹⚡ Pikachu": 0.16,
-    "🐋⚡ Kyogre": 0.16,
-    "🐋 Orca": 0.16,
-    "🐋 Dolphin": 0.16,
-    "Lost cip": 0.16,
+    "🐡 Pufferfish": 0.50,
+    "ଳ Jelly Fish": 0.50,
+    "📿 Lucky Jewel": 0.50,
+    "🐟 Goldfish": 0.50,
+    "🐟 Stingrays Fish": 0.50,
+    "🐟 Seahorse": 0.50,
+    "🐟 Clownfish": 0.50,
+    "🐟 Doryfish": 0.50,
+    "🐟 Bannerfish": 0.50,
+    "🐟 Anglerfish": 0.50,
+    "🦪 Giant Clam": 0.50,
 
-    # Legendary
+    # Ultra rare
+    "🐟 Beta Fish": 0.10,
+    "🐟 Moorish Idol": 0.10,
+    "🐟 Axolotl": 0.10,
+    "🦆 Duck": 0.10,
+    "🦀 Crab": 0.10,
+    "🐟 Shark": 0.10,
+    "🐊 Crocodile": 0.10,
+    "🦦 Seal": 0.10,
+    "🐢 Turtle": 0.10,
+    "🦞 Lobster": 0.10,
+    "🐹⚡ Pikachu": 0.10,
+    "🐸🍀 Bulbasaur": 0.10,
+    "🐋⚡ Kyogre": 0.10,
+    "🐋 Orca": 0.10,
+    "🐋 Dolphin": 0.10,
+    "Lost cip": 0.10,
+
+    # Mythic
     "🐉 Baby Dragon": 0.01,
     "🐉 Baby Spirit Dragon": 0.01,
+    "🐉 Baby Magma Dragon": 0.01,
     "🐉 Skull Dragon": 0.01,
     "🐉 Blue Dragon": 0.01,
     "🐉 Black Dragon": 0.01,
     "🐉 Yellow Dragon": 0.01,
     "🧜‍♀️ Mermaid Boy": 0.01,
     "🧜‍♀️ Mermaid Girl": 0.01,
-
-    # Mythic
-    "🐉 Cupid Dragon": 0.001,
+    "🐉 Cupid Dragon": 0.01,
 }
 
 # Buff rate berdasarkan umpan
