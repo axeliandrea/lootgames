@@ -17,7 +17,7 @@ from datetime import date
 
 logger = logging.getLogger(__name__)
 OWNER_ID = 6395738130
-TARGET_GROUP = -1002946278772  # ganti sesuai supergroup bot
+TARGET_GROUP = -1002904817520  # ganti sesuai supergroup bot
 
 # ---------------- STATE ---------------- #
 TRANSFER_STATE = {}       # user_id: {"jenis": "A/B/C/D"}
