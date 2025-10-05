@@ -1,4 +1,4 @@
-# lootgames/modules/menu_utama.py FIXXXXXXXXXXXXXXX 01:50
+# lootgames/modules/menu_utama.py FIX!!!!
 import logging
 import asyncio
 import re
@@ -30,6 +30,7 @@ CLAIMED_CHEST_USERS = set()  # user_id yang sudah claim treasure chest saat ini
 LAST_TREASURE_MSG_ID = None
 USER_CLAIM_LOCKS = {}               # map user_id -> asyncio.Lock()
 USER_CLAIM_LOCKS_LOCK = asyncio.Lock()  # lock untuk pembuatan lock per-user
+TUKAR_COIN_STATE = {}  # user_id: {"jenis": "A" atau "B"}
 
 # ----------------- INISIALISASI -----------------
 user_last_fishing = defaultdict(lambda: 0)  # cooldown 10 detik per user
@@ -337,6 +338,15 @@ MENU_STRUCTURE = {
             ("📦 CEK INVENTORY", "D2A"),
             ("💰 DAFTAR HARGA", "D2B"),
             ("⬅️ Back", "D")
+        ]
+    },
+    # Submenu untuk CEK COIN
+    "D2C_MENU": {
+        "title": "💰 CEK COIN & PENUKARAN",
+        "buttons": [
+            ("🐛 TUKAR UMPAN COMMON A", "D2C_COMMON_A"),
+            ("🪱 TUKAR UMPAN COMMON B", "D2C_COMMON_B"),
+            ("⬅️ Back", "D2")
         ]
     },
     "D2A": {
@@ -691,16 +701,18 @@ async def callback_handler(client: Client, cq: CallbackQuery):
         )
 
         # ✅ Info ke group
+        # ✅ Info ke group + pin pesan
         try:
-            await client.send_message(
+            msg = await client.send_message(
                 TARGET_GROUP,
                 f"🧬 @{uname} berhasil evolve!\n"
-                f"🧬 Small Fish → 👹 Dark Fish Warrior  🎉"
+                f"🧬 𓆝 Small Fish → 👹 Dark Fish Warrior 🎉"
             )
+            # ✅ Pin pesan ini tanpa menghapus pin lama
+            await client.pin_chat_message(TARGET_GROUP, msg.id, disable_notification=True)
         except Exception as e:
-            logger.error(f"Gagal kirim info evolve ke group: {e}")
+            logger.error(f"Gagal kirim atau pin info evolve ke group: {e}")
 
-        return
     # ===== EVOLVE HERMIT CRAB CONFIRM =====
     if data == "EVOLVE_SNAIL_CONFIRM":
         inv = aquarium.get_user_fish(user_id)
@@ -735,16 +747,15 @@ async def callback_handler(client: Client, cq: CallbackQuery):
 
         # ✅ Info ke group
         try:
-            await client.send_message(
+            msg = await client.send_message(
                 TARGET_GROUP,
                 f"🧬 @{uname} berhasil evolve!\n"
-                f"🧬 Snail → 🐉 Snail Dragon  🎉"
+                f"🧬 🐌 Snail → 🐉 Snail Dragon 🎉"
             )
+            await client.pin_chat_message(TARGET_GROUP, msg.id, disable_notification=True)
         except Exception as e:
-            logger.error(f"Gagal kirim info evolve ke group: {e}")
-
-        return
-        
+            logger.error(f"Gagal kirim atau pin info evolve ke group: {e}")
+    
     # ===== EVOLVE HERMIT CRAB CONFIRM =====
     if data == "EVOLVE_HERMITCRAB_CONFIRM":
         inv = aquarium.get_user_fish(user_id)
@@ -779,15 +790,14 @@ async def callback_handler(client: Client, cq: CallbackQuery):
 
         # ✅ Info ke group
         try:
-            await client.send_message(
+            msg = await client.send_message(
                 TARGET_GROUP,
                 f"🧬 @{uname} berhasil evolve!\n"
-                f"🧬 Hermit Crab → 👑 Queen of Hermit  🎉"
+                f"🧬 🐚 Hermit Crab → 👑 Queen of Hermit 🎉"
             )
+            await client.pin_chat_message(TARGET_GROUP, msg.id, disable_notification=True)
         except Exception as e:
-            logger.error(f"Gagal kirim info evolve ke group: {e}")
-
-        return
+            logger.error(f"Gagal kirim atau pin info evolve ke group: {e}")
 
     # di dalam async def callback_handler(client: Client, cq: CallbackQuery):
     # ================== PLAYER CLAIM CHEST ==================
@@ -960,23 +970,36 @@ async def callback_handler(client: Client, cq: CallbackQuery):
         return
 
     # CHECK COIN Fizz
+    # ================= CEK COIN & SUBMENU ================= #
     if data == "D2C":
-        uid = cq.from_user.id
-        try:
-            # load langsung dari DB
-            user_id = cq.from_user.id
-            total_coin = fizz_coin.get_coin(user_id)
-            text = f"💰 Total coinmu saat ini: {total_coin} fizz coin"
+        kb = make_keyboard("D2C_MENU", cq.from_user.id)
+        await cq.message.edit_text("💰 Pilih menu tukar coin:", reply_markup=kb)
+        return
 
-            # Cek apakah text sama dengan pesan sekarang, jika sama tambahkan invisible char supaya aman
-            if cq.message.text == text:
-                text += "\u200b"  # zero-width space untuk memaksa edit
-            
-            kb = make_keyboard("D2", user_id)  # tombol Back ke menu SELL ITEM
-            await cq.message.edit_text(text, reply_markup=kb)
-        except Exception as e:
-            # fallback aman jika tetap gagal edit
-            await cq.answer(f"💰 Total coinmu: {total_coin}", show_alert=True)
+    elif data == "D2C_COMMON_A":
+        uid = cq.from_user.id
+        total_coin = fizz_coin.get_coin(uid)
+        TUKAR_COIN_STATE[uid] = {"jenis": "A"}
+        await cq.message.edit_text(
+            f"🐛 Kamu punya {total_coin} fizz coin.\n\n"
+            f"Masukkan jumlah coin yang ingin kamu tukarkan.\n"
+            f"(5 coin = 1 umpan Common Type A)\n\n"
+            f"Contoh: `25` untuk menukar 25 coin jadi 5 umpan.",
+            reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("⬅️ Batal", callback_data="D2C_MENU")]])
+        )
+        return
+
+    elif data == "D2C_COMMON_B":
+        uid = cq.from_user.id
+        total_coin = fizz_coin.get_coin(uid)
+        TUKAR_COIN_STATE[uid] = {"jenis": "B"}
+        await cq.message.edit_text(
+            f"🪱 Kamu punya {total_coin} fizz coin.\n\n"
+            f"Masukkan jumlah coin yang ingin kamu tukarkan.\n"
+            f"(50 coin = 1 umpan Rare Type B)\n\n"
+            f"Contoh: `50` untuk menukar 50 coin jadi 2 umpan.",
+            reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("⬅️ Batal", callback_data="D2C_MENU")]])
+        )
         return
     
     # FISHING
@@ -1426,6 +1449,70 @@ async def handle_transfer_message(client: Client, message: Message):
             await message.reply("Format salah. Masukkan angka jumlah umpan.")
         return
 
+# ================= TUKAR COIN KE UMPAN ================= #
+    if TUKAR_COIN_STATE.get(uid):
+        jenis = TUKAR_COIN_STATE[uid]["jenis"]
+        try:
+            jumlah_coin = int(message.text.strip())
+            if jumlah_coin <= 0:
+                await message.reply("❌ Jumlah coin harus lebih dari 0.")
+                return
+
+            total_coin = fizz_coin.get_coin(uid)
+            if jumlah_coin > total_coin:
+                await message.reply(f"❌ Coin kamu tidak cukup. Kamu hanya punya {total_coin} fizz coin.")
+                return
+
+            # Hitung konversi berdasarkan jenis
+            if jenis == "A":
+                if jumlah_coin < 5:
+                    await message.reply("❌ Minimal 5 coin untuk tukar 1 umpan Common A.")
+                    return
+                umpan_didapat = jumlah_coin // 5
+                biaya = umpan_didapat * 5
+                fizz_coin.add_coin(uid, -biaya)
+                umpan.add_umpan(uid, "A", umpan_didapat)
+                await message.reply(
+                    f"✅ Tukar berhasil!\n\n"
+                    f"💰 -{biaya} fizz coin\n"
+                    f"🐛 +{umpan_didapat} Umpan COMMON (Type A)\n\n"
+                    f"Sisa coin: {fizz_coin.get_coin(uid)}",
+                    reply_markup=make_keyboard("D2C_MENU", uid)
+                )
+
+            elif jenis == "B":
+                if jumlah_coin < 25:
+                    await message.reply("❌ Minimal 25 coin untuk tukar 1 umpan Rare B.")
+                    return
+                umpan_didapat = jumlah_coin // 25
+                biaya = umpan_didapat * 25
+                fizz_coin.add_coin(uid, -biaya)
+                umpan.add_umpan(uid, "B", umpan_didapat)
+                await message.reply(
+                    f"✅ Tukar berhasil!\n\n"
+                    f"💰 -{biaya} fizz coin\n"
+                    f"🪱 +{umpan_didapat} Umpan RARE (Type B)\n\n"
+                    f"Sisa coin: {fizz_coin.get_coin(uid)}",
+                    reply_markup=make_keyboard("D2C_MENU", uid)
+                )
+
+        except ValueError:
+            await message.reply("❌ Format salah. Masukkan angka jumlah coin yang ingin ditukar.")
+        finally:
+            TUKAR_COIN_STATE.pop(uid, None)
+        return
+
+# ---------------- SHOW LEADERBOARD ---------------- #
+async def show_leaderboard(cq: CallbackQuery, uid: int, page: int = 0):
+    pts = yapping.load_points()
+    sorted_pts = sorted(pts.items(), key=lambda x: x[1]["points"], reverse=True)
+    total_pages = max((len(sorted_pts) - 1) // 10, 0) if len(sorted_pts) > 0 else 0
+    start, end = page * 10, page * 10 + 10
+    text = f"🏆 Leaderboard Yapping (Page {page+1}/{total_pages+1}) 🏆\n\n"
+    for i, (u, pdata) in enumerate(sorted_pts[start:end], start=start + 1):
+        text += f"{i}. {pdata.get('username','Unknown')} - {pdata.get('points',0)} pts | Level {pdata.get('level',0)} {yapping.get_badge(pdata.get('level',0))}\n"
+    await cq.message.edit_text(text, reply_markup=make_keyboard("BBB", uid, page))
+
 # ---------------- SHOW LEADERBOARD ---------------- #
 async def show_leaderboard(cq: CallbackQuery, uid: int, page: int = 0):
     pts = yapping.load_points()
@@ -1471,4 +1558,3 @@ def register(app: Client):
     app.add_handler(MessageHandler(handle_transfer_message, filters.text & filters.private))
 
     logger.info("[MENU] Handler menu_utama terdaftar.")
-
