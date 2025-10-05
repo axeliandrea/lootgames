@@ -292,8 +292,8 @@
     "\ud83d\udc1f Beta Fish": 1
   },
   "7427494409": {
-    "\ud83e\udd27 Zonk": 59,
-    "\ud80c\udd9d Small Fish": 43,
+    "\ud83e\udd27 Zonk": 60,
+    "\ud80c\udd9d Small Fish": 44,
     "\ud83d\udc1f Seahorse": 4,
     "Lost cip": 2,
     "\ud83d\udc1a Hermit Crab": 24,
@@ -433,7 +433,7 @@
     "\ud83d\udc0c Snail": 154,
     "\ud83e\udd27 Zonk": 311,
     "\ud83e\uddaa Giant Clam": 8,
-    "\ud80c\udd9d Small Fish": 297,
+    "\ud80c\udd9d Small Fish": 299,
     "\ud83d\udc0b Dolphin": 6,
     "\ud83d\udc1f Clownfish": 17,
     "\ud83d\udc1f Seahorse": 13,
@@ -460,8 +460,8 @@
     "\ud83e\udd27 Zonk": 17,
     "\ud83d\udc1f Clownfish": 1,
     "\ud83d\udc1f Bannerfish": 1,
-    "\ud83d\udc1a Hermit Crab": 7,
-    "\ud80c\udd9d Small Fish": 10,
+    "\ud83d\udc1a Hermit Crab": 8,
+    "\ud80c\udd9d Small Fish": 12,
     "\ud83e\uddaa Giant Clam": 1,
     "\ud83d\udcff Lucky Jewel": 1,
     "\ud83d\udc21 Pufferfish": 1,
@@ -470,7 +470,8 @@
     "\ud83d\udc38 Frog": 5,
     "\ud83d\udc19 Octopus": 1,
     "\ud83d\udc1f Doryfish": 1,
-    "\ud83d\udc0b Dolphin": 2
+    "\ud83d\udc0b Dolphin": 2,
+    "\ud83d\udc0a Crocodile": 1
   },
   "1407066606": {
     "\ud83d\udc1f Anglerfish": 7,
@@ -883,13 +884,13 @@
     "\ud83d\udc1a Hermit Crab": 1
   },
   "8103582471": {
-    "\ud83e\udd27 Zonk": 43,
-    "\ud80c\udd9d Small Fish": 55,
+    "\ud83e\udd27 Zonk": 44,
+    "\ud80c\udd9d Small Fish": 56,
     "\ud83d\udc0c Snail": 24,
     "\ud83d\udc1f Bannerfish": 3,
     "\ud83d\udc21 Pufferfish": 5,
     "\ud83d\udc1a Hermit Crab": 20,
-    "\ud83d\udc38 Frog": 32,
+    "\ud83d\udc38 Frog": 33,
     "\ud83d\udc0b\u26a1 Kyogre": 3,
     "\u0b33 Jelly Fish": 2,
     "\ud83d\udc1f Seahorse": 4,
@@ -937,32 +938,32 @@
     "\ud83d\udc1f Stingrays Fish": 3
   },
   "7341241548": {
-    "\u0b33 Jelly Fish": 39,
-    "\ud83e\udd27 Zonk": 668,
-    "\ud80c\udd9d Small Fish": 866,
-    "\ud83d\udc1a Hermit Crab": 380,
-    "\ud83d\udc1f Clownfish": 12,
-    "\ud83d\udcff Lucky Jewel": 12,
+    "\u0b33 Jelly Fish": 40,
+    "\ud83e\udd27 Zonk": 696,
+    "\ud80c\udd9d Small Fish": 891,
+    "\ud83d\udc1a Hermit Crab": 394,
+    "\ud83d\udc1f Clownfish": 13,
+    "\ud83d\udcff Lucky Jewel": 14,
     "\ud83d\udc1f Bannerfish": 16,
     "\ud83d\udc0c Snail": 325,
     "Lost cip": 2,
-    "\ud83d\udc1f Seahorse": 71,
+    "\ud83d\udc1f Seahorse": 73,
     "\ud83e\uddaa Giant Clam": 14,
     "\ud83d\udc1f Doryfish": 12,
     "\ud83d\udc0a Crocodile": 13,
-    "\ud83d\udc19 Octopus": 87,
+    "\ud83d\udc19 Octopus": 91,
     "\ud83d\udc1f Anglerfish": 17,
     "\ud83d\udc0b Orca": 14,
     "\ud83d\udc0b Dolphin": 12,
-    "\ud83d\udc38 Frog": 347,
-    "\ud83d\udc21 Pufferfish": 39,
+    "\ud83d\udc38 Frog": 359,
+    "\ud83d\udc21 Pufferfish": 42,
     "\ud83d\udc09 Black Dragon": 1,
     "\ud83d\udc39\u26a1 Pikachu": 13,
     "\ud83d\udc0b\u26a1 Kyogre": 12,
     "\ud83d\udc09 Baby Dragon": 8,
     "\ud83e\udddc\u200d\u2640\ufe0f Mermaid Boy": 6,
     "\ud83d\udc09 Blue Dragon": 1,
-    "\ud83d\udc22 Turtle": 9,
+    "\ud83d\udc22 Turtle": 10,
     "\ud83e\udda6 Seal": 12,
     "\ud83e\udd9e Lobster": 7,
     "\ud83d\udc1f Shark": 8,
@@ -970,7 +971,8 @@
     "\ud83d\udc1f Goldfish": 6,
     "\ud83e\udddc\u200d\u2640\ufe0f Mermaid Girl": 1,
     "\ud83d\udc09\ud83d\udd25 Charmander": 1,
-    "\ud83d\udc1f Axolotl": 1
+    "\ud83d\udc1f Axolotl": 1,
+    "\ud83d\udc1f Beta Fish": 1
   },
   "933482815": {
     "\ud83d\udc1f Seahorse": 92,
@@ -1409,13 +1411,13 @@
     "\ud83d\udc1f Anglerfish": 1
   },
   "5187061369": {
-    "\ud83d\udc38 Frog": 3,
+    "\ud83d\udc38 Frog": 4,
     "\ud83d\udc0b Dolphin": 1,
     "\ud80c\udd9d Small Fish": 4,
     "\ud83e\udd27 Zonk": 6,
     "\ud83d\udc0c Snail": 2,
     "\ud83d\udc39\u26a1 Pikachu": 1,
-    "\ud83d\udc1a Hermit Crab": 1
+    "\ud83d\udc1a Hermit Crab": 2
   },
   "7838404742": {
     "\ud83e\udd27 Zonk": 1,
@@ -1442,15 +1444,15 @@
     "\ud83d\udc0c Snail": 4
   },
   "5110055485": {
-    "\ud83e\udd27 Zonk": 241,
+    "\ud83e\udd27 Zonk": 245,
     "\ud83d\udc39\u26a1 Pikachu": 2,
-    "\ud83d\udc1a Hermit Crab": 156,
-    "\ud80c\udd9d Small Fish": 356,
+    "\ud83d\udc1a Hermit Crab": 158,
+    "\ud80c\udd9d Small Fish": 364,
     "\ud83d\udc0b Orca": 1,
     "\ud83d\udc0c Snail": 16,
-    "\ud83d\udc38 Frog": 174,
+    "\ud83d\udc38 Frog": 177,
     "\ud83d\udc19 Octopus": 42,
-    "\ud83d\udc1f Seahorse": 9,
+    "\ud83d\udc1f Seahorse": 10,
     "\ud83d\udc1f Doryfish": 11,
     "\ud83d\udc1f Anglerfish": 4,
     "\ud83d\udc1f Clownfish": 6,
@@ -1459,8 +1461,8 @@
     "\ud83d\udc21 Pufferfish": 14,
     "Lost cip": 1,
     "\ud83e\udddc\u200d\u2640\ufe0f Mermaid Girl": 1,
-    "\ud83d\udc1f Stingrays Fish": 5,
-    "\ud83d\udc1f Bannerfish": 6,
+    "\ud83d\udc1f Stingrays Fish": 6,
+    "\ud83d\udc1f Bannerfish": 7,
     "\ud83d\udc0a Crocodile": 4,
     "\ud83d\udc1f Goldfish": 6,
     "\u0b33 Jelly Fish": 9,
@@ -1584,10 +1586,10 @@
   "8221918791": {
     "\ud83d\udc38 Frog": 7,
     "\ud83e\udd9e Lobster": 1,
-    "\ud80c\udd9d Small Fish": 17,
+    "\ud80c\udd9d Small Fish": 19,
     "\ud83d\udc1f Anglerfish": 3,
     "\ud83d\udcff Lucky Jewel": 1,
-    "\ud83e\udd27 Zonk": 12,
+    "\ud83e\udd27 Zonk": 13,
     "\ud83d\udc1f Clownfish": 3,
     "\ud83e\uddaa Giant Clam": 1,
     "\ud83d\udc1a Hermit Crab": 6,
@@ -1595,7 +1597,9 @@
     "\ud83d\udc1f Stingrays Fish": 1,
     "\ud83d\udc1f Doryfish": 1,
     "\ud83d\udc1f Goldfish": 1,
-    "\ud83d\udc0b Dolphin": 1
+    "\ud83d\udc0b Dolphin": 1,
+    "\ud83d\udc19 Octopus": 1,
+    "\u0b33 Jelly Fish": 1
   },
   "1609812473": {
     "\ud83d\udc1a Hermit Crab": 4,
@@ -1652,7 +1656,7 @@
   },
   "5734099837": {
     "\ud83d\udc38 Frog": 1,
-    "\ud80c\udd9d Small Fish": 4,
+    "\ud80c\udd9d Small Fish": 5,
     "\ud83d\udc1f Anglerfish": 1
   },
   "7497739919": {
