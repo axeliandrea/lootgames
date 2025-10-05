@@ -1318,7 +1318,7 @@
     "\ud80c\udd9d Small Fish": 999988000,
     "\ud83e\uddaa Giant Clam": 23,
     "\ud83e\udd27 Zonk": 109,
-    "\ud83d\udc1a Hermit Crab": 99996000,
+    "\ud83d\udc1a Hermit Crab": 99993000,
     "\ud83d\udc0c Snail": 9999997999,
     "\ud83d\udc09 Blue Dragon": 9,
     "\ud83d\udc1f Bannerfish": 22,
@@ -1350,7 +1350,7 @@
     "\ud83e\udddc\u200d\u2640\ufe0f Mermaid Boy": 7,
     "\ud83d\udc22 Turtle": 9,
     "\ud83d\udc09 Black Dragon": 4,
-    "Dark Fish Warrior": 12,
+    "Dark Fish Warrior": 10,
     "\ud83d\udc1f Axolotl": 3,
     "\ud83e\udd80 Crab": 3,
     "\ud83e\udd86 Duck": 3,
@@ -1718,5 +1718,11 @@
     "\ud83d\udc19 Octopus": 1,
     "\ud83d\udc1f Stingrays Fish": 1,
     "\ud83d\udc1f Doryfish": 1
+  },
+  "6621460606": {
+    "\u0b33 Jelly Fish": 2,
+    "\ud83e\uddaa Giant Clam": 1,
+    "\ud83d\udc1a Hermit Crab": 1,
+    "\ud83e\udd27 Zonk": 1
   }
 }
