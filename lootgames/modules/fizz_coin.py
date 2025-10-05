@@ -1,4 +1,4 @@
-# lootgames/modules/fizz_coin.py
+# lootgames/modules/fizz_coin.py BUG TESTING
 import json
 import os
 import threading
