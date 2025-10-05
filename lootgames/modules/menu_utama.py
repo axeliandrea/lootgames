@@ -17,7 +17,7 @@ from datetime import date
 
 logger = logging.getLogger(__name__)
 OWNER_ID = 6395738130
-TARGET_GROUP = -1002946278772  # ganti sesuai supergroup bot
+TARGET_GROUP = -1002904817520  # ganti sesuai supergroup bot
 
 # ---------------- STATE ---------------- #
 TRANSFER_STATE = {}       # user_id: {"jenis": "A/B/C/D"}
@@ -59,53 +59,53 @@ def get_random_item():
 # ---------------- SELL / ITEM CONFIG ---------------- #
 # inv_key harus cocok dengan key di aquarium_data.json (nama item di DB)
 ITEM_PRICES = {
-    "SELL_SMALLFISH":{"name": "𓆝 Small Fish",        "price": 1,  "inv_key": "Small Fish"},
-    "SELL_SNAIL":    {"name": "🐌 Snail",              "price": 2,  "inv_key": "Snail"},
-    "SELL_HERMITCRAB":  {"name": "🐚 Hermit Crab",            "price": 2, "inv_key": "HERMITCRAB"},
-    "SELL_CRAB":  {"name": "🦀 Crab",            "price": 2, "inv_key": "CRAB"},
-    "SELL_FROG":  {"name": "🐸 Frog",            "price": 2, "inv_key": "FROG"},
-    "SELL_OCTOPUS":  {"name": "🐙 Octopus",            "price": 3, "inv_key": "Octopus"},
-    "SELL_JELLYFISH":   {"name": "ଳ Jelly Fish",         "price": 4,  "inv_key": "JELLYFISH"},
-    "SELL_GIANTCLAM":  {"name": "🦪 Giant Clam",            "price": 4, "inv_key": "GIANTCLAM"},
-    "SELL_GOLDFISH":  {"name": "🐟 Goldfish",            "price": 4, "inv_key": "GOLDFISH"},
-    "SELL_STNGRAYSFISH":  {"name": "🐟 Stingrays Fish",            "price": 4, "inv_key": "STNGRAYSFISH"},
-    "SELL_CLOWNFISH":  {"name": "🐟 Clownfish",            "price": 4, "inv_key": "CLOWNFISH"},
-    "SELL_DORYFISH":  {"name": "🐟 Doryfish",            "price": 4, "inv_key": "DORYFISH"},
-    "SELL_BANNERFISH":  {"name": "🐟 Bannerfish",            "price": 4, "inv_key": "BANNERFISH"},
-    "SELL_MOORISHIDOL":  {"name": "🐟 Moorish Idol",            "price": 4, "inv_key": "MOORISHIDOL"},
-    "SELL_AXOLOTL":  {"name": "🐟 Axolotl",            "price": 4, "inv_key": "AXOLOTL"},
-    "SELL_BETAFISH":  {"name": "🐟 Beta Fish",            "price": 4, "inv_key": "BETAFISH"},
-    "SELL_ANGLERFISH":  {"name": "🐟 Anglerfish",            "price": 4, "inv_key": "ANGLERFISH"},
-    "SELL_DUCK":  {"name": "🦆 Duck",            "price": 4, "inv_key": "DUCK"},
-    "SELL_PUFFER":   {"name": "🐡 Pufferfish",         "price": 5,  "inv_key": "Pufferfish"},
-    "SELL_SHARK":  {"name": "🐟 Shark",            "price": 10, "inv_key": "SHARK"},
-    "SELL_SEAHORSE":  {"name": "🐟 Seahorse",            "price": 10, "inv_key": "SEAHORSE"},
-    "SELL_CROCODILE":  {"name": "🐊 Crocodile",            "price": 10, "inv_key": "CROCODILE"},
-    "SELL_SEAL":  {"name": "🦦 Seal",            "price": 10, "inv_key": "SEAL"},
-    "SELL_TURTLE":  {"name": "🐢 Turtle",            "price": 10, "inv_key": "TURTLE"},
-    "SELL_LOBSTER":  {"name": "🦞 Lobster",            "price": 10, "inv_key": "LOBSTER"},
-    "SELL_LUCKYJEWEL":   {"name": "📿 Lucky Jewel",         "price": 7,  "inv_key": "LUCKYJEWEL"},
-    "SELL_ORCA":   {"name": "🐋 Orca",         "price": 15,  "inv_key": "ORCA"},
-    "SELL_DOLPHIN":   {"name": "🐬 Dolphin",         "price": 15,  "inv_key": "DOLPHIN"},
-    "SELL_PIKACHU":  {"name": "🐹⚡ Pikachu",            "price": 30, "inv_key": "PIKACHU"},
-    "SELL_BULBASAUR":  {"name": "🐸🍀 Bulbasaur",            "price": 30, "inv_key": "BULBASAUR"},
-    "SELL_SQUIRTLE":  {"name": "🐢💧 Squirtle",            "price": 30, "inv_key": "SQUIRTLE"},
-    "SELL_CHARMANDER":  {"name": "🐉🔥 Charmander",            "price": 30, "inv_key": "CHARMANDER"},
-    "SELL_KYOGRE":  {"name": "🐋⚡ Kyogre",            "price": 30, "inv_key": "KYOGRE"},
-    "SELL_BABYDRAGON":   {"name": "🐉 Baby Dragon",         "price": 100,  "inv_key": "BABYDRAGON"},
-    "SELL_BABYSPIRITDRAGON":   {"name": "🐉 Baby spirit Dragon",         "price": 100,  "inv_key": "BABYSPIRITDRAGON"},
-    "SELL_BABYMAGMADRAGON":   {"name": "🐉 Baby Magma Dragon",         "price": 100,  "inv_key": "BABYMAGMADRAGON"},
-    "SELL_SKULLDRAGON":   {"name": "🐉 Skull Dragon",         "price": 200,  "inv_key": "SKULLDRAGON"},
-    "SELL_BLUEDRAGON":   {"name": "🐉 Blue Dragon",         "price": 200,  "inv_key": "BLUEDRAGON"},
-    "SELL_YELLOWDRAGON":   {"name": "🐉 Yellow Dragon",         "price": 200,  "inv_key": "YELLOWDRAGON"},
-    "SELL_BLACKDRAGON":   {"name": "🐉 Black Dragon",         "price": 200,  "inv_key": "BLACKDRAGON"},
-    "SELL_MERMAIDBOY":   {"name": "🧜‍♀️ Mermaid Boy",         "price": 200,  "inv_key": "MERMAIDBOY"},
-    "SELL_MERMAIDGIRL":   {"name": "🧜‍♀️ Mermaid Girl",         "price": 200,  "inv_key": "MERMAIDGIRL"},
-    "SELL_CUPIDDRAGON":   {"name": "🐉 Cupid Dragon",         "price": 300,  "inv_key": "CUPIDDRAGON"},
-    "SELL_DARKFISHWARRIOR":   {"name": "👹 Dark Fish Warrior",         "price": 1000,  "inv_key": "DARKFISHWARRIOR"},
-    "SELL_SNAILDRAGON":   {"name": "🐉 Snail Dragon",         "price": 2000,  "inv_key": "SNAILDRAGON"},
-    "SELL_QUEENOFHERMIT":   {"name": "👑 Queen Of Hermit",         "price": 2000,  "inv_key": "QUEENOFHERMIT"},
-    }
+    "SELL_SMALLFISH": {"name": "𓆝 Small Fish", "price": 1, "inv_key": "Small Fish"},
+    "SELL_SNAIL": {"name": "🐌 Snail", "price": 2, "inv_key": "Snail"},
+    "SELL_HERMITCRAB": {"name": "🐚 Hermit Crab", "price": 2, "inv_key": "Hermit Crab"},
+    "SELL_CRAB": {"name": "🦀 Crab", "price": 2, "inv_key": "Crab"},
+    "SELL_FROG": {"name": "🐸 Frog", "price": 2, "inv_key": "Frog"},
+    "SELL_OCTOPUS": {"name": "🐙 Octopus", "price": 3, "inv_key": "Octopus"},
+    "SELL_JELLYFISH": {"name": "ଳ Jelly Fish", "price": 4, "inv_key": "Jelly Fish"},
+    "SELL_GIANTCLAM": {"name": "🦪 Giant Clam", "price": 4, "inv_key": "Giant Clam"},
+    "SELL_GOLDFISH": {"name": "🐟 Goldfish", "price": 4, "inv_key": "Goldfish"},
+    "SELL_STNGRAYSFISH": {"name": "🐟 Stingrays Fish", "price": 4, "inv_key": "Stingrays Fish"},
+    "SELL_CLOWNFISH": {"name": "🐟 Clownfish", "price": 4, "inv_key": "Clownfish"},
+    "SELL_DORYFISH": {"name": "🐟 Doryfish", "price": 4, "inv_key": "Doryfish"},
+    "SELL_BANNERFISH": {"name": "🐟 Bannerfish", "price": 4, "inv_key": "Bannerfish"},
+    "SELL_MOORISHIDOL": {"name": "🐟 Moorish Idol", "price": 4, "inv_key": "Moorish Idol"},
+    "SELL_AXOLOTL": {"name": "🐟 Axolotl", "price": 4, "inv_key": "Axolotl"},
+    "SELL_BETAFISH": {"name": "🐟 Beta Fish", "price": 4, "inv_key": "Beta Fish"},
+    "SELL_ANGLERFISH": {"name": "🐟 Anglerfish", "price": 4, "inv_key": "Anglerfish"},
+    "SELL_DUCK": {"name": "🦆 Duck", "price": 4, "inv_key": "Duck"},
+    "SELL_PUFFER": {"name": "🐡 Pufferfish", "price": 5, "inv_key": "Pufferfish"},
+    "SELL_SHARK": {"name": "🐟 Shark", "price": 10, "inv_key": "Shark"},
+    "SELL_SEAHORSE": {"name": "🐟 Seahorse", "price": 10, "inv_key": "Seahorse"},
+    "SELL_CROCODILE": {"name": "🐊 Crocodile", "price": 10, "inv_key": "Crocodile"},
+    "SELL_SEAL": {"name": "🦦 Seal", "price": 10, "inv_key": "Seal"},
+    "SELL_TURTLE": {"name": "🐢 Turtle", "price": 10, "inv_key": "Turtle"},
+    "SELL_LOBSTER": {"name": "🦞 Lobster", "price": 10, "inv_key": "Lobster"},
+    "SELL_LUCKYJEWEL": {"name": "📿 Lucky Jewel", "price": 7, "inv_key": "Lucky Jewel"},
+    "SELL_ORCA": {"name": "🐋 Orca", "price": 15, "inv_key": "Orca"},
+    "SELL_DOLPHIN": {"name": "🐬 Dolphin", "price": 15, "inv_key": "Dolphin"},
+    "SELL_PIKACHU": {"name": "🐹⚡ Pikachu", "price": 30, "inv_key": "Pikachu"},
+    "SELL_BULBASAUR": {"name": "🐸🍀 Bulbasaur", "price": 30, "inv_key": "Bulbasaur"},
+    "SELL_SQUIRTLE": {"name": "🐢💧 Squirtle", "price": 30, "inv_key": "Squirtle"},
+    "SELL_CHARMANDER": {"name": "🐉🔥 Charmander", "price": 30, "inv_key": "Charmander"},
+    "SELL_KYOGRE": {"name": "🐋⚡ Kyogre", "price": 30, "inv_key": "Kyogre"},
+    "SELL_BABYDRAGON": {"name": "🐉 Baby Dragon", "price": 100, "inv_key": "Baby Dragon"},
+    "SELL_BABYSPIRITDRAGON": {"name": "🐉 Baby Spirit Dragon", "price": 100, "inv_key": "Baby Spirit Dragon"},
+    "SELL_BABYMAGMADRAGON": {"name": "🐉 Baby Magma Dragon", "price": 100, "inv_key": "Baby Magma Dragon"},
+    "SELL_SKULLDRAGON": {"name": "🐉 Skull Dragon", "price": 200, "inv_key": "Skull Dragon"},
+    "SELL_BLUEDRAGON": {"name": "🐉 Blue Dragon", "price": 200, "inv_key": "Blue Dragon"},
+    "SELL_YELLOWDRAGON": {"name": "🐉 Yellow Dragon", "price": 200, "inv_key": "Yellow Dragon"},
+    "SELL_BLACKDRAGON": {"name": "🐉 Black Dragon", "price": 200, "inv_key": "Black Dragon"},
+    "SELL_MERMAIDBOY": {"name": "🧜‍♀️ Mermaid Boy", "price": 200, "inv_key": "Mermaid Boy"},
+    "SELL_MERMAIDGIRL": {"name": "🧜‍♀️ Mermaid Girl", "price": 200, "inv_key": "Mermaid Girl"},
+    "SELL_CUPIDDRAGON": {"name": "🐉 Cupid Dragon", "price": 300, "inv_key": "Cupid Dragon"},
+    "SELL_DARKFISHWARRIOR": {"name": "👹 Dark Fish Warrior", "price": 1000, "inv_key": "Dark Fish Warrior"},
+    "SELL_SNAILDRAGON": {"name": "🐉 Snail Dragon", "price": 2000, "inv_key": "Snail Dragon"},
+    "SELL_QUEENOFHERMIT": {"name": "👑 Queen Of Hermit", "price": 2000, "inv_key": "Queen Of Hermit"},
+}
 # sementara user -> item_code waiting for amount input (chat)
 SELL_WAITING = {}  # user_id: item_code
 
@@ -1558,4 +1558,3 @@ def register(app: Client):
     app.add_handler(MessageHandler(handle_transfer_message, filters.text & filters.private))
 
     logger.info("[MENU] Handler menu_utama terdaftar.")
-
