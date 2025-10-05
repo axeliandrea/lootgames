@@ -10,10 +10,10 @@ logger = logging.getLogger(__name__)
 
 # ---------------- LOOT TABLE ---------------- #
 FISH_LOOT = {
-    "🤧 Zonk": 25.00,
-    "𓆝 Small Fish": 25.67,  # agar total 100.00%
-    "🐚 Hermit Crab": 14.81,
-    "🐸 Frog": 14.26,
+    "🤧 Zonk": 15.00,
+    "𓆝 Small Fish": 30.67,  # agar total 100.00%
+    "🐚 Hermit Crab": 15.27,
+    "🐸 Frog": 15.27,
     "🐙 Octopus": 6.36,
 
     # Rare
