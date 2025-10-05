@@ -1450,6 +1450,9 @@ async def handle_transfer_message(client: Client, message: Message):
         return
 
 # ================= TUKAR COIN KE UMPAN ================= #
+    # ================= TUKAR COIN KE UMPAN ================= #
+    uid = message.from_user.id  # pastikan uid diambil dari message
+
     if TUKAR_COIN_STATE.get(uid):
         jenis = TUKAR_COIN_STATE[uid]["jenis"]
         try:
@@ -1470,7 +1473,7 @@ async def handle_transfer_message(client: Client, message: Message):
                     return
                 umpan_didapat = jumlah_coin // 5
                 biaya = umpan_didapat * 5
-                fizz_coin.add_coin(uid, -biaya)
+                fizz_coin.add_coin(uid, -biaya)  # kurangi coin
                 umpan.add_umpan(uid, "A", umpan_didapat)
                 await message.reply(
                     f"✅ Tukar berhasil!\n\n"
@@ -1486,7 +1489,7 @@ async def handle_transfer_message(client: Client, message: Message):
                     return
                 umpan_didapat = jumlah_coin // 25
                 biaya = umpan_didapat * 25
-                fizz_coin.add_coin(uid, -biaya)
+                fizz_coin.add_coin(uid, -biaya)  # kurangi coin
                 umpan.add_umpan(uid, "B", umpan_didapat)
                 await message.reply(
                     f"✅ Tukar berhasil!\n\n"
@@ -1501,7 +1504,7 @@ async def handle_transfer_message(client: Client, message: Message):
         finally:
             TUKAR_COIN_STATE.pop(uid, None)
         return
-
+        
 # ---------------- SHOW LEADERBOARD ---------------- #
 async def show_leaderboard(cq: CallbackQuery, uid: int, page: int = 0):
     pts = yapping.load_points()
@@ -1558,6 +1561,7 @@ def register(app: Client):
     app.add_handler(MessageHandler(handle_transfer_message, filters.text & filters.private))
 
     logger.info("[MENU] Handler menu_utama terdaftar.")
+
 
 
 
