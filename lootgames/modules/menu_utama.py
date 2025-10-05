@@ -771,7 +771,7 @@ async def callback_handler(client: Client, cq: CallbackQuery):
             inv.pop("🐚 Hermit Crab")
 
         # ✅ Tambahkan 👑 Queen of Hermit
-        inv["Queen of H Crab"] = inv.get("Queen of H Crab", 0) + 1
+        inv["Queen of Hermit"] = inv.get("Queen of Hermit", 0) + 1
 
         # ✅ Simpan kembali
         db = aquarium.load_data()
@@ -1558,3 +1558,4 @@ def register(app: Client):
     app.add_handler(MessageHandler(handle_transfer_message, filters.text & filters.private))
 
     logger.info("[MENU] Handler menu_utama terdaftar.")
+
