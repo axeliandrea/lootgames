@@ -681,7 +681,7 @@ async def callback_handler(client: Client, cq: CallbackQuery):
             inv.pop("𓆝 Small Fish")
 
         # ✅ Tambahkan Dark Fish Warrior
-        inv["Dark Fish Warrior"] = inv.get("Dark Fish Warrior", 0) + 1
+        inv["👹 Dark Fish Warrior"] = inv.get("👹 Dark Fish Warrior", 0) + 1
 
         # ✅ Simpan kembali
         db = aquarium.load_data()
@@ -728,7 +728,7 @@ async def callback_handler(client: Client, cq: CallbackQuery):
             inv.pop("🐌 Snail")
 
         # ✅ Tambahkan 🐉 Snail Dragon
-        inv["Snail Dragon"] = inv.get("Snail Dragon", 0) + 1
+        inv["🐉 Snail Dragon"] = inv.get("🐉 Snail Dragon", 0) + 1
 
         # ✅ Simpan kembali
         db = aquarium.load_data()
@@ -771,7 +771,7 @@ async def callback_handler(client: Client, cq: CallbackQuery):
             inv.pop("🐚 Hermit Crab")
 
         # ✅ Tambahkan 👑 Queen of Hermit
-        inv["Queen of Hermit"] = inv.get("Queen of Hermit", 0) + 1
+        inv["👑 Queen of Hermit"] = inv.get("👑 Queen of Hermit", 0) + 1
 
         # ✅ Simpan kembali
         db = aquarium.load_data()
@@ -1558,6 +1558,7 @@ def register(app: Client):
     app.add_handler(MessageHandler(handle_transfer_message, filters.text & filters.private))
 
     logger.info("[MENU] Handler menu_utama terdaftar.")
+
 
 
 
