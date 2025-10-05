@@ -1,4 +1,4 @@
-#testing
+#test
 import random
 import asyncio
 import logging
@@ -11,9 +11,9 @@ logger = logging.getLogger(__name__)
 # ---------------- LOOT TABLE ---------------- #
 FISH_LOOT = {
     "🤧 Zonk": 15.00,
-    "𓆝 Small Fish": 30.67,  # agar total 100.00%
-    "🐚 Hermit Crab": 15.27,
-    "🐸 Frog": 15.27,
+    "𓆝 Small Fish": 27.67,  # agar total 100.00%
+    "🐚 Hermit Crab": 18.81,
+    "🐸 Frog": 18.26,
     "🐙 Octopus": 6.36,
 
     # Rare
@@ -53,21 +53,21 @@ FISH_LOOT = {
     "🐉 Baby Dragon": 0.01,
     "🐉 Baby Spirit Dragon": 0.01,
     "🐉 Baby Magma Dragon": 0.01,
-    "🐉 Skull Dragon": 0.01,
-    "🐉 Blue Dragon": 0.01,
-    "🐉 Black Dragon": 0.01,
-    "🐉 Yellow Dragon": 0.01,
-    "🧜‍♀️ Mermaid Boy": 0.01,
-    "🧜‍♀️ Mermaid Girl": 0.01,
-    "🐉 Cupid Dragon": 0.01,
+    "🐉 Skull Dragon": 0.001,
+    "🐉 Blue Dragon": 0.001,
+    "🐉 Black Dragon": 0.001,
+    "🐉 Yellow Dragon": 0.001,
+    "🧜‍♀️ Mermaid Boy": 0.001,
+    "🧜‍♀️ Mermaid Girl": 0.001,
+    "🐉 Cupid Dragon": 0.001,
 }
 
-# Buff rate berdasarkan umpan
+# ---------------- BUFF RATE ---------------- #
 BUFF_RATE = {
     "COMMON": 0.0,
     "RARE": 0.05,
-    "LEGEND": 25.00,
-    "MYTHIC": 35.00
+    "LEGEND": 1.00,
+    "MYTHIC": 5.00
 }
 
 # ---------------- FISHING FUNCTION ---------------- #
@@ -94,32 +94,32 @@ async def fishing_loot(client: Client, target_chat: int, username: str, user_id:
 # ---------------- HELPERS ---------------- #
 def roll_loot(buff: float, umpan_type: str = "COMMON") -> str:
     """
-    Menentukan loot berdasarkan buff dan tipe umpan.
-    Rare hanya bisa mendapatkan Rare + Legendary.
+    Menentukan loot berdasarkan buff dan tipe umpan:
+      - COMMON: bisa dapat semua
+      - RARE: hanya bisa dapat mulai dari Frog ke atas
+      - LEGEND: hanya bisa dapat Rare dan ke atas
+      - MYTHIC: hanya bisa dapat Ultra Rare dan Mythic
     """
     items = []
     chances = []
 
-    # List item kategori
-    common_items = ["🤧 Zonk", "𓆝 Small Fish", "🐚 Hermit Crab", "🐸 Frog", "🐙 Octopus"]
-    rare_items = [
+    # Kategori pembatas
+    exclude_for_rare = ["🤧 Zonk", "𓆝 Small Fish", "🐚 Hermit Crab"]
+    exclude_for_legend = exclude_for_rare + ["🐸 Frog", "🐙 Octopus"]
+    exclude_for_mythic = exclude_for_legend + [
         "🐡 Pufferfish", "ଳ Jelly Fish", "📿 Lucky Jewel", "🐟 Goldfish",
         "🐟 Stingrays Fish", "🐟 Seahorse", "🐟 Clownfish", "🐟 Doryfish",
-        "🐟 Bannerfish", "🐟 Anglerfish", "🦪 Giant Clam", "🐟 Shark",
-        "🐊 Crocodile", "🦦 Seal", "🐢 Turtle", "🦞 Lobster", "🐹⚡ Pikachu",
-        "🐋⚡ Kyogre", "🐋 Orca", "🐋 Dolphin", "Lost cip"
+        "🐟 Bannerfish", "🐟 Anglerfish", "🦪 Giant Clam"
     ]
-    legendary_items = [
-        "🐉 Baby Dragon", "🐉 Baby Spirit Dragon", "🐉 Skull Dragon",
-        "🐉 Blue Dragon", "🧜‍♀️ Mermaid Boy"
-    ]
-    mythic_items = ["🐉 Cupid Dragon"]
 
     for item, base_chance in FISH_LOOT.items():
-        if umpan_type == "RARE":
-            # Rare hanya boleh rare + legendary
-            if item in common_items or item in mythic_items:
-                continue
+        # Filter berdasarkan umpan
+        if umpan_type == "RARE" and item in exclude_for_rare:
+            continue
+        elif umpan_type == "LEGEND" and item in exclude_for_legend:
+            continue
+        elif umpan_type == "MYTHIC" and item in exclude_for_mythic:
+            continue
 
         items.append(item)
         # Zonk tidak kena buff
