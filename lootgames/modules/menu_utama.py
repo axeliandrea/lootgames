@@ -284,7 +284,7 @@ MENU_STRUCTURE = {
             ("YAPPING", "B"),
             ("REGISTER", "C"),
             ("🛒STORE", "D"),
-            ("FISHING", "E"),
+            ("CATCH", "E"),
             ("HASIL TANGKAPAN", "F"),
             ("LOGIN CHECK IN", "G"),
             ("TREASURE CHEST", "H"),
@@ -334,7 +334,7 @@ MENU_STRUCTURE = {
 
     # =============== FISHING =============== #
     "E": {
-        "title": "🎣 FISHING",
+        "title": "🎣 CATCHING",
         "buttons": [
             ("PILIH UMPAN", "EE"),
             ("⬅️ Back", "main")
@@ -527,10 +527,10 @@ MENU_STRUCTURE = {
     }
 }
 
-# Tambahan confirm untuk fishing
+# Tambahan confirm untuk catching
 for jenis in ["COMMON", "RARE", "LEGEND", "MYTHIC"]:
     MENU_STRUCTURE[f"EEE_{jenis}"] = {
-        "title": f"📋 Apakah kamu ingin memancing menggunakan umpan {jenis}?",
+        "title": f"📋 Are you want to catch using this {jenis}?",
         "buttons": [
             ("✅ YES", f"FISH_CONFIRM_{jenis}"),
             ("❌ NO", "EEE")
@@ -1075,7 +1075,7 @@ async def callback_handler(client: Client, cq: CallbackQuery):
         try:
             await asyncio.sleep(2)
             # Pesan di grup sekarang termasuk task_id
-            await client.send_message(TARGET_GROUP, f"```\n🎣 @{uname} sedang memancing... fishingtask#{task_id}```\n")
+            await client.send_message(TARGET_GROUP, f"```\n🎣 @{uname} trying to catch... task#{task_id}```\n")
 
             # Jalankan loot system
             loot_result = await fishing_loot(client, None, uname, user_id, umpan_type=jenis)
@@ -1087,14 +1087,14 @@ async def callback_handler(client: Client, cq: CallbackQuery):
             if user_id != OWNER_ID:
                 ud = umpan.get_user(user_id)
                 if not ud or ud.get(jk, {}).get("umpan", 0) <= 0:
-                    # kalau ternyata umpan habis (misal paralel auto fishing), kasih info
+                    # kalau ternyata umpan habis (misal paralel auto catching), kasih info
                     await client.send_message(user_id, "❌ Umpanmu habis, hasil pancingan ini batal.")
                     return
                 umpan.remove_umpan(user_id, jk, 1)
 
             await asyncio.sleep(10)
-            msg_group = f"🎣 @{uname} mendapatkan {loot_result}! dari fishingtask#{task_id}"
-            msg_private = f"🎣 Kamu mendapatkan {loot_result}! dari fishingtask#{task_id}"
+            msg_group = f"🎣 @{uname} got {loot_result}! from task#{task_id}"
+            msg_private = f"🎣 You got {loot_result}! from ask#{task_id}"
             await client.send_message(TARGET_GROUP, msg_group)
             await client.send_message(user_id, msg_private)
 
@@ -1124,7 +1124,7 @@ async def callback_handler(client: Client, cq: CallbackQuery):
 
         if now - last_time < 10:
             await cq.message.edit_text(
-                "⏳ Tunggu beberapa detik sebelum memancing lagi.",
+                "⏳ Wait a sec before you catch again..",
                 reply_markup=kb_back
             )
             return
@@ -1134,10 +1134,10 @@ async def callback_handler(client: Client, cq: CallbackQuery):
         task_id = f"{user_task_count[user_id]:02d}"
 
         await cq.message.edit_text(
-            f"🎣 Kamu berhasil melempar umpan {jenis} ke kolam fishingtask#{task_id}!",
+            f"🎣 You successfully threw the bait! {jenis} to loot task#{task_id}!",
             reply_markup=InlineKeyboardMarkup([
-                [InlineKeyboardButton("🎣 Memancing Lagi", callback_data=f"FISH_CONFIRM_{jenis}")],
-                [InlineKeyboardButton("🤖 Auto Memancing 5x", callback_data=f"AUTO_FISH_{jenis}")],
+                [InlineKeyboardButton("🎣 Catch again", callback_data=f"FISH_CONFIRM_{jenis}")],
+                [InlineKeyboardButton("🤖 Auto Catch 5x", callback_data=f"AUTO_FISH_{jenis}")],
                 [InlineKeyboardButton("⬅️ Back", callback_data="E")]
             ])
         )
@@ -1155,10 +1155,10 @@ async def callback_handler(client: Client, cq: CallbackQuery):
         last_time = user_last_fishing[user_id]
 
         if now - last_time < 10:
-            await cq.answer("⏳ Tunggu cooldown 10 detik sebelum auto memancing!", show_alert=True)
+            await cq.answer("⏳ Wait cooldown 10 sec before auto catching!", show_alert=True)
             return
 
-        await cq.answer("🤖 Auto memancing 5x mulai!")
+        await cq.answer("🤖 Auto Catching 5x Start!")
 
         async def auto_fishing():
             for i in range(5):
@@ -1172,7 +1172,7 @@ async def callback_handler(client: Client, cq: CallbackQuery):
                 if user_id != OWNER_ID:
                     ud = umpan.get_user(user_id)
                     if not ud or ud.get(jk, {}).get("umpan", 0) <= 0:
-                        await cq.message.reply("❌ Umpan habis! Auto memancing berhenti.")
+                        await cq.message.reply("❌ Umpan habis! Auto Catching stop.")
                         break
 
                 user_last_fishing[user_id] = now
@@ -1181,7 +1181,7 @@ async def callback_handler(client: Client, cq: CallbackQuery):
 
                 # Info auto-fishing
                 await cq.message.reply(
-                    f"🎣 Auto memancing {i+1}/5: Kamu berhasil melempar umpan {jenis} ke kolam fishingtask#{task_id}!"
+                    f"🎣 Auto Catching {i+1}/5: You successfully threw the bait {jenis} to loot task#{task_id}!"
                 )
 
                 # Jalankan task memancing (umpan dikurangi saat hasil drop)
@@ -1630,11 +1630,3 @@ def register(app: Client):
     app.add_handler(MessageHandler(handle_transfer_message, filters.text & filters.private))
 
     logger.info("[MENU] Handler menu_utama terdaftar.")
-
-
-
-
-
-
-
-
