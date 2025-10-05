@@ -1,4 +1,4 @@
-# lootgames/modules/fizz_coin.py BUG TESTING
+# lootgames/modules/fizz_coin.py
 import json
 import os
 import threading
@@ -6,21 +6,18 @@ import threading
 _LOCK = threading.Lock()
 
 # ---------------- PATH DB ---------------- #
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))  # folder modules
-DB_FILE = os.path.join(BASE_DIR, "../storage/fizz_coin.json")  # ke folder storage
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+DB_FILE = os.path.join(BASE_DIR, "../storage/fizz_coin.json")
 
-# pastikan folder storage ada
 os.makedirs(os.path.dirname(DB_FILE), exist_ok=True)
 
 # ---------------- HELPER LOAD / SAVE ---------------- #
 def _load_db() -> dict:
     if not os.path.exists(DB_FILE):
-        # buat file kosong jika belum ada
         with open(DB_FILE, "w", encoding="utf-8") as f:
             json.dump({}, f)
         print(f"[DEBUG] fizz_coin DB created at {DB_FILE}")
         return {}
-
     try:
         with open(DB_FILE, "r", encoding="utf-8") as f:
             data = json.load(f)
@@ -43,20 +40,19 @@ def _save_db(db: dict):
 
 # ---------------- PUBLIC FUNCTIONS ---------------- #
 def add_coin(user_id: int, amount: int) -> int:
-    """Tambahkan coin ke user, kembalikan total baru."""
-    if amount <= 0:
-        return get_coin(user_id)
-
+    """Tambah atau kurangi coin user. Bisa negatif. Kembalikan total baru."""
     db = _load_db()
     uid = str(user_id)
     old = db.get(uid, 0)
-    db[uid] = old + amount
+    new_total = old + amount
+    if new_total < 0:
+        new_total = 0  # coin tidak boleh negatif
+    db[uid] = new_total
     _save_db(db)
-    print(f"[DEBUG] add_coin - user:{uid} old:{old} add:{amount} total:{db[uid]}")
+    print(f"[DEBUG] add_coin - user:{uid} old:{old} change:{amount} total:{db[uid]}")
     return db[uid]
 
 def get_coin(user_id: int) -> int:
-    """Ambil total coin user."""
     db = _load_db()
     uid = str(user_id)
     total = db.get(uid, 0)
@@ -64,7 +60,6 @@ def get_coin(user_id: int) -> int:
     return total
 
 def reset_coin(user_id: int):
-    """Reset coin user ke 0."""
     db = _load_db()
     uid = str(user_id)
     db[uid] = 0
@@ -72,7 +67,6 @@ def reset_coin(user_id: int):
     return 0
 
 def reset_all():
-    """Reset semua coin."""
     db = {}
     _save_db(db)
     return True
