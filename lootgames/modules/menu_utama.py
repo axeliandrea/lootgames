@@ -31,10 +31,76 @@ LAST_TREASURE_MSG_ID = None
 USER_CLAIM_LOCKS = {}               # map user_id -> asyncio.Lock()
 USER_CLAIM_LOCKS_LOCK = asyncio.Lock()  # lock untuk pembuatan lock per-user
 TUKAR_COIN_STATE = {}  # user_id: {"jenis": "A" atau "B"}
+# ---------------- PATH DB ---------------- #
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))  # folder modules
+DB_FILE = os.path.join(BASE_DIR, "../storage/fizz_coin.json")  # ke folder storage
+# pastikan folder storage ada
+os.makedirs(os.path.dirname(DB_FILE), exist_ok=True)
 
 # ----------------- INISIALISASI -----------------
 user_last_fishing = defaultdict(lambda: 0)  # cooldown 10 detik per user
 user_task_count = defaultdict(lambda: 0)   # generate task ID unik per user
+
+# ---------------- HELPER LOAD / SAVE ---------------- #
+def _load_db() -> dict:
+    if not os.path.exists(DB_FILE):
+        with open(DB_FILE, "w", encoding="utf-8") as f:
+            json.dump({}, f)
+        print(f"[DEBUG] fizz_coin DB created at {DB_FILE}")
+        return {}
+
+    try:
+        with open(DB_FILE, "r", encoding="utf-8") as f:
+            data = json.load(f)
+        if not isinstance(data, dict):
+            data = {}
+        print(f"[DEBUG] fizz_coin loaded: {data}")
+        return data
+    except Exception as e:
+        print(f"[DEBUG] fizz_coin load error: {e}")
+        return {}
+
+def _save_db(db: dict):
+    try:
+        with _LOCK:
+            with open(DB_FILE, "w", encoding="utf-8") as f:
+                json.dump(db, f, ensure_ascii=False, indent=2)
+        print(f"[DEBUG] fizz_coin saved: {db}")
+    except Exception as e:
+        print(f"[DEBUG] fizz_coin save error: {e}")
+
+# ---------------- PUBLIC FUNCTIONS ---------------- #
+def add_coin(user_id: int, amount: int) -> int:
+    """Tambah atau kurangi coin user. Bisa negatif. Kembalikan total baru."""
+    db = _load_db()
+    uid = str(user_id)
+    old = db.get(uid, 0)
+    new_total = old + amount
+    if new_total < 0:
+        new_total = 0
+    db[uid] = new_total
+    _save_db(db)
+    print(f"[DEBUG] add_coin - user:{uid} old:{old} change:{amount} total:{db[uid]}")
+    return db[uid]
+
+def get_coin(user_id: int) -> int:
+    db = _load_db()
+    uid = str(user_id)
+    total = db.get(uid, 0)
+    print(f"[DEBUG] get_coin - user:{uid} total:{total}")
+    return total
+
+def reset_coin(user_id: int):
+    db = _load_db()
+    uid = str(user_id)
+    db[uid] = 0
+    _save_db(db)
+    return 0
+
+def reset_all():
+    db = {}
+    _save_db(db)
+    return True
 
 # =================== UTIL ===================
 def load_chest_data():
@@ -1451,7 +1517,8 @@ async def handle_transfer_message(client: Client, message: Message):
 
 # ================= TUKAR COIN KE UMPAN ================= #
     # ================= TUKAR COIN KE UMPAN ================= #
-    uid = message.from_user.id  # pastikan uid dari message
+    # ================= TUKAR COIN KE UMPAN ================= #
+    uid = message.from_user.id
 
     if TUKAR_COIN_STATE.get(uid):
         jenis = TUKAR_COIN_STATE[uid]["jenis"]
@@ -1466,31 +1533,26 @@ async def handle_transfer_message(client: Client, message: Message):
                 await message.reply(f"❌ Coin kamu tidak cukup. Kamu hanya punya {total_coin} fizz coin.")
                 return
 
-            # Tukar berdasarkan jenis umpan
+            # Set parameter berdasarkan jenis
             if jenis == "A":
-                min_coin = 5
-                konversi = 5  # 5 coin = 1 umpan
-                nama_umpan = "COMMON (Type A)"
-                emoji = "🐛"
+                min_coin, konversi, nama, emoji = 5, 5, "COMMON (Type A)", "🐛"
             elif jenis == "B":
-                min_coin = 25
-                konversi = 25  # 25 coin = 1 umpan
-                nama_umpan = "RARE (Type B)"
-                emoji = "🪱"
+                min_coin, konversi, nama, emoji = 25, 25, "RARE (Type B)", "🪱"
             else:
                 await message.reply("❌ Tipe tukar tidak valid.")
                 return
 
             if jumlah_coin < min_coin:
-                await message.reply(f"❌ Minimal {min_coin} coin untuk tukar 1 umpan {nama_umpan}.")
+                await message.reply(f"❌ Minimal {min_coin} coin untuk tukar 1 umpan {nama}.")
                 return
 
+            # Hitung jumlah umpan yang bisa didapat
             umpan_didapat = jumlah_coin // konversi
             biaya = umpan_didapat * konversi
-            sisa_coin = jumlah_coin - biaya  # coin yang tidak habis dibagi tetap di user
+            sisa_coin = jumlah_coin - biaya  # coin yang tidak habis dibagi tetap tersisa di user
 
             if umpan_didapat == 0:
-                await message.reply(f"❌ Coin tidak cukup untuk ditukar menjadi umpan {nama_umpan}.")
+                await message.reply(f"❌ Coin tidak cukup untuk ditukar menjadi umpan {nama}.")
                 return
 
             # Kurangi coin & tambahkan umpan
@@ -1500,7 +1562,7 @@ async def handle_transfer_message(client: Client, message: Message):
             await message.reply(
                 f"✅ Tukar berhasil!\n\n"
                 f"💰 -{biaya} fizz coin\n"
-                f"{emoji} +{umpan_didapat} Umpan {nama_umpan}\n\n"
+                f"{emoji} +{umpan_didapat} Umpan {nama}\n\n"
                 f"Sisa coin: {fizz_coin.get_coin(uid)}",
                 reply_markup=make_keyboard("D2C_MENU", uid)
             )
@@ -1567,6 +1629,7 @@ def register(app: Client):
     app.add_handler(MessageHandler(handle_transfer_message, filters.text & filters.private))
 
     logger.info("[MENU] Handler menu_utama terdaftar.")
+
 
 
 
