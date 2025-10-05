@@ -706,7 +706,7 @@ async def callback_handler(client: Client, cq: CallbackQuery):
             msg = await client.send_message(
                 TARGET_GROUP,
                 f"🧬 @{uname} berhasil evolve!\n"
-                f"🧬 𓆝 Small Fish → 👹 Dark Fish Warrior 🎉"
+                f"🧬 Small Fish → 👹 Dark Fish Warrior 🎉"
             )
             # ✅ Pin pesan ini tanpa menghapus pin lama
             await client.pin_chat_message(TARGET_GROUP, msg.id, disable_notification=True)
@@ -750,7 +750,7 @@ async def callback_handler(client: Client, cq: CallbackQuery):
             msg = await client.send_message(
                 TARGET_GROUP,
                 f"🧬 @{uname} berhasil evolve!\n"
-                f"🧬 🐌 Snail → 🐉 Snail Dragon 🎉"
+                f"🧬 Snail → 🐉 Snail Dragon 🎉"
             )
             await client.pin_chat_message(TARGET_GROUP, msg.id, disable_notification=True)
         except Exception as e:
@@ -793,7 +793,7 @@ async def callback_handler(client: Client, cq: CallbackQuery):
             msg = await client.send_message(
                 TARGET_GROUP,
                 f"🧬 @{uname} berhasil evolve!\n"
-                f"🧬 🐚 Hermit Crab → 👑 Queen of Hermit 🎉"
+                f"🧬 Hermit Crab → 👑 Queen of Hermit 🎉"
             )
             await client.pin_chat_message(TARGET_GROUP, msg.id, disable_notification=True)
         except Exception as e:
@@ -1558,5 +1558,6 @@ def register(app: Client):
     app.add_handler(MessageHandler(handle_transfer_message, filters.text & filters.private))
 
     logger.info("[MENU] Handler menu_utama terdaftar.")
+
 
 
