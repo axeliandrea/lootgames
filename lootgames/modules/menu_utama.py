@@ -1451,7 +1451,7 @@ async def handle_transfer_message(client: Client, message: Message):
 
 # ================= TUKAR COIN KE UMPAN ================= #
     # ================= TUKAR COIN KE UMPAN ================= #
-    uid = message.from_user.id  # pastikan uid diambil dari message
+    uid = message.from_user.id  # pastikan uid dari message
 
     if TUKAR_COIN_STATE.get(uid):
         jenis = TUKAR_COIN_STATE[uid]["jenis"]
@@ -1466,45 +1466,51 @@ async def handle_transfer_message(client: Client, message: Message):
                 await message.reply(f"❌ Coin kamu tidak cukup. Kamu hanya punya {total_coin} fizz coin.")
                 return
 
-            # Hitung konversi berdasarkan jenis
+            # Tukar berdasarkan jenis umpan
             if jenis == "A":
-                if jumlah_coin < 5:
-                    await message.reply("❌ Minimal 5 coin untuk tukar 1 umpan Common A.")
-                    return
-                umpan_didapat = jumlah_coin // 5
-                biaya = umpan_didapat * 5
-                fizz_coin.add_coin(uid, -biaya)  # kurangi coin
-                umpan.add_umpan(uid, "A", umpan_didapat)
-                await message.reply(
-                    f"✅ Tukar berhasil!\n\n"
-                    f"💰 -{biaya} fizz coin\n"
-                    f"🐛 +{umpan_didapat} Umpan COMMON (Type A)\n\n"
-                    f"Sisa coin: {fizz_coin.get_coin(uid)}",
-                    reply_markup=make_keyboard("D2C_MENU", uid)
-                )
-
+                min_coin = 5
+                konversi = 5  # 5 coin = 1 umpan
+                nama_umpan = "COMMON (Type A)"
+                emoji = "🐛"
             elif jenis == "B":
-                if jumlah_coin < 25:
-                    await message.reply("❌ Minimal 25 coin untuk tukar 1 umpan Rare B.")
-                    return
-                umpan_didapat = jumlah_coin // 25
-                biaya = umpan_didapat * 25
-                fizz_coin.add_coin(uid, -biaya)  # kurangi coin
-                umpan.add_umpan(uid, "B", umpan_didapat)
-                await message.reply(
-                    f"✅ Tukar berhasil!\n\n"
-                    f"💰 -{biaya} fizz coin\n"
-                    f"🪱 +{umpan_didapat} Umpan RARE (Type B)\n\n"
-                    f"Sisa coin: {fizz_coin.get_coin(uid)}",
-                    reply_markup=make_keyboard("D2C_MENU", uid)
-                )
+                min_coin = 25
+                konversi = 25  # 25 coin = 1 umpan
+                nama_umpan = "RARE (Type B)"
+                emoji = "🪱"
+            else:
+                await message.reply("❌ Tipe tukar tidak valid.")
+                return
+
+            if jumlah_coin < min_coin:
+                await message.reply(f"❌ Minimal {min_coin} coin untuk tukar 1 umpan {nama_umpan}.")
+                return
+
+            umpan_didapat = jumlah_coin // konversi
+            biaya = umpan_didapat * konversi
+            sisa_coin = jumlah_coin - biaya  # coin yang tidak habis dibagi tetap di user
+
+            if umpan_didapat == 0:
+                await message.reply(f"❌ Coin tidak cukup untuk ditukar menjadi umpan {nama_umpan}.")
+                return
+
+            # Kurangi coin & tambahkan umpan
+            fizz_coin.add_coin(uid, -biaya)
+            umpan.add_umpan(uid, jenis, umpan_didapat)
+
+            await message.reply(
+                f"✅ Tukar berhasil!\n\n"
+                f"💰 -{biaya} fizz coin\n"
+                f"{emoji} +{umpan_didapat} Umpan {nama_umpan}\n\n"
+                f"Sisa coin: {fizz_coin.get_coin(uid)}",
+                reply_markup=make_keyboard("D2C_MENU", uid)
+            )
 
         except ValueError:
             await message.reply("❌ Format salah. Masukkan angka jumlah coin yang ingin ditukar.")
         finally:
             TUKAR_COIN_STATE.pop(uid, None)
         return
-        
+
 # ---------------- SHOW LEADERBOARD ---------------- #
 async def show_leaderboard(cq: CallbackQuery, uid: int, page: int = 0):
     pts = yapping.load_points()
@@ -1561,6 +1567,7 @@ def register(app: Client):
     app.add_handler(MessageHandler(handle_transfer_message, filters.text & filters.private))
 
     logger.info("[MENU] Handler menu_utama terdaftar.")
+
 
 
 
