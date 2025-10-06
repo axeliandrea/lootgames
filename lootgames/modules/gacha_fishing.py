@@ -10,58 +10,59 @@ logger = logging.getLogger(__name__)
 
 # ---------------- LOOT TABLE (TOTAL ≈1000.00%) ---------------- #
 FISH_LOOT = {
-    # ---------------- TERMURAH → TERMAHAL ---------------- #
-    "🤧 Zonk": 50.00,               # dummy common, harga 0
-    "𓆝 Small Fish": 128.00,       # harga 1
-    "🐌 Snail": 120.00,             # harga 2
-    "🐚 Hermit Crab": 120.00,       # harga 2
-    "🦀 Crab": 120.00,              # harga 2
-    "🐸 Frog": 120.00,              # harga 2
-    "🐍 Snake": 120.00,             # harga 2
-    "🐙 Octopus": 100.00,           # harga 3
-    "ଳ Jelly Fish": 80.00,          # harga 4
-    "🦪 Giant Clam": 80.00,         # harga 4
-    "🐟 Goldfish": 80.00,           # harga 4
-    "🐟 Stingrays Fish": 80.00,     # harga 4
-    "🐟 Clownfish": 80.00,          # harga 4
-    "🐟 Doryfish": 80.00,           # harga 4
-    "🐟 Bannerfish": 80.00,         # harga 4
-    "🐟 Moorish Idol": 80.00,       # harga 4
-    "🐟 Axolotl": 80.00,            # harga 4
-    "🐟 Beta Fish": 80.00,          # harga 4
-    "🐟 Anglerfish": 80.00,         # harga 4
-    "🦆 Duck": 80.00,               # harga 4
-    "🐡 Pufferfish": 70.00,         # harga 5
-    "📿 Lucky Jewel": 60.00,        # harga 7
-    "🐱 Red Hammer Cat": 10.00,     # harga 8
-    "🐱 Purple Fist Cat": 10.00,    # harga 8
-    "🐱 Green Dino Cat": 10.00,     # harga 8
-    "🐱 White Winter Cat": 10.00,   # harga 8
-    "🐟 Shark": 40.00,              # harga 10
-    "🐟 Seahorse": 40.00,           # harga 10
-    "🐊 Crocodile": 40.00,          # harga 10
-    "🦦 Seal": 40.00,               # harga 10
-    "🐢 Turtle": 40.00,             # harga 10
-    "🦞 Lobster": 40.00,            # harga 10
-    "🐋 Orca": 30.00,               # harga 15
-    "🐬 Dolphin": 30.00,            # harga 15
-    "🐹⚡ Pikachu": 5.00,           # harga 30
-    "🐸🍀 Bulbasaur": 5.00,         # harga 30
-    "🐢💧 Squirtle": 5.00,          # harga 30
-    "🐉🔥 Charmander": 5.00,        # harga 30
-    "🐋⚡ Kyogre": 5.00,             # harga 30
-    "🐉 Baby Dragon": 0.10,         # harga 100
-    "🐉 Baby Spirit Dragon": 0.10,  # harga 100
-    "🐉 Baby Magma Dragon": 0.10,   # harga 100
-    "🐉 Skull Dragon": 0.09,        # harga 200
-    "🐉 Blue Dragon": 0.09,         # harga 200
-    "🐉 Black Dragon": 0.09,        # harga 200
-    "🐉 Yellow Dragon": 0.09,       # harga 200
-    "🧜‍♀️ Mermaid Boy": 0.09,       # harga 200
-    "🧜‍♀️ Mermaid Girl": 0.09,      # harga 200
-    "🐉 Cupid Dragon": 0.01,        # harga 300
-    "🐺 Werewolf": 0.009,           # harga 300
-    "👹 Dark Lord Demon": 0.001     # harga 500
+    "🤧 Zonk": 50.00,               
+    "𓆝 Small Fish": 128.00,       
+    "🐌 Snail": 120.00,             
+    "🐚 Hermit Crab": 120.00,       
+    "🦀 Crab": 120.00,              
+    "🐸 Frog": 120.00,              
+    "🐍 Snake": 120.00,             
+    "🐙 Octopus": 100.00,           
+    "ଳ Jelly Fish": 80.00,          
+    "🦪 Giant Clam": 80.00,         
+    "🐟 Goldfish": 80.00,           
+    "🐟 Stingrays Fish": 80.00,     
+    "🐟 Clownfish": 80.00,          
+    "🐟 Doryfish": 80.00,           
+    "🐟 Bannerfish": 80.00,         
+    "🐟 Moorish Idol": 80.00,       
+    "🐟 Axolotl": 80.00,            
+    "🐟 Beta Fish": 80.00,          
+    "🐟 Anglerfish": 80.00,         
+    "🦆 Duck": 80.00,               
+    "🐔 Chicken": 80.00,            
+    "🐡 Pufferfish": 70.00,         
+    "📿 Lucky Jewel": 60.00,        
+    "🐱 Red Hammer Cat": 10.00,     
+    "🐱 Purple Fist Cat": 10.00,    
+    "🐱 Green Dino Cat": 10.00,     
+    "🐱 White Winter Cat": 10.00,   
+    "🐟 Shark": 40.00,              
+    "🐟 Seahorse": 40.00,           
+    "🐊 Crocodile": 40.00,          
+    "🦦 Seal": 40.00,               
+    "🐢 Turtle": 40.00,             
+    "🦞 Lobster": 40.00,            
+    "🐋 Orca": 30.00,               
+    "🐬 Dolphin": 30.00,            
+    "🐹⚡ Pikachu": 5.00,           
+    "🐸🍀 Bulbasaur": 5.00,         
+    "🐢💧 Squirtle": 5.00,          
+    "🐉🔥 Charmander": 5.00,        
+    "🐋⚡ Kyogre": 5.00,             
+    "🐉 Baby Dragon": 0.10,         
+    "🐉 Baby Spirit Dragon": 0.10,  
+    "🐉 Baby Magma Dragon": 0.10,   
+    "🐉 Skull Dragon": 0.09,        
+    "🐉 Blue Dragon": 0.09,         
+    "🐉 Black Dragon": 0.09,        
+    "🐉 Yellow Dragon": 0.09,       
+    "🧜‍♀️ Mermaid Boy": 0.09,       
+    "🧜‍♀️ Mermaid Girl": 0.09,      
+    "🐉 Cupid Dragon": 0.01,        
+    "🐺 Werewolf": 0.009,           
+    "👹 Dark Lord Demon": 0.001,    
+    "🦊 Princess of Nine Tail": 0.001
 }
 
 # Hitung total drop rate
