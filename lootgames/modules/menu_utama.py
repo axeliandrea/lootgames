@@ -512,7 +512,6 @@ MENU_STRUCTURE = {
             ("🐉 Cupid Dragon", "SELL_DETAIL:SELL_CUPIDDRAGON"),
             ("🐺 Werewolf", "SELL_DETAIL:SELL_WEREWOLF"),
             ("👹 Dark Lord Demon", "SELL_DETAIL:SELL_DARKLORDDEMON"),
-            ("👹 Dark Lord Demon", "SELL_DETAIL:SELL_DARKLORDDEMON"),
             ("🦊 Princess of Nine Tail", "SELL_DETAIL:SELL_PRINCESSOFNINETAIL"),
             ("🐉 Snail Dragon", "SELL_DETAIL:SELL_SNAILDRAGON"),
             ("👑 Queen Of Hermit", "SELL_DETAIL:SELL_QUEENOFHERMIT"),
@@ -1792,4 +1791,5 @@ def register(app: Client):
     app.add_handler(MessageHandler(handle_transfer_message, filters.text & filters.private))
 
     logger.info("[MENU] Handler menu_utama terdaftar.")
+
 
