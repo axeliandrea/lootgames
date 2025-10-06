@@ -98,6 +98,7 @@ def roll_loot(buff: float, umpan_type: str = "COMMON") -> str:
     items = []
     chances = []
 
+    # Filter item sesuai level umpan
     exclude_for_rare = ["🤧 Zonk", "𓆝 Small Fish", "🐚 Hermit Crab"]
     exclude_for_legend = exclude_for_rare + ["🐸 Frog", "🐙 Octopus", "🐍 Snake"]
     exclude_for_mythic = exclude_for_legend + [
