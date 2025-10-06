@@ -60,7 +60,8 @@ FISH_LOOT = {
     "🧜‍♀️ Mermaid Boy": 0.09,       # harga 200
     "🧜‍♀️ Mermaid Girl": 0.09,      # harga 200
     "🐉 Cupid Dragon": 0.01,        # harga 300
-    "🐺 Werewolf": 0.001            # harga 300
+    "🐺 Werewolf": 0.009,           # harga 300
+    "👹 Dark Lord Demon": 0.001     # harga 500
 }
 
 # Hitung total drop rate
@@ -70,9 +71,9 @@ logger.info(f"[INIT] Total drop rate: {_total:.2f}% (Target: ~1000%)")
 # ---------------- BUFF RATE ---------------- #
 BUFF_RATE = {
     "COMMON": 0.0,
-    "RARE": 2.50,
-    "LEGEND": 2.00,
-    "MYTHIC": 5.00
+    "RARE": 1.50,
+    "LEGEND": 5.00,
+    "MYTHIC": 10.00
 }
 
 # ---------------- FISHING FUNCTION ---------------- #
