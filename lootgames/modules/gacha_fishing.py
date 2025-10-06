@@ -1,4 +1,4 @@
-# lootgames/modules/fishing_loot.py
+# lootgames/modules/fishing_loot.py TESTER COBAIN LOOT DROP 1000%
 import random
 import asyncio
 import logging
