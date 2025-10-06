@@ -1,4 +1,4 @@
-# lootgames/modules/fishing_loot.py TESTER COBAIN LOOT DROP 1000%
+# lootgames/modules/fishing_loot.py
 import random
 import asyncio
 import logging
@@ -10,64 +10,69 @@ logger = logging.getLogger(__name__)
 
 # ---------------- LOOT TABLE (TOTAL ≈1000.00%) ---------------- #
 FISH_LOOT = {
-    "🤧 Zonk": 50.00,               
-    "𓆝 Small Fish": 128.00,       
-    "🐌 Snail": 120.00,             
-    "🐚 Hermit Crab": 120.00,       
-    "🦀 Crab": 120.00,              
-    "🐸 Frog": 120.00,              
-    "🐍 Snake": 120.00,             
-    "🐙 Octopus": 100.00,           
-    "ଳ Jelly Fish": 80.00,          
-    "🦪 Giant Clam": 80.00,         
-    "🐟 Goldfish": 80.00,           
-    "🐟 Stingrays Fish": 80.00,     
-    "🐟 Clownfish": 80.00,          
-    "🐟 Doryfish": 80.00,           
-    "🐟 Bannerfish": 80.00,         
-    "🐟 Moorish Idol": 80.00,       
-    "🐟 Axolotl": 80.00,            
-    "🐟 Beta Fish": 80.00,          
-    "🐟 Anglerfish": 80.00,         
-    "🦆 Duck": 80.00,               
-    "🐔 Chicken": 80.00,            
-    "🐡 Pufferfish": 70.00,         
-    "📿 Lucky Jewel": 60.00,        
-    "🐱 Red Hammer Cat": 10.00,     
-    "🐱 Purple Fist Cat": 10.00,    
-    "🐱 Green Dino Cat": 10.00,     
-    "🐱 White Winter Cat": 10.00,   
-    "🐟 Shark": 40.00,              
-    "🐟 Seahorse": 40.00,           
-    "🐊 Crocodile": 40.00,          
-    "🦦 Seal": 40.00,               
-    "🐢 Turtle": 40.00,             
-    "🦞 Lobster": 40.00,            
-    "🐋 Orca": 30.00,               
-    "🐬 Dolphin": 30.00,            
-    "🐹⚡ Pikachu": 5.00,           
-    "🐸🍀 Bulbasaur": 5.00,         
-    "🐢💧 Squirtle": 5.00,          
-    "🐉🔥 Charmander": 5.00,        
-    "🐋⚡ Kyogre": 5.00,             
-    "🐉 Baby Dragon": 0.10,         
-    "🐉 Baby Spirit Dragon": 0.10,  
-    "🐉 Baby Magma Dragon": 0.10,   
-    "🐉 Skull Dragon": 0.09,        
-    "🐉 Blue Dragon": 0.09,         
-    "🐉 Black Dragon": 0.09,        
-    "🐉 Yellow Dragon": 0.09,       
-    "🧜‍♀️ Mermaid Boy": 0.09,       
-    "🧜‍♀️ Mermaid Girl": 0.09,      
-    "🐉 Cupid Dragon": 0.01,        
-    "🐺 Werewolf": 0.009,           
-    "👹 Dark Lord Demon": 0.001,    
-    "🦊 Princess of Nine Tail": 0.001
-}
+    # ---------------- TERMURAH → TERMAHAL ---------------- #
+    # Common
+    "🤧 Zonk": 50.00,                 # harga 0
+    "𓆝 Small Fish": 128.00,          # harga 1
+    "🐌 Snail": 128.00,               # harga 2
+    "🐚 Hermit Crab": 128.00,         # harga 2
+    "🦀 Crab": 128.00,                # harga 2
+    "🐸 Frog": 128.00,                # harga 2
+    "🐍 Snake": 128.00,               # harga 2
+    "🐙 Octopus": 100.00,             # harga 3
 
-# Hitung total drop rate
-_total = sum(FISH_LOOT.values())
-logger.info(f"[INIT] Total drop rate: {_total:.2f}% (Target: ~1000%)")
+    # Rare
+    "ଳ Jelly Fish": 80.00,            # harga 4
+    "🦪 Giant Clam": 80.00,           # harga 4
+    "🐟 Goldfish": 80.00,             # harga 4
+    "🐟 Stingrays Fish": 80.00,       # harga 4
+    "🐟 Clownfish": 80.00,            # harga 4
+    "🐟 Doryfish": 80.00,             # harga 4
+    "🐟 Bannerfish": 80.00,           # harga 4
+    "🐟 Moorish Idol": 80.00,         # harga 4
+    "🐟 Axolotl": 80.00,              # harga 4
+    "🐟 Beta Fish": 80.00,            # harga 4
+    "🐟 Anglerfish": 80.00,           # harga 4
+    "🦆 Duck": 80.00,                 # harga 4
+
+    # Ultra Rare
+    "🐡 Pufferfish": 70.00,           # harga 5
+    "📿 Lucky Jewel": 60.00,          # harga 7
+    "🐱 Red Hammer Cat": 10.00,       # harga 8
+    "🐱 Purple Fist Cat": 10.00,      # harga 8
+    "🐱 Green Dino Cat": 10.00,       # harga 8
+    "🐱 White Winter Cat": 10.00,     # harga 8
+    "🐟 Shark": 40.00,                # harga 10
+    "🐟 Seahorse": 40.00,             # harga 10
+    "🐊 Crocodile": 40.00,            # harga 10
+    "🦦 Seal": 40.00,                 # harga 10
+    "🐢 Turtle": 40.00,               # harga 10
+    "🦞 Lobster": 40.00,              # harga 10
+
+    # Legendary
+    "🐋 Orca": 30.00,                 # harga 15
+    "🐬 Dolphin": 30.00,              # harga 15
+    "🐹⚡ Pikachu": 5.00,             # harga 30
+    "🐸🍀 Bulbasaur": 5.00,          # harga 30
+    "🐢💧 Squirtle": 5.00,           # harga 30
+    "🐉🔥 Charmander": 5.00,         # harga 30
+    "🐋⚡ Kyogre": 5.00,              # harga 30
+
+    # Mythic
+    "🐉 Baby Dragon": 0.10,           # harga 100
+    "🐉 Baby Spirit Dragon": 0.10,    # harga 100
+    "🐉 Baby Magma Dragon": 0.10,     # harga 100
+    "🐉 Skull Dragon": 0.09,          # harga 200
+    "🐉 Blue Dragon": 0.09,           # harga 200
+    "🐉 Black Dragon": 0.09,          # harga 200
+    "🐉 Yellow Dragon": 0.09,         # harga 200
+    "🧜‍♀️ Mermaid Boy": 0.09,         # harga 200
+    "🧜‍♀️ Mermaid Girl": 0.09,        # harga 200
+    "🐉 Cupid Dragon": 0.01,          # harga 300
+    "🐺 Werewolf": 0.001,             # harga 300
+    "👹 Dark Lord Demon": 0.001,      # harga 500
+    "🦊 Princess of Nine Tail": 0.001 # harga 500
+}
 
 # ---------------- BUFF RATE ---------------- #
 BUFF_RATE = {
@@ -85,7 +90,7 @@ async def fishing_loot(client: Client, target_chat: int, username: str, user_id:
     logger.info(f"[FISHING] {username} ({user_id}) memancing dengan {umpan_type}, mendapatkan: {loot_item}")
     
     try:
-        await asyncio.sleep(2)  # delay animasi
+        await asyncio.sleep(2)
         if target_chat:
             await client.send_message(target_chat, f"@{username} mendapatkan {loot_item}!")
         aquarium.add_fish(user_id, loot_item, 1)
@@ -96,26 +101,25 @@ async def fishing_loot(client: Client, target_chat: int, username: str, user_id:
 
 # ---------------- HELPERS ---------------- #
 def roll_loot(buff: float, umpan_type: str = "COMMON") -> str:
+    # Filter berdasarkan jenis umpan
     items = []
     chances = []
 
-    # Filter item sesuai level umpan
-    exclude_for_rare = ["🤧 Zonk", "𓆝 Small Fish", "🐚 Hermit Crab"]
-    exclude_for_legend = exclude_for_rare + ["🐸 Frog", "🐙 Octopus", "🐍 Snake"]
-    exclude_for_mythic = exclude_for_legend + [
-        "🐡 Pufferfish", "ଳ Jelly Fish", "📿 Lucky Jewel", "🐟 Goldfish",
-        "🐟 Stingrays Fish", "🐟 Seahorse", "🐟 Clownfish", "🐟 Doryfish",
-        "🐟 Bannerfish", "🐟 Anglerfish", "🦪 Giant Clam"
-    ]
+    # Batasan jenis ikan per umpan
+    if umpan_type == "COMMON":
+        allowed = list(FISH_LOOT.keys())[:48]   # Common → Mythic (Baby Dragon)
+    elif umpan_type == "RARE":
+        allowed = list(FISH_LOOT.keys())[8:55]  # Rare → Mythic (Yellow Dragon)
+    elif umpan_type == "LEGEND":
+        allowed = list(FISH_LOOT.keys())[20:]   # Ultra Rare → Mythic (semua)
+    elif umpan_type == "MYTHIC":
+        allowed = []  # sementara kosong, kamu bisa isi nanti
+    else:
+        allowed = list(FISH_LOOT.keys())
 
     for item, base_chance in FISH_LOOT.items():
-        if umpan_type == "RARE" and item in exclude_for_rare:
+        if item not in allowed:
             continue
-        elif umpan_type == "LEGEND" and item in exclude_for_legend:
-            continue
-        elif umpan_type == "MYTHIC" and item in exclude_for_mythic:
-            continue
-
         items.append(item)
         if item == "🤧 Zonk":
             chances.append(base_chance)
