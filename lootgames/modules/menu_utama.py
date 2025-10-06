@@ -1,4 +1,4 @@
-# lootgames/modules/menu_utama.py START
+# lootgames/modules/menu_utama.py FIX!!!!
 import os
 import logging
 import asyncio
@@ -18,7 +18,7 @@ from datetime import date
 
 logger = logging.getLogger(__name__)
 OWNER_ID = 6395738130
-TARGET_GROUP = -1002946278772  # ganti sesuai supergroup bot
+TARGET_GROUP = -1002904817520  # ganti sesuai supergroup bot
 
 # ---------------- STATE ---------------- #
 TRANSFER_STATE = {}       # user_id: {"jenis": "A/B/C/D"}
@@ -131,11 +131,12 @@ ITEM_PRICES = {
     "SELL_HERMITCRAB": {"name": "🐚 Hermit Crab", "price": 2, "inv_key": "Hermit Crab"},
     "SELL_CRAB": {"name": "🦀 Crab", "price": 2, "inv_key": "Crab"},
     "SELL_FROG": {"name": "🐸 Frog", "price": 2, "inv_key": "Frog"},
+    "SELL_SNAKE": {"name": "🐍 Snake", "price": 2, "inv_key": "Snake"},
     "SELL_OCTOPUS": {"name": "🐙 Octopus", "price": 3, "inv_key": "Octopus"},
     "SELL_JELLYFISH": {"name": "ଳ Jelly Fish", "price": 4, "inv_key": "Jelly Fish"},
     "SELL_GIANTCLAM": {"name": "🦪 Giant Clam", "price": 4, "inv_key": "Giant Clam"},
     "SELL_GOLDFISH": {"name": "🐟 Goldfish", "price": 4, "inv_key": "Goldfish"},
-    "SELL_STNGRAYSFISH": {"name": "🐟 Stingrays Fish", "price": 4, "inv_key": "Stingrays Fish"},
+    "SELL_STINGRAYSFISH": {"name": "🐟 Stingrays Fish", "price": 4, "inv_key": "Stingrays Fish"},
     "SELL_CLOWNFISH": {"name": "🐟 Clownfish", "price": 4, "inv_key": "Clownfish"},
     "SELL_DORYFISH": {"name": "🐟 Doryfish", "price": 4, "inv_key": "Doryfish"},
     "SELL_BANNERFISH": {"name": "🐟 Bannerfish", "price": 4, "inv_key": "Bannerfish"},
@@ -145,6 +146,10 @@ ITEM_PRICES = {
     "SELL_ANGLERFISH": {"name": "🐟 Anglerfish", "price": 4, "inv_key": "Anglerfish"},
     "SELL_DUCK": {"name": "🦆 Duck", "price": 4, "inv_key": "Duck"},
     "SELL_PUFFER": {"name": "🐡 Pufferfish", "price": 5, "inv_key": "Pufferfish"},
+    "SELL_REDHAMMERCAT": {"name": "🐱 Red Hammer Cat", "price": 8, "inv_key": "Seahorse"},
+    "SELL_PURPLEFISTCAT": {"name": "🐱 Purple Fist Cat", "price": 8, "inv_key": "Seahorse"},
+    "SELL_GREENDINOCAT": {"name": "🐱 Green Dino Cat", "price": 8, "inv_key": "Seahorse"},
+    "SELL_WHITEWINTERCAT": {"name": "🐱 White Winter Cat", "price": 8, "inv_key": "Seahorse"},
     "SELL_SHARK": {"name": "🐟 Shark", "price": 10, "inv_key": "Shark"},
     "SELL_SEAHORSE": {"name": "🐟 Seahorse", "price": 10, "inv_key": "Seahorse"},
     "SELL_CROCODILE": {"name": "🐊 Crocodile", "price": 10, "inv_key": "Crocodile"},
@@ -169,9 +174,12 @@ ITEM_PRICES = {
     "SELL_MERMAIDBOY": {"name": "🧜‍♀️ Mermaid Boy", "price": 200, "inv_key": "Mermaid Boy"},
     "SELL_MERMAIDGIRL": {"name": "🧜‍♀️ Mermaid Girl", "price": 200, "inv_key": "Mermaid Girl"},
     "SELL_CUPIDDRAGON": {"name": "🐉 Cupid Dragon", "price": 300, "inv_key": "Cupid Dragon"},
-    "SELL_DARKFISHWARRIOR": {"name": "👹 Dark Fish Warrior", "price": 1000, "inv_key": "Dark Fish Warrior"},
-    "SELL_SNAILDRAGON": {"name": "🐉 Snail Dragon", "price": 2000, "inv_key": "Snail Dragon"},
-    "SELL_QUEENOFHERMIT": {"name": "👑 Queen Of Hermit", "price": 2000, "inv_key": "Queen Of Hermit"},
+    "SELL_WEREWOLF": {"name": "🐺 Werewolf", "price": 300, "inv_key": "Werewolf"},
+    "SELL_DARKFISHWARRIOR": {"name": "👹 Dark Fish Warrior", "price": 1500, "inv_key": "Dark Fish Warrior"},
+    "SELL_SNAILDRAGON": {"name": "🐉 Snail Dragon", "price": 2700, "inv_key": "Snail Dragon"},
+    "SELL_QUEENOFHERMIT": {"name": "👑 Queen Of Hermit", "price": 2700, "inv_key": "Queen Of Hermit"},
+    "SELL_MECHAFROG": {"name": "🤖 Mecha Frog", "price": 2700, "inv_key": "Mecha Frog"},
+    "SELL_QUEENOFMEDUSA": {"name": "👑 Queen Of Medusa 🐍", "price": 2700, "inv_key": "Queen Of Medusa"},
 }
 # sementara user -> item_code waiting for amount input (chat)
 SELL_WAITING = {}  # user_id: item_code
@@ -187,6 +195,10 @@ INV_KEY_ALIASES = {
     "snail": "Snail",
     "🐚 Hermit Crab": "Hermit Crab",
     "hermit crab": "Hermit Crab",
+    "🐸 Frog": "Frog",
+    "frog": "Frog",
+    "🐍 Snake": "🐍 Snake",
+    "snake": "Snake",
     "🐙 octopus": "Octopus",
     "octopus": "Octopus",
     "🐡 Pufferfish": "Pufferfish",
@@ -197,6 +209,14 @@ INV_KEY_ALIASES = {
     "orca": "Orca",
     "🐬 Dolphin": "Dolphin",
     "dolphin": "Dolphin",
+    "🐱 Red Hammer Cat": "Red Hammer Cat",
+    "red hammer cat": "Red Hammer Cat",
+    "🐱 Purple Fist Cat": "🐱 Purple Fist Cat",
+    "purple fist cat": "Purple Fist Cat",
+    "🐱 Green Dino Cat": "🐱 Green Dino Cat",
+    "green dino cat": "Green Dino Cat",
+    "🐱 White Winter Cat": "🐱 White Winter Cat",
+    "white winter cat": "White Winter Cat",
     "🐉 Baby Dragon": "Baby Dragon",
     "baby dragon": "Baby Dragon",
     "🐉 Baby Spirit Dragon": "🐉 Baby Spirit Dragon",
@@ -215,12 +235,18 @@ INV_KEY_ALIASES = {
     "blue dragon": "Blue Dragon",
     "🐉 Cupid Dragon": "Cupid Dragon",
     "cupid dragon": "Cupid Dragon",
+    "🐺 Werewolf": "🐺 Werewolf",
+    "werewolf": "Werewolf",
     "👹 Dark Fish Warrior": "Dark Fish Warrior",
     "dark fish warrior": "Dark Fish Warrior",
     "👑 Queen Of Hermit": "Queen Of Hermit",
     "queen of hermit": "Queen Of Hermit",
     "🐉 Snail Dragon": "Snail Dragon",
     "snail dragon": "Snail Dragon",
+    "🤖 Mecha Frog": "Mecha Frog",
+    "🤖 Mecha Frog": "Mecha Frog",
+    "👑 Queen Of Medusa 🐍": "Queen Of Medusa",
+    "queen of medusa": "Queen Of Medusa",
     "🐸 Frog": "Frog",
     "Frog": "Frog",
     "🐟 Goldfish": "Goldfish",
@@ -431,6 +457,7 @@ MENU_STRUCTURE = {
             ("🐚 Hermit Crab", "SELL_DETAIL:SELL_HERMITCRAB"),
             ("🦀 Crab", "SELL_DETAIL:SELL_CRAB"),
             ("🐸 Frog", "SELL_DETAIL:SELL_FROG"),
+            ("🐍 Snake", "SELL_DETAIL:SELL_SNAKE"),
             ("🐙 Octopus", "SELL_DETAIL:SELL_OCTOPUS"),
             ("ଳ Jelly Fish", "SELL_DETAIL:SELL_JELLYFISH"),
             ("🦪 Giant Clam", "SELL_DETAIL:SELL_GIANTCLAM"),
@@ -443,6 +470,11 @@ MENU_STRUCTURE = {
             ("🐟 Moorish Idol", "SELL_DETAIL:SELL_MOORISHIDOL"),
             ("🐟 Anglerfish", "SELL_DETAIL:SELL_ANGLERFISH"),
             ("🐟 Axolotl", "SELL_DETAIL:SELL_AXOLOTL"),
+            ("🐱 Red Hammer Cat", "SELL_DETAIL:SELL_REDHAMMERCAT"),
+            ("🐱 Purple Fist Cat", "SELL_DETAIL:SELL_PURPLEFISTCAT"),
+            ("🐱 Green Dino Cat", "SELL_DETAIL:SELL_GREENDINOCAT"),
+            ("🐱 White Winter Cat", "SELL_DETAIL:SELL_WHITEWINTERCAT"),
+            ("🦆 Duck", "SELL_DETAIL:SELL_DUCK"),
             ("🐡 Pufferfish", "SELL_DETAIL:SELL_PUFFER"),
             ("🐟 Shark", "SELL_DETAIL:SELL_SHARK"),
             ("🐟 Seahorse", "SELL_DETAIL:SELL_SEAHORSE"),
@@ -460,6 +492,7 @@ MENU_STRUCTURE = {
             ("🐬 Dolphin", "SELL_DETAIL:SELL_DOLPHIN"),
             ("🐉 Baby Dragon", "SELL_DETAIL:SELL_BABYDRAGON"),
             ("🐉 Baby Spirit Dragon", "SELL_DETAIL:SELL_BABYSPIRITDRAGON"),
+            ("🐉 Baby Magma Dragon", "SELL_DETAIL:SELL_BABYMAGMADRAGON"),
             ("🐉 Skull Dragon", "SELL_DETAIL:SELL_SKULLDRAGON"),
             ("🐉 Blue Dragon", "SELL_DETAIL:SELL_BLUEDRAGON"),
             ("🐉 Yellow Dragon", "SELL_DETAIL:SELL_YELLOWDRAGON"),
@@ -467,9 +500,12 @@ MENU_STRUCTURE = {
             ("🧜‍♀️ Mermaid Boy", "SELL_DETAIL:SELL_MERMAIDBOY"),
             ("🧜‍♀️ Mermaid Girl", "SELL_DETAIL:SELL_MERMAIDGIRL"),
             ("🐉 Cupid Dragon", "SELL_DETAIL:SELL_CUPIDDRAGON"),
+            ("🐺 Werewolf", "SELL_DETAIL:SELL_WEREWOLF"),
             ("👹 Dark Fish Warrior", "SELL_DETAIL:SELL_DARKFISHWARRIOR"),
             ("🐉 Snail Dragon", "SELL_DETAIL:SELL_SNAILDRAGON"),
             ("👑 Queen Of Hermit", "SELL_DETAIL:SELL_QUEENOFHERMIT"),
+            ("🤖 Mecha Frog", "SELL_DETAIL:SELL_MECHAFROG"),
+            ("👑 Queen Medusa 🐍", "SELL_DETAIL:SELL_QUEENOFMEDUSA"),
             ("⬅️ Back", "D2"),
         ]
     },
@@ -560,22 +596,26 @@ MENU_STRUCTURE["H"] = {
 MENU_STRUCTURE["I"] = {
     "title": "🧬 [EVOLVE]",
     "buttons": [
-        ("𓆝 Small Fish", "I_SMALLFISH"),   # tombol pertama
-        ("🐌 Snail", "I_SNAIL"),            # tombol kedua
-        ("🐚 Hermit Crab", "I_HERMITCRAB"), # tombol ketiga
-        ("⬅️ Back", "main")                 # tombol keempat
+        ("𓆝 Small Fish", "I_SMALLFISH"),
+        ("🐌 Snail", "I_SNAIL"),
+        ("🐚 Hermit Crab", "I_HERMITCRAB"),
+        ("🐸 Frog", "I_FROG"),
+        ("🐍 Snake", "I_SNAKE"),
+        ("⬅️ Back", "main")
     ]
 }
+
 # Submenu Small Fish
 MENU_STRUCTURE["I_SMALLFISH"] = {
     "title": "🧬 Evolve 𓆝 Small Fish",
     "buttons": [
-        ("🧬 Evolve jadi Dark Fish Warrior (-1000)", "EVOLVE_SMALLFISH_CONFIRM"),
-        ("COMING SOON", "COMING_SOON"),  # tombol baru
+        ("🧬 Evolve jadi 👹 Dark Fish Warrior (-1000)", "EVOLVE_SMALLFISH_CONFIRM"),
+        ("COMING SOON", "COMING_SOON"),
         ("⬅️ Back", "I")
     ]
 }
-# Submenu Hermit Crab
+
+# Submenu Snail
 MENU_STRUCTURE["I_SNAIL"] = {
     "title": "🧬 Evolve 🐌 Snail",
     "buttons": [
@@ -583,11 +623,30 @@ MENU_STRUCTURE["I_SNAIL"] = {
         ("⬅️ Back", "I")
     ]
 }
+
 # Submenu Hermit Crab
 MENU_STRUCTURE["I_HERMITCRAB"] = {
     "title": "🧬 Evolve 🐚 Hermit Crab",
     "buttons": [
         ("🧬 Evolve jadi 👑 Queen of Hermit (-1000)", "EVOLVE_HERMITCRAB_CONFIRM"),
+        ("⬅️ Back", "I")
+    ]
+}
+
+# Submenu Frog
+MENU_STRUCTURE["I_FROG"] = {
+    "title": "🧬 Evolve 🐸 Frog",
+    "buttons": [
+        ("🧬 Evolve jadi 🤖 Mecha Frog (-1000)", "EVOLVE_FROG_CONFIRM"),
+        ("⬅️ Back", "I")
+    ]
+}
+
+# Submenu Snake
+MENU_STRUCTURE["I_SNAKE"] = {
+    "title": "🧬 Evolve 🐍 Snake",
+    "buttons": [
+        ("🧬 Evolve jadi 👑 Queen Of Medusa 🐍 (-1000)", "EVOLVE_QUEENOFMEDUSA_CONFIRM"),
         ("⬅️ Back", "I")
     ]
 }
@@ -861,6 +920,97 @@ async def callback_handler(client: Client, cq: CallbackQuery):
                 TARGET_GROUP,
                 f"🧬 @{uname} berhasil evolve!\n"
                 f"🧬 Hermit Crab → 👑 Queen of Hermit 🎉"
+            )
+            await client.pin_chat_message(TARGET_GROUP, msg.id, disable_notification=True)
+        except Exception as e:
+            logger.error(f"Gagal kirim atau pin info evolve ke group: {e}")
+
+        # ===== EVOLVE FROG CONFIRM =====
+    if data == "EVOLVE_FROG_CONFIRM":
+        inv = aquarium.get_user_fish(user_id)
+        frog_qty = inv.get("🐸 Frog", 0)
+
+        if frog_qty < 1000:
+            await cq.answer("❌ Frog kamu kurang (butuh 1000)", show_alert=True)
+            return
+
+        # ✅ Kurangi stok Frog
+        inv["🐸 Frog"] = frog_qty - 1000
+        if inv["🐸 Frog"] <= 0:
+            inv.pop("🐸 Frog")
+
+        # ✅ Tambahkan 🤖 Mecha Frog
+        inv["🤖 Mecha Frog"] = inv.get("🤖 Mecha Frog", 0) + 1
+
+        # ✅ Simpan ke database
+        db = aquarium.load_data()
+        db[str(user_id)] = inv
+        aquarium.save_data(db)
+
+        uname = cq.from_user.username or f"user{user_id}"
+
+        # ✅ Balasan ke user
+        inv_text = aquarium.list_inventory(user_id)
+        await cq.message.edit_text(
+            f"✅ Evolve berhasil!\n"
+            f"🐸 Frog -1000\n"
+            f"🧬 🤖 Mecha Frog +1\n\n"
+            f"📦 Inventory terbaru:\n{inv_text}",
+            reply_markup=make_keyboard("I", user_id)
+        )
+
+        # ✅ Info ke group + pin pesan
+        try:
+            msg = await client.send_message(
+                TARGET_GROUP,
+                f"🧬 @{uname} berhasil evolve!\n"
+                f"Frog → 🤖 Mecha Frog 🎉"
+            )
+            await client.pin_chat_message(TARGET_GROUP, msg.id, disable_notification=True)
+        except Exception as e:
+            logger.error(f"Gagal kirim atau pin info evolve ke group: {e}")
+
+
+    # ===== EVOLVE SNAKE CONFIRM =====
+    if data == "EVOLVE_QUEENOFMEDUSA_CONFIRM":
+        inv = aquarium.get_user_fish(user_id)
+        snake_qty = inv.get("🐍 Snake", 0)
+
+        if snake_qty < 1000:
+            await cq.answer("❌ Snake kamu kurang (butuh 1000)", show_alert=True)
+            return
+
+        # ✅ Kurangi stok Snake
+        inv["🐍 Snake"] = snake_qty - 1000
+        if inv["🐍 Snake"] <= 0:
+            inv.pop("🐍 Snake")
+
+        # ✅ Tambahkan 👑 Queen Of Medusa 🐍
+        inv["👑 Queen Of Medusa 🐍"] = inv.get("👑 Queen Of Medusa 🐍", 0) + 1
+
+        # ✅ Simpan ke database
+        db = aquarium.load_data()
+        db[str(user_id)] = inv
+        aquarium.save_data(db)
+
+        uname = cq.from_user.username or f"user{user_id}"
+
+        # ✅ Balasan ke user
+        inv_text = aquarium.list_inventory(user_id)
+        await cq.message.edit_text(
+            f"✅ Evolve berhasil!\n"
+            f"🐍 Snake -1000\n"
+            f"🧬 👑 Queen Of Medusa 🐍 +1\n\n"
+            f"📦 Inventory terbaru:\n{inv_text}",
+            reply_markup=make_keyboard("I", user_id)
+        )
+
+        # ✅ Info ke group + pin pesan
+        try:
+            msg = await client.send_message(
+                TARGET_GROUP,
+                f"🧬 @{uname} berhasil evolve!\n"
+                f"Snake → 👑 Queen Of Medusa 🐍 🎉"
             )
             await client.pin_chat_message(TARGET_GROUP, msg.id, disable_notification=True)
         except Exception as e:
