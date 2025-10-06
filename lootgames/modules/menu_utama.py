@@ -176,6 +176,7 @@ ITEM_PRICES = {
     "SELL_MERMAIDGIRL": {"name": "🧜‍♀️ Mermaid Girl", "price": 200, "inv_key": "Mermaid Girl"},
     "SELL_CUPIDDRAGON": {"name": "🐉 Cupid Dragon", "price": 300, "inv_key": "Cupid Dragon"},
     "SELL_WEREWOLF": {"name": "🐺 Werewolf", "price": 300, "inv_key": "Werewolf"},
+    "SELL_RAINBOWANGELCAT": {"name": "🐱 Rainbow Angel Cat", "price": 300, "inv_key": "Rainbow Angel Cat"},
     "SELL_DARKLORDDEMON": {"name": "👹 Dark Lord Demon", "price": 500, "inv_key": "Dark Lord Demon"},
     "SELL_PRINCESSOFNINETAIL": {"name": "🦊 Princess of Nine Tail", "price": 500, "inv_key": "Princess of Nine Tail"},
     "SELL_DARKFISHWARRIOR": {"name": "👹 Dark Fish Warrior", "price": 1500, "inv_key": "Dark Fish Warrior"},
@@ -240,6 +241,8 @@ INV_KEY_ALIASES = {
     "cupid dragon": "Cupid Dragon",
     "🐺 Werewolf": "🐺 Werewolf",
     "werewolf": "Werewolf",
+    "🐱 Rainbow Angel Cat": "🐱 Rainbow Angel Cat",
+    "rainbow angel cat": "Rainbow Angel Cat",
     "👹 Dark Lord Demon": "👹 Dark Lord Demon",
     "dark lord demon": "Dark Lord Demon",
     "🦊 Princess of Nine Tail": "🦊 Princess of Nine Tail",
@@ -511,6 +514,7 @@ MENU_STRUCTURE = {
             ("🧜‍♀️ Mermaid Girl", "SELL_DETAIL:SELL_MERMAIDGIRL"),
             ("🐉 Cupid Dragon", "SELL_DETAIL:SELL_CUPIDDRAGON"),
             ("🐺 Werewolf", "SELL_DETAIL:SELL_WEREWOLF"),
+            ("🐱 Rainbow Angel Cat", "SELL_DETAIL:SELL_RAINBOWANGELCAT"),
             ("👹 Dark Lord Demon", "SELL_DETAIL:SELL_DARKLORDDEMON"),
             ("🦊 Princess of Nine Tail", "SELL_DETAIL:SELL_PRINCESSOFNINETAIL"),
             ("🐉 Snail Dragon", "SELL_DETAIL:SELL_SNAILDRAGON"),
@@ -1791,6 +1795,7 @@ def register(app: Client):
     app.add_handler(MessageHandler(handle_transfer_message, filters.text & filters.private))
 
     logger.info("[MENU] Handler menu_utama terdaftar.")
+
 
 
 
