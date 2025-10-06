@@ -65,7 +65,7 @@ FISH_LOOT = {
 # ---------------- BUFF RATE ---------------- #
 BUFF_RATE = {
     "COMMON": 0.0,
-    "RARE": 0.05,
+    "RARE": 0.20,
     "LEGEND": 1.00,
     "MYTHIC": 5.00
 }
