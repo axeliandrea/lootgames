@@ -70,7 +70,7 @@ FISH_LOOT = {
     "🧜‍♀️ Mermaid Girl": 0.09,        
     "🐉 Cupid Dragon": 0.01,          
     "🐺 Werewolf": 0.001,  
-    "🐱 Rainbow Angel Cat": 0.001 
+    "🐱 Rainbow Angel Cat": 0.001, 
     "👹 Dark Lord Demon": 0.001,      
     "🦊 Princess of Nine Tail": 0.001,    
 }
