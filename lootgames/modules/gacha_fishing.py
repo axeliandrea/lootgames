@@ -1,4 +1,4 @@
-#test
+#START
 import random
 import asyncio
 import logging
