@@ -9,72 +9,73 @@ from lootgames.modules import aquarium, umpan
 logger = logging.getLogger(__name__)
 
 # ============================================================
-# 🎣 LOOT TABLE (TOTAL ≈1000.00%)
+# 🎣 LOOT TABLE (TOTAL ≈1000.00%, urut harga)
 # ============================================================
 FISH_LOOT = {
-    # ---------------- COMMON (Monster 1–19) ---------------- #
-    "🤧 Zonk": 50.00,                 # harga 0
-    "𓆝 Small Fish": 168.00,          # harga 1 — Monster 1
-    "🐌 Snail": 148.00,               # harga 2 — Monster 2
-    "🐚 Hermit Crab": 148.00,         # harga 2 — Monster 3
-    "🦀 Crab": 138.00,                # harga 2 — Monster 4
-    "🐸 Frog": 138.00,                # harga 2 — Monster 5
-    "🐍 Snake": 138.00,               # harga 2 — Monster 6
-    "🐙 Octopus": 110.00,             # harga 3 — Monster 7
-    "ଳ Jelly Fish": 70.00,            # harga 4 — Monster 8
-    "🦪 Giant Clam": 70.00,           # harga 4 — Monster 9
-    "🐟 Goldfish": 70.00,             # harga 4 — Monster 10
-    "🐟 Stingrays Fish": 70.00,       # harga 4 — Monster 11
-    "🐟 Clownfish": 70.00,            # harga 4 — Monster 12
-    "🐟 Doryfish": 70.00,             # harga 4 — Monster 13
-    "🐟 Bannerfish": 70.00,           # harga 4 — Monster 14
-    "🐟 Moorish Idol": 70.00,         # harga 4 — Monster 15
-    "🐟 Axolotl": 70.00,              # harga 4 — Monster 16
-    "🐟 Beta Fish": 70.00,            # harga 4 — Monster 17
-    "🐟 Anglerfish": 70.00,           # harga 4 — Monster 18
-    "🦆 Duck": 70.00,                 # harga 4 — Monster 19
+    # ---------------- COMMON (harga 0–4) ---------------- #
+    "🤧 Zonk": 50.00,                  # 50.00 / 1000.00 ≈ 5.00%
+    "𓆝 Small Fish": 168.00,          # 16.80%
+    "🐌 Snail": 143.00,                # 14.30%
+    "🐚 Hermit Crab": 143.00,          # 14.30%
+    "🦀 Crab": 133.00,                 # 13.30%
+    "🐸 Frog": 133.00,                 # 13.30%
+    "🐍 Snake": 135.00,                # 13.50%
+    "🐙 Octopus": 105.00,              # 10.50%
+    "ଳ Jelly Fish": 70.00,             # 7.00%
+    "🦪 Giant Clam": 70.00,            # 7.00%
+    "🐟 Goldfish": 70.00,              # 7.00%
+    "🐟 Stingrays Fish": 70.00,        # 7.00%
+    "🐟 Clownfish": 70.00,             # 7.00%
+    "🐟 Doryfish": 70.00,              # 7.00%
+    "🐟 Bannerfish": 70.00,            # 7.00%
+    "🐟 Moorish Idol": 70.00,          # 7.00%
+    "🐟 Axolotl": 70.00,               # 7.00%
+    "🐟 Beta Fish": 70.00,             # 7.00%
+    "🐟 Anglerfish": 70.00,            # 7.00%
+    "🦆 Duck": 70.00,                  # 7.00%
 
-    # ---------------- ULTRA RARE (Monster 20–32) ---------------- #
-    "🐡 Pufferfish": 50.00,           # harga 5 — Monster 20
-    "📿 Lucky Jewel": 50.00,          # harga 7 — Monster 21
-    "🐱 Red Hammer Cat": 10.00,       # harga 8 — Monster 22
-    "🐱 Purple Fist Cat": 10.00,      # harga 8 — Monster 23
-    "🐱 Green Dino Cat": 10.00,       # harga 8 — Monster 24
-    "🐱 White Winter Cat": 10.00,     # harga 8 — Monster 25
-    "🐟 Shark": 30.00,                # harga 10 — Monster 26
-    "🐟 Seahorse": 30.00,             # harga 10 — Monster 27
-    "🐊 Crocodile": 30.00,            # harga 10 — Monster 28
-    "🦦 Seal": 30.00,                 # harga 10 — Monster 29
-    "🐢 Turtle": 30.00,               # harga 10 — Monster 30
-    "🦞 Lobster": 30.00,              # harga 10 — Monster 31
+    # ---------------- ULTRA RARE (harga 5–10) ---------------- #
+    "🐡 Pufferfish": 50.00,            # 5.00%
+    "📿 Lucky Jewel": 50.00,           # 5.00%
+    "🐱 Red Hammer Cat": 10.00,        # 1.00%
+    "🐱 Purple Fist Cat": 10.00,       # 1.00%
+    "🐱 Green Dino Cat": 10.00,        # 1.00%
+    "🐱 White Winter Cat": 10.00,      # 1.00%
+    "🐟 Shark": 30.00,                 # 3.00%
+    "🐟 Seahorse": 30.00,              # 3.00%
+    "🐊 Crocodile": 30.00,             # 3.00%
+    "🦦 Seal": 30.00,                  # 3.00%
+    "🐢 Turtle": 30.00,                # 3.00%
+    "🦞 Lobster": 30.00,               # 3.00%
 
-    # ---------------- LEGENDARY (Monster 32–41) ---------------- #
-    "🐋 Orca": 30.00,                 # harga 15 — Monster 32
-    "🐬 Dolphin": 30.00,              # harga 15 — Monster 33
-    "🐒 Monkey": 30.00,               # harga 15 — Monster 34
-    "🦍 Gorilla": 30.00,              # harga 15 — Monster 35
-    "🐼 Panda" : 30.00,                # harga 15 — Monster 36
-    "🐹⚡ Pikachu": 5.00,             # harga 30 — Monster 37
-    "🐸🍀 Bulbasaur": 5.00,           # harga 30 — Monster 38
-    "🐢💧 Squirtle": 5.00,            # harga 30 — Monster 39
-    "🐉🔥 Charmander": 5.00,          # harga 30 — Monster 40
-    "🐋⚡ Kyogre": 5.00,              # harga 30 — Monster 41
+    # ---------------- LEGENDARY (harga 15–30) ---------------- #
+    "🐋 Orca": 30.00,                   # 3.00%
+    "🐬 Dolphin": 30.00,                # 3.00%
+    "🐒 Monkey": 30.00,                 # 3.00%
+    "🦍 Gorilla": 30.00,                # 3.00%
+    "🐶 Dog": 30.00,                     # 3.00%
+    "🐼 Panda": 30.00,                   # 3.00%
+    "🐹⚡ Pikachu": 5.00,               # 0.50%
+    "🐸🍀 Bulbasaur": 5.00,             # 0.50%
+    "🐢💧 Squirtle": 5.00,              # 0.50%
+    "🐉🔥 Charmander": 5.00,            # 0.50%
+    "🐋⚡ Kyogre": 5.00,                 # 0.50%
 
-    # ---------------- MYTHIC (Monster 41–54) ---------------- #
-    "🐉 Baby Dragon": 0.10,           # harga 50 — Monster 42
-    "🐉 Baby Spirit Dragon": 0.10,    # harga 50 — Monster 43
-    "🐉 Baby Magma Dragon": 0.10,     # harga 50 — Monster 44
-    "🐉 Skull Dragon": 0.09,          # harga 55 — Monster 45
-    "🐉 Blue Dragon": 0.09,           # harga 55 — Monster 46
-    "🐉 Black Dragon": 0.09,          # harga 55 — Monster 47
-    "🐉 Yellow Dragon": 0.09,         # harga 55 — Monster 48
-    "🧜‍♀️ Mermaid Boy": 0.09,         # harga 60 — Monster 49
-    "🧜‍♀️ Mermaid Girl": 0.09,        # harga 60 — Monster 50
-    "🐉 Cupid Dragon": 0.01,          # harga 70 — Monster 51
-    "🐺 Werewolf": 0.001,             # harga 100 — Monster 52
-    "🐱 Rainbow Angel Cat": 0.001,    # harga 120 — Monster 53
-    "👹 Dark Lord Demon": 0.001,      # harga 150 — Monster 54
-    "🦊 Princess of Nine Tail": 0.001 # harga 200 — Monster 55
+    # ---------------- MYTHIC (harga 0,09–0,1) ---------------- #
+    "🐉 Baby Dragon": 0.10,             # 0.01%
+    "🐉 Baby Spirit Dragon": 0.10,      # 0.01%
+    "🐉 Baby Magma Dragon": 0.10,       # 0.01%
+    "🐉 Skull Dragon": 0.09,            # 0.009%
+    "🐉 Blue Dragon": 0.09,             # 0.009%
+    "🐉 Black Dragon": 0.09,            # 0.009%
+    "🐉 Yellow Dragon": 0.09,           # 0.009%
+    "🧜‍♀️ Mermaid Boy": 0.09,           # 0.009%
+    "🧜‍♀️ Mermaid Girl": 0.09,          # 0.009%
+    "🐉 Cupid Dragon": 0.01,            # 0.001%
+    "🐺 Werewolf": 0.001,               # 0.0001%
+    "🐱 Rainbow Angel Cat": 0.001,      # 0.0001%
+    "👹 Dark Lord Demon": 0.001,        # 0.0001%
+    "🦊 Princess of Nine Tail": 0.001   # 0.0001%
 }
 
 # ============================================================
@@ -113,15 +114,14 @@ def roll_loot(buff: float, umpan_type: str = "COMMON") -> str:
     items = []
     chances = []
 
-    # Batasi jenis ikan per tipe umpan
     if umpan_type == "COMMON":
-        allowed = list(FISH_LOOT.keys())[:19]  # Monster 1–19
+        allowed = list(FISH_LOOT.keys())  # COMMON bisa dapat semua termasuk MYTHIC
     elif umpan_type == "RARE":
-        allowed = list(FISH_LOOT.keys())[19:]  # Monster 20 ke atas
+        allowed = list(FISH_LOOT.keys())[20:]  # mulai ULTRA RARE
     elif umpan_type == "LEGEND":
-        allowed = list(FISH_LOOT.keys())[31:]  # Monster 32 ke atas
+        allowed = list(FISH_LOOT.keys())[32:]  # mulai LEGEND
     elif umpan_type == "MYTHIC":
-        allowed = list(FISH_LOOT.keys())[-14:]  # Khusus Mythic
+        allowed = list(FISH_LOOT.keys())[-14:]  # hanya MYTHIC
     else:
         allowed = list(FISH_LOOT.keys())
 
@@ -138,12 +138,11 @@ def roll_loot(buff: float, umpan_type: str = "COMMON") -> str:
             continue
 
         bonus = 0.0
-
         if umpan_type == "RARE":
             if item in mythic_items:
-                bonus = 30.0
+                bonus = 20.0
             elif item in ultra_mythic_items:
-                bonus = 1.5
+                bonus = 0.5
             else:
                 bonus = buff
         elif umpan_type == "LEGEND":
@@ -153,8 +152,15 @@ def roll_loot(buff: float, umpan_type: str = "COMMON") -> str:
                 bonus = 7.0
             else:
                 bonus = buff
+        elif umpan_type == "COMMON":
+            if item in mythic_items:
+                bonus = 0.09  # COMMON juga bisa dapat MYTHIC
+            elif item in ultra_mythic_items:
+                bonus = 0.01  # COMMON bisa dapat ULTRA MYTHIC
+            else:
+                bonus = buff
         else:
-            bonus = buff if item != "🤧 Zonk" else 0
+            bonus = buff
 
         items.append(item)
         chances.append(base_chance + bonus)
