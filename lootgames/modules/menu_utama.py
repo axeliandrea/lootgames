@@ -1,4 +1,4 @@
-# lootgames/modules/menu_utama.py ganti umpan rare nonaktif
+# lootgames/modules/menu_utama.py Test Nonaktif Umpan Rare
 import os
 import logging
 import asyncio
@@ -1195,11 +1195,17 @@ async def callback_handler(client: Client, cq: CallbackQuery):
 
     # TRANSFER START
     if data.startswith("TRANSFER_"):
-        jenis = data.split("_")[1]
-        map_jenis = {"COMMON": "A", "RARE": "B", "LEGEND": "C", "MYTHIC": "D"}
-        TRANSFER_STATE[user_id] = {"jenis": map_jenis.get(jenis)}
-        await cq.message.reply("✍️ Masukkan format transfer: `@username jumlah`\nContoh: `@user 2`")
+    jenis = data.split("_")[1]
+    map_jenis = {"COMMON": "A", "RARE": "B", "LEGEND": "C", "MYTHIC": "D"}
+
+    # 🔒 Batasi transfer umpan Rare hanya untuk OWNER
+    if jenis == "RARE" and user_id != OWNER_ID:
+        await cq.answer("❌ Hanya OWNER yang bisa transfer Umpan Rare 🐌.", show_alert=True)
         return
+
+    TRANSFER_STATE[user_id] = {"jenis": map_jenis.get(jenis)}
+    await cq.message.reply("✍️ Masukkan format transfer: `@username jumlah`\nContoh: `@user 2`")
+    return
 
     # CHECK COIN Fizz
     # ================= CEK COIN & SUBMENU ================= #
@@ -1617,6 +1623,13 @@ async def handle_transfer_message(client: Client, message: Message):
                 return
 
             # ====== PROSES TRANSFER ====== #
+            # ====== PROSES TRANSFER ====== #
+            # 🔒 Batasi transfer umpan Rare hanya untuk OWNER
+            if jenis == "B" and uid != OWNER_ID:
+                await message.reply("❌ Hanya OWNER yang bisa transfer Umpan Rare 🐌.")
+                TRANSFER_STATE.pop(uid, None)
+                return
+
             if uid == OWNER_ID:
                 umpan.add_umpan(rid, jenis, amt)
             else:
@@ -1795,6 +1808,7 @@ def register(app: Client):
     app.add_handler(MessageHandler(handle_transfer_message, filters.text & filters.private))
 
     logger.info("[MENU] Handler menu_utama terdaftar.")
+
 
 
 
