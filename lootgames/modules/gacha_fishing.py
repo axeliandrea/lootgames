@@ -50,17 +50,17 @@ BUFF_RATE = {
 }
 
 # ============================================================
-# 🎣 LIST ITEM PER KATEGORI (URUTAN PENTING!)
+# 🎣 LIST ITEM PER KATEGORI
 # ============================================================
 ultra_mythic_items = [
-    "🐺 Werewolf","🐱 Rainbow Angel Cat","👹 Dark Lord Demon",
-    "🦊 Princess of Nine Tail","🐦‍🔥 Fire Phoenix","🐦❄️ Frost Phoenix","🐦🌌 Dark Phoenix"
+    "🐺 Werewolf", "🐱 Rainbow Angel Cat", "👹 Dark Lord Demon",
+    "🦊 Princess of Nine Tail", "🐦‍🔥 Fire Phoenix", "🐦❄️ Frost Phoenix", "🐦🌌 Dark Phoenix"
 ]
 
 mythic_items = [
-    "🐉 Baby Dragon","🐉 Baby Spirit Dragon","🐉 Baby Magma Dragon",
-    "🐉 Skull Dragon","🐉 Blue Dragon","🐉 Black Dragon",
-    "🐉 Yellow Dragon","🧜‍♀️ Mermaid Boy","🧜‍♀️ Mermaid Girl","🐉 Cupid Dragon"
+    "🐉 Baby Dragon", "🐉 Baby Spirit Dragon", "🐉 Baby Magma Dragon",
+    "🐉 Skull Dragon", "🐉 Blue Dragon", "🐉 Black Dragon",
+    "🐉 Yellow Dragon", "🧜‍♀️ Mermaid Boy", "🧜‍♀️ Mermaid Girl", "🐉 Cupid Dragon"
 ]
 
 common_items = [
@@ -90,19 +90,23 @@ async def fishing_loot(client: Client, target_chat: int, username: str, user_id:
     return loot_item
 
 # ============================================================
-# 🎲 PROSES RANDOM LOOT
+# 🎲 RANDOM LOOT PROCESS
 # ============================================================
 def roll_loot(buff: float = 0.0) -> str:
     roll = random.uniform(0, 100)
+    # Check Ultra Mythic
     for item in ultra_mythic_items:
         if roll <= FISH_LOOT[item] + buff:
             return item
+    # Check Mythic
     for item in mythic_items:
         if roll <= FISH_LOOT[item] + buff:
             return item
+    # Check Rare
     for item in rare_items:
         if roll <= FISH_LOOT[item] + buff:
             return item
+    # Check Common
     for item in common_items:
         if roll <= FISH_LOOT[item] + buff:
             return item
