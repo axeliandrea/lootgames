@@ -8,82 +8,87 @@ from lootgames.modules import aquarium, umpan
 
 logger = logging.getLogger(__name__)
 
-# ---------------- LOOT TABLE (TOTAL ≈1000.00%) ---------------- #
+# ============================================================
+# 🎣 LOOT TABLE (TOTAL ≈1000.00%)
+# ============================================================
 FISH_LOOT = {
-    # ---------------- TERMURAH → TERMAHAL ---------------- #
-    # Common
+    # ---------------- COMMON (Monster 1–19) ---------------- #
     "🤧 Zonk": 50.00,                 # harga 0
-    "𓆝 Small Fish": 128.00,          # harga 1
-    "🐌 Snail": 128.00,               # harga 2
-    "🐚 Hermit Crab": 128.00,         # harga 2
-    "🦀 Crab": 128.00,                # harga 2
-    "🐸 Frog": 128.00,                # harga 2
-    "🐍 Snake": 128.00,               # harga 2
-    "🐙 Octopus": 100.00,             # harga 3
+    "𓆝 Small Fish": 168.00,          # harga 1 — Monster 1
+    "🐌 Snail": 148.00,               # harga 2 — Monster 2
+    "🐚 Hermit Crab": 148.00,         # harga 2 — Monster 3
+    "🦀 Crab": 148.00,                # harga 2 — Monster 4
+    "🐸 Frog": 148.00,                # harga 2 — Monster 5
+    "🐍 Snake": 148.00,               # harga 2 — Monster 6
+    "🐙 Octopus": 110.00,             # harga 3 — Monster 7
+    "ଳ Jelly Fish": 70.00,            # harga 4 — Monster 8
+    "🦪 Giant Clam": 70.00,           # harga 4 — Monster 9
+    "🐟 Goldfish": 70.00,             # harga 4 — Monster 10
+    "🐟 Stingrays Fish": 70.00,       # harga 4 — Monster 11
+    "🐟 Clownfish": 70.00,            # harga 4 — Monster 12
+    "🐟 Doryfish": 70.00,             # harga 4 — Monster 13
+    "🐟 Bannerfish": 70.00,           # harga 4 — Monster 14
+    "🐟 Moorish Idol": 70.00,         # harga 4 — Monster 15
+    "🐟 Axolotl": 70.00,              # harga 4 — Monster 16
+    "🐟 Beta Fish": 70.00,            # harga 4 — Monster 17
+    "🐟 Anglerfish": 70.00,           # harga 4 — Monster 18
+    "🦆 Duck": 70.00,                 # harga 4 — Monster 19
 
-    # Rare
-    "ଳ Jelly Fish": 80.00,            # harga 4
-    "🦪 Giant Clam": 80.00,           # harga 4
-    "🐟 Goldfish": 80.00,             # harga 4
-    "🐟 Stingrays Fish": 80.00,       # harga 4
-    "🐟 Clownfish": 80.00,            # harga 4
-    "🐟 Doryfish": 80.00,             # harga 4
-    "🐟 Bannerfish": 80.00,           # harga 4
-    "🐟 Moorish Idol": 80.00,         # harga 4
-    "🐟 Axolotl": 80.00,              # harga 4
-    "🐟 Beta Fish": 80.00,            # harga 4
-    "🐟 Anglerfish": 80.00,           # harga 4
-    "🦆 Duck": 80.00,                 # harga 4
+    # ---------------- ULTRA RARE (Monster 20–32) ---------------- #
+    "🐡 Pufferfish": 50.00,           # harga 5 — Monster 20
+    "📿 Lucky Jewel": 50.00,          # harga 7 — Monster 21
+    "🐱 Red Hammer Cat": 10.00,       # harga 8 — Monster 22
+    "🐱 Purple Fist Cat": 10.00,      # harga 8 — Monster 23
+    "🐱 Green Dino Cat": 10.00,       # harga 8 — Monster 24
+    "🐱 White Winter Cat": 10.00,     # harga 8 — Monster 25
+    "🐟 Shark": 30.00,                # harga 10 — Monster 26
+    "🐟 Seahorse": 30.00,             # harga 10 — Monster 27
+    "🐊 Crocodile": 30.00,            # harga 10 — Monster 28
+    "🦦 Seal": 30.00,                 # harga 10 — Monster 29
+    "🐢 Turtle": 30.00,               # harga 10 — Monster 30
+    "🦞 Lobster": 30.00,              # harga 10 — Monster 31
 
-    # Ultra Rare
-    "🐡 Pufferfish": 70.00,           # harga 5
-    "📿 Lucky Jewel": 60.00,          # harga 7
-    "🐱 Red Hammer Cat": 10.00,       # harga 8
-    "🐱 Purple Fist Cat": 10.00,      # harga 8
-    "🐱 Green Dino Cat": 10.00,       # harga 8
-    "🐱 White Winter Cat": 10.00,     # harga 8
-    "🐟 Shark": 40.00,                # harga 10
-    "🐟 Seahorse": 40.00,             # harga 10
-    "🐊 Crocodile": 40.00,            # harga 10
-    "🦦 Seal": 40.00,                 # harga 10
-    "🐢 Turtle": 40.00,               # harga 10
-    "🦞 Lobster": 40.00,              # harga 10
+    # ---------------- LEGENDARY (Monster 32–41) ---------------- #
+    "🐋 Orca": 30.00,                 # harga 15 — Monster 32
+    "🐬 Dolphin": 30.00,              # harga 15 — Monster 33
+    "🐒 Monkey": 30.00,               # harga 15 — Monster 34
+    "🦍 Gorilla": 30.00,              # harga 15 — Monster 35
+    "🐹⚡ Pikachu": 5.00,             # harga 30 — Monster 36
+    "🐸🍀 Bulbasaur": 5.00,           # harga 30 — Monster 37
+    "🐢💧 Squirtle": 5.00,            # harga 30 — Monster 38
+    "🐉🔥 Charmander": 5.00,          # harga 30 — Monster 39
+    "🐋⚡ Kyogre": 5.00,              # harga 30 — Monster 40
 
-    # Legendary
-    "🐋 Orca": 30.00,                 # harga 15
-    "🐬 Dolphin": 30.00,              # harga 15
-    "🐹⚡ Pikachu": 5.00,             # harga 30
-    "🐸🍀 Bulbasaur": 5.00,           # harga 30
-    "🐢💧 Squirtle": 5.00,            # harga 30
-    "🐉🔥 Charmander": 5.00,          # harga 30
-    "🐋⚡ Kyogre": 5.00,              # harga 30
-
-    # Mythic
-    "🐉 Baby Dragon": 0.10,           
-    "🐉 Baby Spirit Dragon": 0.10,    
-    "🐉 Baby Magma Dragon": 0.10,     
-    "🐉 Skull Dragon": 0.09,          
-    "🐉 Blue Dragon": 0.09,           
-    "🐉 Black Dragon": 0.09,          
-    "🐉 Yellow Dragon": 0.09,         
-    "🧜‍♀️ Mermaid Boy": 0.09,         
-    "🧜‍♀️ Mermaid Girl": 0.09,        
-    "🐉 Cupid Dragon": 0.01,          
-    "🐺 Werewolf": 0.001,  
-    "🐱 Rainbow Angel Cat": 0.001, 
-    "👹 Dark Lord Demon": 0.001,      
-    "🦊 Princess of Nine Tail": 0.001,    
+    # ---------------- MYTHIC (Monster 41–54) ---------------- #
+    "🐉 Baby Dragon": 0.10,           # harga 50 — Monster 41
+    "🐉 Baby Spirit Dragon": 0.10,    # harga 50 — Monster 42
+    "🐉 Baby Magma Dragon": 0.10,     # harga 50 — Monster 43
+    "🐉 Skull Dragon": 0.09,          # harga 55 — Monster 44
+    "🐉 Blue Dragon": 0.09,           # harga 55 — Monster 45
+    "🐉 Black Dragon": 0.09,          # harga 55 — Monster 46
+    "🐉 Yellow Dragon": 0.09,         # harga 55 — Monster 47
+    "🧜‍♀️ Mermaid Boy": 0.09,         # harga 60 — Monster 48
+    "🧜‍♀️ Mermaid Girl": 0.09,        # harga 60 — Monster 49
+    "🐉 Cupid Dragon": 0.01,          # harga 70 — Monster 50
+    "🐺 Werewolf": 0.001,             # harga 100 — Monster 51
+    "🐱 Rainbow Angel Cat": 0.001,    # harga 120 — Monster 52
+    "👹 Dark Lord Demon": 0.001,      # harga 150 — Monster 53
+    "🦊 Princess of Nine Tail": 0.001 # harga 200 — Monster 54
 }
 
-# ---------------- BUFF RATE ---------------- #
+# ============================================================
+# 🎯 BUFF RATE PER JENIS UMPAN
+# ============================================================
 BUFF_RATE = {
     "COMMON": 0.0,
-    "RARE": 50.50,
+    "RARE": 30.50,
     "LEGEND": 7.00,
     "MYTHIC": 10.00
 }
 
-# ---------------- FISHING FUNCTION ---------------- #
+# ============================================================
+# 🎣 FUNGSI MEMANCING
+# ============================================================
 async def fishing_loot(client: Client, target_chat: int, username: str, user_id: int, umpan_type: str = "COMMON") -> str:
     buff = BUFF_RATE.get(umpan_type, 0.0)
     loot_item = roll_loot(buff, umpan_type)
@@ -100,25 +105,28 @@ async def fishing_loot(client: Client, target_chat: int, username: str, user_id:
 
     return loot_item
 
-# ---------------- HELPERS ---------------- #
+# ============================================================
+# 🎲 PROSES RANDOM LOOT
+# ============================================================
 def roll_loot(buff: float, umpan_type: str = "COMMON") -> str:
     items = []
     chances = []
 
-    # Batasan jenis ikan per jenis umpan
+    # Batasi jenis ikan per tipe umpan
     if umpan_type == "COMMON":
-        allowed = list(FISH_LOOT.keys())[:48]   # Common → awal Mythic
+        allowed = list(FISH_LOOT.keys())[:19]  # Monster 1–19
     elif umpan_type == "RARE":
-        allowed = list(FISH_LOOT.keys())[8:55]  # Rare → Mythic menengah
+        allowed = list(FISH_LOOT.keys())[19:]  # Monster 20 ke atas
     elif umpan_type == "LEGEND":
-        allowed = list(FISH_LOOT.keys())[20:]   # Ultra Rare → Mythic
+        allowed = list(FISH_LOOT.keys())[31:]  # Monster 32 ke atas
     elif umpan_type == "MYTHIC":
         allowed = list(FISH_LOOT.keys())[-14:]  # Khusus Mythic
     else:
         allowed = list(FISH_LOOT.keys())
 
-    # Daftar Mythic & Ultra Mythic untuk pengecualian umpan RARE
     mythic_items = [
+        "🐉 Baby Dragon", "🐉 Baby Spirit Dragon", "🐉 Baby Magma Dragon",
+        "🐉 Skull Dragon", "🐉 Blue Dragon", "🐉 Black Dragon",
         "🐉 Yellow Dragon", "🧜‍♀️ Mermaid Boy", "🧜‍♀️ Mermaid Girl",
         "🐉 Cupid Dragon"
     ]
@@ -130,34 +138,32 @@ def roll_loot(buff: float, umpan_type: str = "COMMON") -> str:
 
         bonus = 0.0
 
-        # === Pengecualian buff untuk umpan RARE === #
         if umpan_type == "RARE":
             if item in mythic_items:
                 bonus = 50.0
             elif item in ultra_mythic_items:
                 bonus = 10.5
-            elif item != "🤧 Zonk":
+            else:
                 bonus = buff
         elif umpan_type == "LEGEND":
             if item in mythic_items:
-                bonus = 4.0      # bonus Mythic saat LEGEND
+                bonus = 4.0
             elif item in ultra_mythic_items:
-                bonus = 7.0      # bonus Ultra Mythic saat LEGEND
-            elif item != "🤧 Zonk":
-                bonus = buff     # buff default LEGEND 7%
+                bonus = 7.0
+            else:
+                bonus = buff
         else:
             bonus = buff if item != "🤧 Zonk" else 0
 
         items.append(item)
         chances.append(base_chance + bonus)
 
-        # Debug optional (aktifkan jika mau analisis drop rate)
-        # logger.debug(f"[BUFF] {item}: base={base_chance} + bonus={bonus} → total={base_chance + bonus}")
-
     loot_item = random.choices(items, weights=chances, k=1)[0]
     return loot_item
 
-# ---------------- WORKER ---------------- #
+# ============================================================
+# 🧠 BACKGROUND WORKER
+# ============================================================
 async def fishing_worker(app: Client):
     logger.info("[FISHING WORKER] Worker siap berjalan...")
     while True:
