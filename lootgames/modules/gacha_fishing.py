@@ -78,7 +78,7 @@ FISH_LOOT = {
 # ---------------- BUFF RATE ---------------- #
 BUFF_RATE = {
     "COMMON": 0.0,
-    "RARE": 30.50,
+    "RARE": 50.50,
     "LEGEND": 7.00,
     "MYTHIC": 10.00
 }
@@ -133,9 +133,9 @@ def roll_loot(buff: float, umpan_type: str = "COMMON") -> str:
         # === Pengecualian buff untuk umpan RARE === #
         if umpan_type == "RARE":
             if item in mythic_items:
-                bonus = 30.0
+                bonus = 50.0
             elif item in ultra_mythic_items:
-                bonus = 0.5
+                bonus = 10.5
             elif item != "🤧 Zonk":
                 bonus = buff
         elif umpan_type == "LEGEND":
