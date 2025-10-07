@@ -13,69 +13,74 @@ logger = logging.getLogger(__name__)
 # ============================================================
 FISH_LOOT = {
     # ---------------- COMMON (harga 0–4) ---------------- #
-    "🤧 Zonk": 50.00,                  # 5.00%
-    "𓆝 Small Fish": 168.00,          # 16.80%
-    "🐌 Snail": 143.00,                # 14.30%
-    "🐚 Hermit Crab": 143.00,          # 14.30%
-    "🦀 Crab": 133.00,                 # 13.30%
-    "🐸 Frog": 133.00,                 # 13.30%
-    "🐍 Snake": 135.00,                # 13.50%
-    "🐙 Octopus": 105.00,              # 10.50%
-    "ଳ Jelly Fish": 70.00,             # 7.00%
-    "🦪 Giant Clam": 70.00,            # 7.00%
-    "🐟 Goldfish": 70.00,              # 7.00%
-    "🐟 Stingrays Fish": 70.00,        # 7.00%
-    "🐟 Clownfish": 70.00,             # 7.00%
-    "🐟 Doryfish": 70.00,              # 7.00%
-    "🐟 Bannerfish": 70.00,            # 7.00%
-    "🐟 Moorish Idol": 70.00,          # 7.00%
-    "🐟 Axolotl": 70.00,               # 7.00%
-    "🐟 Beta Fish": 70.00,             # 7.00%
-    "🐟 Anglerfish": 70.00,            # 7.00%
-    "🦆 Duck": 70.00,                  # 7.00%
+    "🤧 Zonk": 170.00,                  
+    "𓆝 Small Fish": 288.00,         
+    "🐌 Snail": 171.00,                
+    "🐚 Hermit Crab": 171.00,        
+    "🦀 Crab": 161.00,                 
+    "🐸 Frog": 161.00,                 
+    "🐍 Snake": 163.00,                
+    "🐙 Octopus": 105.00,              
+    "ଳ Jelly Fish": 50.00,             
+    "🦪 Giant Clam": 50.00,           
+    "🐟 Goldfish": 50.00,              
+    "🐟 Stingrays Fish": 50.00,       
+    "🐟 Clownfish": 50.00,             
+    "🐟 Doryfish": 50.00,              
+    "🐟 Bannerfish": 50.00,            
+    "🐟 Moorish Idol": 50.00,          
+    "🐟 Axolotl": 50.00,               
+    "🐟 Beta Fish": 50.00,            
+    "🐟 Anglerfish": 50.00,            
+    "🦆 Duck": 50.00,                  
 
     # ---------------- ULTRA RARE (harga 5–10) ---------------- #
-    "🐡 Pufferfish": 50.00,            # 5.00%
-    "📿 Lucky Jewel": 50.00,           # 5.00%
-    "🐱 Red Hammer Cat": 10.00,        # 1.00%
-    "🐱 Purple Fist Cat": 10.00,       # 1.00%
-    "🐱 Green Dino Cat": 10.00,        # 1.00%
-    "🐱 White Winter Cat": 10.00,      # 1.00%
-    "🐟 Shark": 30.00,                 # 3.00%
-    "🐟 Seahorse": 30.00,              # 3.00%
-    "🐊 Crocodile": 30.00,             # 3.00%
-    "🦦 Seal": 30.00,                  # 3.00%
-    "🐢 Turtle": 30.00,                # 3.00%
-    "🦞 Lobster": 30.00,               # 3.00%
+    "🐡 Pufferfish": 40.00,            
+    "📿 Lucky Jewel": 40.00,          
+    "🐱 Red Hammer Cat": 10.00,        
+    "🐱 Purple Fist Cat": 10.00,       
+    "🐱 Green Dino Cat": 10.00,        
+    "🐱 White Winter Cat": 10.00,      
+    "🐟 Shark": 40.00,                 
+    "🐟 Seahorse": 40.00,             
+    "🐊 Crocodile": 40.00,             
+    "🦦 Seal": 40.00,                  
+    "🐢 Turtle": 40.00,                
+    "🦞 Lobster": 40.00,               
 
     # ---------------- LEGENDARY (harga 15–30) ---------------- #
-    "🐋 Orca": 30.00,                   # 3.00%
-    "🐬 Dolphin": 30.00,                # 3.00%
-    "🐒 Monkey": 30.00,                 # 3.00%
-    "🦍 Gorilla": 30.00,                # 3.00%
-    "🐼 Panda": 30.00,                   # 3.00%
-    "🐶 Dog": 30.00,                     # 3.00%
-    "🐹⚡ Pikachu": 5.00,               # 0.50%
-    "🐸🍀 Bulbasaur": 5.00,             # 0.50%
-    "🐢💧 Squirtle": 5.00,              # 0.50%
-    "🐉🔥 Charmander": 5.00,            # 0.50%
-    "🐋⚡ Kyogre": 5.00,                 # 0.50%
+    "🐋 Orca": 20.00,                  
+    "🐬 Dolphin": 20.00,                
+    "🐒 Monkey": 20.00,                 
+    "🦍 Gorilla": 20.00,               
+    "🐼 Panda": 20.00,                  
+    "🐶 Dog": 20.00,                    
+    "🐹⚡ Pikachu": 5.00,              
+    "🐸🍀 Bulbasaur": 5.00,            
+    "🐢💧 Squirtle": 5.00,              
+    "🐉🔥 Charmander": 5.00,            
+    "🐋⚡ Kyogre": 5.00,                 
 
-    # ---------------- MYTHIC (harga 0,09–0,1) ---------------- #
-    "🐉 Baby Dragon": 0.10,             # 0.01%
-    "🐉 Baby Spirit Dragon": 0.10,      # 0.01%
-    "🐉 Baby Magma Dragon": 0.10,       # 0.01%
-    "🐉 Skull Dragon": 0.09,            # 0.009%
-    "🐉 Blue Dragon": 0.09,             # 0.009%
-    "🐉 Black Dragon": 0.09,            # 0.009%
-    "🐉 Yellow Dragon": 0.09,           # 0.009%
-    "🧜‍♀️ Mermaid Boy": 0.09,           # 0.009%
-    "🧜‍♀️ Mermaid Girl": 0.09,          # 0.009%
-    "🐉 Cupid Dragon": 0.01,            # 0.001%
-    "🐺 Werewolf": 0.001,               # 0.0001%
-    "🐱 Rainbow Angel Cat": 0.001,      # 0.0001%
-    "👹 Dark Lord Demon": 0.001,        # 0.0001%
-    "🦊 Princess of Nine Tail": 0.001   # 0.0001%
+    # ---------------- MYTHIC ---------------- #
+    "🐉 Baby Dragon": 0.10,             
+    "🐉 Baby Spirit Dragon": 0.10,      
+    "🐉 Baby Magma Dragon": 0.10,       
+    "🐉 Skull Dragon": 0.09,           
+    "🐉 Blue Dragon": 0.09,             
+    "🐉 Black Dragon": 0.09,            
+    "🐉 Yellow Dragon": 0.09,          
+    "🧜‍♀️ Mermaid Boy": 0.09,             
+    "🧜‍♀️ Mermaid Girl": 0.09,  
+
+    # ---------------- ULTRA MYTHIC ---------------- #
+    "🐉 Cupid Dragon": 0.01,           
+    "🐺 Werewolf": 0.001,               
+    "🐱 Rainbow Angel Cat": 0.001,      
+    "👹 Dark Lord Demon": 0.001,        
+    "🦊 Princess of Nine Tail": 0.001,   
+    "🐦‍🔥 Fire Phoenix": 0.001,   
+    "🐦❄️ Frost Phoenix": 0.001,   
+    "🐦🌌 Dark Phoenix": 0.001
 }
 
 # ============================================================
@@ -110,39 +115,29 @@ async def fishing_loot(client: Client, target_chat: int, username: str, user_id:
 # ============================================================
 # 🎲 PROSES RANDOM LOOT
 # ============================================================
+mythic_items = [
+    "🐉 Baby Dragon", "🐉 Baby Spirit Dragon", "🐉 Baby Magma Dragon",
+    "🐉 Skull Dragon", "🐉 Blue Dragon", "🐉 Black Dragon",
+    "🐉 Yellow Dragon", "🧜‍♀️ Mermaid Boy", "🧜‍♀️ Mermaid Girl",
+    "🐉 Cupid Dragon"
+]
+
+ultra_mythic_items = [
+    "👹 Dark Lord Demon", "🦊 Princess of Nine Tail", "🐱 Rainbow Angel Cat",
+    "🐦‍🔥 Fire Phoenix", "🐦❄️ Frost Phoenix", "🐦🌌 Dark Phoenix"
+]
+
 def roll_loot(buff: float, umpan_type: str = "COMMON") -> str:
-    items = []
-    chances = []
-
-    if umpan_type == "COMMON":
-        allowed = list(FISH_LOOT.keys())  # COMMON bisa dapat semua termasuk MYTHIC
-    elif umpan_type == "RARE":
-        allowed = list(FISH_LOOT.keys())[20:]  # mulai ULTRA RARE
-    elif umpan_type == "LEGEND":
-        allowed = list(FISH_LOOT.keys())[32:]  # mulai LEGEND
-    elif umpan_type == "MYTHIC":
-        allowed = list(FISH_LOOT.keys())[-14:]  # hanya MYTHIC
-    else:
-        allowed = list(FISH_LOOT.keys())
-
-    mythic_items = [
-        "🐉 Baby Dragon", "🐉 Baby Spirit Dragon", "🐉 Baby Magma Dragon",
-        "🐉 Skull Dragon", "🐉 Blue Dragon", "🐉 Black Dragon",
-        "🐉 Yellow Dragon", "🧜‍♀️ Mermaid Boy", "🧜‍♀️ Mermaid Girl",
-        "🐉 Cupid Dragon"
-    ]
-    ultra_mythic_items = ["👹 Dark Lord Demon", "🦊 Princess of Nine Tail", "🐱 Rainbow Angel Cat"]
+    items, chances = [], []
 
     for item, base_chance in FISH_LOOT.items():
-        if item not in allowed:
-            continue
-
         bonus = 0.0
+
         if umpan_type == "RARE":
             if item in mythic_items:
-                bonus = 1.50
+                bonus = 0.50
             elif item in ultra_mythic_items:
-                bonus = 0.5
+                bonus = 0.10
             else:
                 bonus = buff
         elif umpan_type == "LEGEND":
