@@ -119,7 +119,6 @@ def roll_loot(buff: float, umpan_type: str = "COMMON") -> str:
 
     # Daftar Mythic & Ultra Mythic untuk pengecualian umpan RARE
     mythic_items = [
-        "🐉 Skull Dragon", "🐉 Blue Dragon", "🐉 Black Dragon",
         "🐉 Yellow Dragon", "🧜‍♀️ Mermaid Boy", "🧜‍♀️ Mermaid Girl",
         "🐉 Cupid Dragon"
     ]
@@ -134,7 +133,7 @@ def roll_loot(buff: float, umpan_type: str = "COMMON") -> str:
         # === Pengecualian buff untuk umpan RARE === #
         if umpan_type == "RARE":
             if item in mythic_items:
-                bonus = 3.0
+                bonus = 4.0
             elif item in ultra_mythic_items:
                 bonus = 0.5
             elif item != "🤧 Zonk":
