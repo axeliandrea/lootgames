@@ -159,6 +159,8 @@ ITEM_PRICES = {
     "SELL_LOBSTER": {"name": "🦞 Lobster", "price": 10, "inv_key": "Lobster"},
     "SELL_LUCKYJEWEL": {"name": "📿 Lucky Jewel", "price": 7, "inv_key": "Lucky Jewel"},
     "SELL_ORCA": {"name": "🐋 Orca", "price": 15, "inv_key": "Orca"},
+    "SELL_MONKEY": {"name": "🐒 Monkey", "price": 15, "inv_key": "Monkey"},
+    "SELL_GORILLA": {"name": "🦍 Gorilla", "price": 15, "inv_key": "GORILLA"},
     "SELL_DOLPHIN": {"name": "🐬 Dolphin", "price": 15, "inv_key": "Dolphin"},
     "SELL_PIKACHU": {"name": "🐹⚡ Pikachu", "price": 30, "inv_key": "Pikachu"},
     "SELL_BULBASAUR": {"name": "🐸🍀 Bulbasaur", "price": 30, "inv_key": "Bulbasaur"},
@@ -179,11 +181,11 @@ ITEM_PRICES = {
     "SELL_RAINBOWANGELCAT": {"name": "🐱 Rainbow Angel Cat", "price": 300, "inv_key": "Rainbow Angel Cat"},
     "SELL_DARKLORDDEMON": {"name": "👹 Dark Lord Demon", "price": 500, "inv_key": "Dark Lord Demon"},
     "SELL_PRINCESSOFNINETAIL": {"name": "🦊 Princess of Nine Tail", "price": 500, "inv_key": "Princess of Nine Tail"},
-    "SELL_DARKFISHWARRIOR": {"name": "👹 Dark Fish Warrior", "price": 1500, "inv_key": "Dark Fish Warrior"},
-    "SELL_SNAILDRAGON": {"name": "🐉 Snail Dragon", "price": 2700, "inv_key": "Snail Dragon"},
-    "SELL_QUEENOFHERMIT": {"name": "👑 Queen Of Hermit", "price": 2700, "inv_key": "Queen Of Hermit"},
-    "SELL_MECHAFROG": {"name": "🤖 Mecha Frog", "price": 2700, "inv_key": "Mecha Frog"},
-    "SELL_QUEENOFMEDUSA": {"name": "👑 Queen Of Medusa 🐍", "price": 2700, "inv_key": "Queen Of Medusa"},
+    "SELL_DARKFISHWARRIOR": {"name": "👹 Dark Fish Warrior", "price": 2000, "inv_key": "Dark Fish Warrior"},
+    "SELL_SNAILDRAGON": {"name": "🐉 Snail Dragon", "price": 4000, "inv_key": "Snail Dragon"},
+    "SELL_QUEENOFHERMIT": {"name": "👑 Queen Of Hermit", "price": 4000, "inv_key": "Queen Of Hermit"},
+    "SELL_MECHAFROG": {"name": "🤖 Mecha Frog", "price": 4000, "inv_key": "Mecha Frog"},
+    "SELL_QUEENOFMEDUSA": {"name": "👑 Queen Of Medusa 🐍", "price": 4000, "inv_key": "Queen Of Medusa"},
 }
 # sementara user -> item_code waiting for amount input (chat)
 SELL_WAITING = {}  # user_id: item_code
@@ -211,6 +213,10 @@ INV_KEY_ALIASES = {
     "jelly fish": "Jelly Fish",
     "🐋 Orca": "Orca",
     "orca": "Orca",
+    "🐒 Monkey": "🐒 Monkey",
+    "monkey": "Monkey",
+    "🦍 Gorilla": "🦍 Gorilla",
+    "gorilla": "Gorilla",
     "🐬 Dolphin": "Dolphin",
     "dolphin": "Dolphin",
     "🐱 Red Hammer Cat": "Red Hammer Cat",
@@ -502,6 +508,8 @@ MENU_STRUCTURE = {
             ("🦞 Lobster", "SELL_DETAIL:SELL_LOBSTER"),
             ("📿 Lucky Jewel", "SELL_DETAIL:SELL_LUCKYJEWEL"),
             ("🐋 Orca", "SELL_DETAIL:SELL_ORCA"),
+            ("🐒 Monkey", "SELL_DETAIL:SELL_MONKEY"),
+            ("🦍 Gorilla", "SELL_DETAIL:SELL_GORILLA"),
             ("🐬 Dolphin", "SELL_DETAIL:SELL_DOLPHIN"),
             ("🐉 Baby Dragon", "SELL_DETAIL:SELL_BABYDRAGON"),
             ("🐉 Baby Spirit Dragon", "SELL_DETAIL:SELL_BABYSPIRITDRAGON"),
@@ -517,6 +525,7 @@ MENU_STRUCTURE = {
             ("🐱 Rainbow Angel Cat", "SELL_DETAIL:SELL_RAINBOWANGELCAT"),
             ("👹 Dark Lord Demon", "SELL_DETAIL:SELL_DARKLORDDEMON"),
             ("🦊 Princess of Nine Tail", "SELL_DETAIL:SELL_PRINCESSOFNINETAIL"),
+            ("👹 Dark Fish Warrior", "SELL_DETAIL:SELL_DARKFISHWARRIOR"),
             ("🐉 Snail Dragon", "SELL_DETAIL:SELL_SNAILDRAGON"),
             ("👑 Queen Of Hermit", "SELL_DETAIL:SELL_QUEENOFHERMIT"),
             ("🤖 Mecha Frog", "SELL_DETAIL:SELL_MECHAFROG"),
@@ -1808,11 +1817,3 @@ def register(app: Client):
     app.add_handler(MessageHandler(handle_transfer_message, filters.text & filters.private))
 
     logger.info("[MENU] Handler menu_utama terdaftar.")
-
-
-
-
-
-
-
-
