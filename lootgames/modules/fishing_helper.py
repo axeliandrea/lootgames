@@ -1,4 +1,4 @@
-# lootgames/modules/fishing_helper.py
+# lootgames/modules/fishing_helper.py 1
 from pyrogram.types import MessageEntity
 from pyrogram.enums import MessageEntityType
 import logging
