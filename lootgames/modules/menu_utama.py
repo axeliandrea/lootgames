@@ -25,7 +25,7 @@ TRANSFER_STATE = {}       # user_id: {"jenis": "A/B/C/D"}
 TUKAR_POINT_STATE = {}    # user_id: {"step": step, "jumlah_umpan": n}
 OPEN_MENU_STATE = {}      # user_id: True jika menu aktif
 LOGIN_STATE = {}  # user_id: {"last_login_day": int, "streak": int, "umpan_given": set()}
-STREAK_REWARDS = {1: 4, 2: 5, 3: 6, 4: 7, 5: 8, 6: 9, 7: 10}
+STREAK_REWARDS = {1: 0, 2: 5, 3: 6, 4: 7, 5: 8, 6: 9, 7: 10}
 CHEST_DB = "storage/treasure_chest.json"  # Simpan info chest aktif dan siapa yang sudah claim
 CLAIMED_CHEST_USERS = set()  # user_id yang sudah claim treasure chest saat ini
 LAST_TREASURE_MSG_ID = None
@@ -1795,6 +1795,7 @@ def register(app: Client):
     app.add_handler(MessageHandler(handle_transfer_message, filters.text & filters.private))
 
     logger.info("[MENU] Handler menu_utama terdaftar.")
+
 
 
 
