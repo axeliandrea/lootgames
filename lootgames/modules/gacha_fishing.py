@@ -119,7 +119,6 @@ def roll_loot(buff: float, umpan_type: str = "COMMON") -> str:
 
     # Daftar Mythic & Ultra Mythic untuk pengecualian umpan RARE
     mythic_items = [
-        "🐉 Baby Dragon", "🐉 Baby Spirit Dragon", "🐉 Baby Magma Dragon",
         "🐉 Skull Dragon", "🐉 Blue Dragon", "🐉 Black Dragon",
         "🐉 Yellow Dragon", "🧜‍♀️ Mermaid Boy", "🧜‍♀️ Mermaid Girl",
         "🐉 Cupid Dragon"
