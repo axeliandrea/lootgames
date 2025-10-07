@@ -13,72 +13,30 @@ logger = logging.getLogger(__name__)
 # ============================================================
 FISH_LOOT = {
     # COMMON
-    "🤧 Zonk": 40.0,
-    "𓆝 Small Fish": 80.0,
-    "🐌 Snail": 33.0,
-    "🐚 Hermit Crab": 33.0,
-    "🦀 Crab": 33.0,
-    "🐸 Frog": 33.0,
-    "🐍 Snake": 33.0,
-    "🐙 Octopus": 20.0,
-    "ଳ Jelly Fish": 25.0,
-    "🦪 Giant Clam": 25.0,
-    "🐟 Goldfish": 25.0,
-    "🐟 Stingrays Fish": 25.0,
-    "🐟 Clownfish": 25.0,
-    "🐟 Doryfish": 25.0,
-    "🐟 Bannerfish": 25.0,
-    "🐟 Moorish Idol": 25.0,
-    "🐟 Axolotl": 25.0,
-    "🐟 Beta Fish": 25.0,
-    "🐟 Anglerfish": 25.0,
-    "🦆 Duck": 25.0,
+    "🤧 Zonk": 47.0, "𓆝 Small Fish": 82.0, "🐌 Snail": 33.0, "🐚 Hermit Crab": 33.0,
+    "🦀 Crab": 33.0, "🐸 Frog": 33.0, "🐍 Snake": 33.0, "🐙 Octopus": 20.0,
+    "ଳ Jelly Fish": 25.0, "🦪 Giant Clam": 25.0, "🐟 Goldfish": 25.0, "🐟 Stingrays Fish": 25.0,
+    "🐟 Clownfish": 25.0, "🐟 Doryfish": 25.0, "🐟 Bannerfish": 25.0, "🐟 Moorish Idol": 25.0,
+    "🐟 Axolotl": 25.0, "🐟 Beta Fish": 25.0, "🐟 Anglerfish": 25.0, "🦆 Duck": 25.0,
 
     # RARE & LEGENDARY
-    "🐡 Pufferfish": 20.0,
-    "📿 Lucky Jewel": 20.0,
-    "🐱 Red Hammer Cat": 20.0,
-    "🐱 Purple Fist Cat": 20.0,
-    "🐱 Green Dino Cat": 20.0,
-    "🐱 White Winter Cat": 20.0,
-    "🐟 Shark": 20.0,
-    "🐟 Seahorse": 20.0,
-    "🐊 Crocodile": 20.0,
-    "🦦 Seal": 20.0,
-    "🐢 Turtle": 20.0,
-    "🦞 Lobster": 20.0,
-    "🐋 Orca": 13.0,
-    "🐬 Dolphin": 13.0,
-    "🐒 Monkey": 13.0,
-    "🦍 Gorilla": 13.0,
-    "🐼 Panda": 13.0,
-    "🐶 Dog": 13.0,
-    "🐹⚡ Pikachu": 13.0,
-    "🐸🍀 Bulbasaur": 13.0,
-    "🐢💧 Squirtle": 13.0,
-    "🐉🔥 Charmander": 13.0,
-    "🐋⚡ Kyogre": 13.0,
+    "🐡 Pufferfish": 20.0, "📿 Lucky Jewel": 20.0, "🐱 Red Hammer Cat": 20.0,
+    "🐱 Purple Fist Cat": 20.0, "🐱 Green Dino Cat": 20.0, "🐱 White Winter Cat": 20.0,
+    "🐟 Shark": 20.0, "🐟 Seahorse": 20.0, "🐊 Crocodile": 20.0, "🦦 Seal": 20.0,
+    "🐢 Turtle": 20.0, "🦞 Lobster": 20.0, "🐋 Orca": 13.0, "🐬 Dolphin": 13.0,
+    "🐒 Monkey": 13.0, "🦍 Gorilla": 13.0, "🐼 Panda": 13.0, "🐶 Dog": 13.0,
+    "🐹⚡ Pikachu": 13.0, "🐸🍀 Bulbasaur": 13.0, "🐢💧 Squirtle": 13.0,
+    "🐉🔥 Charmander": 13.0, "🐋⚡ Kyogre": 13.0,
 
     # MYTHIC
-    "🐉 Baby Dragon": 2.0,
-    "🐉 Baby Spirit Dragon": 2.0,
-    "🐉 Baby Magma Dragon": 2.0,
-    "🐉 Skull Dragon": 2.0,
-    "🐉 Blue Dragon": 2.0,
-    "🐉 Black Dragon": 2.0,
-    "🐉 Yellow Dragon": 2.0,
-    "🧜‍♀️ Mermaid Boy": 0.42,
-    "🧜‍♀️ Mermaid Girl": 0.42,
+    "🐉 Baby Dragon": 1.0, "🐉 Baby Spirit Dragon": 1.0, "🐉 Baby Magma Dragon": 1.0,
+    "🐉 Skull Dragon": 0.5, "🐉 Blue Dragon": 0.5, "🐉 Black Dragon": 0.5,
+    "🐉 Yellow Dragon": 0.5, "🧜‍♀️ Mermaid Boy": 0.42, "🧜‍♀️ Mermaid Girl": 0.42,
 
     # ULTRA MYTHIC
-    "🐉 Cupid Dragon": 0.05,
-    "🐺 Werewolf": 0.02,
-    "🐱 Rainbow Angel Cat": 0.03,
-    "👹 Dark Lord Demon": 0.02,
-    "🦊 Princess of Nine Tail": 0.02,
-    "🐦‍🔥 Fire Phoenix": 0.02,
-    "🐦❄️ Frost Phoenix": 0.02,
-    "🐦🌌 Dark Phoenix": 0.02,
+    "🐉 Cupid Dragon": 0.05, "🐺 Werewolf": 0.02, "🐱 Rainbow Angel Cat": 0.03,
+    "👹 Dark Lord Demon": 0.02, "🦊 Princess of Nine Tail": 0.02,
+    "🐦‍🔥 Fire Phoenix": 0.02, "🐦❄️ Frost Phoenix": 0.02, "🐦🌌 Dark Phoenix": 0.02,
 }
 
 # ============================================================
@@ -148,4 +106,5 @@ def roll_loot(buff: float = 0.0) -> str:
     for item in common_items:
         if roll <= FISH_LOOT[item] + buff:
             return item
+    # fallback
     return random.choice(common_items)
