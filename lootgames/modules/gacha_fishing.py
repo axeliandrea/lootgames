@@ -127,12 +127,23 @@ ultra_mythic_items = [
     "🐦‍🔥 Fire Phoenix", "🐦❄️ Frost Phoenix", "🐦🌌 Dark Phoenix"
 ]
 
+common_items = [
+    "🤧 Zonk", "𓆝 Small Fish", "🐌 Snail", "🐚 Hermit Crab", "🦀 Crab",
+    "🐸 Frog", "🐍 Snake", "🐙 Octopus", "ଳ Jelly Fish", "🦪 Giant Clam",
+    "🐟 Goldfish", "🐟 Stingrays Fish", "🐟 Clownfish", "🐟 Doryfish",
+    "🐟 Bannerfish", "🐟 Moorish Idol", "🐟 Axolotl", "🐟 Beta Fish",
+    "🐟 Anglerfish", "🦆 Duck"
+]
+
 def roll_loot(buff: float, umpan_type: str = "COMMON") -> str:
     items, chances = [], []
 
     for item, base_chance in FISH_LOOT.items():
-        bonus = 0.0
+        # Filter RARE: tidak bisa dapat COMMON
+        if umpan_type == "RARE" and item in common_items:
+            continue
 
+        bonus = 0.0
         if umpan_type == "RARE":
             if item in mythic_items:
                 bonus = 0.50
