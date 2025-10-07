@@ -162,6 +162,7 @@ ITEM_PRICES = {
     "SELL_MONKEY": {"name": "🐒 Monkey", "price": 15, "inv_key": "Monkey"},
     "SELL_GORILLA": {"name": "🦍 Gorilla", "price": 15, "inv_key": "GORILLA"},
     "SELL_PANDA": {"name": "🐼 Panda", "price": 15, "inv_key": "PANDA"},
+    "SELL_DOG": {"name": "🐶 Dog", "price": 15, "inv_key": "DOG"},
     "SELL_DOLPHIN": {"name": "🐬 Dolphin", "price": 15, "inv_key": "Dolphin"},
     "SELL_PIKACHU": {"name": "🐹⚡ Pikachu", "price": 30, "inv_key": "Pikachu"},
     "SELL_BULBASAUR": {"name": "🐸🍀 Bulbasaur", "price": 30, "inv_key": "Bulbasaur"},
@@ -220,6 +221,8 @@ INV_KEY_ALIASES = {
     "gorilla": "Gorilla",
     "panda": "🐼 Panda",
     "🐼 Panda": "Panda",
+    "🐶 Dog": "🐶 Dog",
+    "dog": "Dog",
     "🐬 Dolphin": "Dolphin",
     "dolphin": "Dolphin",
     "🐱 Red Hammer Cat": "Red Hammer Cat",
@@ -514,6 +517,7 @@ MENU_STRUCTURE = {
             ("🐒 Monkey", "SELL_DETAIL:SELL_MONKEY"),
             ("🦍 Gorilla", "SELL_DETAIL:SELL_GORILLA"),
             ("🐼 Panda", "SELL_DETAIL:SELL_PANDA"),
+            ("🐶 Dog", "SELL_DETAIL:SELL_DOG"),
             ("🐬 Dolphin", "SELL_DETAIL:SELL_DOLPHIN"),
             ("🐉 Baby Dragon", "SELL_DETAIL:SELL_BABYDRAGON"),
             ("🐉 Baby Spirit Dragon", "SELL_DETAIL:SELL_BABYSPIRITDRAGON"),
@@ -1821,6 +1825,7 @@ def register(app: Client):
     app.add_handler(MessageHandler(handle_transfer_message, filters.text & filters.private))
 
     logger.info("[MENU] Handler menu_utama terdaftar.")
+
 
 
 
