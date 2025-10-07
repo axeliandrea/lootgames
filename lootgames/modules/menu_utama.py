@@ -1195,17 +1195,17 @@ async def callback_handler(client: Client, cq: CallbackQuery):
 
     # TRANSFER START
     if data.startswith("TRANSFER_"):
-    jenis = data.split("_")[1]
-    map_jenis = {"COMMON": "A", "RARE": "B", "LEGEND": "C", "MYTHIC": "D"}
+        jenis = data.split("_")[1]
+        map_jenis = {"COMMON": "A", "RARE": "B", "LEGEND": "C", "MYTHIC": "D"}
 
-    # 🔒 Batasi transfer umpan Rare hanya untuk OWNER
-    if jenis == "RARE" and user_id != OWNER_ID:
-        await cq.answer("❌ Hanya OWNER yang bisa transfer Umpan Rare 🐌.", show_alert=True)
+        # 🔒 Batasi transfer umpan Rare hanya untuk OWNER
+        if jenis == "RARE" and user_id != OWNER_ID:
+            await cq.answer("❌ Hanya OWNER yang bisa transfer Umpan Rare 🐌.", show_alert=True)
+            return
+
+        TRANSFER_STATE[user_id] = {"jenis": map_jenis.get(jenis)}
+        await cq.message.reply("✍️ Masukkan format transfer: `@username jumlah`\nContoh: `@user 2`")
         return
-
-    TRANSFER_STATE[user_id] = {"jenis": map_jenis.get(jenis)}
-    await cq.message.reply("✍️ Masukkan format transfer: `@username jumlah`\nContoh: `@user 2`")
-    return
 
     # CHECK COIN Fizz
     # ================= CEK COIN & SUBMENU ================= #
@@ -1808,6 +1808,7 @@ def register(app: Client):
     app.add_handler(MessageHandler(handle_transfer_message, filters.text & filters.private))
 
     logger.info("[MENU] Handler menu_utama terdaftar.")
+
 
 
 
