@@ -1310,7 +1310,7 @@ async def callback_handler(client: Client, cq: CallbackQuery):
             f"🪱 Kamu punya {total_coin} fizz coin.\n\n"
             f"Masukkan jumlah coin yang ingin kamu tukarkan.\n"
             f"(50 coin = 1 umpan Rare Type B)\n\n"
-            f"Contoh: `50` untuk menukar 50 coin jadi 2 umpan.",
+            f"Contoh: `50` untuk menukar 50 coin jadi 1 umpan.",
             reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("⬅️ Batal", callback_data="D2C_MENU")]])
         )
         return
@@ -1791,7 +1791,7 @@ async def handle_transfer_message(client: Client, message: Message):
             if jenis == "A":
                 min_coin, konversi, nama, emoji = 5, 5, "COMMON (Type A)", "🐛"
             elif jenis == "B":
-                min_coin, konversi, nama, emoji = 25, 25, "RARE (Type B)", "🪱"
+                min_coin, konversi, nama, emoji = 50, 50, "RARE (Type B)", "🪱"
             else:
                 await message.reply("❌ Tipe tukar tidak valid.")
                 return
@@ -1883,5 +1883,6 @@ def register(app: Client):
     app.add_handler(MessageHandler(handle_transfer_message, filters.text & filters.private))
 
     logger.info("[MENU] Handler menu_utama terdaftar.")
+
 
 
