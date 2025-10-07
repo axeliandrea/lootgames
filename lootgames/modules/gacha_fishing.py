@@ -1,4 +1,3 @@
-# lootgames/modules/fishing_loot.py
 import random
 import asyncio
 import logging
@@ -9,10 +8,10 @@ from lootgames.modules import aquarium, umpan
 logger = logging.getLogger(__name__)
 
 # ============================================================
-# 🎣 LOOT TABLE (TOTAL ≈1000.00%, urut harga)
+# 🎣 LOOT TABLE (URUT HARGA)
 # ============================================================
 FISH_LOOT = {
-    # ---------------- COMMON (harga 0–4) ---------------- #
+    # ---------------- COMMON ---------------- #
     "🤧 Zonk": 170.00,                  
     "𓆝 Small Fish": 288.00,         
     "🐌 Snail": 171.00,                
@@ -30,11 +29,11 @@ FISH_LOOT = {
     "🐟 Bannerfish": 50.00,            
     "🐟 Moorish Idol": 50.00,          
     "🐟 Axolotl": 50.00,               
-    "🐟 Beta Fish": 50.00,            
+    "🐟 Beta Fish": 50.00,             
     "🐟 Anglerfish": 50.00,            
     "🦆 Duck": 50.00,                  
 
-    # ---------------- ULTRA RARE (harga 5–10) ---------------- #
+    # ---------------- ULTRA RARE ---------------- #
     "🐡 Pufferfish": 40.00,            
     "📿 Lucky Jewel": 40.00,          
     "🐱 Red Hammer Cat": 10.00,        
@@ -42,20 +41,20 @@ FISH_LOOT = {
     "🐱 Green Dino Cat": 10.00,        
     "🐱 White Winter Cat": 10.00,      
     "🐟 Shark": 40.00,                 
-    "🐟 Seahorse": 40.00,             
+    "🐟 Seahorse": 40.00,              
     "🐊 Crocodile": 40.00,             
     "🦦 Seal": 40.00,                  
     "🐢 Turtle": 40.00,                
     "🦞 Lobster": 40.00,               
 
-    # ---------------- LEGENDARY (harga 15–30) ---------------- #
+    # ---------------- LEGENDARY ---------------- #
     "🐋 Orca": 20.00,                  
     "🐬 Dolphin": 20.00,                
     "🐒 Monkey": 20.00,                 
-    "🦍 Gorilla": 20.00,               
+    "🦍 Gorilla": 20.00,                
     "🐼 Panda": 20.00,                  
     "🐶 Dog": 20.00,                    
-    "🐹⚡ Pikachu": 5.00,              
+    "🐹⚡ Pikachu": 5.00,               
     "🐸🍀 Bulbasaur": 5.00,            
     "🐢💧 Squirtle": 5.00,              
     "🐉🔥 Charmander": 5.00,            
@@ -69,19 +68,30 @@ FISH_LOOT = {
     "🐉 Blue Dragon": 0.09,             
     "🐉 Black Dragon": 0.09,            
     "🐉 Yellow Dragon": 0.09,          
-    "🧜‍♀️ Mermaid Boy": 0.09,             
-    "🧜‍♀️ Mermaid Girl": 0.09,  
+    "🧜‍♀️ Mermaid Boy": 0.09,          
+    "🧜‍♀️ Mermaid Girl": 0.09,         
 
     # ---------------- ULTRA MYTHIC ---------------- #
     "🐉 Cupid Dragon": 0.01,           
-    "🐺 Werewolf": 0.001,               
-    "🐱 Rainbow Angel Cat": 0.001,      
-    "👹 Dark Lord Demon": 0.001,        
-    "🦊 Princess of Nine Tail": 0.001,   
-    "🐦‍🔥 Fire Phoenix": 0.001,   
-    "🐦❄️ Frost Phoenix": 0.001,   
+    "🐺 Werewolf": 0.001,              
+    "🐱 Rainbow Angel Cat": 0.001,     
+    "👹 Dark Lord Demon": 0.001,       
+    "🦊 Princess of Nine Tail": 0.001, 
+    "🐦‍🔥 Fire Phoenix": 0.001,       
+    "🐦❄️ Frost Phoenix": 0.001,       
     "🐦🌌 Dark Phoenix": 0.001
 }
+
+# ============================================================
+# 🔧 AUTO SCALE KE TOTAL 2000%
+# ============================================================
+TOTAL_TARGET = 2000.0
+current_total = sum(FISH_LOOT.values())
+scale_factor = TOTAL_TARGET / current_total
+for k in FISH_LOOT:
+    FISH_LOOT[k] = round(FISH_LOOT[k] * scale_factor, 3)
+
+logger.info(f"[FISH_LOOT] Total bobot otomatis di-scale ke {TOTAL_TARGET}%")
 
 # ============================================================
 # 🎯 BUFF RATE PER JENIS UMPAN
