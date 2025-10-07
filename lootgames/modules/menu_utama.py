@@ -1,4 +1,4 @@
-# lootgames/modules/menu_utama.py Test Nonaktif Umpan Rare
+# lootgames/modules/menu_utama.py FIX MENU UTAMA
 import os
 import logging
 import asyncio
@@ -1829,6 +1829,7 @@ def register(app: Client):
     app.add_handler(MessageHandler(handle_transfer_message, filters.text & filters.private))
 
     logger.info("[MENU] Handler menu_utama terdaftar.")
+
 
 
 
