@@ -1392,12 +1392,13 @@ async def callback_handler(client: Client, cq: CallbackQuery):
 
 
     # ----------------- AUTO MEMANCING 5x -----------------
+    # ----------------- AUTO MEMANCING 5x -----------------
     elif data.startswith("AUTO_FISH_"):
         jenis = data.replace("AUTO_FISH_", "")
         uname = cq.from_user.username or f"user{user_id}"
 
         now = asyncio.get_event_loop().time()
-        last_time = user_last_fishing[user_id]
+        last_time = user_last_fishing.get(user_id, 0)
 
         if now - last_time < 10:
             await cq.answer("⏳ Wait cooldown 10 sec before auto catching!", show_alert=True)
@@ -1408,7 +1409,7 @@ async def callback_handler(client: Client, cq: CallbackQuery):
         async def auto_fishing():
             for i in range(5):
                 now = asyncio.get_event_loop().time()
-                if now - user_last_fishing[user_id] < 10:
+                if now - user_last_fishing.get(user_id, 0) < 10:
                     break  # stop kalau masih cooldown
 
                 # cek stok umpan dulu (tanpa mengurangi)
@@ -1417,6 +1418,7 @@ async def callback_handler(client: Client, cq: CallbackQuery):
                 if user_id != OWNER_ID:
                     ud = umpan.get_user(user_id)
                     if not ud or ud.get(jk, {}).get("umpan", 0) <= 0:
+                        # Hanya kirim ke grup/callback, tidak ke private
                         await cq.message.reply("❌ Umpan habis! Auto Catching stop.")
                         break
 
@@ -1424,17 +1426,10 @@ async def callback_handler(client: Client, cq: CallbackQuery):
                 user_task_count[user_id] += 1
                 task_id = f"{user_task_count[user_id]:02d}"
 
-                # Info auto-fishing
+                # Info auto-fishing hanya di grup / callback
                 await cq.message.reply(
-                    f"🎣 Auto Catching {i+1}/5: You successfully threw the bait {jenis} to loot task#{task_id}!"
+                    f"🎣 @{uname} Auto Catching {i+1}/5 with {jenis}! Task#{task_id} in progress..."
                 )
-
-                # Jalankan task memancing (umpan dikurangi saat hasil drop)
-                asyncio.create_task(fishing_task(client, uname, user_id, jenis, task_id))
-
-                await asyncio.sleep(10)  # jeda tiap lemparan
-
-        asyncio.create_task(auto_fishing())
 
     # LEADERBOARD PAGING
     if data.startswith("BBB_PAGE_"):
@@ -1882,6 +1877,7 @@ def register(app: Client):
     app.add_handler(MessageHandler(handle_transfer_message, filters.text & filters.private))
 
     logger.info("[MENU] Handler menu_utama terdaftar.")
+
 
 
 
