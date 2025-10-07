@@ -1,9 +1,10 @@
-# lootgames/__main__.py revisi full terbaru 1
+# lootgames/__main__.py
 import asyncio
 import logging
 import os
 from pyrogram import Client
 from pyrogram.handlers import CallbackQueryHandler
+from pyrogram.types import CallbackQuery
 
 # ================= IMPORT MODULES ================= #
 from lootgames.modules import (
@@ -33,7 +34,7 @@ if "LOG_FORMAT" not in globals():
 logging.basicConfig(level=LOG_LEVEL, format=LOG_FORMAT)
 logger = logging.getLogger(__name__)
 
-# Supaya log internal Pyrogram gak terlalu ramai
+# Supaya log internal Pyrogram tidak terlalu ramai
 logging.getLogger("pyrogram").setLevel(logging.WARNING)
 logging.getLogger("pyrogram.session").setLevel(logging.WARNING)
 
@@ -47,15 +48,24 @@ app = Client(
 
 # ================= STARTUP TASK ================= #
 async def startup_tasks():
-    logger.info("🔹 Menjalankan startup worker fishing...")
-    asyncio.create_task(gacha_fishing.fishing_worker(app))
+    try:
+        if hasattr(gacha_fishing, "fishing_worker"):
+            logger.info("🔹 Menjalankan startup worker fishing...")
+            asyncio.create_task(gacha_fishing.fishing_worker(app))
+        else:
+            logger.warning("Module gacha_fishing tidak memiliki fishing_worker(), melewati startup worker.")
+    except Exception as e:
+        logger.exception(f"Gagal start worker fishing: {e}")
 
 # ================= REGISTER MODULES ================= #
 def safe_register(module, name: str):
-    try:
-        module.register(app)
-        logger.info(f"Module {name} registered ✅")
-    except AttributeError:
+    if hasattr(module, "register"):
+        try:
+            module.register(app)
+            logger.info(f"Module {name} registered ✅")
+        except Exception as e:
+            logger.exception(f"Gagal register module {name}: {e}")
+    else:
         logger.warning(f"Module {name} tidak memiliki fungsi register()")
 
 safe_register(yapping, "yapping")
@@ -69,7 +79,7 @@ if not hasattr(user_database, "register"):
 user_database.register(app)
 
 # ================= CALLBACK FISHING ================= #
-async def fishing_callback_handler(client, callback_query):
+async def fishing_callback_handler(client: Client, callback_query: CallbackQuery):
     data = callback_query.data
     user_id = callback_query.from_user.id
     username = callback_query.from_user.username or f"user{user_id}"
@@ -80,22 +90,27 @@ async def fishing_callback_handler(client, callback_query):
 
         try:
             await callback_query.message.edit_text(f"🎣 Kamu memancing dengan umpan {jenis}!")
-            await gacha_fishing.fishing_loot(
-                client,
-                TARGET_GROUP,
-                username,
-                user_id,
-                umpan_type=jenis
-            )
+            if hasattr(gacha_fishing, "fishing_loot"):
+                await gacha_fishing.fishing_loot(
+                    client,
+                    TARGET_GROUP,
+                    username,
+                    user_id,
+                    umpan_type=jenis
+                )
+            else:
+                logger.warning("Module gacha_fishing tidak memiliki fungsi fishing_loot()")
         except Exception as e:
-            logger.error(f"Gagal proses fishing_loot: {e}")
+            logger.exception(f"Gagal proses fishing_loot: {e}")
 
 app.add_handler(CallbackQueryHandler(fishing_callback_handler))
 
 # ================= MAIN BOT ================= #
 async def main():
     # Pastikan folder storage ada
-    os.makedirs("storage", exist_ok=True)
+    storage_dir = "storage"
+    os.makedirs(storage_dir, exist_ok=True)
+    logger.info(f"✅ Folder storage siap di {storage_dir}")
 
     # Start client
     await app.start()
@@ -107,14 +122,15 @@ async def main():
     await startup_tasks()
 
     # Kirim notifikasi ke owner
-    try:
-        await app.send_message(OWNER_ID, "🤖 TRIAL Bot sudah aktif dan siap dipakai!")
-        logger.info("📢 Notifikasi start terkirim ke OWNER.")
-    except Exception as e:
-        logger.error(f"Gagal kirim notifikasi start: {e}")
+    if isinstance(OWNER_ID, int):
+        try:
+            await app.send_message(OWNER_ID, "🤖 TRIAL Bot sudah aktif dan siap dipakai!")
+            logger.info("📢 Notifikasi start terkirim ke OWNER.")
+        except Exception as e:
+            logger.exception(f"Gagal kirim notifikasi start: {e}")
 
     logger.info("[MAIN] Bot berjalan, tekan Ctrl+C untuk berhenti.")
-    
+
     # Jalankan bot terus-menerus
     await asyncio.Event().wait()
 
@@ -124,7 +140,11 @@ if __name__ == "__main__":
         import nest_asyncio
         nest_asyncio.apply()
     except ImportError:
-        pass
+        logger.warning("nest_asyncio tidak ditemukan, jalankan bot biasa.")
 
-    asyncio.run(main())
-
+    try:
+        asyncio.run(main())
+    except KeyboardInterrupt:
+        logger.info("❌ Bot dihentikan oleh user (Ctrl+C)")
+    except Exception as e:
+        logger.exception(f"Bot berhenti karena error: {e}")
