@@ -17,9 +17,9 @@ FISH_LOOT = {
     "𓆝 Small Fish": 168.00,          # harga 1 — Monster 1
     "🐌 Snail": 148.00,               # harga 2 — Monster 2
     "🐚 Hermit Crab": 148.00,         # harga 2 — Monster 3
-    "🦀 Crab": 148.00,                # harga 2 — Monster 4
-    "🐸 Frog": 148.00,                # harga 2 — Monster 5
-    "🐍 Snake": 148.00,               # harga 2 — Monster 6
+    "🦀 Crab": 138.00,                # harga 2 — Monster 4
+    "🐸 Frog": 138.00,                # harga 2 — Monster 5
+    "🐍 Snake": 138.00,               # harga 2 — Monster 6
     "🐙 Octopus": 110.00,             # harga 3 — Monster 7
     "ଳ Jelly Fish": 70.00,            # harga 4 — Monster 8
     "🦪 Giant Clam": 70.00,           # harga 4 — Monster 9
@@ -53,6 +53,7 @@ FISH_LOOT = {
     "🐬 Dolphin": 30.00,              # harga 15 — Monster 33
     "🐒 Monkey": 30.00,               # harga 15 — Monster 34
     "🦍 Gorilla": 30.00,              # harga 15 — Monster 35
+    "🐼 Panda" : 30.00                # harga 15 — Monster 35
     "🐹⚡ Pikachu": 5.00,             # harga 30 — Monster 36
     "🐸🍀 Bulbasaur": 5.00,           # harga 30 — Monster 37
     "🐢💧 Squirtle": 5.00,            # harga 30 — Monster 38
@@ -140,9 +141,9 @@ def roll_loot(buff: float, umpan_type: str = "COMMON") -> str:
 
         if umpan_type == "RARE":
             if item in mythic_items:
-                bonus = 50.0
+                bonus = 30.0
             elif item in ultra_mythic_items:
-                bonus = 10.5
+                bonus = 1.5
             else:
                 bonus = buff
         elif umpan_type == "LEGEND":
