@@ -1316,6 +1316,7 @@ async def callback_handler(client: Client, cq: CallbackQuery):
         return
     
     # FISHING
+    # FISHING
     # ----------------- FUNGSI MEMANCING -----------------
     async def fishing_task(client, uname, user_id, jenis, task_id):
         try:
@@ -1339,15 +1340,13 @@ async def callback_handler(client: Client, cq: CallbackQuery):
                 umpan.remove_umpan(user_id, jk, 1)
 
             await asyncio.sleep(10)
+            # Hanya kirim ke grup, hapus private
             msg_group = f"🎣 @{uname} got {loot_result}! from task#{task_id}"
-            msg_private = f"🎣 You got {loot_result}! from ask#{task_id}"
             await client.send_message(TARGET_GROUP, msg_group)
-            await client.send_message(user_id, msg_private)
 
         except Exception as e:
-            logger.error(f"Gagal fishing_task: {e}")
-        
-    # ----------------- CALLBACK HANDLER -----------------
+            logger.error(f"[FISHING TASK] Error untuk @{uname}: {e}")
+
     # ----------------- CALLBACK HANDLER -----------------
     if data.startswith("FISH_CONFIRM_"):
         jenis = data.replace("FISH_CONFIRM_", "")
@@ -1883,6 +1882,7 @@ def register(app: Client):
     app.add_handler(MessageHandler(handle_transfer_message, filters.text & filters.private))
 
     logger.info("[MENU] Handler menu_utama terdaftar.")
+
 
 
 
