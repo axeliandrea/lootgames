@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 # 🎣 LOOT TABLE (TOTAL = 1000.00%)
 # ============================================================
 FISH_LOOT = {
-    # ---------------- COMMON (total ≈610) ---------------- #
+    # COMMON
     "🤧 Zonk": 40.0,
     "𓆝 Small Fish": 80.0,
     "🐌 Snail": 33.0,
@@ -32,9 +32,9 @@ FISH_LOOT = {
     "🐟 Axolotl": 25.0,
     "🐟 Beta Fish": 25.0,
     "🐟 Anglerfish": 25.0,
-    "🦆 Duck": 25.0,  # subtotal COMMON: 610.0
+    "🦆 Duck": 25.0,
 
-    # ---------------- RARE & LEGENDARY (total ≈375) ---------------- #
+    # RARE & LEGENDARY
     "🐡 Pufferfish": 20.0,
     "📿 Lucky Jewel": 20.0,
     "🐱 Red Hammer Cat": 20.0,
@@ -57,9 +57,9 @@ FISH_LOOT = {
     "🐸🍀 Bulbasaur": 13.0,
     "🐢💧 Squirtle": 13.0,
     "🐉🔥 Charmander": 13.0,
-    "🐋⚡ Kyogre": 13.0,  # subtotal RARE/LEGEND: 375.0
+    "🐋⚡ Kyogre": 13.0,
 
-    # ---------------- MYTHIC (total ≈14.84) ---------------- #
+    # MYTHIC
     "🐉 Baby Dragon": 2.0,
     "🐉 Baby Spirit Dragon": 2.0,
     "🐉 Baby Magma Dragon": 2.0,
@@ -68,9 +68,9 @@ FISH_LOOT = {
     "🐉 Black Dragon": 2.0,
     "🐉 Yellow Dragon": 2.0,
     "🧜‍♀️ Mermaid Boy": 0.42,
-    "🧜‍♀️ Mermaid Girl": 0.42,  # subtotal MYTHIC: 14.84
+    "🧜‍♀️ Mermaid Girl": 0.42,
 
-    # ---------------- ULTRA MYTHIC (total ≈0.16) ---------------- #
+    # ULTRA MYTHIC
     "🐉 Cupid Dragon": 0.05,
     "🐺 Werewolf": 0.02,
     "🐱 Rainbow Angel Cat": 0.03,
@@ -78,7 +78,7 @@ FISH_LOOT = {
     "🦊 Princess of Nine Tail": 0.02,
     "🐦‍🔥 Fire Phoenix": 0.02,
     "🐦❄️ Frost Phoenix": 0.02,
-    "🐦🌌 Dark Phoenix": 0.02,  # subtotal ULTRA MYTHIC: 0.16
+    "🐦🌌 Dark Phoenix": 0.02,
 }
 
 # ============================================================
@@ -92,12 +92,28 @@ BUFF_RATE = {
 }
 
 # ============================================================
-# 🎣 LIST ITEM PER KATEGORI
+# 🎣 LIST ITEM PER KATEGORI (URUTAN PENTING!)
 # ============================================================
-common_items = [item for item in FISH_LOOT if item in FISH_LOOT and FISH_LOOT[item] >= 20 and item not in ultra_mythic_items and item not in ["🐉 Baby Dragon","🐉 Baby Spirit Dragon","🐉 Baby Magma Dragon","🐉 Skull Dragon","🐉 Blue Dragon","🐉 Black Dragon","🐉 Yellow Dragon","🧜‍♀️ Mermaid Boy","🧜‍♀️ Mermaid Girl","🐉 Cupid Dragon"]]
-rare_items = [item for item in FISH_LOOT if item in FISH_LOOT and item not in common_items and item not in ultra_mythic_items and item not in ["🐉 Baby Dragon","🐉 Baby Spirit Dragon","🐉 Baby Magma Dragon","🐉 Skull Dragon","🐉 Blue Dragon","🐉 Black Dragon","🐉 Yellow Dragon","🧜‍♀️ Mermaid Boy","🧜‍♀️ Mermaid Girl","🐉 Cupid Dragon"]]
-mythic_items = ["🐉 Baby Dragon","🐉 Baby Spirit Dragon","🐉 Baby Magma Dragon","🐉 Skull Dragon","🐉 Blue Dragon","🐉 Black Dragon","🐉 Yellow Dragon","🧜‍♀️ Mermaid Boy","🧜‍♀️ Mermaid Girl","🐉 Cupid Dragon"]
-ultra_mythic_items = ["🐺 Werewolf","🐱 Rainbow Angel Cat","👹 Dark Lord Demon","🦊 Princess of Nine Tail","🐦‍🔥 Fire Phoenix","🐦❄️ Frost Phoenix","🐦🌌 Dark Phoenix"]
+ultra_mythic_items = [
+    "🐺 Werewolf","🐱 Rainbow Angel Cat","👹 Dark Lord Demon",
+    "🦊 Princess of Nine Tail","🐦‍🔥 Fire Phoenix","🐦❄️ Frost Phoenix","🐦🌌 Dark Phoenix"
+]
+
+mythic_items = [
+    "🐉 Baby Dragon","🐉 Baby Spirit Dragon","🐉 Baby Magma Dragon",
+    "🐉 Skull Dragon","🐉 Blue Dragon","🐉 Black Dragon",
+    "🐉 Yellow Dragon","🧜‍♀️ Mermaid Boy","🧜‍♀️ Mermaid Girl","🐉 Cupid Dragon"
+]
+
+common_items = [
+    item for item in FISH_LOOT
+    if FISH_LOOT[item] >= 20 and item not in mythic_items + ultra_mythic_items
+]
+
+rare_items = [
+    item for item in FISH_LOOT
+    if item not in common_items + mythic_items + ultra_mythic_items
+]
 
 # ============================================================
 # 🎣 FUNGSI MEMANCING
@@ -121,19 +137,15 @@ async def fishing_loot(client: Client, target_chat: int, username: str, user_id:
 def roll_loot(buff: float = 0.0) -> str:
     roll = random.uniform(0, 100)
     for item in ultra_mythic_items:
-        chance = FISH_LOOT[item] + buff
-        if roll <= chance:
+        if roll <= FISH_LOOT[item] + buff:
             return item
     for item in mythic_items:
-        chance = FISH_LOOT[item] + buff
-        if roll <= chance:
+        if roll <= FISH_LOOT[item] + buff:
             return item
     for item in rare_items:
-        chance = FISH_LOOT[item] + buff
-        if roll <= chance:
+        if roll <= FISH_LOOT[item] + buff:
             return item
     for item in common_items:
-        chance = FISH_LOOT[item] + buff
-        if roll <= chance:
+        if roll <= FISH_LOOT[item] + buff:
             return item
     return random.choice(common_items)
