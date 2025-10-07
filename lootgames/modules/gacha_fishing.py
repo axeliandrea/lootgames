@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 # ============================================================
 FISH_LOOT = {
     # ---------------- COMMON (harga 0–4) ---------------- #
-    "🤧 Zonk": 50.00,                  # 50.00 / 1000.00 ≈ 5.00%
+    "🤧 Zonk": 50.00,                  # 5.00%
     "𓆝 Small Fish": 168.00,          # 16.80%
     "🐌 Snail": 143.00,                # 14.30%
     "🐚 Hermit Crab": 143.00,          # 14.30%
@@ -53,8 +53,8 @@ FISH_LOOT = {
     "🐬 Dolphin": 30.00,                # 3.00%
     "🐒 Monkey": 30.00,                 # 3.00%
     "🦍 Gorilla": 30.00,                # 3.00%
-    "🐶 Dog": 30.00,                     # 3.00%
     "🐼 Panda": 30.00,                   # 3.00%
+    "🐶 Dog": 30.00,                     # 3.00%
     "🐹⚡ Pikachu": 5.00,               # 0.50%
     "🐸🍀 Bulbasaur": 5.00,             # 0.50%
     "🐢💧 Squirtle": 5.00,              # 0.50%
@@ -83,7 +83,7 @@ FISH_LOOT = {
 # ============================================================
 BUFF_RATE = {
     "COMMON": 0.0,
-    "RARE": 30.50,
+    "RARE": 10.50,
     "LEGEND": 7.00,
     "MYTHIC": 10.00
 }
@@ -140,7 +140,7 @@ def roll_loot(buff: float, umpan_type: str = "COMMON") -> str:
         bonus = 0.0
         if umpan_type == "RARE":
             if item in mythic_items:
-                bonus = 20.0
+                bonus = 10.0
             elif item in ultra_mythic_items:
                 bonus = 0.5
             else:
@@ -154,9 +154,9 @@ def roll_loot(buff: float, umpan_type: str = "COMMON") -> str:
                 bonus = buff
         elif umpan_type == "COMMON":
             if item in mythic_items:
-                bonus = 0.09  # COMMON juga bisa dapat MYTHIC
+                bonus = 0.09
             elif item in ultra_mythic_items:
-                bonus = 0.01  # COMMON bisa dapat ULTRA MYTHIC
+                bonus = 0.01
             else:
                 bonus = buff
         else:
