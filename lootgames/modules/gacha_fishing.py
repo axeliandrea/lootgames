@@ -53,28 +53,28 @@ FISH_LOOT = {
     "🐬 Dolphin": 30.00,              # harga 15 — Monster 33
     "🐒 Monkey": 30.00,               # harga 15 — Monster 34
     "🦍 Gorilla": 30.00,              # harga 15 — Monster 35
-    "🐼 Panda" : 30.00                # harga 15 — Monster 35
-    "🐹⚡ Pikachu": 5.00,             # harga 30 — Monster 36
-    "🐸🍀 Bulbasaur": 5.00,           # harga 30 — Monster 37
-    "🐢💧 Squirtle": 5.00,            # harga 30 — Monster 38
-    "🐉🔥 Charmander": 5.00,          # harga 30 — Monster 39
-    "🐋⚡ Kyogre": 5.00,              # harga 30 — Monster 40
+    "🐼 Panda" : 30.00,                # harga 15 — Monster 36
+    "🐹⚡ Pikachu": 5.00,             # harga 30 — Monster 37
+    "🐸🍀 Bulbasaur": 5.00,           # harga 30 — Monster 38
+    "🐢💧 Squirtle": 5.00,            # harga 30 — Monster 39
+    "🐉🔥 Charmander": 5.00,          # harga 30 — Monster 40
+    "🐋⚡ Kyogre": 5.00,              # harga 30 — Monster 41
 
     # ---------------- MYTHIC (Monster 41–54) ---------------- #
-    "🐉 Baby Dragon": 0.10,           # harga 50 — Monster 41
-    "🐉 Baby Spirit Dragon": 0.10,    # harga 50 — Monster 42
-    "🐉 Baby Magma Dragon": 0.10,     # harga 50 — Monster 43
-    "🐉 Skull Dragon": 0.09,          # harga 55 — Monster 44
-    "🐉 Blue Dragon": 0.09,           # harga 55 — Monster 45
-    "🐉 Black Dragon": 0.09,          # harga 55 — Monster 46
-    "🐉 Yellow Dragon": 0.09,         # harga 55 — Monster 47
-    "🧜‍♀️ Mermaid Boy": 0.09,         # harga 60 — Monster 48
-    "🧜‍♀️ Mermaid Girl": 0.09,        # harga 60 — Monster 49
-    "🐉 Cupid Dragon": 0.01,          # harga 70 — Monster 50
-    "🐺 Werewolf": 0.001,             # harga 100 — Monster 51
-    "🐱 Rainbow Angel Cat": 0.001,    # harga 120 — Monster 52
-    "👹 Dark Lord Demon": 0.001,      # harga 150 — Monster 53
-    "🦊 Princess of Nine Tail": 0.001 # harga 200 — Monster 54
+    "🐉 Baby Dragon": 0.10,           # harga 50 — Monster 42
+    "🐉 Baby Spirit Dragon": 0.10,    # harga 50 — Monster 43
+    "🐉 Baby Magma Dragon": 0.10,     # harga 50 — Monster 44
+    "🐉 Skull Dragon": 0.09,          # harga 55 — Monster 45
+    "🐉 Blue Dragon": 0.09,           # harga 55 — Monster 46
+    "🐉 Black Dragon": 0.09,          # harga 55 — Monster 47
+    "🐉 Yellow Dragon": 0.09,         # harga 55 — Monster 48
+    "🧜‍♀️ Mermaid Boy": 0.09,         # harga 60 — Monster 49
+    "🧜‍♀️ Mermaid Girl": 0.09,        # harga 60 — Monster 50
+    "🐉 Cupid Dragon": 0.01,          # harga 70 — Monster 51
+    "🐺 Werewolf": 0.001,             # harga 100 — Monster 52
+    "🐱 Rainbow Angel Cat": 0.001,    # harga 120 — Monster 53
+    "👹 Dark Lord Demon": 0.001,      # harga 150 — Monster 54
+    "🦊 Princess of Nine Tail": 0.001 # harga 200 — Monster 55
 }
 
 # ============================================================
