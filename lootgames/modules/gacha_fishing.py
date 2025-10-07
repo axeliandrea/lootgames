@@ -135,7 +135,7 @@ def roll_loot(buff: float, umpan_type: str = "COMMON") -> str:
         # === Pengecualian buff untuk umpan RARE === #
         if umpan_type == "RARE":
             if item in mythic_items:
-                bonus = 1.0
+                bonus = 3.0
             elif item in ultra_mythic_items:
                 bonus = 0.5
             elif item != "🤧 Zonk":
