@@ -1,4 +1,4 @@
-# lootgames/modules/menu_utama.py FIX MENU UTAMA
+# lootgames/modules/menu_utama.py Test Nonaktif Umpan Rare
 import os
 import logging
 import asyncio
@@ -821,12 +821,54 @@ def get_treasure_drop():
             return item, jenis, jumlah
     return "ZONK", None, 0
 
+# ================== FULL INVENTORY LIST (urut berdasarkan jumlah terbanyak) ==================
+def list_full_inventory(user_id: int) -> str:
+    """Gabungkan semua item dari ITEM_PRICES + hasil pancingan user.
+    Item yang belum didapat akan tampil dengan jumlah 0.
+    Urutkan berdasarkan jumlah terbanyak, lalu nama.
+    """
+    # Ambil data ikan user
+    inv = aquarium.get_user_fish(user_id) or {}
+
+    # Ambil semua nama item dari ITEM_PRICES
+    all_items = []
+    for cfg in ITEM_PRICES.values():
+        if cfg["name"] not in all_items:
+            all_items.append(cfg["name"])
+
+    # Tambahkan item dasar (Zonk, Small Fish) jika belum ada
+    base_items = ["🤧 Zonk", "𓆝 Small Fish"]
+    for b in base_items:
+        if b not in all_items:
+            all_items.insert(0, b)
+
+    # Gabungkan hasil user (jika item tidak ada, beri nilai 0)
+    item_data = []
+    for name in all_items:
+        qty = inv.get(name, 0)
+        item_data.append((name, qty))
+
+    # Urutkan berdasarkan jumlah terbanyak, lalu nama (ascending)
+    item_data.sort(key=lambda x: (-x[1], x[0].lower()))
+
+    # Format teks hasil
+    lines = [f"{name} : {qty}" for name, qty in item_data]
+    result = "🎣 **HASIL TANGKAPANMU:**\n\n" + "\n".join(lines)
+    return result
+
 # ---------------- CALLBACK HANDLER ---------------- #
 async def callback_handler(client: Client, cq: CallbackQuery):
     data = cq.data
     user_id = cq.from_user.id
     # <-- Pastikan uname didefinisikan di sini
     uname = cq.from_user.username or f"user{user_id}"
+
+    # ====== MENU HASIL TANGKAPAN (LIHAT INVENTORY LENGKAP) ======
+    if data == "FFF":
+        full_text = list_full_inventory(user_id)
+        kb = InlineKeyboardMarkup([[InlineKeyboardButton("⬅️ Back", callback_data="F")]])
+        await cq.message.edit_text(full_text, reply_markup=kb)
+        return
     
     # ===== EVOLVE SMALL FISH CONFIRM =====
     if data == "EVOLVE_SMALLFISH_CONFIRM":
@@ -1829,9 +1871,4 @@ def register(app: Client):
     app.add_handler(MessageHandler(handle_transfer_message, filters.text & filters.private))
 
     logger.info("[MENU] Handler menu_utama terdaftar.")
-
-
-
-
-
 
