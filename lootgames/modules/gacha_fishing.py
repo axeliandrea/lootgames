@@ -9,34 +9,78 @@ from lootgames.modules import aquarium, umpan
 logger = logging.getLogger(__name__)
 
 # ============================================================
-# 🎣 LOOT TABLE (TOTAL = 1000.00%)
+# 🎣 LOOT TABLE (TOTAL ≈1000.00%, urut harga)
 # ============================================================
 FISH_LOOT = {
-    # COMMON
-    "🤧 Zonk": 47.0, "𓆝 Small Fish": 82.0, "🐌 Snail": 33.0, "🐚 Hermit Crab": 33.0,
-    "🦀 Crab": 33.0, "🐸 Frog": 33.0, "🐍 Snake": 33.0, "🐙 Octopus": 20.0,
-    "ଳ Jelly Fish": 25.0, "🦪 Giant Clam": 25.0, "🐟 Goldfish": 25.0, "🐟 Stingrays Fish": 25.0,
-    "🐟 Clownfish": 25.0, "🐟 Doryfish": 25.0, "🐟 Bannerfish": 25.0, "🐟 Moorish Idol": 25.0,
-    "🐟 Axolotl": 25.0, "🐟 Beta Fish": 25.0, "🐟 Anglerfish": 25.0, "🦆 Duck": 25.0,
+    # ---------------- COMMON (harga 0–4) ---------------- #
+    "🤧 Zonk": 170.00,                  
+    "𓆝 Small Fish": 288.00,         
+    "🐌 Snail": 171.00,                
+    "🐚 Hermit Crab": 171.00,        
+    "🦀 Crab": 161.00,                 
+    "🐸 Frog": 161.00,                 
+    "🐍 Snake": 163.00,                
+    "🐙 Octopus": 105.00,              
+    "ଳ Jelly Fish": 50.00,             
+    "🦪 Giant Clam": 50.00,           
+    "🐟 Goldfish": 50.00,              
+    "🐟 Stingrays Fish": 50.00,       
+    "🐟 Clownfish": 50.00,             
+    "🐟 Doryfish": 50.00,              
+    "🐟 Bannerfish": 50.00,            
+    "🐟 Moorish Idol": 50.00,          
+    "🐟 Axolotl": 50.00,               
+    "🐟 Beta Fish": 50.00,            
+    "🐟 Anglerfish": 50.00,            
+    "🦆 Duck": 50.00,                  
 
-    # RARE & LEGENDARY
-    "🐡 Pufferfish": 20.0, "📿 Lucky Jewel": 20.0, "🐱 Red Hammer Cat": 20.0,
-    "🐱 Purple Fist Cat": 20.0, "🐱 Green Dino Cat": 20.0, "🐱 White Winter Cat": 20.0,
-    "🐟 Shark": 20.0, "🐟 Seahorse": 20.0, "🐊 Crocodile": 20.0, "🦦 Seal": 20.0,
-    "🐢 Turtle": 20.0, "🦞 Lobster": 20.0, "🐋 Orca": 13.0, "🐬 Dolphin": 13.0,
-    "🐒 Monkey": 13.0, "🦍 Gorilla": 13.0, "🐼 Panda": 13.0, "🐶 Dog": 13.0,
-    "🐹⚡ Pikachu": 13.0, "🐸🍀 Bulbasaur": 13.0, "🐢💧 Squirtle": 13.0,
-    "🐉🔥 Charmander": 13.0, "🐋⚡ Kyogre": 13.0,
+    # ---------------- ULTRA RARE (harga 5–10) ---------------- #
+    "🐡 Pufferfish": 40.00,            
+    "📿 Lucky Jewel": 40.00,          
+    "🐱 Red Hammer Cat": 10.00,        
+    "🐱 Purple Fist Cat": 10.00,       
+    "🐱 Green Dino Cat": 10.00,        
+    "🐱 White Winter Cat": 10.00,      
+    "🐟 Shark": 40.00,                 
+    "🐟 Seahorse": 40.00,             
+    "🐊 Crocodile": 40.00,             
+    "🦦 Seal": 40.00,                  
+    "🐢 Turtle": 40.00,                
+    "🦞 Lobster": 40.00,               
 
-    # MYTHIC
-    "🐉 Baby Dragon": 1.0, "🐉 Baby Spirit Dragon": 1.0, "🐉 Baby Magma Dragon": 1.0,
-    "🐉 Skull Dragon": 0.5, "🐉 Blue Dragon": 0.5, "🐉 Black Dragon": 0.5,
-    "🐉 Yellow Dragon": 0.5, "🧜‍♀️ Mermaid Boy": 0.42, "🧜‍♀️ Mermaid Girl": 0.42,
+    # ---------------- LEGENDARY (harga 15–30) ---------------- #
+    "🐋 Orca": 20.00,                  
+    "🐬 Dolphin": 20.00,                
+    "🐒 Monkey": 20.00,                 
+    "🦍 Gorilla": 20.00,               
+    "🐼 Panda": 20.00,                  
+    "🐶 Dog": 20.00,                    
+    "🐹⚡ Pikachu": 5.00,              
+    "🐸🍀 Bulbasaur": 5.00,            
+    "🐢💧 Squirtle": 5.00,              
+    "🐉🔥 Charmander": 5.00,            
+    "🐋⚡ Kyogre": 5.00,                 
 
-    # ULTRA MYTHIC
-    "🐉 Cupid Dragon": 0.05, "🐺 Werewolf": 0.02, "🐱 Rainbow Angel Cat": 0.03,
-    "👹 Dark Lord Demon": 0.02, "🦊 Princess of Nine Tail": 0.02,
-    "🐦‍🔥 Fire Phoenix": 0.02, "🐦❄️ Frost Phoenix": 0.02, "🐦🌌 Dark Phoenix": 0.02,
+    # ---------------- MYTHIC ---------------- #
+    "🐉 Baby Dragon": 0.10,             
+    "🐉 Baby Spirit Dragon": 0.10,      
+    "🐉 Baby Magma Dragon": 0.10,       
+    "🐉 Skull Dragon": 0.09,           
+    "🐉 Blue Dragon": 0.09,             
+    "🐉 Black Dragon": 0.09,            
+    "🐉 Yellow Dragon": 0.09,          
+    "🧜‍♀️ Mermaid Boy": 0.09,             
+    "🧜‍♀️ Mermaid Girl": 0.09,  
+
+    # ---------------- ULTRA MYTHIC ---------------- #
+    "🐉 Cupid Dragon": 0.01,           
+    "🐺 Werewolf": 0.001,               
+    "🐱 Rainbow Angel Cat": 0.001,      
+    "👹 Dark Lord Demon": 0.001,        
+    "🦊 Princess of Nine Tail": 0.001,   
+    "🐦‍🔥 Fire Phoenix": 0.001,   
+    "🐦❄️ Frost Phoenix": 0.001,   
+    "🐦🌌 Dark Phoenix": 0.001
 }
 
 # ============================================================
@@ -50,36 +94,14 @@ BUFF_RATE = {
 }
 
 # ============================================================
-# 🎣 LIST ITEM PER KATEGORI
-# ============================================================
-ultra_mythic_items = [
-    "🐺 Werewolf", "🐱 Rainbow Angel Cat", "👹 Dark Lord Demon",
-    "🦊 Princess of Nine Tail", "🐦‍🔥 Fire Phoenix", "🐦❄️ Frost Phoenix", "🐦🌌 Dark Phoenix"
-]
-
-mythic_items = [
-    "🐉 Baby Dragon", "🐉 Baby Spirit Dragon", "🐉 Baby Magma Dragon",
-    "🐉 Skull Dragon", "🐉 Blue Dragon", "🐉 Black Dragon",
-    "🐉 Yellow Dragon", "🧜‍♀️ Mermaid Boy", "🧜‍♀️ Mermaid Girl", "🐉 Cupid Dragon"
-]
-
-common_items = [
-    item for item in FISH_LOOT
-    if FISH_LOOT[item] >= 20 and item not in mythic_items + ultra_mythic_items
-]
-
-rare_items = [
-    item for item in FISH_LOOT
-    if item not in common_items + mythic_items + ultra_mythic_items
-]
-
-# ============================================================
 # 🎣 FUNGSI MEMANCING
 # ============================================================
 async def fishing_loot(client: Client, target_chat: int, username: str, user_id: int, umpan_type: str = "COMMON") -> str:
     buff = BUFF_RATE.get(umpan_type, 0.0)
-    loot_item = roll_loot(buff)
+    loot_item = roll_loot(buff, umpan_type)
+
     logger.info(f"[FISHING] {username} ({user_id}) memancing dengan {umpan_type}, mendapatkan: {loot_item}")
+
     try:
         await asyncio.sleep(2)
         if target_chat:
@@ -87,28 +109,65 @@ async def fishing_loot(client: Client, target_chat: int, username: str, user_id:
         aquarium.add_fish(user_id, loot_item, 1)
     except Exception as e:
         logger.error(f"[FISHING] Error untuk {username}: {e}")
+
     return loot_item
 
 # ============================================================
-# 🎲 RANDOM LOOT PROCESS
+# 🎲 PROSES RANDOM LOOT
 # ============================================================
-def roll_loot(buff: float = 0.0) -> str:
-    roll = random.uniform(0, 100)
-    # Check Ultra Mythic
-    for item in ultra_mythic_items:
-        if roll <= FISH_LOOT[item] + buff:
-            return item
-    # Check Mythic
-    for item in mythic_items:
-        if roll <= FISH_LOOT[item] + buff:
-            return item
-    # Check Rare
-    for item in rare_items:
-        if roll <= FISH_LOOT[item] + buff:
-            return item
-    # Check Common
-    for item in common_items:
-        if roll <= FISH_LOOT[item] + buff:
-            return item
-    # fallback
-    return random.choice(common_items)
+mythic_items = [
+    "🐉 Baby Dragon", "🐉 Baby Spirit Dragon", "🐉 Baby Magma Dragon",
+    "🐉 Skull Dragon", "🐉 Blue Dragon", "🐉 Black Dragon",
+    "🐉 Yellow Dragon", "🧜‍♀️ Mermaid Boy", "🧜‍♀️ Mermaid Girl",
+    "🐉 Cupid Dragon"
+]
+
+ultra_mythic_items = [
+    "👹 Dark Lord Demon", "🦊 Princess of Nine Tail", "🐱 Rainbow Angel Cat",
+    "🐦‍🔥 Fire Phoenix", "🐦❄️ Frost Phoenix", "🐦🌌 Dark Phoenix"
+]
+
+def roll_loot(buff: float, umpan_type: str = "COMMON") -> str:
+    items, chances = [], []
+
+    for item, base_chance in FISH_LOOT.items():
+        bonus = 0.0
+
+        if umpan_type == "RARE":
+            if item in mythic_items:
+                bonus = 0.50
+            elif item in ultra_mythic_items:
+                bonus = 0.10
+            else:
+                bonus = buff
+        elif umpan_type == "LEGEND":
+            if item in mythic_items:
+                bonus = 4.0
+            elif item in ultra_mythic_items:
+                bonus = 1.5
+            else:
+                bonus = buff
+        elif umpan_type == "COMMON":
+            if item in mythic_items:
+                bonus = 0.09
+            elif item in ultra_mythic_items:
+                bonus = 0.01
+            else:
+                bonus = buff
+        else:
+            bonus = buff
+
+        items.append(item)
+        chances.append(base_chance + bonus)
+
+    loot_item = random.choices(items, weights=chances, k=1)[0]
+    return loot_item
+
+# ============================================================
+# 🧠 BACKGROUND WORKER
+# ============================================================
+async def fishing_worker(app: Client):
+    logger.info("[FISHING WORKER] Worker siap berjalan...")
+    while True:
+        logger.debug("[FISHING WORKER] Tick... tidak ada aksi saat ini")
+        await asyncio.sleep(60)
