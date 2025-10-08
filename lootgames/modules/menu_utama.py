@@ -1602,7 +1602,7 @@ async def callback_handler(client: Client, cq: CallbackQuery):
     if data == "D2A":
         inv_text = aquarium.list_inventory(user_id)
         kb = make_keyboard("D2A", user_id)
-        await cq.message.edit_text(f"📦 Inventorymu:\n\n{inv_text}", reply_markup=kb)
+        await cq.message.edit_text(f"🎣 Inventorymu:\n\n{inv_text}", reply_markup=kb)
         return
 
     # CEK INVENTORY (hasil tangkapan)
@@ -1878,6 +1878,7 @@ def register(app: Client):
     app.add_handler(MessageHandler(handle_transfer_message, filters.text & filters.private))
 
     logger.info("[MENU] Handler menu_utama terdaftar.")
+
 
 
 
