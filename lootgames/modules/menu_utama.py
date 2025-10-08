@@ -1,4 +1,4 @@
-# lootgames/modules/menu_utama.py Test Nonaktif Umpan Rare
+# lootgames/modules/menu_utama.py Upgrade inventory Total monster
 import os
 import logging
 import asyncio
@@ -18,7 +18,7 @@ from datetime import date
 
 logger = logging.getLogger(__name__)
 OWNER_ID = 6395738130
-TARGET_GROUP = -1002946278772  # ganti sesuai supergroup bot
+TARGET_GROUP = -1002904817520  # ganti sesuai supergroup bot
 
 # ---------------- STATE ---------------- #
 TRANSFER_STATE = {}       # user_id: {"jenis": "A/B/C/D"}
@@ -838,6 +838,7 @@ def list_full_inventory(user_id: int) -> str:
     """Gabungkan semua item dari ITEM_PRICES + hasil pancingan user.
     Item yang belum didapat akan tampil dengan jumlah 0.
     Urutkan berdasarkan jumlah terbanyak, lalu nama.
+    Tambahkan total keseluruhan item (termasuk zonk).
     """
     # Ambil data ikan user
     inv = aquarium.get_user_fish(user_id) or {}
@@ -856,8 +857,10 @@ def list_full_inventory(user_id: int) -> str:
 
     # Gabungkan hasil user (jika item tidak ada, beri nilai 0)
     item_data = []
+    total_all = 0
     for name in all_items:
         qty = inv.get(name, 0)
+        total_all += qty
         item_data.append((name, qty))
 
     # Urutkan berdasarkan jumlah terbanyak, lalu nama (ascending)
@@ -865,6 +868,11 @@ def list_full_inventory(user_id: int) -> str:
 
     # Format teks hasil
     lines = [f"{name} : {qty}" for name, qty in item_data]
+
+    # Tambahkan total keseluruhan di akhir
+    lines.append("\n============================")
+    lines.append(f"📦 **Total Keseluruhan:** {total_all}")
+
     result = "🎣 **HASIL TANGKAPANMU:**\n\n" + "\n".join(lines)
     return result
 
@@ -1407,7 +1415,7 @@ async def callback_handler(client: Client, cq: CallbackQuery):
         await cq.answer("🤖 Auto Catching 5x Start!")
 
         async def auto_fishing():
-            for i in range(5):
+            for i in range(50):
                 now = asyncio.get_event_loop().time()
                 if now - user_last_fishing.get(user_id, 0) < 10:
                     break  # stop kalau masih cooldown
@@ -1879,10 +1887,3 @@ def register(app: Client):
     app.add_handler(MessageHandler(handle_transfer_message, filters.text & filters.private))
 
     logger.info("[MENU] Handler menu_utama terdaftar.")
-
-
-
-
-
-
-
