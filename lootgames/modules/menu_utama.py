@@ -184,7 +184,6 @@ ITEM_PRICES = {
     "SELL_MERMAIDGIRL": {"name": "🧜‍♀️ Mermaid Girl", "price": 200, "inv_key": "Mermaid Girl"},
     "SELL_CUPIDDRAGON": {"name": "🐉 Cupid Dragon", "price": 300, "inv_key": "Cupid Dragon"},
     "SELL_WEREWOLF": {"name": "🐺 Werewolf", "price": 300, "inv_key": "Werewolf"},
-    "SELL_DARKKNIGHTDRAGON": {"name": "🐉 Dark Knight Dragon", "price": 300, "inv_key": "Dark Knight Dragon"},
     "SELL_WHITETIGER": {"name": "🐯 White Tiger", "price": 300, "inv_key": "White Tiger"},
     "SELL_RAINBOWANGELCAT": {"name": "🐱 Rainbow Angel Cat", "price": 300, "inv_key": "Rainbow Angel Cat"},
     "SELL_FIREPHOENIX": {"name": "🐦‍🔥 Fire Phoenix", "price": 300, "inv_key": "Fire Phoenix"},
@@ -193,6 +192,7 @@ ITEM_PRICES = {
     "SELL_CHIMERA": {"name": "🦁🐍 Chimera", "price": 300, "inv_key": "Chimera"},
     "SELL_DARKLORDDEMON": {"name": "👹 Dark Lord Demon", "price": 500, "inv_key": "Dark Lord Demon"},
     "SELL_PRINCESSOFNINETAIL": {"name": "🦊 Princess of Nine Tail", "price": 500, "inv_key": "Princess of Nine Tail"},
+    "SELL_DARKKNIGHTDRAGON": {"name": "🐉 Dark Knight Dragon", "price": 500, "inv_key": "Dark Knight Dragon"},
     "SELL_DARKFISHWARRIOR": {"name": "👹 Dark Fish Warrior", "price": 2000, "inv_key": "Dark Fish Warrior"},
     "SELL_SNAILDRAGON": {"name": "🐉 Snail Dragon", "price": 4000, "inv_key": "Snail Dragon"},
     "SELL_QUEENOFHERMIT": {"name": "👑 Queen Of Hermit", "price": 4000, "inv_key": "Queen Of Hermit"},
@@ -557,7 +557,6 @@ MENU_STRUCTURE = {
             ("🧜‍♀️ Mermaid Boy", "SELL_DETAIL:SELL_MERMAIDBOY"),
             ("🧜‍♀️ Mermaid Girl", "SELL_DETAIL:SELL_MERMAIDGIRL"),
             ("🐉 Cupid Dragon", "SELL_DETAIL:SELL_CUPIDDRAGON"),
-            ("🐉 Dark Knight Dragon", "SELL_DETAIL:SELL_DARKKNIGHTDRAGON"),
             ("🐺 Werewolf", "SELL_DETAIL:SELL_WEREWOLF"),
             ("🐯 White Tiger", "SELL_DETAIL:SELL_WHITETIGER"),
             ("🐱 Rainbow Angel Cat", "SELL_DETAIL:SELL_RAINBOWANGELCAT"),
@@ -567,6 +566,7 @@ MENU_STRUCTURE = {
             ("🦁🐍 Chimera", "SELL_DETAIL:SELL_CHIMERA"),
             ("👹 Dark Lord Demon", "SELL_DETAIL:SELL_DARKLORDDEMON"),
             ("🦊 Princess of Nine Tail", "SELL_DETAIL:SELL_PRINCESSOFNINETAIL"),
+            ("🐉 Dark Knight Dragon", "SELL_DETAIL:SELL_DARKKNIGHTDRAGON"),
             ("👹 Dark Fish Warrior", "SELL_DETAIL:SELL_DARKFISHWARRIOR"),
             ("🐉 Snail Dragon", "SELL_DETAIL:SELL_SNAILDRAGON"),
             ("👑 Queen Of Hermit", "SELL_DETAIL:SELL_QUEENOFHERMIT"),
@@ -1928,4 +1928,5 @@ def register(app: Client):
     app.add_handler(MessageHandler(handle_transfer_message, filters.text & filters.private))
 
     logger.info("[MENU] Handler menu_utama terdaftar.")
+
 
