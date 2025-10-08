@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 FISH_LOOT_COMMON = {
     # ---------------- COMMON ---------------- #
     "🤧 Zonk": 77.91,
-    "𓆝 Small Fish": 131.52,
+    "𓆝 Small Fish": 131.50,
     "🐌 Snail": 78.27,
     "🐚 Hermit Crab": 78.27,
     "🦀 Crab": 73.78,
@@ -47,6 +47,8 @@ FISH_LOOT_COMMON = {
 
     # ---------------- ULTRA MYTHIC ---------------- #
     "🐉 Cupid Dragon": 0.1,
+    "🐉 Dark Knight Dragon": 0.01,
+    "🐯 White Tiger": 0.01,
     "🐺 Werewolf": 0.1,
     "🐱 Rainbow Angel Cat": 0.1,
     "👹 Dark Lord Demon": 0.1,
@@ -61,16 +63,16 @@ FISH_LOOT_COMMON = {
 # ============================================================
 FISH_LOOT_RARE = {
     # ---------------- ULTRA RARE ---------------- #
-    "🐡 Pufferfish": 62.75,
-    "📿 Lucky Jewel": 62.75,
-    "🐱 Red Hammer Cat": 62.75,
-    "🐱 Purple Fist Cat": 62.75,
-    "🐱 Green Dino Cat": 62.75,
-    "🐱 White Winter Cat": 62.75,
-    "🐟 Shark": 62.75,
-    "🐟 Seahorse": 62.75,
-    "🐊 Crocodile": 62.75,
-    "🦦 Seal": 62.75,
+    "🐡 Pufferfish": 58.73,
+    "📿 Lucky Jewel": 60.75,
+    "🐱 Red Hammer Cat": 60.75,
+    "🐱 Purple Fist Cat": 60.75,
+    "🐱 Green Dino Cat": 60.75,
+    "🐱 White Winter Cat": 60.75,
+    "🐟 Shark": 60.75,
+    "🐟 Seahorse": 60.75,
+    "🐊 Crocodile": 60.75,
+    "🦦 Seal": 60.75,
     "🐢 Turtle": 62.75,
     "🦞 Lobster": 62.75,
 
@@ -81,6 +83,7 @@ FISH_LOOT_RARE = {
     "🦍 Gorilla": 20.00,
     "🐼 Panda": 20.00,
     "🐶 Dog": 20.00,
+    "🦇 bat": 20.00,
     "🐹⚡ Pikachu": 5.00,
     "🐸🍀 Bulbasaur": 5.00,
     "🐢💧 Squirtle": 5.00,
@@ -100,6 +103,8 @@ FISH_LOOT_RARE = {
 
     # ---------------- ULTRA MYTHIC ---------------- #
     "🐉 Cupid Dragon": 1.01,
+    "🐉 Dark Knight Dragon": 1.01,
+    "🐯 White Tiger": 1.01,
     "🐺 Werewolf": 1.01,
     "🐱 Rainbow Angel Cat": 1.01,
     "👹 Dark Lord Demon": 1.01,
