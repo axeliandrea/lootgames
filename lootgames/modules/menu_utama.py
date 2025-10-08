@@ -816,9 +816,9 @@ def get_treasure_drop():
     Return: (item_name, jenis_umpan, jumlah)
     """
     drop_table = [
-        ("ZONK", None, 0, 40),                  # 40% zonk
-        ("Umpan Common", "A", 2, 39),           # 39% common
-        ("Umpan Rare", "B", 1, 10),             # 10% rare
+        ("ZONK", None, 0, 10),                  # 40% zonk
+        ("Umpan Common", "A", 2, 50),           # 39% common
+        ("Umpan Rare", "B", 1, 29),             # 10% rare
         ("Umpan Legend", "C", 0, 0.00000000001),# 1e-11% legend
         ("Umpan Mythic", "D", 0, 0.00000000001),# 1e-11% mythic
     ]
@@ -1879,6 +1879,7 @@ def register(app: Client):
     app.add_handler(MessageHandler(handle_transfer_message, filters.text & filters.private))
 
     logger.info("[MENU] Handler menu_utama terdaftar.")
+
 
 
 
