@@ -41,6 +41,8 @@ os.makedirs(os.path.dirname(DB_FILE), exist_ok=True)
 # ----------------- INISIALISASI -----------------
 user_last_fishing = defaultdict(lambda: 0)  # cooldown 10 detik per user
 user_task_count = defaultdict(lambda: 0)   # generate task ID unik per user
+active_auto_fish = {}  # user_id -> {"active": bool, "jenis": str}
+JK_MAP = {"COMMON": "A", "RARE": "B", "LEGEND": "C", "MYTHIC": "D"}
 
 # ---------------- HELPER LOAD / SAVE ---------------- #
 def _load_db() -> dict:
@@ -705,7 +707,8 @@ MENU_STRUCTURE["G"]["buttons"] = [b for b in MENU_STRUCTURE["G"]["buttons"] if b
 
 def normalize_key(key: str) -> str:
     """
-    Normalisasi nama item dari inventory agar cocok dengan inv_key.
+    Normalisasi nama item dari inventory agar
+    cocok dengan inv_key.
     - Lowercase
     - Hilangkan emoji dan karakter non-alnum (kecuali spasi)
     - Trim spasi berlebih
@@ -834,28 +837,21 @@ def get_treasure_drop():
     return "ZONK", None, 0
 
 # ================== FULL INVENTORY LIST (urut berdasarkan jumlah terbanyak) ==================
-def list_full_inventory(user_id: int) -> str:
-    """Gabungkan semua item dari ITEM_PRICES + hasil pancingan user.
-    Item yang belum didapat akan tampil dengan jumlah 0.
-    Urutkan berdasarkan jumlah terbanyak, lalu nama.
-    Tambahkan total keseluruhan item (termasuk zonk).
-    """
-    # Ambil data ikan user
+# ================== FULL INVENTORY LIST (urut berdasarkan jumlah terbanyak) ==================
+def list_inventory_with_total(user_id: int) -> str:
+    """Gabungkan semua item dari ITEM_PRICES + hasil pancingan user."""
     inv = aquarium.get_user_fish(user_id) or {}
 
-    # Ambil semua nama item dari ITEM_PRICES
     all_items = []
     for cfg in ITEM_PRICES.values():
         if cfg["name"] not in all_items:
             all_items.append(cfg["name"])
 
-    # Tambahkan item dasar (Zonk, Small Fish) jika belum ada
     base_items = ["🤧 Zonk", "𓆝 Small Fish"]
     for b in base_items:
         if b not in all_items:
             all_items.insert(0, b)
 
-    # Gabungkan hasil user (jika item tidak ada, beri nilai 0)
     item_data = []
     total_all = 0
     for name in all_items:
@@ -863,16 +859,10 @@ def list_full_inventory(user_id: int) -> str:
         total_all += qty
         item_data.append((name, qty))
 
-    # Urutkan berdasarkan jumlah terbanyak, lalu nama (ascending)
     item_data.sort(key=lambda x: (-x[1], x[0].lower()))
-
-    # Format teks hasil
     lines = [f"{name} : {qty}" for name, qty in item_data]
-
-    # Tambahkan total keseluruhan di akhir
     lines.append("\n============================")
     lines.append(f"📦 **Total Keseluruhan:** {total_all}")
-
     result = "🎣 **HASIL TANGKAPANMU:**\n\n" + "\n".join(lines)
     return result
 
@@ -885,7 +875,7 @@ async def callback_handler(client: Client, cq: CallbackQuery):
 
     # ====== MENU HASIL TANGKAPAN (LIHAT INVENTORY LENGKAP) ======
     if data == "FFF":
-        full_text = list_full_inventory(user_id)
+        full_text = list_inventory_with_total(user_id)
         kb = InlineKeyboardMarkup([[InlineKeyboardButton("⬅️ Back", callback_data="F")]])
         await cq.message.edit_text(full_text, reply_markup=kb)
         return
@@ -1644,14 +1634,14 @@ async def callback_handler(client, cq):
     # CEK INVENTORY STORE
     # CEK INVENTORY STORE (PAKAI FORMAT LIST FULL INVENTORY)
     if data == "D2A":
-        inv_text = list_full_inventory(user_id)
+        inv_text = list_inventory_with_total(user_id)  # ✅ benar
         kb = make_keyboard("D2A", user_id)
         await cq.message.edit_text(inv_text, reply_markup=kb)
         return
 
     # CEK INVENTORY (hasil tangkapan)
     if data == "FFF":
-        inv_text = aquarium.list_inventory(user_id)
+        inv_text = list_inventory_with_total(user_id)  # ✅ benar
         kb = make_keyboard("FFF", user_id)
         await cq.message.edit_text(f"🎣 Inventorymu:\n\n{inv_text}", reply_markup=kb)
         return
@@ -1922,4 +1912,6 @@ def register(app: Client):
     app.add_handler(MessageHandler(handle_transfer_message, filters.text & filters.private))
 
     logger.info("[MENU] Handler menu_utama terdaftar.")
+
+
 
