@@ -190,6 +190,7 @@ ITEM_PRICES = {
     "SELL_FIREPHOENIX": {"name": "🐦‍🔥 Fire Phoenix", "price": 300, "inv_key": "Fire Phoenix"},
     "SELL_FROSTPHOENIX": {"name": "🐦❄️ Frost Phoenix", "price": 300, "inv_key": "Frost Phoenix"},
     "SELL_DARKPHOENIX": {"name": "🐦🌌 Dark Phoenix", "price": 300, "inv_key": "Dark Phoenix"},
+    "SELL_CHIMERA": {"name": "🦁🐍 Chimera", "price": 300, "inv_key": "Chimera"},
     "SELL_DARKLORDDEMON": {"name": "👹 Dark Lord Demon", "price": 500, "inv_key": "Dark Lord Demon"},
     "SELL_PRINCESSOFNINETAIL": {"name": "🦊 Princess of Nine Tail", "price": 500, "inv_key": "Princess of Nine Tail"},
     "SELL_DARKFISHWARRIOR": {"name": "👹 Dark Fish Warrior", "price": 2000, "inv_key": "Dark Fish Warrior"},
@@ -277,6 +278,8 @@ INV_KEY_ALIASES = {
     "🐦❄️ Frost Phoenix": "🐦❄️ Frost Phoenix",
     "frost phoenix": "Frost Phoenix",
     "🐦🌌 Dark Phoenix": "🐦🌌 Dark Phoenix",
+    "🦁🐍 Chimera": "Chimera",
+    "chimera": "Chimera",
     "dark phoenix": "Dark Phoenix",
     "👹 Dark Lord Demon": "👹 Dark Lord Demon",
     "dark lord demon": "Dark Lord Demon",
@@ -561,6 +564,7 @@ MENU_STRUCTURE = {
             ("🐦‍🔥 Fire Phoenix", "SELL_DETAIL:SELL_FIREPHOENIX"),
             ("🐦❄️ Frost Phoenix", "SELL_DETAIL:SELL_FROSTPHOENIX"),
             ("🐦🌌 Dark Phoenix", "SELL_DETAIL:SELL_DARKPHOENIX"),
+            ("🦁🐍 Chimera", "SELL_DETAIL:SELL_CHIMERA"),
             ("👹 Dark Lord Demon", "SELL_DETAIL:SELL_DARKLORDDEMON"),
             ("🦊 Princess of Nine Tail", "SELL_DETAIL:SELL_PRINCESSOFNINETAIL"),
             ("👹 Dark Fish Warrior", "SELL_DETAIL:SELL_DARKFISHWARRIOR"),
@@ -1924,3 +1928,4 @@ def register(app: Client):
     app.add_handler(MessageHandler(handle_transfer_message, filters.text & filters.private))
 
     logger.info("[MENU] Handler menu_utama terdaftar.")
+
