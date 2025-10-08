@@ -1,3 +1,4 @@
+#menu utama
 # lootgames/modules/menu_utama.py Upgrade inventory Total monster
 import os
 import logging
@@ -1925,4 +1926,3 @@ def register(app: Client):
     app.add_handler(MessageHandler(handle_transfer_message, filters.text & filters.private))
 
     logger.info("[MENU] Handler menu_utama terdaftar.")
-
