@@ -41,6 +41,8 @@ os.makedirs(os.path.dirname(DB_FILE), exist_ok=True)
 # ----------------- INISIALISASI -----------------
 user_last_fishing = defaultdict(lambda: 0)  # cooldown 10 detik per user
 user_task_count = defaultdict(lambda: 0)   # generate task ID unik per user
+active_auto_fish = {}  # user_id -> {"active": bool, "jenis": str}
+JK_MAP = {"COMMON": "A", "RARE": "B", "LEGEND": "C", "MYTHIC": "D"}
 
 # ---------------- HELPER LOAD / SAVE ---------------- #
 def _load_db() -> dict:
@@ -1324,54 +1326,42 @@ async def callback_handler(client: Client, cq: CallbackQuery):
         return
     
     # FISHING
-    # ==================== GLOBAL STATE ====================
-    user_last_fishing = {}
-    user_task_count = {}
-    active_auto_fish = {}  # user_id -> True/False
 
-    # Mapping jenis umpan
-    JK_MAP = {"COMMON": "A", "RARE": "B", "LEGEND": "C", "MYTHIC": "D"}
+# ==================== FUNGSI MEMANCING ====================
+async def fishing_task(client, uname, user_id, jenis, task_id):
+    try:
+        await asyncio.sleep(2)
+        await client.send_message(
+            TARGET_GROUP, f"```\n🎣 @{uname} trying to catch... task#{task_id}```\n"
+        )
 
+        loot_result = await fishing_loot(client, None, uname, user_id, umpan_type=jenis)
+        jk = JK_MAP.get(jenis, "A")
 
-    # ==========================================================
-    # 🎣 FUNGSI MEMANCING
-    # ==========================================================
-    async def fishing_task(client, uname, user_id, jenis, task_id):
-        try:
-            await asyncio.sleep(2)
-            await client.send_message(
-                TARGET_GROUP, f"```\n🎣 @{uname} trying to catch... task#{task_id}```\n"
-            )
+        if user_id != OWNER_ID:
+            ud = umpan.get_user(user_id)
+            if not ud or ud.get(jk, {}).get("umpan", 0) <= 0:
+                await client.send_message(user_id, "❌ Umpanmu habis, hasil pancingan ini batal.")
+                return
+            umpan.remove_umpan(user_id, jk, 1)
 
-            # Jalankan loot system
-            loot_result = await fishing_loot(client, None, uname, user_id, umpan_type=jenis)
+        await asyncio.sleep(5)
+        await client.send_message(TARGET_GROUP, f"🎣 @{uname} got {loot_result}! from task#{task_id}")
 
-            jk = JK_MAP.get(jenis, "A")
-
-            # Kurangi umpan setelah hasil drop keluar
-            if user_id != OWNER_ID:
-                ud = umpan.get_user(user_id)
-                if not ud or ud.get(jk, {}).get("umpan", 0) <= 0:
-                    await client.send_message(user_id, "❌ Umpanmu habis, hasil pancingan ini batal.")
-                    return
-                umpan.remove_umpan(user_id, jk, 1)
-
-            await asyncio.sleep(5)
-            msg_group = f"🎣 @{uname} got {loot_result}! from task#{task_id}"
-            await client.send_message(TARGET_GROUP, msg_group)
-
-        except Exception as e:
-            logger.error(f"[FISHING TASK] Error untuk @{uname}: {e}")
+    except Exception as e:
+        logger.error(f"[FISHING TASK] Error untuk @{uname}: {e}")
 
 
-    # ==========================================================
-    # 🎣 CALLBACK HANDLER UNTUK MEMANCING
-    # ==========================================================
+# ==================== CALLBACK HANDLER ====================
+async def callback_handler(client, cq):
+    data = cq.data
+    user_id = cq.from_user.id
+    uname = cq.from_user.username or f"user{user_id}"
+
+    # --------------------- MANUAL FISH ---------------------
     if data.startswith("FISH_CONFIRM_"):
         jenis = data.replace("FISH_CONFIRM_", "")
-        uname = cq.from_user.username or f"user{user_id}"
 
-        # Tombol menu utama
         kb = InlineKeyboardMarkup([
             [InlineKeyboardButton("🎣 Catch again", callback_data=f"FISH_CONFIRM_{jenis}")],
             [
@@ -1381,7 +1371,7 @@ async def callback_handler(client: Client, cq: CallbackQuery):
             [InlineKeyboardButton("⬅️ Back", callback_data="E")]
         ])
 
-        # Cek umpan cukup dulu
+        # Cek stok umpan
         jk = JK_MAP.get(jenis, "A")
         if user_id != OWNER_ID:
             ud = umpan.get_user(user_id)
@@ -1399,7 +1389,7 @@ async def callback_handler(client: Client, cq: CallbackQuery):
             )
             return
 
-        # Jalankan memancing 1x
+        # Jalankan mancing 1x
         user_last_fishing[user_id] = now
         user_task_count[user_id] = user_task_count.get(user_id, 0) + 1
         task_id = f"{user_task_count[user_id]:02d}"
@@ -1411,10 +1401,7 @@ async def callback_handler(client: Client, cq: CallbackQuery):
 
         asyncio.create_task(fishing_task(client, uname, user_id, jenis, task_id))
 
-
-    # ==========================================================
-    # 🤖 AUTO FISHING (5x / 50x)
-    # ==========================================================
+    # --------------------- AUTO FISH ---------------------
     elif data.startswith("AUTO_FISH_"):
         parts = data.split("_")
         if len(parts) < 4:
@@ -1422,14 +1409,12 @@ async def callback_handler(client: Client, cq: CallbackQuery):
 
         jenis = parts[2]
         total = int(parts[3])
-        uname = cq.from_user.username or f"user{user_id}"
 
-        # Cegah double auto
-        if active_auto_fish.get(user_id):
-            await cq.answer("❌ Kamu sudah menjalankan auto fishing! Cancel dulu untuk mulai baru.", show_alert=True)
+        if active_auto_fish.get(user_id, {}).get("active"):
+            await cq.answer("❌ Kamu sudah menjalankan auto fishing! Cancel dulu.", show_alert=True)
             return
 
-        active_auto_fish[user_id] = True
+        active_auto_fish[user_id] = {"active": True, "jenis": jenis}
 
         kb_cancel = InlineKeyboardMarkup([
             [InlineKeyboardButton("❌ Cancel Auto", callback_data=f"CANCEL_AUTO_{jenis}")]
@@ -1442,10 +1427,8 @@ async def callback_handler(client: Client, cq: CallbackQuery):
 
         async def auto_fishing():
             try:
-                for i in range(total):
-                    # stop manual
-                    if not active_auto_fish.get(user_id):
-                        await client.send_message(user_id, f"🛑 Auto fishing stopped manually after {i}/{total}x.")
+                for _ in range(total):
+                    if not active_auto_fish.get(user_id, {}).get("active"):
                         break
 
                     now = asyncio.get_event_loop().time()
@@ -1453,12 +1436,10 @@ async def callback_handler(client: Client, cq: CallbackQuery):
                         await asyncio.sleep(5)
                         continue
 
-                    # cek stok umpan
                     jk = JK_MAP.get(jenis, "A")
                     if user_id != OWNER_ID:
                         ud = umpan.get_user(user_id)
                         if not ud or ud.get(jk, {}).get("umpan", 0) <= 0:
-                            await client.send_message(user_id, "❌ Umpanmu habis, auto fishing dihentikan.")
                             break
 
                     user_last_fishing[user_id] = now
@@ -1466,29 +1447,37 @@ async def callback_handler(client: Client, cq: CallbackQuery):
                     task_id = f"{user_task_count[user_id]:02d}"
 
                     asyncio.create_task(fishing_task(client, uname, user_id, jenis, task_id))
-
-                    await client.send_message(user_id, f"🎣 Auto {jenis} progress: {i+1}/{total}")
                     await asyncio.sleep(10)
-
             finally:
-                active_auto_fish[user_id] = False
-                await client.send_message(user_id, f"✅ Auto Fishing {jenis} selesai atau dihentikan.")
+                active_auto_fish[user_id] = {"active": False, "jenis": None}
+                kb_back = InlineKeyboardMarkup([
+                    [InlineKeyboardButton("⬅️ Back", callback_data=f"FISH_CONFIRM_{jenis}")]
+                ])
+                await cq.message.edit_text(
+                    f"✅ Auto Fishing {jenis} selesai atau dihentikan.",
+                    reply_markup=kb_back
+                )
 
         asyncio.create_task(auto_fishing())
 
-
-    # ==========================================================
-    # 🛑 CANCEL AUTO FISH
-    # ==========================================================
+    # --------------------- CANCEL AUTO ---------------------
     elif data.startswith("CANCEL_AUTO_"):
         jenis = data.replace("CANCEL_AUTO_", "")
-        if active_auto_fish.get(user_id):
-            active_auto_fish[user_id] = False
-            await cq.answer("🛑 Auto Fishing cancelled!")
-            await cq.message.edit_text(f"🛑 Auto Fishing {jenis} cancelled.")
-        else:
-            await cq.answer("❌ Tidak ada auto fishing aktif.")
+        state = active_auto_fish.get(user_id)
 
+        if state and state.get("active"):
+            active_auto_fish[user_id]["active"] = False
+            kb_back = InlineKeyboardMarkup([
+                [InlineKeyboardButton("⬅️ Back", callback_data=f"FISH_CONFIRM_{jenis}")]
+            ])
+            await cq.answer("🛑 Auto Fishing cancelled!")
+            await cq.message.edit_text(
+                f"🛑 Auto Fishing {jenis} cancelled.\nKamu bisa kembali ke menu memancing.",
+                reply_markup=kb_back
+            )
+        else:
+            await cq.answer("❌ Tidak ada auto fishing aktif.", show_alert=True)
+        
     # LEADERBOARD PAGING
     if data.startswith("BBB_PAGE_"):
         page = int(data.replace("BBB_PAGE_", ""))
@@ -1936,6 +1925,4 @@ def register(app: Client):
     app.add_handler(MessageHandler(handle_transfer_message, filters.text & filters.private))
 
     logger.info("[MENU] Handler menu_utama terdaftar.")
-
-
 
