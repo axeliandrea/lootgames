@@ -133,7 +133,7 @@ def roll_loot(buff: float, umpan_type: str = "COMMON") -> str:
             if item not in mythic_items and item not in ultra_mythic_items and base_chance > 50.0:
                 continue
             if item in mythic_items:
-                bonus = 0.50
+                bonus = 1.50
             elif item in ultra_mythic_items:
                 bonus = 0.10
             else:
