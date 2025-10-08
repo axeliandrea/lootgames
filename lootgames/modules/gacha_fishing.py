@@ -1,3 +1,4 @@
+#gacha fishing
 import random
 import asyncio
 import logging
