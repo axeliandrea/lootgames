@@ -98,7 +98,7 @@ logger.info(f"[FISH_LOOT] Total bobot otomatis di-scale ke {TOTAL_TARGET}%")
 # ============================================================
 BUFF_RATE = {
     "COMMON": 0.0,
-    "RARE": 1.50,
+    "RARE": 2.50,
     "LEGEND": 7.00,
     "MYTHIC": 10.00
 }
@@ -133,18 +133,18 @@ def roll_loot(buff: float, umpan_type: str = "COMMON") -> str:
             if item not in mythic_items and item not in ultra_mythic_items and base_chance > 50.0:
                 continue
             if item in mythic_items:
-                bonus = 1.50
+                bonus = 4.50
             elif item in ultra_mythic_items:
-                bonus = 0.10
+                bonus = 1.10
             else:
                 bonus = buff
 
         # ==================== LEGEND ====================
         elif umpan_type == "LEGEND":
             if item in mythic_items:
-                bonus = 4.0
+                bonus = 10.0
             elif item in ultra_mythic_items:
-                bonus = 1.5
+                bonus = 5.5
             else:
                 bonus = buff
 
