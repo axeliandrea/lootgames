@@ -1339,7 +1339,7 @@ async def callback_handler(client: Client, cq: CallbackQuery):
         try:
             await asyncio.sleep(2)
             # Pesan di grup sekarang termasuk task_id
-            await client.send_message(TARGET_GROUP, f"```\n🎣 @{uname} trying to catch... task#{task_id}```\n")
+           #await client.send_message(TARGET_GROUP, f"```\n🎣 @{uname} trying to catch... task#{task_id}```\n")
 
             # Jalankan loot system
             loot_result = await fishing_loot(client, None, uname, user_id, umpan_type=jenis)
@@ -1896,6 +1896,7 @@ def register(app: Client):
     app.add_handler(MessageHandler(handle_transfer_message, filters.text & filters.private))
 
     logger.info("[MENU] Handler menu_utama terdaftar.")
+
 
 
 
