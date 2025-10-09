@@ -40,6 +40,7 @@ DB_FILE = os.path.join(BASE_DIR, "../storage/fizz_coin.json")  # ke folder stora
 os.makedirs(os.path.dirname(DB_FILE), exist_ok=True)
 
 # ----------------- INISIALISASI -----------------
+active_auto_fishing = {}
 user_last_fishing = defaultdict(lambda: 0)  # cooldown 10 detik per user
 user_task_count = defaultdict(lambda: 0)   # generate task ID unik per user
 
@@ -1924,6 +1925,7 @@ def register(app: Client):
     app.add_handler(MessageHandler(handle_transfer_message, filters.text & filters.private))
 
     logger.info("[MENU] Handler menu_utama terdaftar.")
+
 
 
 
