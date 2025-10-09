@@ -1399,7 +1399,7 @@ async def callback_handler(client: Client, cq: CallbackQuery):
             f"🎣 You successfully threw the bait! {jenis} to loot task#{task_id}!",
             reply_markup=InlineKeyboardMarkup([
                 [InlineKeyboardButton("🎣 Catch again", callback_data=f"FISH_CONFIRM_{jenis}")],
-                [InlineKeyboardButton("🤖 Auto Catch 5x", callback_data=f"AUTO_FISH_{jenis}")],
+                [InlineKeyboardButton("🤖 Auto Catch 50x", callback_data=f"AUTO_FISH_{jenis}")],
                 [InlineKeyboardButton("⬅️ Back", callback_data="E")]
             ])
         )
@@ -1896,6 +1896,7 @@ def register(app: Client):
     app.add_handler(MessageHandler(handle_transfer_message, filters.text & filters.private))
 
     logger.info("[MENU] Handler menu_utama terdaftar.")
+
 
 
 
