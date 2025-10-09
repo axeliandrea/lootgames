@@ -1210,18 +1210,18 @@ async def callback_handler(client: Client, cq: CallbackQuery):
     # CHECK COIN Fizz
     # ================= CEK COIN & SUBMENU ================= #
     if data == "D2C":
-    kb = make_keyboard("D2C_MENU", cq.from_user.id)
-    logger.info(f"[MENU] D2C clicked by user {user_id}")
-    try:
-        await cq.message.edit_text("💰 Pilih menu tukar coin:", reply_markup=kb)
-    except Exception as e:
-        logger.exception("[MENU] Failed to edit message for D2C: %s", e)
-        # fallback: kirim pesan baru ke user kalau edit_text gagal
+        kb = make_keyboard("D2C_MENU", cq.from_user.id)
+        logger.info(f"[MENU] D2C clicked by user {user_id}")
         try:
-            await client.send_message(user_id, "💰 Pilih menu tukar coin:", reply_markup=kb)
-        except Exception as e2:
-            logger.exception("[MENU] Fallback send_message failed for D2C: %s", e2)
-    return
+            await cq.message.edit_text("💰 Pilih menu tukar coin:", reply_markup=kb)
+        except Exception as e:
+            logger.exception("[MENU] Failed to edit message for D2C: %s", e)
+            # fallback: kirim pesan baru ke user kalau edit_text gagal
+            try:
+                await client.send_message(user_id, "💰 Pilih menu tukar coin:", reply_markup=kb)
+            except Exception as e2:
+                logger.exception("[MENU] Fallback send_message failed for D2C: %s", e2)
+        return
 
     elif data == "D2C_COMMON_A":
         uid = cq.from_user.id
@@ -1817,4 +1817,5 @@ def register(app: Client):
     app.add_handler(MessageHandler(handle_transfer_message, filters.text & filters.private))
 
     logger.info("[MENU] Handler menu_utama terdaftar.")
+
 
