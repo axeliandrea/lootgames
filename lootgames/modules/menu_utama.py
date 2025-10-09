@@ -1,4 +1,4 @@
-# lootgames/modules/menu_utama.py Test Nonaktif Umpan Rare
+# lootgames/modules/menu_utama.py Upgrade inventory Total monster
 import os
 import logging
 import asyncio
@@ -41,6 +41,8 @@ os.makedirs(os.path.dirname(DB_FILE), exist_ok=True)
 # ----------------- INISIALISASI -----------------
 user_last_fishing = defaultdict(lambda: 0)  # cooldown 10 detik per user
 user_task_count = defaultdict(lambda: 0)   # generate task ID unik per user
+active_auto_fish = {}  # user_id -> {"active": bool, "jenis": str}
+JK_MAP = {"COMMON": "A", "RARE": "B", "LEGEND": "C", "MYTHIC": "D"}
 
 # ---------------- HELPER LOAD / SAVE ---------------- #
 def _load_db() -> dict:
@@ -159,6 +161,12 @@ ITEM_PRICES = {
     "SELL_LOBSTER": {"name": "🦞 Lobster", "price": 10, "inv_key": "Lobster"},
     "SELL_LUCKYJEWEL": {"name": "📿 Lucky Jewel", "price": 7, "inv_key": "Lucky Jewel"},
     "SELL_ORCA": {"name": "🐋 Orca", "price": 15, "inv_key": "Orca"},
+    "SELL_MONKEY": {"name": "🐒 Monkey", "price": 15, "inv_key": "Monkey"},
+    "SELL_GORILLA": {"name": "🦍 Gorilla", "price": 15, "inv_key": "GORILLA"},
+    "SELL_PANDA": {"name": "🐼 Panda", "price": 15, "inv_key": "PANDA"},
+    "SELL_BEAR": {"name": "🐻 Bear", "price": 15, "inv_key": "BEAR"},
+    "SELL_DOG": {"name": "🐶 Dog", "price": 15, "inv_key": "DOG"},
+    "SELL_BAT": {"name": "🦇 bat", "price": 15, "inv_key": "BAT"},
     "SELL_DOLPHIN": {"name": "🐬 Dolphin", "price": 15, "inv_key": "Dolphin"},
     "SELL_PIKACHU": {"name": "🐹⚡ Pikachu", "price": 30, "inv_key": "Pikachu"},
     "SELL_BULBASAUR": {"name": "🐸🍀 Bulbasaur", "price": 30, "inv_key": "Bulbasaur"},
@@ -176,14 +184,20 @@ ITEM_PRICES = {
     "SELL_MERMAIDGIRL": {"name": "🧜‍♀️ Mermaid Girl", "price": 200, "inv_key": "Mermaid Girl"},
     "SELL_CUPIDDRAGON": {"name": "🐉 Cupid Dragon", "price": 300, "inv_key": "Cupid Dragon"},
     "SELL_WEREWOLF": {"name": "🐺 Werewolf", "price": 300, "inv_key": "Werewolf"},
+    "SELL_WHITETIGER": {"name": "🐯 White Tiger", "price": 300, "inv_key": "White Tiger"},
     "SELL_RAINBOWANGELCAT": {"name": "🐱 Rainbow Angel Cat", "price": 300, "inv_key": "Rainbow Angel Cat"},
+    "SELL_FIREPHOENIX": {"name": "🐦‍🔥 Fire Phoenix", "price": 300, "inv_key": "Fire Phoenix"},
+    "SELL_FROSTPHOENIX": {"name": "🐦❄️ Frost Phoenix", "price": 300, "inv_key": "Frost Phoenix"},
+    "SELL_DARKPHOENIX": {"name": "🐦🌌 Dark Phoenix", "price": 300, "inv_key": "Dark Phoenix"},
+    "SELL_CHIMERA": {"name": "🦁🐍 Chimera", "price": 300, "inv_key": "Chimera"},
     "SELL_DARKLORDDEMON": {"name": "👹 Dark Lord Demon", "price": 500, "inv_key": "Dark Lord Demon"},
     "SELL_PRINCESSOFNINETAIL": {"name": "🦊 Princess of Nine Tail", "price": 500, "inv_key": "Princess of Nine Tail"},
-    "SELL_DARKFISHWARRIOR": {"name": "👹 Dark Fish Warrior", "price": 1500, "inv_key": "Dark Fish Warrior"},
-    "SELL_SNAILDRAGON": {"name": "🐉 Snail Dragon", "price": 2700, "inv_key": "Snail Dragon"},
-    "SELL_QUEENOFHERMIT": {"name": "👑 Queen Of Hermit", "price": 2700, "inv_key": "Queen Of Hermit"},
-    "SELL_MECHAFROG": {"name": "🤖 Mecha Frog", "price": 2700, "inv_key": "Mecha Frog"},
-    "SELL_QUEENOFMEDUSA": {"name": "👑 Queen Of Medusa 🐍", "price": 2700, "inv_key": "Queen Of Medusa"},
+    "SELL_DARKKNIGHTDRAGON": {"name": "🐉 Dark Knight Dragon", "price": 500, "inv_key": "Dark Knight Dragon"},
+    "SELL_DARKFISHWARRIOR": {"name": "👹 Dark Fish Warrior", "price": 2000, "inv_key": "Dark Fish Warrior"},
+    "SELL_SNAILDRAGON": {"name": "🐉 Snail Dragon", "price": 4000, "inv_key": "Snail Dragon"},
+    "SELL_QUEENOFHERMIT": {"name": "👑 Queen Of Hermit", "price": 4000, "inv_key": "Queen Of Hermit"},
+    "SELL_MECHAFROG": {"name": "🤖 Mecha Frog", "price": 4000, "inv_key": "Mecha Frog"},
+    "SELL_QUEENOFMEDUSA": {"name": "👑 Queen Of Medusa 🐍", "price": 4000, "inv_key": "Queen Of Medusa"},
 }
 # sementara user -> item_code waiting for amount input (chat)
 SELL_WAITING = {}  # user_id: item_code
@@ -211,6 +225,18 @@ INV_KEY_ALIASES = {
     "jelly fish": "Jelly Fish",
     "🐋 Orca": "Orca",
     "orca": "Orca",
+    "🐒 Monkey": "Monkey",
+    "monkey": "Monkey",
+    "🦍 Gorilla": "Gorilla",
+    "gorilla": "Gorilla",
+    "🐼 Panda": "Panda",
+    "panda": "Panda",
+    "🐻 Bear": "Bear",
+    "bear": "Bear",
+    "🐶 Dog": "Dog",
+    "dog": "Dog",
+    "🦇 Bat": "Bat",
+    "bat": "Bat",
     "🐬 Dolphin": "Dolphin",
     "dolphin": "Dolphin",
     "🐱 Red Hammer Cat": "Red Hammer Cat",
@@ -239,10 +265,22 @@ INV_KEY_ALIASES = {
     "blue dragon": "Blue Dragon",
     "🐉 Cupid Dragon": "Cupid Dragon",
     "cupid dragon": "Cupid Dragon",
+    "🐉 Dark Knight Dragon": "🐉 Dark Knight Dragon",
+    "dark knight dragon": "Dark Knight Dragon",
+    "🐯 White Tiger": "White Tiger",
+    "white tiger": "White Tiger",
     "🐺 Werewolf": "🐺 Werewolf",
     "werewolf": "Werewolf",
     "🐱 Rainbow Angel Cat": "🐱 Rainbow Angel Cat",
     "rainbow angel cat": "Rainbow Angel Cat",
+    "🐦‍🔥 Fire Phoenix": "🐦‍🔥 Fire Phoenix",
+    "fire phoenix": "Fire Phoenix",
+    "🐦❄️ Frost Phoenix": "🐦❄️ Frost Phoenix",
+    "frost phoenix": "Frost Phoenix",
+    "🐦🌌 Dark Phoenix": "🐦🌌 Dark Phoenix",
+    "🦁🐍 Chimera": "Chimera",
+    "chimera": "Chimera",
+    "dark phoenix": "Dark Phoenix",
     "👹 Dark Lord Demon": "👹 Dark Lord Demon",
     "dark lord demon": "Dark Lord Demon",
     "🦊 Princess of Nine Tail": "🦊 Princess of Nine Tail",
@@ -461,37 +499,4 @@ MENU_STRUCTURE = {
         ]
     },
     # DAFTAR HARGA -> note: callback format SELL_DETAIL:<code>
-    "D2B": {
-        "title": "💰 DAFTAR HARGA",
-        "buttons": [
-            ("𓆝 Small Fish", "SELL_DETAIL:SELL_SMALLFISH"),
-            ("🐌 Snail", "SELL_DETAIL:SELL_SNAIL"),
-            ("🐚 Hermit Crab", "SELL_DETAIL:SELL_HERMITCRAB"),
-            ("🦀 Crab", "SELL_DETAIL:SELL_CRAB"),
-            ("🐸 Frog", "SELL_DETAIL:SELL_FROG"),
-            ("🐍 Snake", "SELL_DETAIL:SELL_SNAKE"),
-            ("🐙 Octopus", "SELL_DETAIL:SELL_OCTOPUS"),
-            ("ଳ Jelly Fish", "SELL_DETAIL:SELL_JELLYFISH"),
-            ("🦪 Giant Clam", "SELL_DETAIL:SELL_GIANTCLAM"),
-            ("🐟 Goldfish", "SELL_DETAIL:SELL_GOLDFISH"),
-            ("🐟 Clownfish", "SELL_DETAIL:SELL_CLOWNFISH"),
-            ("🐟 Stingrays Fish", "SELL_DETAIL:SELL_STINGRAYSFISH"),
-            ("🐟 Doryfish", "SELL_DETAIL:SELL_DORYFISH"),
-            ("🐟 Bannerfish", "SELL_DETAIL:SELL_BANNERFISH"),
-            ("🐟 Beta Fish", "SELL_DETAIL:SELL_BETAFISH"),
-            ("🐟 Moorish Idol", "SELL_DETAIL:SELL_MOORISHIDOL"),
-            ("🐟 Anglerfish", "SELL_DETAIL:SELL_ANGLERFISH"),
-            ("🐟 Axolotl", "SELL_DETAIL:SELL_AXOLOTL"),
-            ("🐱 Red Hammer Cat", "SELL_DETAIL:SELL_REDHAMMERCAT"),
-            ("🐱 Purple Fist Cat", "SELL_DETAIL:SELL_PURPLEFISTCAT"),
-            ("🐱 Green Dino Cat", "SELL_DETAIL:SELL_GREENDINOCAT"),
-            ("🐱 White Winter Cat", "SELL_DETAIL:SELL_WHITEWINTERCAT"),
-            ("🦆 Duck", "SELL_DETAIL:SELL_DUCK"),
-            ("🐔 Chicken", "SELL_DETAIL:SELL_CHICKEN"),
-            ("🐡 Pufferfish", "SELL_DETAIL:SELL_PUFFER"),
-            ("🐟 Shark", "SELL_DETAIL:SELL_SHARK"),
-            ("🐟 Seahorse", "SELL_DETAIL:SELL_SEAHORSE"),
-            ("🐹⚡ Pikachu", "SELL_DETAIL:SELL_PIKACHU"),
-            ("🐸🍀 Bulbasaur", "SELL_DETAIL:SELL_BULBASAUR"),
-            ("🐢💧 Squirtle", "SELL_DETAIL:SELL_SQUIRTLE"),
-            ("🐉🔥 Charmander", "SELL_DETAIL:SELL_CHARMAN
+ 
