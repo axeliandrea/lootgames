@@ -1421,7 +1421,7 @@ async def callback_handler(client: Client, cq: CallbackQuery):
             await cq.answer("⏳ Wait cooldown 10 sec before auto catching!", show_alert=True)
             return
 
-        await cq.answer("🤖 Auto Catching 5x Start!")
+        await cq.answer("🤖 Auto Catching 50x!!! Start!")
 
         async def auto_fishing():
             for i in range(50):
@@ -1896,6 +1896,7 @@ def register(app: Client):
     app.add_handler(MessageHandler(handle_transfer_message, filters.text & filters.private))
 
     logger.info("[MENU] Handler menu_utama terdaftar.")
+
 
 
 
