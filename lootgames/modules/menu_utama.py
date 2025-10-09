@@ -1,4 +1,3 @@
-#FIX NIH
 # lootgames/modules/menu_utama.py Test Nonaktif Umpan Rare
 import os
 import logging
@@ -160,12 +159,6 @@ ITEM_PRICES = {
     "SELL_LOBSTER": {"name": "🦞 Lobster", "price": 10, "inv_key": "Lobster"},
     "SELL_LUCKYJEWEL": {"name": "📿 Lucky Jewel", "price": 7, "inv_key": "Lucky Jewel"},
     "SELL_ORCA": {"name": "🐋 Orca", "price": 15, "inv_key": "Orca"},
-    "SELL_MONKEY": {"name": "🐒 Monkey", "price": 15, "inv_key": "Monkey"},
-    "SELL_GORILLA": {"name": "🦍 Gorilla", "price": 15, "inv_key": "GORILLA"},
-    "SELL_PANDA": {"name": "🐼 Panda", "price": 15, "inv_key": "PANDA"},
-    "SELL_BEAR": {"name": "🐻 Bear", "price": 15, "inv_key": "BEAR"},
-    "SELL_DOG": {"name": "🐶 Dog", "price": 15, "inv_key": "DOG"},
-    "SELL_BAT": {"name": "🦇 bat", "price": 15, "inv_key": "BAT"},
     "SELL_DOLPHIN": {"name": "🐬 Dolphin", "price": 15, "inv_key": "Dolphin"},
     "SELL_PIKACHU": {"name": "🐹⚡ Pikachu", "price": 30, "inv_key": "Pikachu"},
     "SELL_BULBASAUR": {"name": "🐸🍀 Bulbasaur", "price": 30, "inv_key": "Bulbasaur"},
@@ -184,19 +177,13 @@ ITEM_PRICES = {
     "SELL_CUPIDDRAGON": {"name": "🐉 Cupid Dragon", "price": 300, "inv_key": "Cupid Dragon"},
     "SELL_WEREWOLF": {"name": "🐺 Werewolf", "price": 300, "inv_key": "Werewolf"},
     "SELL_RAINBOWANGELCAT": {"name": "🐱 Rainbow Angel Cat", "price": 300, "inv_key": "Rainbow Angel Cat"},
-    "SELL_FIREPHOENIX": {"name": "🐦‍🔥 Fire Phoenix", "price": 300, "inv_key": "Fire Phoenix"},
-    "SELL_FROSTPHOENIX": {"name": "🐦❄️ Frost Phoenix", "price": 300, "inv_key": "Frost Phoenix"},
-    "SELL_DARKPHOENIX": {"name": "🐦🌌 Dark Phoenix", "price": 300, "inv_key": "Dark Phoenix"},
-    "SELL_CHIMERA": {"name": "🦁🐍 Chimera", "price": 300, "inv_key": "Chimera"},
-    "SELL_WHITETIGER": {"name": "🐯 White Tiger", "price": 300, "inv_key": "White Tiger"},
     "SELL_DARKLORDDEMON": {"name": "👹 Dark Lord Demon", "price": 500, "inv_key": "Dark Lord Demon"},
     "SELL_PRINCESSOFNINETAIL": {"name": "🦊 Princess of Nine Tail", "price": 500, "inv_key": "Princess of Nine Tail"},
-    "SELL_DARKKNIGHTDRAGON": {"name": "🐉 Dark Knight Dragon", "price": 500, "inv_key": "Dark Knight Dragon"},
-    "SELL_DARKFISHWARRIOR": {"name": "👹 Dark Fish Warrior", "price": 2000, "inv_key": "Dark Fish Warrior"},
-    "SELL_SNAILDRAGON": {"name": "🐉 Snail Dragon", "price": 4000, "inv_key": "Snail Dragon"},
-    "SELL_QUEENOFHERMIT": {"name": "👑 Queen Of Hermit", "price": 4000, "inv_key": "Queen Of Hermit"},
-    "SELL_MECHAFROG": {"name": "🤖 Mecha Frog", "price": 4000, "inv_key": "Mecha Frog"},
-    "SELL_QUEENOFMEDUSA": {"name": "👑 Queen Of Medusa 🐍", "price": 4000, "inv_key": "Queen Of Medusa"},
+    "SELL_DARKFISHWARRIOR": {"name": "👹 Dark Fish Warrior", "price": 1500, "inv_key": "Dark Fish Warrior"},
+    "SELL_SNAILDRAGON": {"name": "🐉 Snail Dragon", "price": 2700, "inv_key": "Snail Dragon"},
+    "SELL_QUEENOFHERMIT": {"name": "👑 Queen Of Hermit", "price": 2700, "inv_key": "Queen Of Hermit"},
+    "SELL_MECHAFROG": {"name": "🤖 Mecha Frog", "price": 2700, "inv_key": "Mecha Frog"},
+    "SELL_QUEENOFMEDUSA": {"name": "👑 Queen Of Medusa 🐍", "price": 2700, "inv_key": "Queen Of Medusa"},
 }
 # sementara user -> item_code waiting for amount input (chat)
 SELL_WAITING = {}  # user_id: item_code
@@ -224,18 +211,6 @@ INV_KEY_ALIASES = {
     "jelly fish": "Jelly Fish",
     "🐋 Orca": "Orca",
     "orca": "Orca",
-    "🐒 Monkey": "Monkey",
-    "monkey": "Monkey",
-    "🦍 Gorilla": "Gorilla",
-    "gorilla": "Gorilla",
-    "🐼 Panda": "Panda",
-    "panda": "Panda",
-    "🐻 Bear": "Bear",
-    "bear": "Bear",
-    "🐶 Dog": "Dog",
-    "dog": "Dog",
-    "🦇 Bat": "Bat",
-    "bat": "Bat",
     "🐬 Dolphin": "Dolphin",
     "dolphin": "Dolphin",
     "🐱 Red Hammer Cat": "Red Hammer Cat",
@@ -264,22 +239,10 @@ INV_KEY_ALIASES = {
     "blue dragon": "Blue Dragon",
     "🐉 Cupid Dragon": "Cupid Dragon",
     "cupid dragon": "Cupid Dragon",
-    "🐉 Dark Knight Dragon": "🐉 Dark Knight Dragon",
-    "dark knight dragon": "Dark Knight Dragon",
-    "🐯 White Tiger": "White Tiger",
-    "white tiger": "White Tiger",
     "🐺 Werewolf": "🐺 Werewolf",
     "werewolf": "Werewolf",
     "🐱 Rainbow Angel Cat": "🐱 Rainbow Angel Cat",
     "rainbow angel cat": "Rainbow Angel Cat",
-    "🐦‍🔥 Fire Phoenix": "🐦‍🔥 Fire Phoenix",
-    "fire phoenix": "Fire Phoenix",
-    "🐦❄️ Frost Phoenix": "🐦❄️ Frost Phoenix",
-    "frost phoenix": "Frost Phoenix",
-    "🐦🌌 Dark Phoenix": "🐦🌌 Dark Phoenix",
-    "🦁🐍 Chimera": "Chimera",
-    "chimera": "Chimera",
-    "dark phoenix": "Dark Phoenix",
     "👹 Dark Lord Demon": "👹 Dark Lord Demon",
     "dark lord demon": "Dark Lord Demon",
     "🦊 Princess of Nine Tail": "🦊 Princess of Nine Tail",
@@ -539,12 +502,6 @@ MENU_STRUCTURE = {
             ("🦞 Lobster", "SELL_DETAIL:SELL_LOBSTER"),
             ("📿 Lucky Jewel", "SELL_DETAIL:SELL_LUCKYJEWEL"),
             ("🐋 Orca", "SELL_DETAIL:SELL_ORCA"),
-            ("🐒 Monkey", "SELL_DETAIL:SELL_MONKEY"),
-            ("🦍 Gorilla", "SELL_DETAIL:SELL_GORILLA"),
-            ("🐼 Panda", "SELL_DETAIL:SELL_PANDA"),
-            ("🐻 Bear", "SELL_DETAIL:SELL_BEAR"),
-            ("🐶 Dog", "SELL_DETAIL:SELL_DOG"),
-            ("🦇 bat", "SELL_DETAIL:SELL_BAT"),
             ("🐬 Dolphin", "SELL_DETAIL:SELL_DOLPHIN"),
             ("🐉 Baby Dragon", "SELL_DETAIL:SELL_BABYDRAGON"),
             ("🐉 Baby Spirit Dragon", "SELL_DETAIL:SELL_BABYSPIRITDRAGON"),
@@ -558,15 +515,8 @@ MENU_STRUCTURE = {
             ("🐉 Cupid Dragon", "SELL_DETAIL:SELL_CUPIDDRAGON"),
             ("🐺 Werewolf", "SELL_DETAIL:SELL_WEREWOLF"),
             ("🐱 Rainbow Angel Cat", "SELL_DETAIL:SELL_RAINBOWANGELCAT"),
-            ("🐦‍🔥 Fire Phoenix", "SELL_DETAIL:SELL_FIREPHOENIX"),
-            ("🐦❄️ Frost Phoenix", "SELL_DETAIL:SELL_FROSTPHOENIX"),
-            ("🐦🌌 Dark Phoenix", "SELL_DETAIL:SELL_DARKPHOENIX"),
-            ("🦁🐍 Chimera", "SELL_DETAIL:SELL_CHIMERA"),
-            ("🐯 White Tiger", "SELL_DETAIL:SELL_WHITETIGER"),
             ("👹 Dark Lord Demon", "SELL_DETAIL:SELL_DARKLORDDEMON"),
             ("🦊 Princess of Nine Tail", "SELL_DETAIL:SELL_PRINCESSOFNINETAIL"),
-            ("🐉 Dark Knight Dragon", "SELL_DETAIL:SELL_DARKKNIGHTDRAGON"),
-            ("👹 Dark Fish Warrior", "SELL_DETAIL:SELL_DARKFISHWARRIOR"),
             ("🐉 Snail Dragon", "SELL_DETAIL:SELL_SNAILDRAGON"),
             ("👑 Queen Of Hermit", "SELL_DETAIL:SELL_QUEENOFHERMIT"),
             ("🤖 Mecha Frog", "SELL_DETAIL:SELL_MECHAFROG"),
@@ -833,9 +783,9 @@ def get_treasure_drop():
     Return: (item_name, jenis_umpan, jumlah)
     """
     drop_table = [
-        ("ZONK", None, 0, 10),                  # 40% zonk
-        ("Umpan Common", "A", 2, 50),           # 39% common
-        ("Umpan Rare", "B", 1, 29),             # 10% rare
+        ("ZONK", None, 0, 40),                  # 40% zonk
+        ("Umpan Common", "A", 2, 39),           # 39% common
+        ("Umpan Rare", "B", 1, 10),             # 10% rare
         ("Umpan Legend", "C", 0, 0.00000000001),# 1e-11% legend
         ("Umpan Mythic", "D", 0, 0.00000000001),# 1e-11% mythic
     ]
@@ -850,54 +800,12 @@ def get_treasure_drop():
             return item, jenis, jumlah
     return "ZONK", None, 0
 
-# ================== FULL INVENTORY LIST (urut berdasarkan jumlah terbanyak) ==================
-def list_full_inventory(user_id: int) -> str:
-    """Gabungkan semua item dari ITEM_PRICES + hasil pancingan user.
-    Item yang belum didapat akan tampil dengan jumlah 0.
-    Urutkan berdasarkan jumlah terbanyak, lalu nama.
-    """
-    # Ambil data ikan user
-    inv = aquarium.get_user_fish(user_id) or {}
-
-    # Ambil semua nama item dari ITEM_PRICES
-    all_items = []
-    for cfg in ITEM_PRICES.values():
-        if cfg["name"] not in all_items:
-            all_items.append(cfg["name"])
-
-    # Tambahkan item dasar (Zonk, Small Fish) jika belum ada
-    base_items = ["🤧 Zonk", "𓆝 Small Fish"]
-    for b in base_items:
-        if b not in all_items:
-            all_items.insert(0, b)
-
-    # Gabungkan hasil user (jika item tidak ada, beri nilai 0)
-    item_data = []
-    for name in all_items:
-        qty = inv.get(name, 0)
-        item_data.append((name, qty))
-
-    # Urutkan berdasarkan jumlah terbanyak, lalu nama (ascending)
-    item_data.sort(key=lambda x: (-x[1], x[0].lower()))
-
-    # Format teks hasil
-    lines = [f"{name} : {qty}" for name, qty in item_data]
-    result = "🎣 **HASIL TANGKAPANMU:**\n\n" + "\n".join(lines)
-    return result
-
 # ---------------- CALLBACK HANDLER ---------------- #
 async def callback_handler(client: Client, cq: CallbackQuery):
     data = cq.data
     user_id = cq.from_user.id
     # <-- Pastikan uname didefinisikan di sini
     uname = cq.from_user.username or f"user{user_id}"
-
-    # ====== MENU HASIL TANGKAPAN (LIHAT INVENTORY LENGKAP) ======
-    if data == "FFF":
-        full_text = list_full_inventory(user_id)
-        kb = InlineKeyboardMarkup([[InlineKeyboardButton("⬅️ Back", callback_data="F")]])
-        await cq.message.edit_text(full_text, reply_markup=kb)
-        return
     
     # ===== EVOLVE SMALL FISH CONFIRM =====
     if data == "EVOLVE_SMALLFISH_CONFIRM":
@@ -1287,24 +1195,33 @@ async def callback_handler(client: Client, cq: CallbackQuery):
 
     # TRANSFER START
     if data.startswith("TRANSFER_"):
-        jenis = data.split("_")[1]
-        map_jenis = {"COMMON": "A", "RARE": "B", "LEGEND": "C", "MYTHIC": "D"}
+    jenis = data.split("_")[1]
+    map_jenis = {"COMMON": "A", "RARE": "B", "LEGEND": "C", "MYTHIC": "D"}
 
-        # 🔒 Batasi transfer umpan Rare hanya untuk OWNER
-        if jenis == "RARE" and user_id != OWNER_ID:
-            await cq.answer("❌ Hanya OWNER yang bisa transfer Umpan Rare 🐌.", show_alert=True)
-            return
-
-        TRANSFER_STATE[user_id] = {"jenis": map_jenis.get(jenis)}
-        await cq.message.reply("✍️ Masukkan format transfer: `@username jumlah`\nContoh: `@user 2`")
+    # 🔒 Batasi transfer umpan Rare hanya untuk OWNER
+    if jenis == "RARE" and user_id != OWNER_ID:
+        await cq.answer("❌ Hanya OWNER yang bisa transfer Umpan Rare 🐌.", show_alert=True)
         return
+
+    TRANSFER_STATE[user_id] = {"jenis": map_jenis.get(jenis)}
+    await cq.message.reply("✍️ Masukkan format transfer: `@username jumlah`\nContoh: `@user 2`")
+    return
 
     # CHECK COIN Fizz
     # ================= CEK COIN & SUBMENU ================= #
     if data == "D2C":
-        kb = make_keyboard("D2C_MENU", cq.from_user.id)
+    kb = make_keyboard("D2C_MENU", cq.from_user.id)
+    logger.info(f"[MENU] D2C clicked by user {user_id}")
+    try:
         await cq.message.edit_text("💰 Pilih menu tukar coin:", reply_markup=kb)
-        return
+    except Exception as e:
+        logger.exception("[MENU] Failed to edit message for D2C: %s", e)
+        # fallback: kirim pesan baru ke user kalau edit_text gagal
+        try:
+            await client.send_message(user_id, "💰 Pilih menu tukar coin:", reply_markup=kb)
+        except Exception as e2:
+            logger.exception("[MENU] Fallback send_message failed for D2C: %s", e2)
+    return
 
     elif data == "D2C_COMMON_A":
         uid = cq.from_user.id
@@ -1327,12 +1244,11 @@ async def callback_handler(client: Client, cq: CallbackQuery):
             f"🪱 Kamu punya {total_coin} fizz coin.\n\n"
             f"Masukkan jumlah coin yang ingin kamu tukarkan.\n"
             f"(50 coin = 1 umpan Rare Type B)\n\n"
-            f"Contoh: `50` untuk menukar 50 coin jadi 1 umpan.",
+            f"Contoh: `50` untuk menukar 50 coin jadi 2 umpan.",
             reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("⬅️ Batal", callback_data="D2C_MENU")]])
         )
         return
     
-    # FISHING
     # FISHING
     # ----------------- FUNGSI MEMANCING -----------------
     async def fishing_task(client, uname, user_id, jenis, task_id):
@@ -1357,13 +1273,15 @@ async def callback_handler(client: Client, cq: CallbackQuery):
                 umpan.remove_umpan(user_id, jk, 1)
 
             await asyncio.sleep(10)
-            # Hanya kirim ke grup, hapus private
             msg_group = f"🎣 @{uname} got {loot_result}! from task#{task_id}"
+            msg_private = f"🎣 You got {loot_result}! from ask#{task_id}"
             await client.send_message(TARGET_GROUP, msg_group)
+            await client.send_message(user_id, msg_private)
 
         except Exception as e:
-            logger.error(f"[FISHING TASK] Error untuk @{uname}: {e}")
-
+            logger.error(f"Gagal fishing_task: {e}")
+        
+    # ----------------- CALLBACK HANDLER -----------------
     # ----------------- CALLBACK HANDLER -----------------
     if data.startswith("FISH_CONFIRM_"):
         jenis = data.replace("FISH_CONFIRM_", "")
@@ -1409,13 +1327,12 @@ async def callback_handler(client: Client, cq: CallbackQuery):
 
 
     # ----------------- AUTO MEMANCING 5x -----------------
-    # ----------------- AUTO MEMANCING 5x -----------------
     elif data.startswith("AUTO_FISH_"):
         jenis = data.replace("AUTO_FISH_", "")
         uname = cq.from_user.username or f"user{user_id}"
 
         now = asyncio.get_event_loop().time()
-        last_time = user_last_fishing.get(user_id, 0)
+        last_time = user_last_fishing[user_id]
 
         if now - last_time < 10:
             await cq.answer("⏳ Wait cooldown 10 sec before auto catching!", show_alert=True)
@@ -1426,7 +1343,7 @@ async def callback_handler(client: Client, cq: CallbackQuery):
         async def auto_fishing():
             for i in range(5):
                 now = asyncio.get_event_loop().time()
-                if now - user_last_fishing.get(user_id, 0) < 10:
+                if now - user_last_fishing[user_id] < 10:
                     break  # stop kalau masih cooldown
 
                 # cek stok umpan dulu (tanpa mengurangi)
@@ -1435,12 +1352,17 @@ async def callback_handler(client: Client, cq: CallbackQuery):
                 if user_id != OWNER_ID:
                     ud = umpan.get_user(user_id)
                     if not ud or ud.get(jk, {}).get("umpan", 0) <= 0:
-                        # Stop jika umpan habis, tapi tidak mengirim pesan
+                        await cq.message.reply("❌ Umpan habis! Auto Catching stop.")
                         break
 
                 user_last_fishing[user_id] = now
                 user_task_count[user_id] += 1
                 task_id = f"{user_task_count[user_id]:02d}"
+
+                # Info auto-fishing
+                await cq.message.reply(
+                    f"🎣 Auto Catching {i+1}/5: You successfully threw the bait {jenis} to loot task#{task_id}!"
+                )
 
                 # Jalankan task memancing (umpan dikurangi saat hasil drop)
                 asyncio.create_task(fishing_task(client, uname, user_id, jenis, task_id))
@@ -1616,11 +1538,10 @@ async def callback_handler(client: Client, cq: CallbackQuery):
         return
 
     # CEK INVENTORY STORE
-    # CEK INVENTORY STORE (PAKAI FORMAT LIST FULL INVENTORY)
     if data == "D2A":
-        inv_text = list_full_inventory(user_id)
+        inv_text = aquarium.list_inventory(user_id)
         kb = make_keyboard("D2A", user_id)
-        await cq.message.edit_text(inv_text, reply_markup=kb)
+        await cq.message.edit_text(f"📦 Inventorymu:\n\n{inv_text}", reply_markup=kb)
         return
 
     # CEK INVENTORY (hasil tangkapan)
@@ -1804,7 +1725,7 @@ async def handle_transfer_message(client: Client, message: Message):
             if jenis == "A":
                 min_coin, konversi, nama, emoji = 5, 5, "COMMON (Type A)", "🐛"
             elif jenis == "B":
-                min_coin, konversi, nama, emoji = 50, 50, "RARE (Type B)", "🪱"
+                min_coin, konversi, nama, emoji = 25, 25, "RARE (Type B)", "🪱"
             else:
                 await message.reply("❌ Tipe tukar tidak valid.")
                 return
@@ -1896,7 +1817,4 @@ def register(app: Client):
     app.add_handler(MessageHandler(handle_transfer_message, filters.text & filters.private))
 
     logger.info("[MENU] Handler menu_utama terdaftar.")
-
-
-
 
