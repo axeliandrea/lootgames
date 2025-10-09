@@ -1,4 +1,4 @@
-# lootgames/modules/menu_utama.py Upgrade inventory Total monster
+# lootgames/modules/menu_utama.py Test Nonaktif Umpan Rare
 import os
 import logging
 import asyncio
@@ -41,8 +41,6 @@ os.makedirs(os.path.dirname(DB_FILE), exist_ok=True)
 # ----------------- INISIALISASI -----------------
 user_last_fishing = defaultdict(lambda: 0)  # cooldown 10 detik per user
 user_task_count = defaultdict(lambda: 0)   # generate task ID unik per user
-active_auto_fish = {}  # user_id -> {"active": bool, "jenis": str}
-JK_MAP = {"COMMON": "A", "RARE": "B", "LEGEND": "C", "MYTHIC": "D"}
 
 # ---------------- HELPER LOAD / SAVE ---------------- #
 def _load_db() -> dict:
@@ -166,7 +164,6 @@ ITEM_PRICES = {
     "SELL_PANDA": {"name": "🐼 Panda", "price": 15, "inv_key": "PANDA"},
     "SELL_BEAR": {"name": "🐻 Bear", "price": 15, "inv_key": "BEAR"},
     "SELL_DOG": {"name": "🐶 Dog", "price": 15, "inv_key": "DOG"},
-    "SELL_BAT": {"name": "🦇 bat", "price": 15, "inv_key": "BAT"},
     "SELL_DOLPHIN": {"name": "🐬 Dolphin", "price": 15, "inv_key": "Dolphin"},
     "SELL_PIKACHU": {"name": "🐹⚡ Pikachu", "price": 30, "inv_key": "Pikachu"},
     "SELL_BULBASAUR": {"name": "🐸🍀 Bulbasaur", "price": 30, "inv_key": "Bulbasaur"},
@@ -184,15 +181,12 @@ ITEM_PRICES = {
     "SELL_MERMAIDGIRL": {"name": "🧜‍♀️ Mermaid Girl", "price": 200, "inv_key": "Mermaid Girl"},
     "SELL_CUPIDDRAGON": {"name": "🐉 Cupid Dragon", "price": 300, "inv_key": "Cupid Dragon"},
     "SELL_WEREWOLF": {"name": "🐺 Werewolf", "price": 300, "inv_key": "Werewolf"},
-    "SELL_WHITETIGER": {"name": "🐯 White Tiger", "price": 300, "inv_key": "White Tiger"},
     "SELL_RAINBOWANGELCAT": {"name": "🐱 Rainbow Angel Cat", "price": 300, "inv_key": "Rainbow Angel Cat"},
     "SELL_FIREPHOENIX": {"name": "🐦‍🔥 Fire Phoenix", "price": 300, "inv_key": "Fire Phoenix"},
     "SELL_FROSTPHOENIX": {"name": "🐦❄️ Frost Phoenix", "price": 300, "inv_key": "Frost Phoenix"},
     "SELL_DARKPHOENIX": {"name": "🐦🌌 Dark Phoenix", "price": 300, "inv_key": "Dark Phoenix"},
-    "SELL_CHIMERA": {"name": "🦁🐍 Chimera", "price": 300, "inv_key": "Chimera"},
     "SELL_DARKLORDDEMON": {"name": "👹 Dark Lord Demon", "price": 500, "inv_key": "Dark Lord Demon"},
     "SELL_PRINCESSOFNINETAIL": {"name": "🦊 Princess of Nine Tail", "price": 500, "inv_key": "Princess of Nine Tail"},
-    "SELL_DARKKNIGHTDRAGON": {"name": "🐉 Dark Knight Dragon", "price": 500, "inv_key": "Dark Knight Dragon"},
     "SELL_DARKFISHWARRIOR": {"name": "👹 Dark Fish Warrior", "price": 2000, "inv_key": "Dark Fish Warrior"},
     "SELL_SNAILDRAGON": {"name": "🐉 Snail Dragon", "price": 4000, "inv_key": "Snail Dragon"},
     "SELL_QUEENOFHERMIT": {"name": "👑 Queen Of Hermit", "price": 4000, "inv_key": "Queen Of Hermit"},
@@ -225,18 +219,16 @@ INV_KEY_ALIASES = {
     "jelly fish": "Jelly Fish",
     "🐋 Orca": "Orca",
     "orca": "Orca",
-    "🐒 Monkey": "Monkey",
+    "🐒 Monkey": "🐒 Monkey",
     "monkey": "Monkey",
-    "🦍 Gorilla": "Gorilla",
+    "🦍 Gorilla": "🦍 Gorilla",
     "gorilla": "Gorilla",
+    "panda": "🐼 Panda",
     "🐼 Panda": "Panda",
-    "panda": "Panda",
     "🐻 Bear": "Bear",
     "bear": "Bear",
-    "🐶 Dog": "Dog",
+    "🐶 Dog": "🐶 Dog",
     "dog": "Dog",
-    "🦇 Bat": "Bat",
-    "bat": "Bat",
     "🐬 Dolphin": "Dolphin",
     "dolphin": "Dolphin",
     "🐱 Red Hammer Cat": "Red Hammer Cat",
@@ -265,10 +257,6 @@ INV_KEY_ALIASES = {
     "blue dragon": "Blue Dragon",
     "🐉 Cupid Dragon": "Cupid Dragon",
     "cupid dragon": "Cupid Dragon",
-    "🐉 Dark Knight Dragon": "🐉 Dark Knight Dragon",
-    "dark knight dragon": "Dark Knight Dragon",
-    "🐯 White Tiger": "White Tiger",
-    "white tiger": "White Tiger",
     "🐺 Werewolf": "🐺 Werewolf",
     "werewolf": "Werewolf",
     "🐱 Rainbow Angel Cat": "🐱 Rainbow Angel Cat",
@@ -278,8 +266,6 @@ INV_KEY_ALIASES = {
     "🐦❄️ Frost Phoenix": "🐦❄️ Frost Phoenix",
     "frost phoenix": "Frost Phoenix",
     "🐦🌌 Dark Phoenix": "🐦🌌 Dark Phoenix",
-    "🦁🐍 Chimera": "Chimera",
-    "chimera": "Chimera",
     "dark phoenix": "Dark Phoenix",
     "👹 Dark Lord Demon": "👹 Dark Lord Demon",
     "dark lord demon": "Dark Lord Demon",
@@ -545,7 +531,6 @@ MENU_STRUCTURE = {
             ("🐼 Panda", "SELL_DETAIL:SELL_PANDA"),
             ("🐻 Bear", "SELL_DETAIL:SELL_BEAR"),
             ("🐶 Dog", "SELL_DETAIL:SELL_DOG"),
-            ("🦇 bat", "SELL_DETAIL:SELL_BAT"),
             ("🐬 Dolphin", "SELL_DETAIL:SELL_DOLPHIN"),
             ("🐉 Baby Dragon", "SELL_DETAIL:SELL_BABYDRAGON"),
             ("🐉 Baby Spirit Dragon", "SELL_DETAIL:SELL_BABYSPIRITDRAGON"),
@@ -558,15 +543,12 @@ MENU_STRUCTURE = {
             ("🧜‍♀️ Mermaid Girl", "SELL_DETAIL:SELL_MERMAIDGIRL"),
             ("🐉 Cupid Dragon", "SELL_DETAIL:SELL_CUPIDDRAGON"),
             ("🐺 Werewolf", "SELL_DETAIL:SELL_WEREWOLF"),
-            ("🐯 White Tiger", "SELL_DETAIL:SELL_WHITETIGER"),
             ("🐱 Rainbow Angel Cat", "SELL_DETAIL:SELL_RAINBOWANGELCAT"),
             ("🐦‍🔥 Fire Phoenix", "SELL_DETAIL:SELL_FIREPHOENIX"),
             ("🐦❄️ Frost Phoenix", "SELL_DETAIL:SELL_FROSTPHOENIX"),
             ("🐦🌌 Dark Phoenix", "SELL_DETAIL:SELL_DARKPHOENIX"),
-            ("🦁🐍 Chimera", "SELL_DETAIL:SELL_CHIMERA"),
             ("👹 Dark Lord Demon", "SELL_DETAIL:SELL_DARKLORDDEMON"),
             ("🦊 Princess of Nine Tail", "SELL_DETAIL:SELL_PRINCESSOFNINETAIL"),
-            ("🐉 Dark Knight Dragon", "SELL_DETAIL:SELL_DARKKNIGHTDRAGON"),
             ("👹 Dark Fish Warrior", "SELL_DETAIL:SELL_DARKFISHWARRIOR"),
             ("🐉 Snail Dragon", "SELL_DETAIL:SELL_SNAILDRAGON"),
             ("👑 Queen Of Hermit", "SELL_DETAIL:SELL_QUEENOFHERMIT"),
@@ -723,8 +705,7 @@ MENU_STRUCTURE["G"]["buttons"] = [b for b in MENU_STRUCTURE["G"]["buttons"] if b
 
 def normalize_key(key: str) -> str:
     """
-    Normalisasi nama item dari inventory agar
-    cocok dengan inv_key.
+    Normalisasi nama item dari inventory agar cocok dengan inv_key.
     - Lowercase
     - Hilangkan emoji dan karakter non-alnum (kecuali spasi)
     - Trim spasi berlebih
@@ -853,32 +834,37 @@ def get_treasure_drop():
     return "ZONK", None, 0
 
 # ================== FULL INVENTORY LIST (urut berdasarkan jumlah terbanyak) ==================
-# ================== FULL INVENTORY LIST (urut berdasarkan jumlah terbanyak) ==================
-def list_inventory_with_total(user_id: int) -> str:
-    """Gabungkan semua item dari ITEM_PRICES + hasil pancingan user."""
+def list_full_inventory(user_id: int) -> str:
+    """Gabungkan semua item dari ITEM_PRICES + hasil pancingan user.
+    Item yang belum didapat akan tampil dengan jumlah 0.
+    Urutkan berdasarkan jumlah terbanyak, lalu nama.
+    """
+    # Ambil data ikan user
     inv = aquarium.get_user_fish(user_id) or {}
 
+    # Ambil semua nama item dari ITEM_PRICES
     all_items = []
     for cfg in ITEM_PRICES.values():
         if cfg["name"] not in all_items:
             all_items.append(cfg["name"])
 
+    # Tambahkan item dasar (Zonk, Small Fish) jika belum ada
     base_items = ["🤧 Zonk", "𓆝 Small Fish"]
     for b in base_items:
         if b not in all_items:
             all_items.insert(0, b)
 
+    # Gabungkan hasil user (jika item tidak ada, beri nilai 0)
     item_data = []
-    total_all = 0
     for name in all_items:
         qty = inv.get(name, 0)
-        total_all += qty
         item_data.append((name, qty))
 
+    # Urutkan berdasarkan jumlah terbanyak, lalu nama (ascending)
     item_data.sort(key=lambda x: (-x[1], x[0].lower()))
+
+    # Format teks hasil
     lines = [f"{name} : {qty}" for name, qty in item_data]
-    lines.append("\n============================")
-    lines.append(f"📦 **Total Keseluruhan:** {total_all}")
     result = "🎣 **HASIL TANGKAPANMU:**\n\n" + "\n".join(lines)
     return result
 
@@ -891,7 +877,7 @@ async def callback_handler(client: Client, cq: CallbackQuery):
 
     # ====== MENU HASIL TANGKAPAN (LIHAT INVENTORY LENGKAP) ======
     if data == "FFF":
-        full_text = list_inventory_with_total(user_id)
+        full_text = list_full_inventory(user_id)
         kb = InlineKeyboardMarkup([[InlineKeyboardButton("⬅️ Back", callback_data="F")]])
         await cq.message.edit_text(full_text, reply_markup=kb)
         return
@@ -1330,156 +1316,121 @@ async def callback_handler(client: Client, cq: CallbackQuery):
         return
     
     # FISHING
-# ==================== FUNGSI MEMANCING ====================
-async def fishing_task(client, uname, user_id, jenis, task_id):
-    try:
-        await asyncio.sleep(2)
-        await client.send_message(
-            TARGET_GROUP, f"```\n🎣 @{uname} trying to catch... task#{task_id}```\n"
-        )
+    # FISHING
+    # ----------------- FUNGSI MEMANCING -----------------
+    async def fishing_task(client, uname, user_id, jenis, task_id):
+        try:
+            await asyncio.sleep(2)
+            # Pesan di grup sekarang termasuk task_id
+            await client.send_message(TARGET_GROUP, f"```\n🎣 @{uname} trying to catch... task#{task_id}```\n")
 
-        loot_result = await fishing_loot(client, None, uname, user_id, umpan_type=jenis)
-        jk = JK_MAP.get(jenis, "A")
+            # Jalankan loot system
+            loot_result = await fishing_loot(client, None, uname, user_id, umpan_type=jenis)
 
-        if user_id != OWNER_ID:
-            ud = umpan.get_user(user_id)
-            if not ud or ud.get(jk, {}).get("umpan", 0) <= 0:
-                await client.send_message(user_id, "❌ Umpanmu habis, hasil pancingan ini batal.")
-                return
-            umpan.remove_umpan(user_id, jk, 1)
+            # ==== Kurangi umpan setelah hasil drop keluar ====
+            jk_map = {"COMMON": "A", "RARE": "B", "LEGEND": "C", "MYTHIC": "D"}
+            jk = jk_map.get(jenis, "A")
 
-        await asyncio.sleep(5)
-        await client.send_message(TARGET_GROUP, f"🎣 @{uname} got {loot_result}! from task#{task_id}")
+            if user_id != OWNER_ID:
+                ud = umpan.get_user(user_id)
+                if not ud or ud.get(jk, {}).get("umpan", 0) <= 0:
+                    # kalau ternyata umpan habis (misal paralel auto catching), kasih info
+                    await client.send_message(user_id, "❌ Umpanmu habis, hasil pancingan ini batal.")
+                    return
+                umpan.remove_umpan(user_id, jk, 1)
 
-    except Exception as e:
-        logger.error(f"[FISHING TASK] Error untuk @{uname}: {e}")
+            await asyncio.sleep(10)
+            # Hanya kirim ke grup, hapus private
+            msg_group = f"🎣 @{uname} got {loot_result}! from task#{task_id}"
+            await client.send_message(TARGET_GROUP, msg_group)
 
+        except Exception as e:
+            logger.error(f"[FISHING TASK] Error untuk @{uname}: {e}")
 
-# ==================== CALLBACK HANDLER ====================
-async def callback_handler(client, cq):
-    data = cq.data
-    user_id = cq.from_user.id
-    uname = cq.from_user.username or f"user{user_id}"
-
-    # --------------------- MANUAL FISH ---------------------
+    # ----------------- CALLBACK HANDLER -----------------
     if data.startswith("FISH_CONFIRM_"):
         jenis = data.replace("FISH_CONFIRM_", "")
+        uname = cq.from_user.username or f"user{user_id}"
 
-        kb = InlineKeyboardMarkup([
-            [InlineKeyboardButton("🎣 Catch again", callback_data=f"FISH_CONFIRM_{jenis}")],
-            [
-                InlineKeyboardButton("🤖 Auto 5x", callback_data=f"AUTO_FISH_{jenis}_5"),
-                InlineKeyboardButton("⚡ Auto 50x", callback_data=f"AUTO_FISH_{jenis}_50"),
-            ],
-            [InlineKeyboardButton("⬅️ Back", callback_data="E")]
-        ])
+        # Tombol Back
+        kb_back = InlineKeyboardMarkup([[InlineKeyboardButton("⬅️ Back", callback_data="E")]])
 
-        # Cek stok umpan
-        jk = JK_MAP.get(jenis, "A")
+        # Cek umpan cukup dulu (tanpa mengurangi)
+        jk_map = {"COMMON": "A", "RARE": "B", "LEGEND": "C", "MYTHIC": "D"}
+        jk = jk_map.get(jenis, "A")
         if user_id != OWNER_ID:
             ud = umpan.get_user(user_id)
             if not ud or ud.get(jk, {}).get("umpan", 0) <= 0:
                 await cq.answer("❌ Umpan tidak cukup!", show_alert=True)
                 return
 
-        # Cek cooldown
         now = asyncio.get_event_loop().time()
-        last_time = user_last_fishing.get(user_id, 0)
+        last_time = user_last_fishing[user_id]
+
         if now - last_time < 10:
             await cq.message.edit_text(
                 "⏳ Wait a sec before you catch again..",
-                reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("⬅️ Back", callback_data="E")]])
+                reply_markup=kb_back
             )
             return
 
-        # Jalankan mancing 1x
         user_last_fishing[user_id] = now
-        user_task_count[user_id] = user_task_count.get(user_id, 0) + 1
+        user_task_count[user_id] += 1
         task_id = f"{user_task_count[user_id]:02d}"
 
         await cq.message.edit_text(
             f"🎣 You successfully threw the bait! {jenis} to loot task#{task_id}!",
-            reply_markup=kb
+            reply_markup=InlineKeyboardMarkup([
+                [InlineKeyboardButton("🎣 Catch again", callback_data=f"FISH_CONFIRM_{jenis}")],
+                [InlineKeyboardButton("🤖 Auto Catch 5x", callback_data=f"AUTO_FISH_{jenis}")],
+                [InlineKeyboardButton("⬅️ Back", callback_data="E")]
+            ])
         )
 
+        # Jalankan task memancing
         asyncio.create_task(fishing_task(client, uname, user_id, jenis, task_id))
 
-    # --------------------- AUTO FISH ---------------------
+
+    # ----------------- AUTO MEMANCING 5x -----------------
+    # ----------------- AUTO MEMANCING 5x -----------------
     elif data.startswith("AUTO_FISH_"):
-        parts = data.split("_")
-        if len(parts) < 4:
+        jenis = data.replace("AUTO_FISH_", "")
+        uname = cq.from_user.username or f"user{user_id}"
+
+        now = asyncio.get_event_loop().time()
+        last_time = user_last_fishing.get(user_id, 0)
+
+        if now - last_time < 10:
+            await cq.answer("⏳ Wait cooldown 10 sec before auto catching!", show_alert=True)
             return
 
-        jenis = parts[2]
-        total = int(parts[3])
-
-        if active_auto_fish.get(user_id, {}).get("active"):
-            await cq.answer("❌ Kamu sudah menjalankan auto fishing! Cancel dulu.", show_alert=True)
-            return
-
-        active_auto_fish[user_id] = {"active": True, "jenis": jenis}
-
-        kb_cancel = InlineKeyboardMarkup([
-            [InlineKeyboardButton("❌ Cancel Auto", callback_data=f"CANCEL_AUTO_{jenis}")]
-        ])
-
-        await cq.message.edit_text(
-            f"🤖 Auto Fishing started for {total}x {jenis}!\nTekan ❌ Cancel Auto untuk berhenti.",
-            reply_markup=kb_cancel
-        )
+        await cq.answer("🤖 Auto Catching 5x Start!")
 
         async def auto_fishing():
-            try:
-                for _ in range(total):
-                    if not active_auto_fish.get(user_id, {}).get("active"):
+            for i in range(5):
+                now = asyncio.get_event_loop().time()
+                if now - user_last_fishing.get(user_id, 0) < 10:
+                    break  # stop kalau masih cooldown
+
+                # cek stok umpan dulu (tanpa mengurangi)
+                jk_map = {"COMMON": "A", "RARE": "B", "LEGEND": "C", "MYTHIC": "D"}
+                jk = jk_map.get(jenis, "A")
+                if user_id != OWNER_ID:
+                    ud = umpan.get_user(user_id)
+                    if not ud or ud.get(jk, {}).get("umpan", 0) <= 0:
+                        # Stop jika umpan habis, tapi tidak mengirim pesan
                         break
 
-                    now = asyncio.get_event_loop().time()
-                    if now - user_last_fishing.get(user_id, 0) < 10:
-                        await asyncio.sleep(5)
-                        continue
+                user_last_fishing[user_id] = now
+                user_task_count[user_id] += 1
+                task_id = f"{user_task_count[user_id]:02d}"
 
-                    jk = JK_MAP.get(jenis, "A")
-                    if user_id != OWNER_ID:
-                        ud = umpan.get_user(user_id)
-                        if not ud or ud.get(jk, {}).get("umpan", 0) <= 0:
-                            break
+                # Jalankan task memancing (umpan dikurangi saat hasil drop)
+                asyncio.create_task(fishing_task(client, uname, user_id, jenis, task_id))
 
-                    user_last_fishing[user_id] = now
-                    user_task_count[user_id] = user_task_count.get(user_id, 0) + 1
-                    task_id = f"{user_task_count[user_id]:02d}"
-
-                    asyncio.create_task(fishing_task(client, uname, user_id, jenis, task_id))
-                    await asyncio.sleep(10)
-            finally:
-                active_auto_fish[user_id] = {"active": False, "jenis": None}
-                kb_back = InlineKeyboardMarkup([
-                    [InlineKeyboardButton("⬅️ Back", callback_data=f"FISH_CONFIRM_{jenis}")]
-                ])
-                await cq.message.edit_text(
-                    f"✅ Auto Fishing {jenis} selesai atau dihentikan.",
-                    reply_markup=kb_back
-                )
+                await asyncio.sleep(10)  # jeda tiap lemparan
 
         asyncio.create_task(auto_fishing())
-
-    # --------------------- CANCEL AUTO ---------------------
-    elif data.startswith("CANCEL_AUTO_"):
-        jenis = data.replace("CANCEL_AUTO_", "")
-        state = active_auto_fish.get(user_id)
-
-        if state and state.get("active"):
-            active_auto_fish[user_id]["active"] = False
-            kb_back = InlineKeyboardMarkup([
-                [InlineKeyboardButton("⬅️ Back", callback_data=f"FISH_CONFIRM_{jenis}")]
-            ])
-            await cq.answer("🛑 Auto Fishing cancelled!")
-            await cq.message.edit_text(
-                f"🛑 Auto Fishing {jenis} cancelled.\nKamu bisa kembali ke menu memancing.",
-                reply_markup=kb_back
-            )
-        else:
-            await cq.answer("❌ Tidak ada auto fishing aktif.", show_alert=True)
 
     # LEADERBOARD PAGING
     if data.startswith("BBB_PAGE_"):
@@ -1650,14 +1601,14 @@ async def callback_handler(client, cq):
     # CEK INVENTORY STORE
     # CEK INVENTORY STORE (PAKAI FORMAT LIST FULL INVENTORY)
     if data == "D2A":
-        inv_text = list_inventory_with_total(user_id)  # ✅ benar
+        inv_text = list_full_inventory(user_id)
         kb = make_keyboard("D2A", user_id)
         await cq.message.edit_text(inv_text, reply_markup=kb)
         return
 
     # CEK INVENTORY (hasil tangkapan)
     if data == "FFF":
-        inv_text = list_inventory_with_total(user_id)  # ✅ benar
+        inv_text = aquarium.list_inventory(user_id)
         kb = make_keyboard("FFF", user_id)
         await cq.message.edit_text(f"🎣 Inventorymu:\n\n{inv_text}", reply_markup=kb)
         return
@@ -1928,6 +1879,3 @@ def register(app: Client):
     app.add_handler(MessageHandler(handle_transfer_message, filters.text & filters.private))
 
     logger.info("[MENU] Handler menu_utama terdaftar.")
-
-
-
