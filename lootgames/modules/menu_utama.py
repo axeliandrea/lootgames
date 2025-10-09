@@ -1302,6 +1302,11 @@ async def callback_handler(client: Client, cq: CallbackQuery):
 
     # CHECK COIN Fizz
     # ================= CEK COIN & SUBMENU ================= #
+async def callback_handler(client, cq):
+    user_id = cq.from_user.id
+    data = cq.data
+    uname = cq.from_user.username or f"user{user_id}"
+    
     if data == "D2C":
         kb = make_keyboard("D2C_MENU", cq.from_user.id)
         await cq.message.edit_text("💰 Pilih menu tukar coin:", reply_markup=kb)
@@ -1926,6 +1931,7 @@ def register(app: Client):
     app.add_handler(MessageHandler(handle_transfer_message, filters.text & filters.private))
 
     logger.info("[MENU] Handler menu_utama terdaftar.")
+
 
 
 
