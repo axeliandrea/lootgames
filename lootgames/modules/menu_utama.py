@@ -348,7 +348,7 @@ INV_KEY_ALIASES = {
     "🧜‍♀️ Mermaid Girl": "Mermaid Girl",
     "mermaid girl": "Mermaid Girl"
     # tambahkan sesuai kebutuhan 
-}
+},
 
 # ---------------- KEYBOARD / MENU STRUCTURE ---------------- #
 MENU_STRUCTURE = {
@@ -500,3 +500,4 @@ MENU_STRUCTURE = {
     },
     # DAFTAR HARGA -> note: callback format SELL_DETAIL:<code>
  
+
