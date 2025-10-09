@@ -1,4 +1,4 @@
-#FIX 05:52
+#FIX ya
 # lootgames/modules/menu_utama.py Test Nonaktif Umpan Rare
 import os
 import logging
@@ -1334,37 +1334,42 @@ async def callback_handler(client: Client, cq: CallbackQuery):
         return
     
     # FISHING
-# FISHING
+# FI#HING
     # ----------------- FUNGSI MEMANCING -----------------
-    async def fishing_task(client, uname, user_id, jenis, task_id):
-        try:
-            await asyncio.sleep(2)
-            # Pesan di grup sekarang termasuk task_id
-           #await client.send_message(TARGET_GROUP, f"```\n🎣 @{uname} trying to catch... task#{task_id}```\n")
+    async def fishing_task(client, uname, user_id, jenis, task_id, auto_mode=False):
+    try:
+        await asyncio.sleep(2)
+        # Pesan di grup sekarang termasuk task_id
+        if not auto_mode:
+            # Hanya kirim kalau manual
+            # await client.send_message(TARGET_GROUP, f"```\n🎣 @{uname} trying to catch... task#{task_id}```\n")
+            pass
 
-            # Jalankan loot system
-            loot_result = await fishing_loot(client, None, uname, user_id, umpan_type=jenis)
+        # Jalankan loot system
+        loot_result = await fishing_loot(client, None, uname, user_id, umpan_type=jenis)
 
-            # ==== Kurangi umpan setelah hasil drop keluar ====
-            jk_map = {"COMMON": "A", "RARE": "B", "LEGEND": "C", "MYTHIC": "D"}
-            jk = jk_map.get(jenis, "A")
+        # Kurangi umpan setelah hasil drop
+        jk_map = {"COMMON": "A", "RARE": "B", "LEGEND": "C", "MYTHIC": "D"}
+        jk = jk_map.get(jenis, "A")
 
-            if user_id != OWNER_ID:
-                ud = umpan.get_user(user_id)
-                if not ud or ud.get(jk, {}).get("umpan", 0) <= 0:
-                    # kalau ternyata umpan habis (misal paralel auto catching), kasih info
-                    await client.send_message(user_id, "❌ Umpanmu habis, hasil pancingan ini batal.")
+        if user_id != OWNER_ID:
+            ud = umpan.get_user(user_id)
+            if not ud or ud.get(jk, {}).get("umpan", 0) <= 0:
+                if auto_mode:
+                    # Saat auto, skip saja
                     return
-                umpan.remove_umpan(user_id, jk, 1)
+                await client.send_message(user_id, "❌ Umpanmu habis, hasil pancingan ini batal.")
+                return
+            umpan.remove_umpan(user_id, jk, 1)
 
-            await asyncio.sleep(10)
-            # Hanya kirim ke grup, hapus private
-            msg_group = f"🎣 @{uname} got {loot_result}! from task#{task_id}"
-            await client.send_message(TARGET_GROUP, msg_group)
+        await asyncio.sleep(10)
+        # Hanya kirim ke grup hasil drop
+        msg_group = f"🎣 @{uname} got {loot_result}! from task#{task_id}"
+        await client.send_message(TARGET_GROUP, msg_group)
 
-        except Exception as e:
-            logger.error(f"[FISHING TASK] Error untuk @{uname}: {e}")
-
+    except Exception as e:
+        logger.error(f"[FISHING TASK] Error untuk @{uname}: {e}")
+        
     # ----------------- CALLBACK HANDLER -----------------
     if data.startswith("FISH_CONFIRM_"):
         jenis = data.replace("FISH_CONFIRM_", "")
@@ -1925,6 +1930,7 @@ def register(app: Client):
     app.add_handler(MessageHandler(handle_transfer_message, filters.text & filters.private))
 
     logger.info("[MENU] Handler menu_utama terdaftar.")
+
 
 
 
