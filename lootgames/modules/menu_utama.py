@@ -1286,56 +1286,40 @@ async def callback_handler(client: Client, cq: CallbackQuery):
             return
 
     # ================== TREASURE CHEST OWNER ==================
-    if data == "TREASURE_SEND_NOW":
-        global LAST_TREASURE_MSG_ID
+    if data == "treasure_chest":
+        chest = load_chest_db()  # Load chest dari file
 
-        if user_id != OWNER_ID:
-            await cq.answer("❌ Hanya owner yang bisa akses menu ini.", show_alert=True)
+        if not chest or not chest.get("active"):
+            await cq.answer("❌ Tidak ada Treasure Chest aktif.", show_alert=True)
             return
 
-        # 🔹 Load chest lama dari file
-        old_chest = load_chest_db()
-        if old_chest and old_chest.get("active"):
-            # Cukup nonaktifkan chest lama, tidak perlu refund
-            old_chest["active"] = False
-            save_chest_db(old_chest)
-            await cq.message.reply(
-                f"⚠️ Treasure Chest sebelumnya dibatalkan. Klaim lama tidak bisa digunakan lagi."
-            )
-
-        # 🔹 Kirim Treasure Chest baru
-        jumlah_default = 10
+        user_id = cq.from_user.id
         uname = cq.from_user.username or f"user{user_id}"
-        chest_data = {
-            "active": True,
-            "owner_id": user_id,
-            "owner_name": uname,
-            "rewards": {"A": jumlah_default},
-            "claimed_users": [],   # catatan siapa saja yang sudah klaim
-            "max_claim": jumlah_default
-        }
-        save_chest_db(chest_data)  # simpan ke file agar tetap tersimpan saat restart
 
-        try:
-            msg = await cq._client.send_message(
-                TARGET_GROUP,
-                "📦 **Treasure Chest telah dikirim oleh OWNER!**\n"
-                "Cepat klaim sebelum terlambat! 🎁",
-                reply_markup=InlineKeyboardMarkup(
-                    [[InlineKeyboardButton("🔑 Buka Treasure Chest", callback_data="treasure_chest")]]
-                )
-            )
-            LAST_TREASURE_MSG_ID = msg.id
-        except Exception as e:
-            logger.error(f"Gagal kirim Treasure Chest: {e}")
+        # Cek apakah user sudah claim sebelumnya
+        if user_id in chest.get("claimed_users", []):
+            await cq.answer("❌ Kamu sudah klaim Treasure Chest ini.", show_alert=True)
+            return
 
-        await cq.message.edit_text(
-            "✅ Treasure Chest berhasil dikirim ke group!",
-            reply_markup=InlineKeyboardMarkup(
-                [[InlineKeyboardButton("⬅️ Kembali", callback_data="H")]]
-            )
-        )
-        return
+        # Pilih jenis umpan (untuk owner bisa unlimited)
+        jenis_list = list(chest["rewards"].keys())
+        jenis = random.choice(jenis_list)
+        jumlah = 1
+
+        # Tambahkan umpan ke user
+        umpan.add_umpan(user_id, jenis, jumlah)
+
+        # Update chest: catat user yang sudah claim
+        chest["claimed_users"].append(user_id)
+
+        # Jika ada limit claim, tutup chest jika sudah penuh
+        if chest.get("max_claim") is not None:
+            if len(chest["claimed_users"]) >= chest["max_claim"]:
+                chest["active"] = False
+
+        save_chest_db(chest)  # Simpan kembali ke file
+
+        await cq.answer(f"🎉 @{uname} berhasil klaim {jumlah} umpan Type {jenis}!", show_alert=True)
 
     # ====================== TC DROP ======================
 # === TC DROP ADD ===
@@ -2114,5 +2098,6 @@ def register(app: Client):
     # --- Logging tambahan ---
     logger.info("💬 menu_utama handlers registered (callback + tc_drop_input)")
     print("[DEBUG] register(menu_utama) dipanggil ✅")
+
 
 
