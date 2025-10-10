@@ -19,7 +19,7 @@ from datetime import date
 
 logger = logging.getLogger(__name__)
 OWNER_ID = 6395738130
-TARGET_GROUP = -1002946278772  # ganti sesuai supergroup bot
+TARGET_GROUP = -1002946278772  # ganti sesuai supergroup bot (-1002904817520 TRIAL , -1002946278772 LOOT) #
 
 # ---------------- STATE ---------------- #
 TRANSFER_STATE = {}       # user_id: {"jenis": "A/B/C/D"}
@@ -40,6 +40,7 @@ DB_FILE = os.path.join(BASE_DIR, "../storage/fizz_coin.json")  # ke folder stora
 os.makedirs(os.path.dirname(DB_FILE), exist_ok=True)
 
 # ----------------- INISIALISASI -----------------
+AUTO_FISH_TASKS = {}
 user_last_fishing = defaultdict(lambda: 0)  # cooldown 10 detik per user
 user_task_count = defaultdict(lambda: 0)   # generate task ID unik per user
 
@@ -148,14 +149,15 @@ ITEM_PRICES = {
     "SELL_DUCK": {"name": "🦆 Duck", "price": 4, "inv_key": "Duck"},
     "SELL_CHICKEN": {"name": "🐔 Chicken", "price": 4, "inv_key": "Chicken"},
     "SELL_PUFFER": {"name": "🐡 Pufferfish", "price": 5, "inv_key": "Pufferfish"},
-    "SELL_REDHAMMERCAT": {"name": "🐱 Red Hammer Cat", "price": 8, "inv_key": "Seahorse"},
-    "SELL_PURPLEFISTCAT": {"name": "🐱 Purple Fist Cat", "price": 8, "inv_key": "Seahorse"},
-    "SELL_GREENDINOCAT": {"name": "🐱 Green Dino Cat", "price": 8, "inv_key": "Seahorse"},
-    "SELL_WHITEWINTERCAT": {"name": "🐱 White Winter Cat", "price": 8, "inv_key": "Seahorse"},
+    "SELL_REDHAMMERCAT": {"name": "🐱 Red Hammer Cat", "price": 8, "inv_key": "Red Hammer Cat"},
+    "SELL_PURPLEFISTCAT": {"name": "🐱 Purple Fist Cat", "price": 8, "inv_key": "Purple Fist Cat"},
+    "SELL_GREENDINOCAT": {"name": "🐱 Green Dino Cat", "price": 8, "inv_key": "Green Dino Cat"},
+    "SELL_WHITEWINTERCAT": {"name": "🐱 White Winter Cat", "price": 8, "inv_key": "White Winter Cat"},
     "SELL_SHARK": {"name": "🐟 Shark", "price": 10, "inv_key": "Shark"},
     "SELL_SEAHORSE": {"name": "🐟 Seahorse", "price": 10, "inv_key": "Seahorse"},
     "SELL_CROCODILE": {"name": "🐊 Crocodile", "price": 10, "inv_key": "Crocodile"},
     "SELL_SEAL": {"name": "🦦 Seal", "price": 10, "inv_key": "Seal"},
+    "SELL_MYSTERIOUSDNA": {"name": "🧬 Mysterious DNA", "price": 10, "inv_key": "Mysterious DNA"},
     "SELL_TURTLE": {"name": "🐢 Turtle", "price": 10, "inv_key": "Turtle"},
     "SELL_LOBSTER": {"name": "🦞 Lobster", "price": 10, "inv_key": "Lobster"},
     "SELL_LUCKYJEWEL": {"name": "📿 Lucky Jewel", "price": 7, "inv_key": "Lucky Jewel"},
@@ -192,11 +194,11 @@ ITEM_PRICES = {
     "SELL_DARKLORDDEMON": {"name": "👹 Dark Lord Demon", "price": 500, "inv_key": "Dark Lord Demon"},
     "SELL_PRINCESSOFNINETAIL": {"name": "🦊 Princess of Nine Tail", "price": 500, "inv_key": "Princess of Nine Tail"},
     "SELL_DARKKNIGHTDRAGON": {"name": "🐉 Dark Knight Dragon", "price": 500, "inv_key": "Dark Knight Dragon"},
-    "SELL_DARKFISHWARRIOR": {"name": "👹 Dark Fish Warrior", "price": 2000, "inv_key": "Dark Fish Warrior"},
-    "SELL_SNAILDRAGON": {"name": "🐉 Snail Dragon", "price": 4000, "inv_key": "Snail Dragon"},
-    "SELL_QUEENOFHERMIT": {"name": "👑 Queen Of Hermit", "price": 4000, "inv_key": "Queen Of Hermit"},
-    "SELL_MECHAFROG": {"name": "🤖 Mecha Frog", "price": 4000, "inv_key": "Mecha Frog"},
-    "SELL_QUEENOFMEDUSA": {"name": "👑 Queen Of Medusa 🐍", "price": 4000, "inv_key": "Queen Of Medusa"},
+    "SELL_DARKFISHWARRIOR": {"name": "👹 Dark Fish Warrior", "price": 3000, "inv_key": "Dark Fish Warrior"},
+    "SELL_SNAILDRAGON": {"name": "🐉 Snail Dragon", "price": 5000, "inv_key": "Snail Dragon"},
+    "SELL_QUEENOFHERMIT": {"name": "👑 Queen Of Hermit", "price": 5000, "inv_key": "Queen Of Hermit"},
+    "SELL_MECHAFROG": {"name": "🤖 Mecha Frog", "price": 5000, "inv_key": "Mecha Frog"},
+    "SELL_QUEENOFMEDUSA": {"name": "👑 Queen Of Medusa 🐍", "price": 5000, "inv_key": "Queen Of Medusa"},
 }
 # sementara user -> item_code waiting for amount input (chat)
 SELL_WAITING = {}  # user_id: item_code
@@ -338,6 +340,8 @@ INV_KEY_ALIASES = {
     "crocodile": "Crocodile",
     "🦦 Seal": "Seal",
     "seal": "Seal",
+    "🧬 Mysterious DNA": "Mysterious DNA",
+    "mysterious dna": "Mysterious DNA",
     "🐢 Turtle": "🐢 Turtle",
     "turtle": "Turtle",
     "🦞 Lobster": "🦞 Lobster",
@@ -535,6 +539,7 @@ MENU_STRUCTURE = {
             ("🐋⚡ Kyogre", "SELL_DETAIL:SELL_KYOGRE"),
             ("🐊 Crocodile", "SELL_DETAIL:SELL_CROCODILE"),
             ("🦦 Seal", "SELL_DETAIL:SELL_SEAL"),
+            ("🧬 Mysterious DNA", "SELL_DETAIL:SELL_MYSTERIOUS"),
             ("🐢 Turtle", "SELL_DETAIL:SELL_TURTLE"),
             ("🦞 Lobster", "SELL_DETAIL:SELL_LOBSTER"),
             ("📿 Lucky Jewel", "SELL_DETAIL:SELL_LUCKYJEWEL"),
@@ -899,49 +904,62 @@ async def callback_handler(client: Client, cq: CallbackQuery):
         await cq.message.edit_text(full_text, reply_markup=kb)
         return
     
+
+#Revisi Part ini aja
     # ===== EVOLVE SMALL FISH CONFIRM =====
     if data == "EVOLVE_SMALLFISH_CONFIRM":
         inv = aquarium.get_user_fish(user_id)
         small_fish_qty = inv.get("𓆝 Small Fish", 0)
+        zonk_qty = inv.get("🤧 Zonk", 0)
+        dna_qty = inv.get("🧬 Mysterious DNA", 0)
 
         if small_fish_qty < 1000:
             await cq.answer("❌ Small Fish kamu kurang (butuh 1000)", show_alert=True)
             return
+        if zonk_qty < 50:
+            await cq.answer("❌ 🤧 Zonk kamu kurang (butuh 100)", show_alert=True)
+            return
+        if dna_qty < 30:
+            await cq.answer("❌ 🧬 Mysterious DNA kamu kurang (butuh 20)", show_alert=True)
+            return
 
-        # ✅ Kurangi stok Small Fish
+        # ✅ Kurangi stok bahan
         inv["𓆝 Small Fish"] = small_fish_qty - 1000
-        if inv["𓆝 Small Fish"] <= 0:
-            inv.pop("𓆝 Small Fish")
+        if inv["𓆝 Small Fish"] <= 0: inv.pop("𓆝 Small Fish")
+        inv["🤧 Zonk"] = zonk_qty - 50
+        if inv["🤧 Zonk"] <= 0: inv.pop("🤧 Zonk")
+        inv["🧬 Mysterious DNA"] = dna_qty - 30
+        if inv["🧬 Mysterious DNA"] <= 0: inv.pop("🧬 Mysterious DNA")
 
-        # ✅ Tambahkan Dark Fish Warrior
+        # ✅ Tambahkan hasil evolve
         inv["👹 Dark Fish Warrior"] = inv.get("👹 Dark Fish Warrior", 0) + 1
 
-        # ✅ Simpan kembali
+        # ✅ Simpan ke DB
         db = aquarium.load_data()
         db[str(user_id)] = inv
         aquarium.save_data(db)
 
         uname = cq.from_user.username or f"user{user_id}"
 
-        # ✅ Balasan private ke user
+        # ✅ Balasan private
         inv_text = aquarium.list_inventory(user_id)
         await cq.message.edit_text(
             f"✅ Evolve berhasil!\n"
             f"𓆝 Small Fish -1000\n"
-            f"🧬 Dark Fish Warrior +1\n\n"
+            f"🤧 Zonk -50\n"
+            f"🧬 Mysterious DNA -30\n"
+            f"Dark Fish Warrior +1\n\n"
             f"📦 Inventory terbaru:\n{inv_text}",
             reply_markup=make_keyboard("I", user_id)
         )
 
-        # ✅ Info ke group
-        # ✅ Info ke group + pin pesan
+        # ✅ Info ke group + pin
         try:
             msg = await client.send_message(
                 TARGET_GROUP,
                 f"🧬 @{uname} berhasil evolve!\n"
-                f"🧬 Small Fish → 👹 Dark Fish Warrior 🎉"
+                f"Small Fish → 👹 Dark Fish Warrior 🎉"
             )
-            # ✅ Pin pesan ini tanpa menghapus pin lama
             await client.pin_chat_message(TARGET_GROUP, msg.id, disable_notification=True)
         except Exception as e:
             logger.error(f"Gagal kirim atau pin info evolve ke group: {e}")
@@ -950,123 +968,166 @@ async def callback_handler(client: Client, cq: CallbackQuery):
     if data == "EVOLVE_SNAIL_CONFIRM":
         inv = aquarium.get_user_fish(user_id)
         snail_qty = inv.get("🐌 Snail", 0)
+        zonk_qty = inv.get("🤧 Zonk", 0)
+        dna_qty = inv.get("🧬 Mysterious DNA", 0)
 
         if snail_qty < 1000:
-            await cq.answer("❌ Hermit Crab kamu kurang (butuh 1000)", show_alert=True)
+            await cq.answer("❌ Snail kamu kurang (butuh 1000)", show_alert=True)
+            return
+        if zonk_qty < 50:
+            await cq.answer("❌ 🤧 Zonk kamu kurang (butuh 100)", show_alert=True)
+            return
+        if dna_qty < 30:
+            await cq.answer("❌ 🧬 Mysterious DNA kamu kurang (butuh 20)", show_alert=True)
             return
 
-        # ✅ Kurangi stok Hermit Crab
+        # ✅ Kurangi stok bahan
         inv["🐌 Snail"] = snail_qty - 1000
-        if inv["🐌 Snail"] <= 0:
-            inv.pop("🐌 Snail")
+        if inv["🐌 Snail"] <= 0: inv.pop("🐌 Snail")
+        inv["🤧 Zonk"] = zonk_qty - 50
+        if inv["🤧 Zonk"] <= 0: inv.pop("🤧 Zonk")
+        inv["🧬 Mysterious DNA"] = dna_qty - 30
+        if inv["🧬 Mysterious DNA"] <= 0: inv.pop("🧬 Mysterious DNA")
 
-        # ✅ Tambahkan 🐉 Snail Dragon
+        # ✅ Tambahkan hasil evolve
         inv["🐉 Snail Dragon"] = inv.get("🐉 Snail Dragon", 0) + 1
 
-        # ✅ Simpan kembali
-        db = aquarium.load_data()
-        db[str(user_id)] = inv
-        aquarium.save_data(db)
-
-        # ✅ Balasan private ke user
-        inv_text = aquarium.list_inventory(user_id)
-        await cq.message.edit_text(
-            f"✅ Evolve berhasil!\n"
-            f"🐌 Snail -1000\n"
-            f"🧬 🐉 Snail Dragon +1\n\n"
-            f"📦 Inventory terbaru:\n{inv_text}",
-            reply_markup=make_keyboard("I", user_id)
-        )
-
-        # ✅ Info ke group
-        try:
-            msg = await client.send_message(
-                TARGET_GROUP,
-                f"🧬 @{uname} berhasil evolve!\n"
-                f"🧬 Snail → 🐉 Snail Dragon 🎉"
-            )
-            await client.pin_chat_message(TARGET_GROUP, msg.id, disable_notification=True)
-        except Exception as e:
-            logger.error(f"Gagal kirim atau pin info evolve ke group: {e}")
-    
-    # ===== EVOLVE HERMIT CRAB CONFIRM =====
-    if data == "EVOLVE_HERMITCRAB_CONFIRM":
-        inv = aquarium.get_user_fish(user_id)
-        hermit_crab_qty = inv.get("🐚 Hermit Crab", 0)
-
-        if hermit_crab_qty < 1000:
-            await cq.answer("❌ Hermit Crab kamu kurang (butuh 1000)", show_alert=True)
-            return
-
-        # ✅ Kurangi stok Hermit Crab
-        inv["🐚 Hermit Crab"] = hermit_crab_qty - 1000
-        if inv["🐚 Hermit Crab"] <= 0:
-            inv.pop("🐚 Hermit Crab")
-
-        # ✅ Tambahkan 👑 Queen of Hermit
-        inv["👑 Queen of Hermit"] = inv.get("👑 Queen of Hermit", 0) + 1
-
-        # ✅ Simpan kembali
-        db = aquarium.load_data()
-        db[str(user_id)] = inv
-        aquarium.save_data(db)
-
-        # ✅ Balasan private ke user
-        inv_text = aquarium.list_inventory(user_id)
-        await cq.message.edit_text(
-            f"✅ Evolve berhasil!\n"
-            f"🐚 Hermit Crab -1000\n"
-            f"🧬 👑 Queen of Hermit +1\n\n"
-            f"📦 Inventory terbaru:\n{inv_text}",
-            reply_markup=make_keyboard("I", user_id)
-        )
-
-        # ✅ Info ke group
-        try:
-            msg = await client.send_message(
-                TARGET_GROUP,
-                f"🧬 @{uname} berhasil evolve!\n"
-                f"🧬 Hermit Crab → 👑 Queen of Hermit 🎉"
-            )
-            await client.pin_chat_message(TARGET_GROUP, msg.id, disable_notification=True)
-        except Exception as e:
-            logger.error(f"Gagal kirim atau pin info evolve ke group: {e}")
-
-        # ===== EVOLVE FROG CONFIRM =====
-    if data == "EVOLVE_FROG_CONFIRM":
-        inv = aquarium.get_user_fish(user_id)
-        frog_qty = inv.get("🐸 Frog", 0)
-
-        if frog_qty < 1000:
-            await cq.answer("❌ Frog kamu kurang (butuh 1000)", show_alert=True)
-            return
-
-        # ✅ Kurangi stok Frog
-        inv["🐸 Frog"] = frog_qty - 1000
-        if inv["🐸 Frog"] <= 0:
-            inv.pop("🐸 Frog")
-
-        # ✅ Tambahkan 🤖 Mecha Frog
-        inv["🤖 Mecha Frog"] = inv.get("🤖 Mecha Frog", 0) + 1
-
-        # ✅ Simpan ke database
+        # ✅ Simpan ke DB
         db = aquarium.load_data()
         db[str(user_id)] = inv
         aquarium.save_data(db)
 
         uname = cq.from_user.username or f"user{user_id}"
 
-        # ✅ Balasan ke user
+        # ✅ Balasan private
         inv_text = aquarium.list_inventory(user_id)
         await cq.message.edit_text(
             f"✅ Evolve berhasil!\n"
-            f"🐸 Frog -1000\n"
-            f"🧬 🤖 Mecha Frog +1\n\n"
+            f"🐌 Snail -1000\n"
+            f"🤧 Zonk -50\n"
+            f"🧬 Mysterious DNA -30\n"
+            f"🐉 Snail Dragon +1\n\n"
             f"📦 Inventory terbaru:\n{inv_text}",
             reply_markup=make_keyboard("I", user_id)
         )
 
-        # ✅ Info ke group + pin pesan
+        # ✅ Info ke group + pin
+        try:
+            msg = await client.send_message(
+                TARGET_GROUP,
+                f"🧬 @{uname} berhasil evolve!\n"
+                f"Snail → 🐉 Snail Dragon 🎉"
+            )
+            await client.pin_chat_message(TARGET_GROUP, msg.id, disable_notification=True)
+        except Exception as e:
+            logger.error(f"Gagal kirim atau pin info evolve ke group: {e}")
+
+    # ===== EVOLVE HERMIT CRAB CONFIRM =====
+    if data == "EVOLVE_HERMITCRAB_CONFIRM":
+        inv = aquarium.get_user_fish(user_id)
+        hermit_crab_qty = inv.get("🐚 Hermit Crab", 0)
+        zonk_qty = inv.get("🤧 Zonk", 0)
+        dna_qty = inv.get("🧬 Mysterious DNA", 0)
+
+        if hermit_crab_qty < 1000:
+            await cq.answer("❌ Hermit Crab kamu kurang (butuh 1000)", show_alert=True)
+            return
+        if zonk_qty < 50:
+            await cq.answer("❌ 🤧 Zonk kamu kurang (butuh 100)", show_alert=True)
+            return
+        if dna_qty < 30:
+            await cq.answer("❌ 🧬 Mysterious DNA kamu kurang (butuh 20)", show_alert=True)
+            return
+
+        # ✅ Kurangi stok bahan
+        inv["🐚 Hermit Crab"] = hermit_crab_qty - 1000
+        if inv["🐚 Hermit Crab"] <= 0: inv.pop("🐚 Hermit Crab")
+        inv["🤧 Zonk"] = zonk_qty - 50
+        if inv["🤧 Zonk"] <= 0: inv.pop("🤧 Zonk")
+        inv["🧬 Mysterious DNA"] = dna_qty - 30
+        if inv["🧬 Mysterious DNA"] <= 0: inv.pop("🧬 Mysterious DNA")
+
+        # ✅ Tambahkan hasil evolve
+        inv["👑 Queen of Hermit"] = inv.get("👑 Queen of Hermit", 0) + 1
+
+        # ✅ Simpan ke DB
+        db = aquarium.load_data()
+        db[str(user_id)] = inv
+        aquarium.save_data(db)
+
+        uname = cq.from_user.username or f"user{user_id}"
+
+        # ✅ Balasan private
+        inv_text = aquarium.list_inventory(user_id)
+        await cq.message.edit_text(
+            f"✅ Evolve berhasil!\n"
+            f"🐚 Hermit Crab -1000\n"
+            f"🤧 Zonk -50\n"
+            f"🧬 Mysterious DNA -30\n"
+            f"👑 Queen of Hermit +1\n\n"
+            f"📦 Inventory terbaru:\n{inv_text}",
+            reply_markup=make_keyboard("I", user_id)
+        )
+
+        # ✅ Info ke group + pin
+        try:
+            msg = await client.send_message(
+                TARGET_GROUP,
+                f"🧬 @{uname} berhasil evolve!\n"
+                f"Hermit Crab → 👑 Queen of Hermit 🎉"
+            )
+            await client.pin_chat_message(TARGET_GROUP, msg.id, disable_notification=True)
+        except Exception as e:
+            logger.error(f"Gagal kirim atau pin info evolve ke group: {e}")
+
+    # ===== EVOLVE FROG CONFIRM =====
+    if data == "EVOLVE_FROG_CONFIRM":
+        inv = aquarium.get_user_fish(user_id)
+        frog_qty = inv.get("🐸 Frog", 0)
+        zonk_qty = inv.get("🤧 Zonk", 0)
+        dna_qty = inv.get("🧬 Mysterious DNA", 0)
+
+        if frog_qty < 1000:
+            await cq.answer("❌ Frog kamu kurang (butuh 1000)", show_alert=True)
+            return
+        if zonk_qty < 50:
+            await cq.answer("❌ 🤧 Zonk kamu kurang (butuh 100)", show_alert=True)
+            return
+        if dna_qty < 30:
+            await cq.answer("❌ 🧬 Mysterious DNA kamu kurang (butuh 20)", show_alert=True)
+            return
+
+        # ✅ Kurangi stok bahan
+        inv["🐸 Frog"] = frog_qty - 1000
+        if inv["🐸 Frog"] <= 0: inv.pop("🐸 Frog")
+        inv["🤧 Zonk"] = zonk_qty - 50
+        if inv["🤧 Zonk"] <= 0: inv.pop("🤧 Zonk")
+        inv["🧬 Mysterious DNA"] = dna_qty - 30
+        if inv["🧬 Mysterious DNA"] <= 0: inv.pop("🧬 Mysterious DNA")
+
+        # ✅ Tambahkan hasil evolve
+        inv["🤖 Mecha Frog"] = inv.get("🤖 Mecha Frog", 0) + 1
+
+        # ✅ Simpan ke DB
+        db = aquarium.load_data()
+        db[str(user_id)] = inv
+        aquarium.save_data(db)
+
+        uname = cq.from_user.username or f"user{user_id}"
+
+        # ✅ Balasan private
+        inv_text = aquarium.list_inventory(user_id)
+        await cq.message.edit_text(
+            f"✅ Evolve berhasil!\n"
+            f"🐸 Frog -1000\n"
+            f"🤧 Zonk -50\n"
+            f"🧬 Mysterious DNA -30\n"
+            f"🤖 Mecha Frog +1\n\n"
+            f"📦 Inventory terbaru:\n{inv_text}",
+            reply_markup=make_keyboard("I", user_id)
+        )
+
+        # ✅ Info ke group + pin
         try:
             msg = await client.send_message(
                 TARGET_GROUP,
@@ -1077,42 +1138,54 @@ async def callback_handler(client: Client, cq: CallbackQuery):
         except Exception as e:
             logger.error(f"Gagal kirim atau pin info evolve ke group: {e}")
 
-
     # ===== EVOLVE SNAKE CONFIRM =====
     if data == "EVOLVE_QUEENOFMEDUSA_CONFIRM":
         inv = aquarium.get_user_fish(user_id)
         snake_qty = inv.get("🐍 Snake", 0)
+        zonk_qty = inv.get("🤧 Zonk", 0)
+        dna_qty = inv.get("🧬 Mysterious DNA", 0)
 
         if snake_qty < 1000:
             await cq.answer("❌ Snake kamu kurang (butuh 1000)", show_alert=True)
             return
+        if zonk_qty < 50:
+            await cq.answer("❌ 🤧 Zonk kamu kurang (butuh 100)", show_alert=True)
+            return
+        if dna_qty < 30:
+            await cq.answer("❌ 🧬 Mysterious DNA kamu kurang (butuh 20)", show_alert=True)
+            return
 
-        # ✅ Kurangi stok Snake
+        # ✅ Kurangi stok bahan
         inv["🐍 Snake"] = snake_qty - 1000
-        if inv["🐍 Snake"] <= 0:
-            inv.pop("🐍 Snake")
+        if inv["🐍 Snake"] <= 0: inv.pop("🐍 Snake")
+        inv["🤧 Zonk"] = zonk_qty - 50
+        if inv["🤧 Zonk"] <= 0: inv.pop("🤧 Zonk")
+        inv["🧬 Mysterious DNA"] = dna_qty - 30
+        if inv["🧬 Mysterious DNA"] <= 0: inv.pop("🧬 Mysterious DNA")
 
-        # ✅ Tambahkan 👑 Queen Of Medusa 🐍
+        # ✅ Tambahkan hasil evolve
         inv["👑 Queen Of Medusa 🐍"] = inv.get("👑 Queen Of Medusa 🐍", 0) + 1
 
-        # ✅ Simpan ke database
+        # ✅ Simpan ke DB
         db = aquarium.load_data()
         db[str(user_id)] = inv
         aquarium.save_data(db)
 
         uname = cq.from_user.username or f"user{user_id}"
 
-        # ✅ Balasan ke user
+        # ✅ Balasan private
         inv_text = aquarium.list_inventory(user_id)
         await cq.message.edit_text(
             f"✅ Evolve berhasil!\n"
             f"🐍 Snake -1000\n"
-            f"🧬 👑 Queen Of Medusa 🐍 +1\n\n"
+            f"🤧 Zonk -50\n"
+            f"🧬 Mysterious DNA -30\n"
+            f"👑 Queen Of Medusa 🐍 +1\n\n"
             f"📦 Inventory terbaru:\n{inv_text}",
             reply_markup=make_keyboard("I", user_id)
         )
 
-        # ✅ Info ke group + pin pesan
+        # ✅ Info ke group + pin
         try:
             msg = await client.send_message(
                 TARGET_GROUP,
@@ -1333,7 +1406,7 @@ async def callback_handler(client: Client, cq: CallbackQuery):
         return
     
     # FISHING
-    # FISHING
+# FISHING
     # ----------------- FUNGSI MEMANCING -----------------
     async def fishing_task(client, uname, user_id, jenis, task_id):
         try:
@@ -1394,12 +1467,13 @@ async def callback_handler(client: Client, cq: CallbackQuery):
         user_last_fishing[user_id] = now
         user_task_count[user_id] += 1
         task_id = f"{user_task_count[user_id]:02d}"
-
+        # di bagian callback FISH_CONFIRM_
         await cq.message.edit_text(
             f"🎣 You successfully threw the bait! {jenis} to loot task#{task_id}!",
             reply_markup=InlineKeyboardMarkup([
                 [InlineKeyboardButton("🎣 Catch again", callback_data=f"FISH_CONFIRM_{jenis}")],
                 [InlineKeyboardButton("🤖 Auto Catch 50x", callback_data=f"AUTO_FISH_{jenis}")],
+                [InlineKeyboardButton("❌ Cancel Auto", callback_data="AUTO_FISH_CANCEL")],  # tombol baru
                 [InlineKeyboardButton("⬅️ Back", callback_data="E")]
             ])
         )
@@ -1410,44 +1484,48 @@ async def callback_handler(client: Client, cq: CallbackQuery):
 
     # ----------------- AUTO MEMANCING 5x -----------------
     # ----------------- AUTO MEMANCING 5x -----------------
+    # callback handler AUTO_FISH_ 
+    elif data == "AUTO_FISH_CANCEL":
+        task = AUTO_FISH_TASKS.get(user_id)
+        if task and not task.done():
+            task.cancel()
+            await cq.answer("❌ Auto Fishing cancelled!", show_alert=True)
+            AUTO_FISH_TASKS.pop(user_id, None)
+        else:
+            await cq.answer("❌ Tidak ada auto fishing aktif.", show_alert=True)
+        return  # jangan lanjut ke auto fishing
+
+    # 2️⃣ Handle Auto Fishing 50x
     elif data.startswith("AUTO_FISH_"):
         jenis = data.replace("AUTO_FISH_", "")
         uname = cq.from_user.username or f"user{user_id}"
 
-        now = asyncio.get_event_loop().time()
-        last_time = user_last_fishing.get(user_id, 0)
-
-        if now - last_time < 10:
-            await cq.answer("⏳ Wait cooldown 10 sec before auto catching!", show_alert=True)
-            return
-
         await cq.answer("🤖 Auto Catching 50x!!! Start!")
 
         async def auto_fishing():
-            for i in range(50):
-                now = asyncio.get_event_loop().time()
-                if now - user_last_fishing.get(user_id, 0) < 10:
-                    break  # stop kalau masih cooldown
-
-                # cek stok umpan dulu (tanpa mengurangi)
-                jk_map = {"COMMON": "A", "RARE": "B", "LEGEND": "C", "MYTHIC": "D"}
-                jk = jk_map.get(jenis, "A")
-                if user_id != OWNER_ID:
-                    ud = umpan.get_user(user_id)
-                    if not ud or ud.get(jk, {}).get("umpan", 0) <= 0:
-                        # Stop jika umpan habis, tapi tidak mengirim pesan
+            try:
+                for i in range(50):
+                    now = asyncio.get_event_loop().time()
+                    if now - user_last_fishing.get(user_id, 0) < 10:
                         break
+                    jk_map = {"COMMON": "A", "RARE": "B", "LEGEND": "C", "MYTHIC": "D"}
+                    jk = jk_map.get(jenis, "A")
+                    if user_id != OWNER_ID:
+                        ud = umpan.get_user(user_id)
+                        if not ud or ud.get(jk, {}).get("umpan", 0) <= 0:
+                            break
+                    user_last_fishing[user_id] = now
+                    user_task_count[user_id] += 1
+                    task_id = f"{user_task_count[user_id]:02d}"
+                    await fishing_task(cq._client, uname, user_id, jenis, task_id)
+                    await asyncio.sleep(10)
+            except asyncio.CancelledError:
+                await cq.message.reply("❌ Auto Fishing dibatalkan.")
+                return
 
-                user_last_fishing[user_id] = now
-                user_task_count[user_id] += 1
-                task_id = f"{user_task_count[user_id]:02d}"
-
-                # Jalankan task memancing (umpan dikurangi saat hasil drop)
-                asyncio.create_task(fishing_task(client, uname, user_id, jenis, task_id))
-
-                await asyncio.sleep(10)  # jeda tiap lemparan
-
-        asyncio.create_task(auto_fishing())
+        # simpan task auto fishing agar bisa cancel
+        task_obj = asyncio.create_task(auto_fishing())
+        AUTO_FISH_TASKS[user_id] = task_obj
 
     # LEADERBOARD PAGING
     if data.startswith("BBB_PAGE_"):
@@ -1896,12 +1974,3 @@ def register(app: Client):
     app.add_handler(MessageHandler(handle_transfer_message, filters.text & filters.private))
 
     logger.info("[MENU] Handler menu_utama terdaftar.")
-
-
-
-
-
-
-
-
-

@@ -13,9 +13,9 @@ logger = logging.getLogger(__name__)
 # ============================================================
 FISH_LOOT_COMMON = {
     # ---------------- COMMON ---------------- #
-    "🤧 Zonk": 77.91,
-    "𓆝 Small Fish": 131.50,
-    "🐌 Snail": 78.27,
+    "🤧 Zonk": 87.91,
+    "𓆝 Small Fish": 121.50,
+    "🐌 Snail": 73.27,
     "🐚 Hermit Crab": 78.27,
     "🦀 Crab": 73.78,
     "🐸 Frog": 73.78,
@@ -33,6 +33,7 @@ FISH_LOOT_COMMON = {
     "🐟 Beta Fish": 22.91,
     "🐟 Anglerfish": 22.91,
     "🦆 Duck": 22.91,
+    "🧬 Mysterious DNA": 5.00,
 
     # ---------------- MYTHIC ---------------- #
     "🐉 Baby Dragon": 0.5,
@@ -63,18 +64,18 @@ FISH_LOOT_COMMON = {
 # ============================================================
 FISH_LOOT_RARE = {
     # ---------------- ULTRA RARE ---------------- #
-    "🐡 Pufferfish": 58.73,
-    "📿 Lucky Jewel": 60.75,
-    "🐱 Red Hammer Cat": 60.75,
-    "🐱 Purple Fist Cat": 60.75,
-    "🐱 Green Dino Cat": 60.75,
-    "🐱 White Winter Cat": 60.75,
-    "🐟 Shark": 60.75,
-    "🐟 Seahorse": 60.75,
-    "🐊 Crocodile": 60.75,
-    "🦦 Seal": 60.75,
-    "🐢 Turtle": 62.75,
-    "🦞 Lobster": 62.75,
+    "🐡 Pufferfish": 56.73,
+    "📿 Lucky Jewel": 59.75,
+    "🐱 Red Hammer Cat": 59.75,
+    "🐱 Purple Fist Cat": 59.75,
+    "🐱 Green Dino Cat": 59.75,
+    "🐱 White Winter Cat": 59.75,
+    "🐟 Shark": 59.75,
+    "🐟 Seahorse": 59.75,
+    "🐊 Crocodile": 59.75,
+    "🦦 Seal": 59.75,
+    "🐢 Turtle": 60.75,
+    "🦞 Lobster": 60.75,
 
     # ---------------- LEGENDARY ---------------- #
     "🐋 Orca": 20.00,
@@ -84,6 +85,7 @@ FISH_LOOT_RARE = {
     "🐼 Panda": 20.00,
     "🐶 Dog": 20.00,
     "🦇 bat": 20.00,
+    "🧬 Mysterious DNA": 15.00,
     "🐹⚡ Pikachu": 5.00,
     "🐸🍀 Bulbasaur": 5.00,
     "🐢💧 Squirtle": 5.00,
@@ -132,7 +134,7 @@ logger.info(f"[FISH_LOOT] Common & Rare di-scale otomatis ke total 2000%")
 # ============================================================
 BUFF_RATE = {
     "COMMON": 0.0,
-    "RARE": 7.50,
+    "RARE": 10.50,
     "LEGEND": 10.00,
     "MYTHIC": 15.00,
 }
