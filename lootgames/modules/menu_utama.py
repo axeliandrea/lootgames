@@ -1293,23 +1293,14 @@ async def callback_handler(client: Client, cq: CallbackQuery):
             await cq.answer("❌ Hanya owner yang bisa akses menu ini.", show_alert=True)
             return
 
-        # 🔹 Load chest lama
+        # 🔹 Load chest lama dari file
         old_chest = load_chest_db()
         if old_chest and old_chest.get("active"):
-            owner_id_old = old_chest["owner_id"]
-            rewards_old = old_chest.get("rewards", {})
-            claimed_users_old = set(old_chest.get("claimed_users", []))
-
-            # Refund sisa umpan ke owner lama
-            for jenis, jumlah in rewards_old.items():
-                sisa = jumlah - len(claimed_users_old)
-                if sisa > 0:
-                    umpan.tambah_umpan(owner_id_old, jenis, sisa)
-
+            # Cukup nonaktifkan chest lama, tidak perlu refund
             old_chest["active"] = False
             save_chest_db(old_chest)
             await cq.message.reply(
-                f"⚠️ Treasure Chest sebelumnya dibatalkan. Sisa umpan dikembalikan ke @{old_chest['owner_name']}."
+                f"⚠️ Treasure Chest sebelumnya dibatalkan. Klaim lama tidak bisa digunakan lagi."
             )
 
         # 🔹 Kirim Treasure Chest baru
@@ -1320,10 +1311,10 @@ async def callback_handler(client: Client, cq: CallbackQuery):
             "owner_id": user_id,
             "owner_name": uname,
             "rewards": {"A": jumlah_default},
-            "claimed_users": [],
+            "claimed_users": [],   # catatan siapa saja yang sudah klaim
             "max_claim": jumlah_default
         }
-        save_chest_db(chest_data)
+        save_chest_db(chest_data)  # simpan ke file agar tetap tersimpan saat restart
 
         try:
             msg = await cq._client.send_message(
@@ -2123,4 +2114,5 @@ def register(app: Client):
     # --- Logging tambahan ---
     logger.info("💬 menu_utama handlers registered (callback + tc_drop_input)")
     print("[DEBUG] register(menu_utama) dipanggil ✅")
+
 
