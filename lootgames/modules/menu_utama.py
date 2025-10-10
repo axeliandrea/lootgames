@@ -1318,7 +1318,7 @@ async def callback_handler(client: Client, cq: CallbackQuery):
 # === TC DROP ADD ===
     # di dalam callback handler bagian TC_DROP_ADD
     if data == "TC_DROP_ADD":
-        uname = message.from_user.username or f"user{user_id}"
+        uname = cq.from_user.username or f"user{user_id}"
 
         # Cek TC DROP lama
         old_chest = load_chest_data()
@@ -2091,4 +2091,5 @@ def register(app: Client):
     # --- Logging tambahan ---
     logger.info("💬 menu_utama handlers registered (callback + tc_drop_input)")
     print("[DEBUG] register(menu_utama) dipanggil ✅")
+
 
