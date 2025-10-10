@@ -1328,7 +1328,20 @@ async def callback_handler(client: Client, cq: CallbackQuery):
             await cq.answer(f"❌ Umpan Type {jenis} kurang! (punya {stok}, butuh {jumlah})", show_alert=True)
             return
 
-        # kurangi stok langsung
+        # rollback sisa chest lama jika ada
+        old_chest = load_chest_data()
+        if old_chest and old_chest.get("active"):
+            sisa_umpan = 0
+            for j, qty in old_chest.get("rewards", {}).items():
+                sisa_umpan += qty
+            sisa_umpan -= old_chest.get("total_claim", 0)  # sisa yang belum di-claim
+            if sisa_umpan > 0:
+                umpan.add_umpan(old_chest["owner_id"], j, sisa_umpan)
+                print(f"[DEBUG] Rollback {sisa_umpan} umpan ke {old_chest['owner_id']} dari chest lama")
+            old_chest["active"] = False
+            save_chest_data(old_chest)
+
+        # kurangi stok langsung dari pemilik TC baru
         try:
             umpan.remove_umpan(uid, jenis, jumlah)
             print(f"[DEBUG] Umpan {jenis} dikurangi {jumlah} dari {uid}")
@@ -1336,7 +1349,7 @@ async def callback_handler(client: Client, cq: CallbackQuery):
             await cq.answer(f"❌ Gagal kurangi umpan: {e}", show_alert=True)
             return
 
-        # buat chest
+        # buat chest baru
         chest_data = {
             "active": True,
             "owner_id": uid,
@@ -1364,7 +1377,7 @@ async def callback_handler(client: Client, cq: CallbackQuery):
             await cq.answer(f"❌ Gagal kirim TC ke group: {e}", show_alert=True)
             # rollback umpan
             umpan.add_umpan(uid, jenis, jumlah)
-            print(f"[DEBUG] Rollback umpan ke {uid}")
+            print(f"[DEBUG] Rollback umpan ke {uid} karena gagal kirim TC")
 
     # ===== RESET LOGIN (OWNER ONLY) =====
     if data == "LOGIN_RESET":
@@ -2100,3 +2113,4 @@ def register(app: Client):
     # --- Logging tambahan ---
     logger.info("💬 menu_utama handlers registered (callback + tc_drop_input)")
     print("[DEBUG] register(menu_utama) dipanggil ✅")
+
