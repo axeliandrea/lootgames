@@ -1,4 +1,4 @@
-#FIX 05:53 test TC
+#FIX 05:52
 # lootgames/modules/menu_utama.py Test Nonaktif Umpan Rare
 import os
 import logging
@@ -27,11 +27,28 @@ TUKAR_POINT_STATE = {}    # user_id: {"step": step, "jumlah_umpan": n}
 OPEN_MENU_STATE = {}      # user_id: True jika menu aktif
 LOGIN_STATE = {}  # user_id: {"last_login_day": int, "streak": int, "umpan_given": set()}
 STREAK_REWARDS = {1: 0, 2: 5, 3: 6, 4: 7, 5: 8, 6: 9, 7: 10}
-CHEST_DB = "storage/treasure_chest.json"  # Simpan info chest aktif dan siapa yang sudah claim
-CLAIMED_CHEST_USERS = set()  # user_id yang sudah claim treasure chest saat ini
+
+# =================== TREASURE CHEST SYSTEM =================== #
+CHEST_DB = "storage/treasure_chest.json"
+CLAIMED_CHEST_USERS = set()
 LAST_TREASURE_MSG_ID = None
-USER_CLAIM_LOCKS = {}               # map user_id -> asyncio.Lock()
-USER_CLAIM_LOCKS_LOCK = asyncio.Lock()  # lock untuk pembuatan lock per-user
+USER_CLAIM_LOCKS = {}
+USER_CLAIM_LOCKS_LOCK = asyncio.Lock()
+# Format data chest di CHEST_DB:
+# {
+#   "active": true,
+#   "owner_id": 12345,
+#   "owner_name": "playerA",
+#   "rewards": {"A": 10, "B": 1},
+#   "total_claim": 0,
+#   "max_claim": 10,
+#   "claimed_users": [111, 222]
+# }
+
+# ===== Global State =====
+TC_DROP_STATE = {}  # uid -> sedang input umpan TC DROP
+
+#fizz coin
 TUKAR_COIN_STATE = {}  # user_id: {"jenis": "A" atau "B"}
 # ---------------- PATH DB ---------------- #
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))  # folder modules
@@ -106,24 +123,21 @@ def reset_all():
     return True
 
 # =================== UTIL ===================
+# ========== HELPER CHEST DATA ==========
 def load_chest_data():
-    try:
-        with open(CHEST_DB, "r") as f:
-            return json.load(f)
-    except:
+    if not os.path.exists(CHEST_DB):
+        with open(CHEST_DB, "w", encoding="utf-8") as f:
+            json.dump({}, f)
         return {}
+    with open(CHEST_DB, "r", encoding="utf-8") as f:
+        try:
+            return json.load(f)
+        except:
+            return {}
 
 def save_chest_data(data):
-    with open(CHEST_DB, "w") as f:
-        json.dump(data, f)
-
-def get_random_item():
-    # 90% ZONK, 10% Umpan
-    return random.choices(
-        ["ZONK", "Umpan Common Type A"],
-        weights=[65, 35],
-        k=1
-    )[0]
+    with open(CHEST_DB, "w", encoding="utf-8") as f:
+        json.dump(data, f, indent=2)
 
 # ---------------- SELL / ITEM CONFIG ---------------- #
 # inv_key harus cocok dengan key di aquarium_data.json (nama item di DB)
@@ -656,9 +670,10 @@ MENU_STRUCTURE["G"] = {
 
 # di bawah LOGIN CHECK IN (G)
 MENU_STRUCTURE["H"] = {
-    "title": "📦 TREASURE CHEST (OWNER ONLY)",
+    "title": "📦 TREASURE CHEST",
     "buttons": [
-        ("KIRIM KE GROUP SEKARANG?", "TREASURE_SEND_NOW"),
+        ("📤 OWNER Only", "TREASURE_SEND_NOW"),
+        ("🎁 SEDEKAH TC (Share Umpan)", "TC_DROP_ADD"),
         ("⬅️ Back", "main")
     ]
 }
@@ -833,22 +848,15 @@ def make_keyboard(menu_key: str, user_id=None, page: int = 0) -> InlineKeyboardM
 # di bagian global module (atas file)
 # 🔹 DROP TABLE
 def get_treasure_drop():
-    """
-    Menentukan drop item dan tipe umpan.
-    Return: (item_name, jenis_umpan, jumlah)
-    """
+    """Drop default untuk chest OWNER."""
     drop_table = [
-        ("ZONK", None, 0, 10),                  # 40% zonk
-        ("Umpan Common", "A", 2, 50),           # 39% common
-        ("Umpan Rare", "B", 1, 29),             # 10% rare
-        ("Umpan Legend", "C", 0, 0.00000000001),# 1e-11% legend
-        ("Umpan Mythic", "D", 0, 0.00000000001),# 1e-11% mythic
+        ("ZONK", None, 0, 30),
+        ("Umpan Common", "A", 2, 55),
+        ("Umpan Rare", "B", 1, 15)
     ]
-
     total = sum(i[3] for i in drop_table)
     roll = random.uniform(0, total)
     current = 0
-
     for item, jenis, jumlah, chance in drop_table:
         current += chance
         if roll <= current:
@@ -904,7 +912,38 @@ async def callback_handler(client: Client, cq: CallbackQuery):
         await cq.message.edit_text(full_text, reply_markup=kb)
         return
     
+# ====================== TC DROP CLAIM ======================
+    if data == "tc_drop_claim":
+        chest = load_chest_data()
+        if not chest or not chest.get("active"):
+            await cq.answer("❌ Tidak ada TC DROP aktif.", show_alert=True)
+            return
 
+        if user_id in chest.get("claimed_users", []):
+            await cq.answer("❌ Kamu sudah klaim TC DROP ini.", show_alert=True)
+            return
+
+        if chest["total_claim"] >= chest["max_claim"]:
+            await cq.answer("❌ TC DROP sudah habis diklaim semua!", show_alert=True)
+            return
+
+        # Pilih random jenis umpan dari rewards
+        jenis_list = list(chest["rewards"].keys())
+        jenis = random.choice(jenis_list)
+        jumlah = 1
+
+        umpan.add_umpan(user_id, jenis, jumlah)
+        chest["claimed_users"].append(user_id)
+        chest["total_claim"] += 1
+
+        # Tutup chest jika sudah penuh
+        if chest["total_claim"] >= chest["max_claim"]:
+            chest["active"] = False
+
+        save_chest_data(chest)
+        await cq.message.reply(f"🎉 @{uname} berhasil klaim 1 umpan Type {jenis}!")
+        return
+    
 #Revisi Part ini aja
     # ===== EVOLVE SMALL FISH CONFIRM =====
     if data == "EVOLVE_SMALLFISH_CONFIRM":
@@ -1271,31 +1310,61 @@ async def callback_handler(client: Client, cq: CallbackQuery):
         )
         return
 
-    # ===== LOGIN HARIAN CALLBACK =====
-    if data == "LOGIN_TODAY":
-        init_user_login(user_id)
-        today = get_today_int()
-        user_login = LOGIN_STATE[user_id]
-        if user_login["last_login_day"] == today:
-            await cq.answer("❌ Kamu sudah absen hari ini!", show_alert=True)
+    # ====================== TC DROP ======================
+# === TC DROP ADD ===
+    # di dalam callback handler bagian TC_DROP_ADD
+    if data == "TC_DROP_ADD":
+        uid = cq.from_user.id
+        uname = cq.from_user.username or f"user{uid}"
+        jenis = "A"
+        jumlah = 10
+
+        # ambil stok user
+        user_data = umpan.get_user(uid)
+        stok = user_data.get(jenis, {}).get("umpan", 0)
+        print(f"[DEBUG] Stok {jenis} user {uid}: {stok}")
+
+        if stok < jumlah:
+            await cq.answer(f"❌ Umpan Type {jenis} kurang! (punya {stok}, butuh {jumlah})", show_alert=True)
             return
 
-        # update streak dan hari terakhir
-        user_login["streak"] += 1
-        user_login["last_login_day"] = today
+        # kurangi stok langsung
+        try:
+            umpan.remove_umpan(uid, jenis, jumlah)
+            print(f"[DEBUG] Umpan {jenis} dikurangi {jumlah} dari {uid}")
+        except ValueError as e:
+            await cq.answer(f"❌ Gagal kurangi umpan: {e}", show_alert=True)
+            return
 
-        # berikan 1 Umpan COMMON A jika belum pernah diterima
-        reward = STREAK_REWARDS.get(user_login["streak"], 10)  # max 10 umpan
-        reward_key = f"COMMON_{user_login['streak']}"  # track per streak
-        if reward_key not in user_login["umpan_given"]:
-            umpan.add_umpan(user_id, "A", reward)
-            user_login["umpan_given"].add(reward_key)
-            msg = f"🎉 Absen berhasil! Kamu mendapatkan {reward} Umpan COMMON 🐛. Streak: {user_login['streak']} hari."
-        else:
-            msg = f"✅ Absen berhasil! Tapi umpan sudah diterima sebelumnya. Streak: {user_login['streak']} hari."
+        # buat chest
+        chest_data = {
+            "active": True,
+            "owner_id": uid,
+            "owner_name": uname,
+            "rewards": {jenis: jumlah},
+            "total_claim": 0,
+            "max_claim": 10,
+            "claimed_users": []
+        }
+        save_chest_data(chest_data)
+        print(f"[DEBUG] Chest data disimpan untuk {uid}")
 
-        await cq.message.edit_text(msg, reply_markup=make_keyboard("G", user_id))
-        return
+        # kirim ke group
+        try:
+            await client.send_message(
+                TARGET_GROUP,
+                f"🎁 **{uname}** telah membuat TC DROP!\nBagikan umpan kepada semua player!",
+                reply_markup=InlineKeyboardMarkup(
+                    [[InlineKeyboardButton("🎁 Claim TC", callback_data="tc_drop_claim")]]
+                )
+            )
+            await cq.answer(f"✅ TC DROP berhasil dibuat ({jumlah} umpan Type {jenis})", show_alert=True)
+            print(f"[DEBUG] TC dikirim ke group oleh {uid}")
+        except Exception as e:
+            await cq.answer(f"❌ Gagal kirim TC ke group: {e}", show_alert=True)
+            # rollback umpan
+            umpan.add_umpan(uid, jenis, jumlah)
+            print(f"[DEBUG] Rollback umpan ke {uid}")
 
     # ===== RESET LOGIN (OWNER ONLY) =====
     if data == "LOGIN_RESET":
@@ -1717,6 +1786,9 @@ async def callback_handler(client: Client, cq: CallbackQuery):
 async def handle_transfer_message(client: Client, message: Message):
     uid = message.from_user.id
     uname = message.from_user.username or f"user{uid}"
+    
+    if TC_DROP_STATE.get(uid):
+        return
 
     # SELL AMOUNT via chat (user previously pressed SELL_START -> SELL_WAITING populated)
     if SELL_WAITING.get(uid):
@@ -1918,16 +1990,54 @@ async def handle_transfer_message(client: Client, message: Message):
             TUKAR_COIN_STATE.pop(uid, None)
         return
 
-# ---------------- SHOW LEADERBOARD ---------------- #
-async def show_leaderboard(cq: CallbackQuery, uid: int, page: int = 0):
-    pts = yapping.load_points()
-    sorted_pts = sorted(pts.items(), key=lambda x: x[1]["points"], reverse=True)
-    total_pages = max((len(sorted_pts) - 1) // 10, 0) if len(sorted_pts) > 0 else 0
-    start, end = page * 10, page * 10 + 10
-    text = f"🏆 Leaderboard Yapping (Page {page+1}/{total_pages+1}) 🏆\n\n"
-    for i, (u, pdata) in enumerate(sorted_pts[start:end], start=start + 1):
-        text += f"{i}. {pdata.get('username','Unknown')} - {pdata.get('points',0)} pts | Level {pdata.get('level',0)} {yapping.get_badge(pdata.get('level',0))}\n"
-    await cq.message.edit_text(text, reply_markup=make_keyboard("BBB", uid, page))
+# ================== HANDLE INPUT TC DROP ================== #
+# ================== HANDLE INPUT TC DROP ================== #
+@Client.on_message(filters.private & filters.text, group=1)
+async def handle_tc_drop_input(client, message):
+    global TC_DROP_STATE
+    uid = message.from_user.id
+    text = message.text.strip()
+
+    if not TC_DROP_STATE.get(uid):
+        return  # skip jika user tidak sedang input TC DROP
+
+    # regex untuk 10A / 10 A
+    match = re.match(r"^(\d+)\s*([aA])$", text, re.IGNORECASE)
+    if not match:
+        await message.reply("❌ Format salah. Gunakan 10A atau 10 A.")
+        return
+
+    jumlah = int(match.group(1))
+    jenis = match.group(2).upper()
+
+    user_data = umpan.get_user(uid)
+    if not user_data or user_data.get(jenis, {}).get("umpan", 0) < jumlah:
+        await message.reply(f"❌ Umpan Type {jenis} kamu kurang!")
+        return
+
+    # kurangi stok & buat chest
+    umpan.kurangi_umpan(uid, jenis, jumlah)
+    chest_data = {
+        "active": True,
+        "owner_id": uid,
+        "owner_name": message.from_user.username or f"user{uid}",
+        "rewards": {jenis: jumlah},
+        "total_claim": 0,
+        "max_claim": 10,
+        "claimed_users": []
+    }
+    save_chest_data(chest_data)
+
+    # kirim ke group
+    await client.send_message(
+        TARGET_GROUP,
+        f"🎁 **{message.from_user.username or f'user{uid}'}** telah membuat TC DROP!\nBagikan umpan kepada semua player!",
+        reply_markup=InlineKeyboardMarkup(
+            [[InlineKeyboardButton("🎁 Klaim TC DROP", callback_data="tc_drop_claim")]]
+        )
+    )
+    await message.reply(f"✅ TC DROP berhasil dibuat ({jumlah} umpan Type {jenis}).")
+    TC_DROP_STATE.pop(uid, None)
 
 # ---------------- SHOW LEADERBOARD ---------------- #
 async def show_leaderboard(cq: CallbackQuery, uid: int, page: int = 0):
@@ -1963,15 +2073,30 @@ def init_user_login(user_id: int):
             "umpan_given": set()
         }
 
-# ---------------- REGISTER HANDLERS ---------------- #
+# ---------------- REGISTER HANDLERS ---------------- #if TC_DROP_STATE.get(uid):
 def register(app: Client):
-    # register handlers already expected by your app:
+    """
+    Registrasi semua handler utama dari menu_utama.
+    Pastikan semua fungsi sudah dideklarasikan sebelum fungsi ini dipanggil.
+    """
+
+    # --- Menu handlers utama ---
     app.add_handler(MessageHandler(open_menu, filters.regex(r"^\.menufish$") & filters.private))
     app.add_handler(MessageHandler(open_menu_pm, filters.command("menu") & filters.private))
-    # this handler will also handle SELL amount input because SELL_WAITING is checked inside
+
+    # --- Handler transfer & input coin ---
     app.add_handler(MessageHandler(handle_transfer_message, filters.text & filters.private))
+
+    # --- Callback utama (semua tombol inline) ---
     app.add_handler(CallbackQueryHandler(callback_handler))
-    app.add_handler(MessageHandler(handle_transfer_message, filters.text & filters.private))
 
-    logger.info("[MENU] Handler menu_utama terdaftar.")
+    # --- Handler TC DROP (input dari DM) ---
+    try:
+        app.add_handler(MessageHandler(handle_tc_drop_input, filters.private & filters.text))
+        logger.info("✅ TC_DROP handler registered (filters.private & filters.text)")
+    except NameError:
+        logger.error("❌ handle_tc_drop_input belum terdefinisi! Pastikan fungsi ini ada di atas register().")
 
+    # --- Logging tambahan ---
+    logger.info("💬 menu_utama handlers registered (callback + tc_drop_input)")
+    print("[DEBUG] register(menu_utama) dipanggil ✅")
