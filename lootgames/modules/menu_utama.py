@@ -915,6 +915,7 @@ async def callback_handler(client: Client, cq: CallbackQuery):
 # ====================== TC DROP CLAIM ======================
     if data == "tc_drop_claim":
         chest = load_chest_data()
+
         if not chest or not chest.get("active"):
             await cq.answer("❌ Tidak ada TC DROP aktif.", show_alert=True)
             return
@@ -924,6 +925,8 @@ async def callback_handler(client: Client, cq: CallbackQuery):
             return
 
         if chest["total_claim"] >= chest["max_claim"]:
+            chest["active"] = False
+            save_chest_data(chest)
             await cq.answer("❌ TC DROP sudah habis diklaim semua!", show_alert=True)
             return
 
@@ -932,6 +935,7 @@ async def callback_handler(client: Client, cq: CallbackQuery):
         jenis = random.choice(jenis_list)
         jumlah = 1
 
+        # Tambahkan umpan ke user
         umpan.add_umpan(user_id, jenis, jumlah)
         chest["claimed_users"].append(user_id)
         chest["total_claim"] += 1
@@ -1314,57 +1318,44 @@ async def callback_handler(client: Client, cq: CallbackQuery):
 # === TC DROP ADD ===
     # di dalam callback handler bagian TC_DROP_ADD
     if data == "TC_DROP_ADD":
-        uid = cq.from_user.id
-        uname = cq.from_user.username or f"user{uid}"
-        jenis = "A"
-        jumlah = 10
+        uname = message.from_user.username or f"user{user_id}"
 
-        # ambil stok user
-        user_data = umpan.get_user(uid)
-        stok = user_data.get(jenis, {}).get("umpan", 0)
-        print(f"[DEBUG] Stok {jenis} user {uid}: {stok}")
+        # Cek TC DROP lama
+        old_chest = load_chest_data()
+        if old_chest and old_chest.get("active"):
+            rewards = old_chest["rewards"]
+            total_claim = old_chest.get("total_claim", 0)
+            owner_id_old = old_chest["owner_id"]
 
-        if stok < jumlah:
-            await cq.answer(f"❌ Umpan Type {jenis} kurang! (punya {stok}, butuh {jumlah})", show_alert=True)
-            return
+            # Refund sisa umpan ke owner lama
+            for jenis, jumlah in rewards.items():
+                sisa_jenis = jumlah - total_claim  # sisa yang belum diklaim
+                if sisa_jenis > 0:
+                    umpan.tambah_umpan(owner_id_old, jenis, sisa_jenis)
 
-        # kurangi stok langsung
-        try:
-            umpan.remove_umpan(uid, jenis, jumlah)
-            print(f"[DEBUG] Umpan {jenis} dikurangi {jumlah} dari {uid}")
-        except ValueError as e:
-            await cq.answer(f"❌ Gagal kurangi umpan: {e}", show_alert=True)
-            return
+            old_chest["active"] = False
+            save_chest_data(old_chest)
+            await message.reply(
+                f"⚠️ TC DROP sebelumnya dibatalkan. Sisa umpan dikembalikan ke @{old_chest['owner_name']}."
+            )
 
-        # buat chest
+        # Buat TC DROP baru otomatis
+        jumlah_default = 10  # jumlah umpan default
         chest_data = {
             "active": True,
-            "owner_id": uid,
+            "owner_id": user_id,
             "owner_name": uname,
-            "rewards": {jenis: jumlah},
+            "rewards": {"A": jumlah_default},
             "total_claim": 0,
-            "max_claim": 10,
+            "max_claim": jumlah_default,
             "claimed_users": []
         }
         save_chest_data(chest_data)
-        print(f"[DEBUG] Chest data disimpan untuk {uid}")
 
-        # kirim ke group
-        try:
-            await client.send_message(
-                TARGET_GROUP,
-                f"🎁 **{uname}** telah membuat TC DROP!\nBagikan umpan kepada semua player!",
-                reply_markup=InlineKeyboardMarkup(
-                    [[InlineKeyboardButton("🎁 Claim TC", callback_data="tc_drop_claim")]]
-                )
-            )
-            await cq.answer(f"✅ TC DROP berhasil dibuat ({jumlah} umpan Type {jenis})", show_alert=True)
-            print(f"[DEBUG] TC dikirim ke group oleh {uid}")
-        except Exception as e:
-            await cq.answer(f"❌ Gagal kirim TC ke group: {e}", show_alert=True)
-            # rollback umpan
-            umpan.add_umpan(uid, jenis, jumlah)
-            print(f"[DEBUG] Rollback umpan ke {uid}")
+        await message.reply(
+            f"✅ TC DROP baru berhasil dibuat oleh @{uname} dengan {jumlah_default} umpan Common (A)."
+        )
+        return
 
     # ===== RESET LOGIN (OWNER ONLY) =====
     if data == "LOGIN_RESET":
@@ -2100,3 +2091,4 @@ def register(app: Client):
     # --- Logging tambahan ---
     logger.info("💬 menu_utama handlers registered (callback + tc_drop_input)")
     print("[DEBUG] register(menu_utama) dipanggil ✅")
+
