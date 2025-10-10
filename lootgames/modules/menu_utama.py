@@ -1,4 +1,3 @@
-#FIX 05:52
 # lootgames/modules/menu_utama.py Test Nonaktif Umpan Rare
 import os
 import logging
@@ -60,6 +59,18 @@ os.makedirs(os.path.dirname(DB_FILE), exist_ok=True)
 AUTO_FISH_TASKS = {}
 user_last_fishing = defaultdict(lambda: 0)  # cooldown 10 detik per user
 user_task_count = defaultdict(lambda: 0)   # generate task ID unik per user
+
+#tc owner
+def save_chest_db(data):
+    os.makedirs(os.path.dirname(CHEST_DB), exist_ok=True)
+    with open(CHEST_DB, "w") as f:
+        json.dump(data, f)
+
+def load_chest_db():
+    if not os.path.exists(CHEST_DB):
+        return None
+    with open(CHEST_DB, "r") as f:
+        return json.load(f)  #tc owner
 
 # ---------------- HELPER LOAD / SAVE ---------------- #
 def _load_db() -> dict:
@@ -1282,17 +1293,38 @@ async def callback_handler(client: Client, cq: CallbackQuery):
             await cq.answer("❌ Hanya owner yang bisa akses menu ini.", show_alert=True)
             return
 
-        # 🔹 Reset claim
-        CLAIMED_CHEST_USERS.clear()
+        # 🔹 Load chest lama
+        old_chest = load_chest_db()
+        if old_chest and old_chest.get("active"):
+            owner_id_old = old_chest["owner_id"]
+            rewards_old = old_chest.get("rewards", {})
+            claimed_users_old = set(old_chest.get("claimed_users", []))
 
-        # 🔹 Hapus pesan chest lama
-        if LAST_TREASURE_MSG_ID is not None:
-            try:
-                await cq._client.delete_messages(TARGET_GROUP, LAST_TREASURE_MSG_ID)
-            except Exception as e:
-                logger.warning(f"Gagal hapus Treasure Chest lama: {e}")
+            # Refund sisa umpan ke owner lama
+            for jenis, jumlah in rewards_old.items():
+                sisa = jumlah - len(claimed_users_old)
+                if sisa > 0:
+                    umpan.tambah_umpan(owner_id_old, jenis, sisa)
+
+            old_chest["active"] = False
+            save_chest_db(old_chest)
+            await cq.message.reply(
+                f"⚠️ Treasure Chest sebelumnya dibatalkan. Sisa umpan dikembalikan ke @{old_chest['owner_name']}."
+            )
 
         # 🔹 Kirim Treasure Chest baru
+        jumlah_default = 10
+        uname = cq.from_user.username or f"user{user_id}"
+        chest_data = {
+            "active": True,
+            "owner_id": user_id,
+            "owner_name": uname,
+            "rewards": {"A": jumlah_default},
+            "claimed_users": [],
+            "max_claim": jumlah_default
+        }
+        save_chest_db(chest_data)
+
         try:
             msg = await cq._client.send_message(
                 TARGET_GROUP,
@@ -2091,3 +2123,4 @@ def register(app: Client):
     # --- Logging tambahan ---
     logger.info("💬 menu_utama handlers registered (callback + tc_drop_input)")
     print("[DEBUG] register(menu_utama) dipanggil ✅")
+
