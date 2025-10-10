@@ -887,426 +887,38 @@ def list_full_inventory(user_id: int) -> str:
     return result
 
 # ---------------- CALLBACK HANDLER ---------------- #
-async def callback_handler(client: Client, cq: CallbackQuery):
-    data = cq.data
+
+
+    elif data == "D2C_COMMON_B":
+        uid = cq.from_user.id
+        total_coin = fizz_coin.get_coin(uid)
+        TUKAR_COIN_STATE[uid] = {"jenis": "B"}
+        await cq.message.edit_text(
+            f"🪱 Kamu punya {total_coin} fizz coin.\n\n"
+            f"Masukkan jumlah coin yang ingin kamu tukarkan.\n"
+            f"(50 coin = 1 umpan Rare Type B)\n\n"
+            f"Contoh: `50` untuk menukar 50 coin jadi 1 umpan.",
+            reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("⬅️ Batal", callback_data="D2C_MENU")]])
+        )
+        return
+    
+    # FISHING
+# TEST AUTO FISHING
+
+# ======================= CALLBACK HANDLER FINAL REVISI ======================= #
+async def callback_handler(client, cq):
     user_id = cq.from_user.id
-    # <-- Pastikan uname didefinisikan di sini
+    data = cq.data
     uname = cq.from_user.username or f"user{user_id}"
 
-    # ====== MENU HASIL TANGKAPAN (LIHAT INVENTORY LENGKAP) ======
+    # ======== MENU CEK INVENTORY FULL ========
     if data == "FFF":
         full_text = list_full_inventory(user_id)
         kb = InlineKeyboardMarkup([[InlineKeyboardButton("⬅️ Back", callback_data="F")]])
         await cq.message.edit_text(full_text, reply_markup=kb)
         return
-    
-    # ===== EVOLVE SMALL FISH CONFIRM =====
-    if data == "EVOLVE_SMALLFISH_CONFIRM":
-        inv = aquarium.get_user_fish(user_id)
-        small_fish_qty = inv.get("𓆝 Small Fish", 0)
 
-        if small_fish_qty < 1000:
-            await cq.answer("❌ Small Fish kamu kurang (butuh 1000)", show_alert=True)
-            return
-
-        # ✅ Kurangi stok Small Fish
-        inv["𓆝 Small Fish"] = small_fish_qty - 1000
-        if inv["𓆝 Small Fish"] <= 0:
-            inv.pop("𓆝 Small Fish")
-
-        # ✅ Tambahkan Dark Fish Warrior
-        inv["👹 Dark Fish Warrior"] = inv.get("👹 Dark Fish Warrior", 0) + 1
-
-        # ✅ Simpan kembali
-        db = aquarium.load_data()
-        db[str(user_id)] = inv
-        aquarium.save_data(db)
-
-        uname = cq.from_user.username or f"user{user_id}"
-
-        # ✅ Balasan private ke user
-        inv_text = aquarium.list_inventory(user_id)
-        await cq.message.edit_text(
-            f"✅ Evolve berhasil!\n"
-            f"𓆝 Small Fish -1000\n"
-            f"🧬 Dark Fish Warrior +1\n\n"
-            f"📦 Inventory terbaru:\n{inv_text}",
-            reply_markup=make_keyboard("I", user_id)
-        )
-
-        # ✅ Info ke group
-        # ✅ Info ke group + pin pesan
-        try:
-            msg = await client.send_message(
-                TARGET_GROUP,
-                f"🧬 @{uname} berhasil evolve!\n"
-                f"🧬 Small Fish → 👹 Dark Fish Warrior 🎉"
-            )
-            # ✅ Pin pesan ini tanpa menghapus pin lama
-            await client.pin_chat_message(TARGET_GROUP, msg.id, disable_notification=True)
-        except Exception as e:
-            logger.error(f"Gagal kirim atau pin info evolve ke group: {e}")
-
-    # ===== EVOLVE HERMIT CRAB CONFIRM =====
-    if data == "EVOLVE_SNAIL_CONFIRM":
-        inv = aquarium.get_user_fish(user_id)
-        snail_qty = inv.get("🐌 Snail", 0)
-
-        if snail_qty < 1000:
-            await cq.answer("❌ Hermit Crab kamu kurang (butuh 1000)", show_alert=True)
-            return
-
-        # ✅ Kurangi stok Hermit Crab
-        inv["🐌 Snail"] = snail_qty - 1000
-        if inv["🐌 Snail"] <= 0:
-            inv.pop("🐌 Snail")
-
-        # ✅ Tambahkan 🐉 Snail Dragon
-        inv["🐉 Snail Dragon"] = inv.get("🐉 Snail Dragon", 0) + 1
-
-        # ✅ Simpan kembali
-        db = aquarium.load_data()
-        db[str(user_id)] = inv
-        aquarium.save_data(db)
-
-        # ✅ Balasan private ke user
-        inv_text = aquarium.list_inventory(user_id)
-        await cq.message.edit_text(
-            f"✅ Evolve berhasil!\n"
-            f"🐌 Snail -1000\n"
-            f"🧬 🐉 Snail Dragon +1\n\n"
-            f"📦 Inventory terbaru:\n{inv_text}",
-            reply_markup=make_keyboard("I", user_id)
-        )
-
-        # ✅ Info ke group
-        try:
-            msg = await client.send_message(
-                TARGET_GROUP,
-                f"🧬 @{uname} berhasil evolve!\n"
-                f"🧬 Snail → 🐉 Snail Dragon 🎉"
-            )
-            await client.pin_chat_message(TARGET_GROUP, msg.id, disable_notification=True)
-        except Exception as e:
-            logger.error(f"Gagal kirim atau pin info evolve ke group: {e}")
-    
-    # ===== EVOLVE HERMIT CRAB CONFIRM =====
-    if data == "EVOLVE_HERMITCRAB_CONFIRM":
-        inv = aquarium.get_user_fish(user_id)
-        hermit_crab_qty = inv.get("🐚 Hermit Crab", 0)
-
-        if hermit_crab_qty < 1000:
-            await cq.answer("❌ Hermit Crab kamu kurang (butuh 1000)", show_alert=True)
-            return
-
-        # ✅ Kurangi stok Hermit Crab
-        inv["🐚 Hermit Crab"] = hermit_crab_qty - 1000
-        if inv["🐚 Hermit Crab"] <= 0:
-            inv.pop("🐚 Hermit Crab")
-
-        # ✅ Tambahkan 👑 Queen of Hermit
-        inv["👑 Queen of Hermit"] = inv.get("👑 Queen of Hermit", 0) + 1
-
-        # ✅ Simpan kembali
-        db = aquarium.load_data()
-        db[str(user_id)] = inv
-        aquarium.save_data(db)
-
-        # ✅ Balasan private ke user
-        inv_text = aquarium.list_inventory(user_id)
-        await cq.message.edit_text(
-            f"✅ Evolve berhasil!\n"
-            f"🐚 Hermit Crab -1000\n"
-            f"🧬 👑 Queen of Hermit +1\n\n"
-            f"📦 Inventory terbaru:\n{inv_text}",
-            reply_markup=make_keyboard("I", user_id)
-        )
-
-        # ✅ Info ke group
-        try:
-            msg = await client.send_message(
-                TARGET_GROUP,
-                f"🧬 @{uname} berhasil evolve!\n"
-                f"🧬 Hermit Crab → 👑 Queen of Hermit 🎉"
-            )
-            await client.pin_chat_message(TARGET_GROUP, msg.id, disable_notification=True)
-        except Exception as e:
-            logger.error(f"Gagal kirim atau pin info evolve ke group: {e}")
-
-        # ===== EVOLVE FROG CONFIRM =====
-    if data == "EVOLVE_FROG_CONFIRM":
-        inv = aquarium.get_user_fish(user_id)
-        frog_qty = inv.get("🐸 Frog", 0)
-
-        if frog_qty < 1000:
-            await cq.answer("❌ Frog kamu kurang (butuh 1000)", show_alert=True)
-            return
-
-        # ✅ Kurangi stok Frog
-        inv["🐸 Frog"] = frog_qty - 1000
-        if inv["🐸 Frog"] <= 0:
-            inv.pop("🐸 Frog")
-
-        # ✅ Tambahkan 🤖 Mecha Frog
-        inv["🤖 Mecha Frog"] = inv.get("🤖 Mecha Frog", 0) + 1
-
-        # ✅ Simpan ke database
-        db = aquarium.load_data()
-        db[str(user_id)] = inv
-        aquarium.save_data(db)
-
-        uname = cq.from_user.username or f"user{user_id}"
-
-        # ✅ Balasan ke user
-        inv_text = aquarium.list_inventory(user_id)
-        await cq.message.edit_text(
-            f"✅ Evolve berhasil!\n"
-            f"🐸 Frog -1000\n"
-            f"🧬 🤖 Mecha Frog +1\n\n"
-            f"📦 Inventory terbaru:\n{inv_text}",
-            reply_markup=make_keyboard("I", user_id)
-        )
-
-        # ✅ Info ke group + pin pesan
-        try:
-            msg = await client.send_message(
-                TARGET_GROUP,
-                f"🧬 @{uname} berhasil evolve!\n"
-                f"Frog → 🤖 Mecha Frog 🎉"
-            )
-            await client.pin_chat_message(TARGET_GROUP, msg.id, disable_notification=True)
-        except Exception as e:
-            logger.error(f"Gagal kirim atau pin info evolve ke group: {e}")
-
-
-    # ===== EVOLVE SNAKE CONFIRM =====
-    if data == "EVOLVE_QUEENOFMEDUSA_CONFIRM":
-        inv = aquarium.get_user_fish(user_id)
-        snake_qty = inv.get("🐍 Snake", 0)
-
-        if snake_qty < 1000:
-            await cq.answer("❌ Snake kamu kurang (butuh 1000)", show_alert=True)
-            return
-
-        # ✅ Kurangi stok Snake
-        inv["🐍 Snake"] = snake_qty - 1000
-        if inv["🐍 Snake"] <= 0:
-            inv.pop("🐍 Snake")
-
-        # ✅ Tambahkan 👑 Queen Of Medusa 🐍
-        inv["👑 Queen Of Medusa 🐍"] = inv.get("👑 Queen Of Medusa 🐍", 0) + 1
-
-        # ✅ Simpan ke database
-        db = aquarium.load_data()
-        db[str(user_id)] = inv
-        aquarium.save_data(db)
-
-        uname = cq.from_user.username or f"user{user_id}"
-
-        # ✅ Balasan ke user
-        inv_text = aquarium.list_inventory(user_id)
-        await cq.message.edit_text(
-            f"✅ Evolve berhasil!\n"
-            f"🐍 Snake -1000\n"
-            f"🧬 👑 Queen Of Medusa 🐍 +1\n\n"
-            f"📦 Inventory terbaru:\n{inv_text}",
-            reply_markup=make_keyboard("I", user_id)
-        )
-
-        # ✅ Info ke group + pin pesan
-        try:
-            msg = await client.send_message(
-                TARGET_GROUP,
-                f"🧬 @{uname} berhasil evolve!\n"
-                f"Snake → 👑 Queen Of Medusa 🐍 🎉"
-            )
-            await client.pin_chat_message(TARGET_GROUP, msg.id, disable_notification=True)
-        except Exception as e:
-            logger.error(f"Gagal kirim atau pin info evolve ke group: {e}")
-
-    # di dalam async def callback_handler(client: Client, cq: CallbackQuery):
-    # ================== PLAYER CLAIM CHEST ==================
-    if data == "treasure_chest":
-        # pastikan ada lock per user
-        async with USER_CLAIM_LOCKS_LOCK:
-            lock = USER_CLAIM_LOCKS.get(user_id)
-            if lock is None:
-                lock = asyncio.Lock()
-                USER_CLAIM_LOCKS[user_id] = lock
-
-        async with lock:
-            if user_id in CLAIMED_CHEST_USERS:
-                await cq.answer("❌ Kamu sudah mengklaim Treasure Chest ini sebelumnya!", show_alert=True)
-                return
-
-            await asyncio.sleep(3)  # efek dramatis
-
-            # 🎲 Tentukan drop
-            item, jenis, jumlah = get_treasure_drop()
-
-            if item == "ZONK":
-                msg = f"😢 @{uname} mendapatkan ZONK!"
-            else:
-                msg = f"🎉 @{uname} mendapatkan {jumlah} pcs 🐛{item}!"
-                try:
-                    umpan.add_umpan(user_id, jenis, jumlah)
-                except Exception as e:
-                    logger.error(f"Gagal tambah umpan ke user {user_id}: {e}")
-
-            # tandai user sudah claim
-            CLAIMED_CHEST_USERS.add(user_id)
-
-            await cq.message.reply(msg)
-            return
-
-    # ================== TREASURE CHEST OWNER ==================
-    if data == "TREASURE_SEND_NOW":
-        global LAST_TREASURE_MSG_ID
-
-        if user_id != OWNER_ID:
-            await cq.answer("❌ Hanya owner yang bisa akses menu ini.", show_alert=True)
-            return
-
-        # 🔹 Reset claim
-        CLAIMED_CHEST_USERS.clear()
-
-        # 🔹 Hapus pesan chest lama
-        if LAST_TREASURE_MSG_ID is not None:
-            try:
-                await cq._client.delete_messages(TARGET_GROUP, LAST_TREASURE_MSG_ID)
-            except Exception as e:
-                logger.warning(f"Gagal hapus Treasure Chest lama: {e}")
-
-        # 🔹 Kirim Treasure Chest baru
-        try:
-            msg = await cq._client.send_message(
-                TARGET_GROUP,
-                "📦 **Treasure Chest telah dikirim oleh OWNER!**\n"
-                "Cepat klaim sebelum terlambat! 🎁",
-                reply_markup=InlineKeyboardMarkup(
-                    [[InlineKeyboardButton("🔑 Buka Treasure Chest", callback_data="treasure_chest")]]
-                )
-            )
-            LAST_TREASURE_MSG_ID = msg.id
-        except Exception as e:
-            logger.error(f"Gagal kirim Treasure Chest: {e}")
-
-        await cq.message.edit_text(
-            "✅ Treasure Chest berhasil dikirim ke group!",
-            reply_markup=InlineKeyboardMarkup(
-                [[InlineKeyboardButton("⬅️ Kembali", callback_data="H")]]
-            )
-        )
-        return
-
-    # ===== LOGIN HARIAN CALLBACK =====
-    if data == "LOGIN_TODAY":
-        init_user_login(user_id)
-        today = get_today_int()
-        user_login = LOGIN_STATE[user_id]
-        if user_login["last_login_day"] == today:
-            await cq.answer("❌ Kamu sudah absen hari ini!", show_alert=True)
-            return
-
-        # update streak dan hari terakhir
-        user_login["streak"] += 1
-        user_login["last_login_day"] = today
-
-        # berikan 1 Umpan COMMON A jika belum pernah diterima
-        reward = STREAK_REWARDS.get(user_login["streak"], 10)  # max 10 umpan
-        reward_key = f"COMMON_{user_login['streak']}"  # track per streak
-        if reward_key not in user_login["umpan_given"]:
-            umpan.add_umpan(user_id, "A", reward)
-            user_login["umpan_given"].add(reward_key)
-            msg = f"🎉 Absen berhasil! Kamu mendapatkan {reward} Umpan COMMON 🐛. Streak: {user_login['streak']} hari."
-        else:
-            msg = f"✅ Absen berhasil! Tapi umpan sudah diterima sebelumnya. Streak: {user_login['streak']} hari."
-
-        await cq.message.edit_text(msg, reply_markup=make_keyboard("G", user_id))
-        return
-
-    # ===== RESET LOGIN (OWNER ONLY) =====
-    if data == "LOGIN_RESET":
-        if user_id != OWNER_ID:
-            await cq.answer("❌ Hanya owner yang bisa reset login.", show_alert=True)
-            return
-        LOGIN_STATE.clear()
-        await cq.message.edit_text("✅ Semua data login harian telah direset.", reply_markup=make_keyboard("G", user_id))
-        return
-
-    elif data == "LOGIN_STATUS":
-        # tampilkan 7 hari terakhir streak user
-        init_user_login(user_id)
-        user_login = LOGIN_STATE[user_id]
-        streak = user_login["streak"]
-
-        status_text = "📅 Status LOGIN 7 Hari Terakhir:\n"
-        for i in range(7):
-            status_text += f"LOGIN-{i+1}: "
-            status_text += "✅" if streak >= i + 1 else "❌"
-            status_text += "\n"
-
-        await cq.message.edit_text(status_text, reply_markup=make_keyboard("G", user_id))
-        return
-
-    # MENU OPEN untuk login, tombol navigasi
-    elif data == "G":
-        # tampilkan menu LOGIN HARIAN
-        buttons = [
-            [InlineKeyboardButton("✅ Absen Hari Ini", callback_data="LOGIN_TODAY")],
-            [InlineKeyboardButton("📅 Lihat Status Login 7 Hari", callback_data="LOGIN_STATUS")],
-            [InlineKeyboardButton("⬅️ Back", callback_data="main")]
-        ]
-        kb = InlineKeyboardMarkup(buttons)
-        await cq.message.edit_text("📋 LOGIN HARIAN", reply_markup=kb)
-        return
-
-    # ---------------- REGISTER FLOW ---------------- #
-    if data == "REGISTER_YES":
-        uname = cq.from_user.username or "TanpaUsername"
-        text = "🎉 Selamat kamu menjadi Player Loot!"
-        kb = InlineKeyboardMarkup([
-            [InlineKeyboardButton("📇 SCAN ID & USN", callback_data="REGISTER_SCAN")],
-            [InlineKeyboardButton("⬅️ Back", callback_data="main")]
-        ])
-        await cq.message.edit_text(text, reply_markup=kb)
-        user_database.set_player_loot(user_id, True, uname)
-        try:
-            await client.send_message(
-                OWNER_ID,
-                f"📢 [REGISTER] Player baru mendaftar!\n\n👤 Username: @{uname}\n🆔 User ID: {user_id}"
-            )
-        except Exception as e:
-            logger.error(f"Gagal kirim notif register ke owner: {e}")
-        return
-
-    if data == "REGISTER_SCAN":
-        uname = cq.from_user.username or "TanpaUsername"
-        text = f"📇 Data Player\n\n👤 Username: @{uname}\n🆔 User ID: {user_id}"
-        await cq.message.edit_text(text, reply_markup=make_keyboard("main", user_id))
-        return
-
-    # TRANSFER START
-    if data.startswith("TRANSFER_"):
-        jenis = data.split("_")[1]
-        map_jenis = {"COMMON": "A", "RARE": "B", "LEGEND": "C", "MYTHIC": "D"}
-
-        # 🔒 Batasi transfer umpan Rare hanya untuk OWNER
-        if jenis == "RARE" and user_id != OWNER_ID:
-            await cq.answer("❌ Hanya OWNER yang bisa transfer Umpan Rare 🐌.", show_alert=True)
-            return
-
-        TRANSFER_STATE[user_id] = {"jenis": map_jenis.get(jenis)}
-        await cq.message.reply("✍️ Masukkan format transfer: `@username jumlah`\nContoh: `@user 2`")
-        return
-
-    # CHECK COIN Fizz
-    # ================= CEK COIN & SUBMENU ================= #
-async def callback_handler(client, cq):
-    user_id = cq.from_user.id
-    data = cq.data
-    uname = cq.from_user.username or f"user{user_id}"
-    
+    # ======== MENU CEK COIN & PENUKARAN ========
     if data == "D2C":
         kb = make_keyboard("D2C_MENU", cq.from_user.id)
         await cq.message.edit_text("💰 Pilih menu tukar coin:", reply_markup=kb)
@@ -1337,55 +949,162 @@ async def callback_handler(client, cq):
             reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("⬅️ Batal", callback_data="D2C_MENU")]])
         )
         return
-    
-    # FISHING
-# TEST AUTO FISHING
-# ----------------- FUNGSI MEMANCING -----------------
-async def fishing_task(client, uname, user_id, jenis, task_id, auto_mode=False):
-    try:
-        await asyncio.sleep(2)
-        # Hanya tampilkan pesan manual
-        if not auto_mode:
-            # await client.send_message(TARGET_GROUP, f"```\n🎣 @{uname} trying to catch... task#{task_id}```\n")
-            pass
 
-        # Jalankan loot system
-        loot_result = await fishing_loot(client, None, uname, user_id, umpan_type=jenis)
+    # ======== EVOLVE SYSTEM (SEMUA MONSTER) ========
+    evolve_map = {
+        "EVOLVE_SMALLFISH_CONFIRM": ("𓆝 Small Fish", 1000, "👹 Dark Fish Warrior", "Dark Fish Warrior"),
+        "EVOLVE_SNAIL_CONFIRM": ("🐌 Snail", 1000, "🐉 Snail Dragon", "Snail Dragon"),
+        "EVOLVE_HERMITCRAB_CONFIRM": ("🐚 Hermit Crab", 1000, "👑 Queen of Hermit", "Queen of Hermit"),
+        "EVOLVE_FROG_CONFIRM": ("🐸 Frog", 1000, "🤖 Mecha Frog", "Mecha Frog"),
+        "EVOLVE_QUEENOFMEDUSA_CONFIRM": ("🐍 Snake", 1000, "👑 Queen Of Medusa 🐍", "Queen Of Medusa 🐍"),
+    }
+    if data in evolve_map:
+        src, need, dest, logname = evolve_map[data]
+        inv = aquarium.get_user_fish(user_id)
+        have = inv.get(src, 0)
+        if have < need:
+            await cq.answer(f"❌ {src} kamu kurang (butuh {need})", show_alert=True)
+            return
+        inv[src] = have - need
+        if inv[src] <= 0:
+            inv.pop(src)
+        inv[dest] = inv.get(dest, 0) + 1
+        db = aquarium.load_data()
+        db[str(user_id)] = inv
+        aquarium.save_data(db)
+        inv_text = aquarium.list_inventory(user_id)
+        await cq.message.edit_text(
+            f"✅ Evolve berhasil!\n{src} -{need}\n🧬 {dest} +1\n\n📦 Inventory terbaru:\n{inv_text}",
+            reply_markup=make_keyboard("I", user_id)
+        )
+        try:
+            msg = await client.send_message(TARGET_GROUP, f"🧬 @{uname} berhasil evolve!\n{src} → {dest} 🎉")
+            await client.pin_chat_message(TARGET_GROUP, msg.id, disable_notification=True)
+        except Exception as e:
+            logger.error(f"Gagal kirim info evolve: {e}")
+        return
 
-        # Kurangi umpan setelah hasil drop
-        jk_map = {"COMMON": "A", "RARE": "B", "LEGEND": "C", "MYTHIC": "D"}
-        jk = jk_map.get(jenis, "A")
+    # ======== LOGIN / ABSEN HARIAN ========
+    if data == "LOGIN_TODAY":
+        init_user_login(user_id)
+        today = get_today_int()
+        user_login = LOGIN_STATE[user_id]
+        if user_login["last_login_day"] == today:
+            await cq.answer("❌ Kamu sudah absen hari ini!", show_alert=True)
+            return
+        user_login["streak"] += 1
+        user_login["last_login_day"] = today
+        reward = STREAK_REWARDS.get(user_login["streak"], 10)
+        reward_key = f"COMMON_{user_login['streak']}"
+        if reward_key not in user_login["umpan_given"]:
+            umpan.add_umpan(user_id, "A", reward)
+            user_login["umpan_given"].add(reward_key)
+            msg = f"🎉 Absen berhasil! Kamu dapat {reward} Umpan COMMON 🐛."
+        else:
+            msg = f"✅ Absen berhasil! Tapi umpan sudah diterima sebelumnya."
+        await cq.message.edit_text(msg, reply_markup=make_keyboard("G", user_id))
+        return
 
+    if data == "LOGIN_STATUS":
+        init_user_login(user_id)
+        user_login = LOGIN_STATE[user_id]
+        streak = user_login["streak"]
+        status_text = "📅 Status LOGIN 7 Hari Terakhir:\n"
+        for i in range(7):
+            status_text += f"LOGIN-{i+1}: {'✅' if streak >= i+1 else '❌'}\n"
+        await cq.message.edit_text(status_text, reply_markup=make_keyboard("G", user_id))
+        return
+
+    if data == "LOGIN_RESET":
         if user_id != OWNER_ID:
-            ud = umpan.get_user(user_id)
-            if not ud or ud.get(jk, {}).get("umpan", 0) <= 0:
-                if auto_mode:
-                    return  # skip saat auto jika umpan habis
-                await client.send_message(user_id, "❌ Umpanmu habis, hasil pancingan ini batal.")
+            await cq.answer("❌ Hanya owner yang bisa reset login.", show_alert=True)
+            return
+        LOGIN_STATE.clear()
+        await cq.message.edit_text("✅ Semua data login direset.", reply_markup=make_keyboard("G", user_id))
+        return
+
+    # ======== TREASURE CHEST ========
+    if data == "treasure_chest":
+        async with USER_CLAIM_LOCKS_LOCK:
+            lock = USER_CLAIM_LOCKS.get(user_id)
+            if lock is None:
+                lock = asyncio.Lock()
+                USER_CLAIM_LOCKS[user_id] = lock
+        async with lock:
+            if user_id in CLAIMED_CHEST_USERS:
+                await cq.answer("❌ Kamu sudah klaim Treasure Chest ini!", show_alert=True)
                 return
-            umpan.remove_umpan(user_id, jk, 1)
+            await asyncio.sleep(3)
+            item, jenis, jumlah = get_treasure_drop()
+            if item == "ZONK":
+                msg = f"😢 @{uname} mendapatkan ZONK!"
+            else:
+                msg = f"🎉 @{uname} mendapatkan {jumlah} pcs 🐛{item}!"
+                try:
+                    umpan.add_umpan(user_id, jenis, jumlah)
+                except Exception as e:
+                    logger.error(f"Gagal tambah umpan ke user {user_id}: {e}")
+            CLAIMED_CHEST_USERS.add(user_id)
+            await cq.message.reply(msg)
+            return
 
-        await asyncio.sleep(10)
-        # Kirim hasil drop ke grup
-        msg_group = f"🎣 @{uname} got {loot_result}! from task#{task_id}"
-        await client.send_message(TARGET_GROUP, msg_group)
+    if data == "TREASURE_SEND_NOW":
+        global LAST_TREASURE_MSG_ID
+        if user_id != OWNER_ID:
+            await cq.answer("❌ Hanya owner yang bisa akses menu ini.", show_alert=True)
+            return
+        CLAIMED_CHEST_USERS.clear()
+        if LAST_TREASURE_MSG_ID is not None:
+            try:
+                await cq._client.delete_messages(TARGET_GROUP, LAST_TREASURE_MSG_ID)
+            except Exception as e:
+                logger.warning(f"Gagal hapus pesan chest lama: {e}")
+        msg = await cq._client.send_message(
+            TARGET_GROUP,
+            "📦 **Treasure Chest telah dikirim oleh OWNER!**\nKlaim sekarang sebelum terlambat 🎁",
+            reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("🔑 Buka Treasure Chest", callback_data="treasure_chest")]])
+        )
+        LAST_TREASURE_MSG_ID = msg.id
+        await cq.message.edit_text("✅ Treasure Chest berhasil dikirim!", reply_markup=make_keyboard("H", user_id))
+        return
 
-    except Exception as e:
-        logger.error(f"[FISHING TASK] Error untuk @{uname}: {e}")
+    # ======== REGISTER PLAYER ========
+    if data == "REGISTER_YES":
+        uname = cq.from_user.username or "TanpaUsername"
+        text = "🎉 Selamat kamu menjadi Player Loot!"
+        kb = InlineKeyboardMarkup([
+            [InlineKeyboardButton("📇 SCAN ID & USN", callback_data="REGISTER_SCAN")],
+            [InlineKeyboardButton("⬅️ Back", callback_data="main")]
+        ])
+        await cq.message.edit_text(text, reply_markup=kb)
+        user_database.set_player_loot(user_id, True, uname)
+        try:
+            await client.send_message(OWNER_ID, f"📢 [REGISTER] Player baru mendaftar!\n\n👤 @{uname}\n🆔 {user_id}")
+        except Exception as e:
+            logger.error(f"Gagal kirim notif register: {e}")
+        return
 
-# ----------------- CALLBACK HANDLER -----------------
-async def callback_handler(client, cq):
-    user_id = cq.from_user.id
-    data = cq.data
-    uname = cq.from_user.username or f"user{user_id}"
+    if data == "REGISTER_SCAN":
+        uname = cq.from_user.username or "TanpaUsername"
+        text = f"📇 Data Player\n\n👤 @{uname}\n🆔 {user_id}"
+        await cq.message.edit_text(text, reply_markup=make_keyboard("main", user_id))
+        return
 
-    # ----------------- FISHING MANUAL -----------------
+    # ======== TRANSFER UMPAN ========
+    if data.startswith("TRANSFER_"):
+        jenis = data.split("_")[1]
+        map_jenis = {"COMMON": "A", "RARE": "B", "LEGEND": "C", "MYTHIC": "D"}
+        if jenis == "RARE" and user_id != OWNER_ID:
+            await cq.answer("❌ Hanya OWNER yang bisa transfer Umpan Rare 🐌.", show_alert=True)
+            return
+        TRANSFER_STATE[user_id] = {"jenis": map_jenis.get(jenis)}
+        await cq.message.reply("✍️ Format: `@username jumlah`\nContoh: `@user 2`")
+        return
+
+    # ======== FISHING MANUAL ========
     if data.startswith("FISH_CONFIRM_"):
         jenis = data.replace("FISH_CONFIRM_", "")
-
         kb_back = InlineKeyboardMarkup([[InlineKeyboardButton("⬅️ Back", callback_data="E")]])
-
-        # Cek stok umpan tanpa mengurangi
         jk_map = {"COMMON": "A", "RARE": "B", "LEGEND": "C", "MYTHIC": "D"}
         jk = jk_map.get(jenis, "A")
         if user_id != OWNER_ID:
@@ -1393,22 +1112,16 @@ async def callback_handler(client, cq):
             if not ud or ud.get(jk, {}).get("umpan", 0) <= 0:
                 await cq.answer("❌ Umpan tidak cukup!", show_alert=True)
                 return
-
         now = asyncio.get_event_loop().time()
         last_time = user_last_fishing.get(user_id, 0)
         if now - last_time < 10:
-            await cq.message.edit_text(
-                "⏳ Wait a sec before you catch again..",
-                reply_markup=kb_back
-            )
+            await cq.message.edit_text("⏳ Tunggu 10 detik sebelum memancing lagi.", reply_markup=kb_back)
             return
-
         user_last_fishing[user_id] = now
         user_task_count[user_id] += 1
         task_id = f"{user_task_count[user_id]:02d}"
-
         await cq.message.edit_text(
-            f"🎣 You successfully threw the bait! {jenis} to loot task#{task_id}!",
+            f"🎣 @{uname} melempar umpan {jenis}! task#{task_id}",
             reply_markup=InlineKeyboardMarkup([
                 [InlineKeyboardButton("🎣 Catch again", callback_data=f"FISH_CONFIRM_{jenis}")],
                 [InlineKeyboardButton("🤖 Auto 5x", callback_data=f"AUTO_FISH_{jenis}_5"),
@@ -1418,90 +1131,63 @@ async def callback_handler(client, cq):
                 [InlineKeyboardButton("⬅️ Back", callback_data="E")]
             ])
         )
-
-        # Jalankan task manual
         asyncio.create_task(fishing_task(client, uname, user_id, jenis, task_id))
+        return
 
-    # ----------------- AUTO FISHING -----------------
-    elif data.startswith("AUTO_FISH_"):
+    # ======== AUTO FISHING ========
+    if data.startswith("AUTO_FISH_"):
         parts = data.split("_")
         jenis = parts[2] if len(parts) > 2 else "COMMON"
         try:
             count = int(parts[3])
         except (IndexError, ValueError):
             count = 50
-
         now = asyncio.get_event_loop().time()
         last_time = user_last_fishing.get(user_id, 0)
         if now - last_time < 10:
-            await cq.answer("⏳ Wait cooldown 10 sec before auto catching!", show_alert=True)
+            await cq.answer("⏳ Tunggu cooldown 10 detik!", show_alert=True)
             return
-
-        await cq.answer(f"🤖 Auto Catching {count}x!!! Start!")
-
+        await cq.answer(f"🤖 Auto Catch {count}x dimulai!")
         async def auto_fishing():
             for i in range(count):
                 if user_id not in active_auto_fishing:
-                    break  # dibatalkan
-
-                now = asyncio.get_event_loop().time()
-                if now - user_last_fishing.get(user_id, 0) < 10:
                     break
-
                 jk_map = {"COMMON": "A", "RARE": "B", "LEGEND": "C", "MYTHIC": "D"}
                 jk = jk_map.get(jenis, "A")
                 if user_id != OWNER_ID:
                     ud = umpan.get_user(user_id)
                     if not ud or ud.get(jk, {}).get("umpan", 0) <= 0:
                         break
-
-                user_last_fishing[user_id] = now
+                user_last_fishing[user_id] = asyncio.get_event_loop().time()
                 user_task_count[user_id] += 1
                 task_id = f"{user_task_count[user_id]:02d}"
-
-                # Jalankan task auto fishing
                 asyncio.create_task(fishing_task(client, uname, user_id, jenis, task_id, auto_mode=True))
-
                 await asyncio.sleep(10)
-
-            # selesai
             active_auto_fishing.pop(user_id, None)
             await cq.message.reply_text(f"✅ Auto fishing {count}x selesai!")
-
-        # simpan task aktif user
         task = asyncio.create_task(auto_fishing())
         active_auto_fishing[user_id] = task
+        return
 
-    # ----------------- CANCEL AUTO -----------------
-    elif data == "CANCEL_AUTO":
+    # ======== CANCEL AUTO ========
+    if data == "CANCEL_AUTO":
         if user_id in active_auto_fishing:
-            task = active_auto_fishing[user_id]
-            task.cancel()
-            active_auto_fishing.pop(user_id, None)
-            await cq.answer("❌ Auto fishing dibatalkan!", show_alert=True)
-            await cq.message.reply_text("🛑 Auto fishing telah dihentikan.")
+            active_auto_fishing[user_id].cancel()
+            del active_auto_fishing[user_id]
+            await cq.answer("❌ Auto fishing dibatalkan.", show_alert=True)
         else:
-            await cq.answer("⚠️ Tidak ada auto fishing yang berjalan.", show_alert=True)
-
-    
-    # LEADERBOARD PAGING
-    if data.startswith("BBB_PAGE_"):
-        page = int(data.replace("BBB_PAGE_", ""))
-        await show_leaderboard(cq, user_id, page)
+            await cq.answer("⚠️ Tidak ada auto fishing aktif.", show_alert=True)
         return
 
-    # POIN PRIBADI
-    if data == "BB":
-        pts = yapping.load_points()
-        udata = pts.get(str(user_id))
-        if not udata:
-            text = "❌ Kamu belum punya poin."
-        else:
-            lvl = udata.get("level", 0)
-            badge = yapping.get_badge(lvl)
-            text = f"📊 Poin Pribadi\n\n👤 {udata.get('username','Unknown')}\n⭐ {udata.get('points',0)} pts\n🏅 Level {lvl} {badge}"
-        await cq.message.edit_text(text, reply_markup=make_keyboard("BB", user_id))
+    # ======== DEFAULT NAVIGATION ========
+    if data in MENU_STRUCTURE:
+        kb = make_keyboard(data, user_id)
+        title = MENU_STRUCTURE[data].get("title", "📋 Menu")
+        await cq.message.edit_text(title, reply_markup=kb)
         return
+
+    # ======== UNKNOWN CALLBACK (debug) ========
+    await cq.answer(f"⚠️ Unknown action: {data}", show_alert=True)
 
     # LEADERBOARD
     if data == "BBB":
@@ -1931,6 +1617,7 @@ def register(app: Client):
     app.add_handler(MessageHandler(handle_transfer_message, filters.text & filters.private))
 
     logger.info("[MENU] Handler menu_utama terdaftar.")
+
 
 
 
