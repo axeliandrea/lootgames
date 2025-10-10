@@ -851,7 +851,7 @@ def get_treasure_drop():
     """Drop default untuk chest OWNER."""
     drop_table = [
         ("ZONK", None, 0, 30),
-        ("Umpan Common", "A", 2, 55),
+        ("Umpan Common", "A", 0, 55),
         ("Umpan Rare", "B", 1, 15)
     ]
     total = sum(i[3] for i in drop_table)
@@ -2113,4 +2113,5 @@ def register(app: Client):
     # --- Logging tambahan ---
     logger.info("💬 menu_utama handlers registered (callback + tc_drop_input)")
     print("[DEBUG] register(menu_utama) dipanggil ✅")
+
 
