@@ -1,3 +1,4 @@
+#FIX 05:52
 # lootgames/modules/menu_utama.py Test Nonaktif Umpan Rare
 import os
 import logging
@@ -59,18 +60,6 @@ os.makedirs(os.path.dirname(DB_FILE), exist_ok=True)
 AUTO_FISH_TASKS = {}
 user_last_fishing = defaultdict(lambda: 0)  # cooldown 10 detik per user
 user_task_count = defaultdict(lambda: 0)   # generate task ID unik per user
-
-#tc owner
-def save_chest_db(data):
-    os.makedirs(os.path.dirname(CHEST_DB), exist_ok=True)
-    with open(CHEST_DB, "w") as f:
-        json.dump(data, f)
-
-def load_chest_db():
-    if not os.path.exists(CHEST_DB):
-        return None
-    with open(CHEST_DB, "r") as f:
-        return json.load(f)  #tc owner
 
 # ---------------- HELPER LOAD / SAVE ---------------- #
 def _load_db() -> dict:
@@ -926,7 +915,6 @@ async def callback_handler(client: Client, cq: CallbackQuery):
 # ====================== TC DROP CLAIM ======================
     if data == "tc_drop_claim":
         chest = load_chest_data()
-
         if not chest or not chest.get("active"):
             await cq.answer("❌ Tidak ada TC DROP aktif.", show_alert=True)
             return
@@ -936,8 +924,6 @@ async def callback_handler(client: Client, cq: CallbackQuery):
             return
 
         if chest["total_claim"] >= chest["max_claim"]:
-            chest["active"] = False
-            save_chest_data(chest)
             await cq.answer("❌ TC DROP sudah habis diklaim semua!", show_alert=True)
             return
 
@@ -946,7 +932,6 @@ async def callback_handler(client: Client, cq: CallbackQuery):
         jenis = random.choice(jenis_list)
         jumlah = 1
 
-        # Tambahkan umpan ke user
         umpan.add_umpan(user_id, jenis, jumlah)
         chest["claimed_users"].append(user_id)
         chest["total_claim"] += 1
@@ -1286,83 +1271,100 @@ async def callback_handler(client: Client, cq: CallbackQuery):
             return
 
     # ================== TREASURE CHEST OWNER ==================
-    if data == "treasure_chest":
-        chest = load_chest_db()  # Load chest dari file
+    if data == "TREASURE_SEND_NOW":
+        global LAST_TREASURE_MSG_ID
 
-        if not chest or not chest.get("active"):
-            await cq.answer("❌ Tidak ada Treasure Chest aktif.", show_alert=True)
+        if user_id != OWNER_ID:
+            await cq.answer("❌ Hanya owner yang bisa akses menu ini.", show_alert=True)
             return
 
-        user_id = cq.from_user.id
-        uname = cq.from_user.username or f"user{user_id}"
+        # 🔹 Reset claim
+        CLAIMED_CHEST_USERS.clear()
 
-        # Cek apakah user sudah claim sebelumnya
-        if user_id in chest.get("claimed_users", []):
-            await cq.answer("❌ Kamu sudah klaim Treasure Chest ini.", show_alert=True)
-            return
+        # 🔹 Hapus pesan chest lama
+        if LAST_TREASURE_MSG_ID is not None:
+            try:
+                await cq._client.delete_messages(TARGET_GROUP, LAST_TREASURE_MSG_ID)
+            except Exception as e:
+                logger.warning(f"Gagal hapus Treasure Chest lama: {e}")
 
-        # Pilih jenis umpan (untuk owner bisa unlimited)
-        jenis_list = list(chest["rewards"].keys())
-        jenis = random.choice(jenis_list)
-        jumlah = 1
+        # 🔹 Kirim Treasure Chest baru
+        try:
+            msg = await cq._client.send_message(
+                TARGET_GROUP,
+                "📦 **Treasure Chest telah dikirim oleh OWNER!**\n"
+                "Cepat klaim sebelum terlambat! 🎁",
+                reply_markup=InlineKeyboardMarkup(
+                    [[InlineKeyboardButton("🔑 Buka Treasure Chest", callback_data="treasure_chest")]]
+                )
+            )
+            LAST_TREASURE_MSG_ID = msg.id
+        except Exception as e:
+            logger.error(f"Gagal kirim Treasure Chest: {e}")
 
-        # Tambahkan umpan ke user
-        umpan.add_umpan(user_id, jenis, jumlah)
-
-        # Update chest: catat user yang sudah claim
-        chest["claimed_users"].append(user_id)
-
-        # Jika ada limit claim, tutup chest jika sudah penuh
-        if chest.get("max_claim") is not None:
-            if len(chest["claimed_users"]) >= chest["max_claim"]:
-                chest["active"] = False
-
-        save_chest_db(chest)  # Simpan kembali ke file
-
-        await cq.answer(f"🎉 @{uname} berhasil klaim {jumlah} umpan Type {jenis}!", show_alert=True)
+        await cq.message.edit_text(
+            "✅ Treasure Chest berhasil dikirim ke group!",
+            reply_markup=InlineKeyboardMarkup(
+                [[InlineKeyboardButton("⬅️ Kembali", callback_data="H")]]
+            )
+        )
+        return
 
     # ====================== TC DROP ======================
 # === TC DROP ADD ===
     # di dalam callback handler bagian TC_DROP_ADD
     if data == "TC_DROP_ADD":
-        uname = message.from_user.username or f"user{user_id}"
+        uid = cq.from_user.id
+        uname = cq.from_user.username or f"user{uid}"
+        jenis = "A"
+        jumlah = 10
 
-        # Cek TC DROP lama
-        old_chest = load_chest_data()
-        if old_chest and old_chest.get("active"):
-            rewards = old_chest["rewards"]
-            total_claim = old_chest.get("total_claim", 0)
-            owner_id_old = old_chest["owner_id"]
+        # ambil stok user
+        user_data = umpan.get_user(uid)
+        stok = user_data.get(jenis, {}).get("umpan", 0)
+        print(f"[DEBUG] Stok {jenis} user {uid}: {stok}")
 
-            # Refund sisa umpan ke owner lama
-            for jenis, jumlah in rewards.items():
-                sisa_jenis = jumlah - total_claim  # sisa yang belum diklaim
-                if sisa_jenis > 0:
-                    umpan.tambah_umpan(owner_id_old, jenis, sisa_jenis)
+        if stok < jumlah:
+            await cq.answer(f"❌ Umpan Type {jenis} kurang! (punya {stok}, butuh {jumlah})", show_alert=True)
+            return
 
-            old_chest["active"] = False
-            save_chest_data(old_chest)
-            await message.reply(
-                f"⚠️ TC DROP sebelumnya dibatalkan. Sisa umpan dikembalikan ke @{old_chest['owner_name']}."
-            )
+        # kurangi stok langsung
+        try:
+            umpan.remove_umpan(uid, jenis, jumlah)
+            print(f"[DEBUG] Umpan {jenis} dikurangi {jumlah} dari {uid}")
+        except ValueError as e:
+            await cq.answer(f"❌ Gagal kurangi umpan: {e}", show_alert=True)
+            return
 
-        # Buat TC DROP baru otomatis
-        jumlah_default = 10  # jumlah umpan default
+        # buat chest
         chest_data = {
             "active": True,
-            "owner_id": user_id,
+            "owner_id": uid,
             "owner_name": uname,
-            "rewards": {"A": jumlah_default},
+            "rewards": {jenis: jumlah},
             "total_claim": 0,
-            "max_claim": jumlah_default,
+            "max_claim": 10,
             "claimed_users": []
         }
         save_chest_data(chest_data)
+        print(f"[DEBUG] Chest data disimpan untuk {uid}")
 
-        await message.reply(
-            f"✅ TC DROP baru berhasil dibuat oleh @{uname} dengan {jumlah_default} umpan Common (A)."
-        )
-        return
+        # kirim ke group
+        try:
+            await client.send_message(
+                TARGET_GROUP,
+                f"🎁 **{uname}** telah membuat TC DROP!\nBagikan umpan kepada semua player!",
+                reply_markup=InlineKeyboardMarkup(
+                    [[InlineKeyboardButton("🎁 Claim TC", callback_data="tc_drop_claim")]]
+                )
+            )
+            await cq.answer(f"✅ TC DROP berhasil dibuat ({jumlah} umpan Type {jenis})", show_alert=True)
+            print(f"[DEBUG] TC dikirim ke group oleh {uid}")
+        except Exception as e:
+            await cq.answer(f"❌ Gagal kirim TC ke group: {e}", show_alert=True)
+            # rollback umpan
+            umpan.add_umpan(uid, jenis, jumlah)
+            print(f"[DEBUG] Rollback umpan ke {uid}")
 
     # ===== RESET LOGIN (OWNER ONLY) =====
     if data == "LOGIN_RESET":
@@ -2098,6 +2100,3 @@ def register(app: Client):
     # --- Logging tambahan ---
     logger.info("💬 menu_utama handlers registered (callback + tc_drop_input)")
     print("[DEBUG] register(menu_utama) dipanggil ✅")
-
-
-
