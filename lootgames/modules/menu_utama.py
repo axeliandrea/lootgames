@@ -932,23 +932,28 @@ async def callback_handler(client: Client, cq: CallbackQuery):
         jenis = random.choice(jenis_list)
         jumlah = 1
 
-        # Proses klaim hadiah
+        # Proses klaim hadiah (langsung masuk)
         umpan.add_umpan(user_id, jenis, jumlah)
         chest["claimed_users"].append(user_id)
         chest["total_claim"] += 1
 
+        # Tutup chest jika sudah penuh
         if chest["total_claim"] >= chest["max_claim"]:
             chest["active"] = False
 
         save_chest_data(chest)
 
-        # Delay 2 detik sebelum proses klaim berikutnya
+        # 🔹 Delay 2 detik sebelum bot memproses klaim berikutnya
         await asyncio.sleep(2)
 
-        # 🔹 Kirim 10 pesan info dengan jeda 1 detik
-        for i in range(1, 11):
-            await cq.message.reply(f"🎉 @{uname} berhasil klaim 1 umpan Type **{jenis}**! 🎁 (Info {i})")
-            await asyncio.sleep(1)
+        # 🔹 Delay tambahan 3 detik sebelum kirim info awal klaim
+        await asyncio.sleep(3)
+
+        # 🔹 Kirim beberapa info pesan akhir klaim dengan jeda 1 detik tiap pesan
+        jumlah_info = 5  # ubah sesuai kebutuhan, misal 20
+        for i in range(1, jumlah_info + 1):
+            await cq.message.reply(f"🎉 @{uname} berhasil klaim 1 umpan Type **{jenis}**! (Info {i})")
+            await asyncio.sleep(1)  # jeda 1 detik antar pesan
 
         return
     
@@ -2109,15 +2114,4 @@ def register(app: Client):
     logger.info("💬 menu_utama handlers registered (callback + tc_drop_input)")
     print("[DEBUG] register(menu_utama) dipanggil ✅")
 
-
-
-
-
-
-
-
-
-
-
 #TC DROP FIX
-
