@@ -1284,6 +1284,7 @@ async def callback_handler(client: Client, cq: CallbackQuery):
 
 ###
     # ================== TREASURE CHEST OWNER ==================
+        # ================== TREASURE CHEST OWNER ==================
     if data == "TREASURE_SEND_NOW":
         global LAST_TREASURE_MSG_ID
 
@@ -1291,7 +1292,7 @@ async def callback_handler(client: Client, cq: CallbackQuery):
             await cq.answer("❌ Hanya owner yang bisa akses menu ini.", show_alert=True)
             return
 
-        # 🔹 Reset claim dan simpan perubahan
+        # 🔹 Reset klaim
         CLAIMED_CHEST_USERS.clear()
 
         # 🔹 Hapus pesan chest lama
@@ -1311,9 +1312,11 @@ async def callback_handler(client: Client, cq: CallbackQuery):
                     [[InlineKeyboardButton("🔑 Buka Treasure Chest", callback_data="treasure_chest")]]
                 )
             )
+
+            # ✅ Simpan ID pesan chest baru
             LAST_TREASURE_MSG_ID = msg.id
 
-            # ✅ Simpan data chest baru
+            # ✅ Simpan ke file JSON agar tetap ada setelah restart
             os.makedirs(os.path.dirname(CHEST_DB), exist_ok=True)
             with open(CHEST_DB, "w") as f:
                 json.dump(
@@ -1324,6 +1327,7 @@ async def callback_handler(client: Client, cq: CallbackQuery):
                     f,
                     indent=2
                 )
+            logger.info(f"💾 Treasure Chest baru disimpan (msg_id={LAST_TREASURE_MSG_ID})")
 
         except Exception as e:
             logger.error(f"Gagal kirim Treasure Chest: {e}")
@@ -2139,6 +2143,7 @@ def register(app: Client):
     # --- Logging tambahan ---
     logger.info("💬 menu_utama handlers registered (callback + tc_drop_input)")
     print("[DEBUG] register(menu_utama) dipanggil ✅")
+
 
 
 
