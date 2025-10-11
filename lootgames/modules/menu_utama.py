@@ -19,7 +19,7 @@ from datetime import date
 
 logger = logging.getLogger(__name__)
 OWNER_ID = 6395738130
-TARGET_GROUP = -1002904817520  # ganti sesuai supergroup bot (-1002904817520 TRIAL , -1002946278772 LOOT) #
+TARGET_GROUP = -1002946278772  # ganti sesuai supergroup bot (-1002904817520 TRIAL , -1002946278772 LOOT) #
 
 # ---------------- STATE ---------------- #
 TRANSFER_STATE = {}       # user_id: {"jenis": "A/B/C/D"}
@@ -2189,5 +2189,6 @@ def register(app: Client):
     # --- Logging tambahan ---
     logger.info("💬 menu_utama handlers registered (callback + tc_drop_input)")
     print("[DEBUG] register(menu_utama) dipanggil ✅")
+
 
 
