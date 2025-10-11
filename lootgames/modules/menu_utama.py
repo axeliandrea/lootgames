@@ -927,20 +927,12 @@ async def callback_handler(client: Client, cq: CallbackQuery):
             await cq.answer("❌ TC DROP sudah habis diklaim semua!", show_alert=True)
             return
 
-        # Kirim pesan pertama
-        msg = await cq.message.reply("⏳ Sedang membuka Treasure Chest...")
-        await asyncio.sleep(3)
-
-        # Pilih random jenis umpan dari rewards
+        # Pilih random jenis umpan
         jenis_list = list(chest["rewards"].keys())
         jenis = random.choice(jenis_list)
         jumlah = 1
 
-        # Update progres
-        await msg.edit_text(f"🎁 Menemukan hadiah di dalam chest...\n\nJenis umpan: **{jenis}**")
-        await asyncio.sleep(3)
-
-        # Proses pemberian hadiah
+        # Proses klaim hadiah
         umpan.add_umpan(user_id, jenis, jumlah)
         chest["claimed_users"].append(user_id)
         chest["total_claim"] += 1
@@ -951,8 +943,11 @@ async def callback_handler(client: Client, cq: CallbackQuery):
 
         save_chest_data(chest)
 
+        # Jeda 3 detik sebelum tampilkan info akhir klaim
+        await asyncio.sleep(3)
+
         # Pesan akhir sukses klaim
-        await msg.edit_text(f"🎉 @{uname} berhasil klaim 1 umpan Type **{jenis}**!")
+        await cq.message.reply(f"🎉 @{uname} berhasil klaim 1 umpan Type **{jenis}**!")
         return
     
 #Revisi Part ini aja
