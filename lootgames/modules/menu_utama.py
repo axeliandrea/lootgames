@@ -932,7 +932,7 @@ async def callback_handler(client: Client, cq: CallbackQuery):
         jenis = random.choice(jenis_list)
         jumlah = 1
 
-        # Proses klaim hadiah
+        # Proses klaim hadiah (langsung masuk)
         umpan.add_umpan(user_id, jenis, jumlah)
         chest["claimed_users"].append(user_id)
         chest["total_claim"] += 1
@@ -943,7 +943,10 @@ async def callback_handler(client: Client, cq: CallbackQuery):
 
         save_chest_data(chest)
 
-        # 🔹 Delay 3 detik untuk tiap user klaim
+        # 🔹 Delay 2 detik sebelum bot memproses klaim berikutnya (untuk rate limit)
+        await asyncio.sleep(2)
+
+        # 🔹 Delay tambahan 3 detik sebelum kirim info akhir klaim
         await asyncio.sleep(3)
 
         # Kirim pesan akhir klaim
@@ -2106,6 +2109,7 @@ def register(app: Client):
     # --- Logging tambahan ---
     logger.info("💬 menu_utama handlers registered (callback + tc_drop_input)")
     print("[DEBUG] register(menu_utama) dipanggil ✅")
+
 
 
 
