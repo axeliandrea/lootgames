@@ -1,4 +1,4 @@
-#FIX 04:33
+#FIX 05:52
 # lootgames/modules/menu_utama.py Test Nonaktif Umpan Rare
 import os
 import logging
@@ -19,7 +19,7 @@ from datetime import date
 
 logger = logging.getLogger(__name__)
 OWNER_ID = 6395738130
-TARGET_GROUP = -1002946278772  # ganti sesuai supergroup bot (-1002904817520 TRIAL , -1002946278772 LOOT) #
+TARGET_GROUP = -1002904817520  # ganti sesuai supergroup bot (-1002904817520 TRIAL , -1002946278772 LOOT) #
 
 # ---------------- STATE ---------------- #
 TRANSFER_STATE = {}       # user_id: {"jenis": "A/B/C/D"}
@@ -686,6 +686,7 @@ MENU_STRUCTURE["I"] = {
         ("🐚 Hermit Crab", "I_HERMITCRAB"),
         ("🐸 Frog", "I_FROG"),
         ("🐍 Snake", "I_SNAKE"),
+        ("🧜‍♀️ Mermaid Girl", "I_MERMAIDGIRL"),
         ("⬅️ Back", "main")
     ]
 }
@@ -732,6 +733,14 @@ MENU_STRUCTURE["I_SNAKE"] = {
     "title": "🧬 Evolve 🐍 Snake",
     "buttons": [
         ("🧬 Evolve jadi 👑 Queen Of Medusa 🐍 (-1000)", "EVOLVE_QUEENOFMEDUSA_CONFIRM"),
+        ("⬅️ Back", "I")
+    ]
+}
+# Submenu Mermaid
+MENU_STRUCTURE["I_MERMAIDGIRL"] = {
+    "title": "🧬 Evolve 🧜‍♀️ Mermaid Girl",
+    "buttons": [
+        ("🧬 Evolve jadi 👑 🧜‍♀️ Princess Mermaid (-1000)", "EVOLVE_PRINCESSMERMAID_CONFIRM"),
         ("⬅️ Back", "I")
     ]
 }
@@ -1246,6 +1255,71 @@ async def callback_handler(client: Client, cq: CallbackQuery):
         except Exception as e:
             logger.error(f"Gagal kirim atau pin info evolve ke group: {e}")
 
+    # ===== EVOLVE SNAKE CONFIRM =====
+    if data == "EVOLVE_PRINCESSMERMAID_CONFIRM":
+        inv = aquarium.get_user_fish(user_id)
+        mermaidgirl_qty = inv.get("🧜‍♀️ Mermaid Girl", 0)
+        axolotl_qty = inv.get("🐟 Axolotl", 0)
+        doryfish_qty = inv.get("🐟 Doryfish", 0)
+        dna_qty = inv.get("🧬 Mysterious DNA", 0)
+
+        if mermaidgirl_qty < 5:
+            await cq.answer("❌ 🧜‍♀️ Mermaid Girl kamu kurang (butuh 5)", show_alert=True)
+            return
+        if axolotl_qty < 50:
+            await cq.answer("❌ 🐟 Axolotl kamu kurang (butuh 50)", show_alert=True)
+            return
+        if doryfish_qty < 50:
+            await cq.answer("❌ 🐟 Doryfish kamu kurang (butuh 50)", show_alert=True)
+            return
+        if dna_qty < 30:
+            await cq.answer("❌ 🧬 Mysterious DNA kamu kurang (butuh 50)", show_alert=True)
+            return
+
+        # ✅ Kurangi stok bahan
+        inv["🧜‍♀️ Mermaid Girl"] = mermaidgirl_qty - 5
+        if inv["🧜‍♀️ Mermaid Girl"] <= 0: inv.pop("🧜‍♀️ Mermaid Girl")
+        inv["🐟 Axolotl"] = axolotl_qty - 50
+        if inv["🐟 Axolotl"] <= 0: inv.pop("🐟 Axolotl")
+        inv["🐟 Doryfish"] = doryfish_qty - 50
+        if inv["🐟 Doryfish"] <= 0: inv.pop("🐟 Doryfish")
+        inv["🧬 Mysterious DNA"] = dna_qty - 50
+        if inv["🧬 Mysterious DNA"] <= 0: inv.pop("🧬 Mysterious DNA")
+
+        # ✅ Tambahkan hasil evolve
+        inv["👑 Princess Mermaid"] = inv.get("👑 Princess Mermaid", 0) + 1
+
+        # ✅ Simpan ke DB
+        db = aquarium.load_data()
+        db[str(user_id)] = inv
+        aquarium.save_data(db)
+
+        uname = cq.from_user.username or f"user{user_id}"
+
+        # ✅ Balasan private
+        inv_text = aquarium.list_inventory(user_id)
+        await cq.message.edit_text(
+            f"✅ Evolve berhasil!\n"
+            f"🧜‍♀️ Mermaid Girl -5\n"
+            f"🐟 Axolotl -50\n"
+            f"🐟 Doryfish -50\n"
+            f"🧬 Mysterious DNA -50\n"
+            f"👑 Princess Mermaid +1\n\n"
+            f"📦 Inventory terbaru:\n{inv_text}",
+            reply_markup=make_keyboard("I", user_id)
+        )
+
+        # ✅ Info ke group + pin
+        try:
+            msg = await client.send_message(
+                TARGET_GROUP,
+                f"🧬 @{uname} berhasil evolve!\n"
+                f"Mermaid Girl → 👑 Princess Mermaid 🎉"
+            )
+            await client.pin_chat_message(TARGET_GROUP, msg.id, disable_notification=True)
+        except Exception as e:
+            logger.error(f"Gagal kirim atau pin info evolve ke group: {e}")
+
     # di dalam async def callback_handler(client: Client, cq: CallbackQuery):
     # ================== PLAYER CLAIM CHEST ==================
     if data == "treasure_chest":
@@ -1552,7 +1626,7 @@ async def callback_handler(client: Client, cq: CallbackQuery):
             f"🎣 You successfully threw the bait! {jenis} to loot task#{task_id}!",
             reply_markup=InlineKeyboardMarkup([
                 [InlineKeyboardButton("🎣 Catch again", callback_data=f"FISH_CONFIRM_{jenis}")],
-                [InlineKeyboardButton("🤖 Auto Catch 50x", callback_data=f"AUTO_FISH_{jenis}")],
+                [InlineKeyboardButton("🤖 Auto Catch 1000x", callback_data=f"AUTO_FISH_{jenis}")],
                 [InlineKeyboardButton("❌ Cancel Auto", callback_data="AUTO_FISH_CANCEL")],  # tombol baru
                 [InlineKeyboardButton("⬅️ Back", callback_data="E")]
             ])
@@ -1575,16 +1649,16 @@ async def callback_handler(client: Client, cq: CallbackQuery):
             await cq.answer("❌ Tidak ada auto fishing aktif.", show_alert=True)
         return  # jangan lanjut ke auto fishing
 
-    # 2️⃣ Handle Auto Fishing 50x
+    # 2️⃣ Handle Auto Fishing 1000x
     elif data.startswith("AUTO_FISH_"):
         jenis = data.replace("AUTO_FISH_", "")
         uname = cq.from_user.username or f"user{user_id}"
 
-        await cq.answer("🤖 Auto Catching 50x!!! Start!")
+        await cq.answer("🤖 Auto Catching 1000x!!! Start!")
 
         async def auto_fishing():
             try:
-                for i in range(50):
+                for i in range(1000):
                     now = asyncio.get_event_loop().time()
                     if now - user_last_fishing.get(user_id, 0) < 10:
                         break
@@ -2111,9 +2185,3 @@ def register(app: Client):
     # --- Logging tambahan ---
     logger.info("💬 menu_utama handlers registered (callback + tc_drop_input)")
     print("[DEBUG] register(menu_utama) dipanggil ✅")
-
-#TC DROP FIX
-
-
-
-
