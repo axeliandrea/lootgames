@@ -1282,8 +1282,9 @@ if data == "tc_drop_claim":
             return
 
     # ================== TREASURE CHEST OWNER ==================
+    # ================== TREASURE CHEST OWNER ==================
     if data == "TREASURE_SEND_NOW":
-        global LAST_TREASURE_MSG_ID
+        global LAST_TREASURE_MSG_ID  # <-- pindah ke paling atas
 
         if user_id != OWNER_ID:
             await cq.answer("❌ Hanya owner yang bisa akses menu ini.", show_alert=True)
@@ -1320,6 +1321,7 @@ if data == "tc_drop_claim":
             )
         )
         return
+
 
     # ====================== TC DROP ======================
 # === TC DROP ADD ===
@@ -2111,6 +2113,7 @@ def register(app: Client):
     # --- Logging tambahan ---
     logger.info("💬 menu_utama handlers registered (callback + tc_drop_input)")
     print("[DEBUG] register(menu_utama) dipanggil ✅")
+
 
 
 
