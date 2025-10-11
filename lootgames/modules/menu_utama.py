@@ -213,6 +213,7 @@ ITEM_PRICES = {
     "SELL_QUEENOFHERMIT": {"name": "👑 Queen Of Hermit", "price": 5000, "inv_key": "Queen Of Hermit"},
     "SELL_MECHAFROG": {"name": "🤖 Mecha Frog", "price": 5000, "inv_key": "Mecha Frog"},
     "SELL_QUEENOFMEDUSA": {"name": "👑 Queen Of Medusa 🐍", "price": 5000, "inv_key": "Queen Of Medusa"},
+    "SELL_PRINCESSMERMAID": {"name": "👑🧜‍♀️ Princess Mermaid", "price": 10000, "inv_key": "Princess Mermaid"},
 }
 # sementara user -> item_code waiting for amount input (chat)
 SELL_WAITING = {}  # user_id: item_code
@@ -364,6 +365,8 @@ INV_KEY_ALIASES = {
     "mermaid boy": "Mermaid Boy",
     "🧜‍♀️ Mermaid Girl": "Mermaid Girl",
     "mermaid girl": "Mermaid Girl"
+    "👑🧜‍♀️ Princess Mermaid": "Princess Mermaid",
+    "princess Mermaid": "Princess Mermaid"
     # tambahkan sesuai kebutuhan 
 }
 
@@ -590,6 +593,7 @@ MENU_STRUCTURE = {
             ("👑 Queen Of Hermit", "SELL_DETAIL:SELL_QUEENOFHERMIT"),
             ("🤖 Mecha Frog", "SELL_DETAIL:SELL_MECHAFROG"),
             ("👑 Queen Medusa 🐍", "SELL_DETAIL:SELL_QUEENOFMEDUSA"),
+            ("👑🧜‍♀️ Princess Mermaid", "SELL_DETAIL:SELL_PRINCESSMERMAID"),
             ("⬅️ Back", "D2"),
         ]
     },
@@ -740,7 +744,7 @@ MENU_STRUCTURE["I_SNAKE"] = {
 MENU_STRUCTURE["I_MERMAIDGIRL"] = {
     "title": "🧬 Evolve 🧜‍♀️ Mermaid Girl",
     "buttons": [
-        ("🧬 Evolve jadi 👑 🧜‍♀️ Princess Mermaid (-1000)", "EVOLVE_PRINCESSMERMAID_CONFIRM"),
+        ("🧬 Evolve jadi 👑🧜‍♀️ Princess Mermaid (-1000)", "EVOLVE_PRINCESSMERMAID_CONFIRM"),
         ("⬅️ Back", "I")
     ]
 }
@@ -2185,3 +2189,4 @@ def register(app: Client):
     # --- Logging tambahan ---
     logger.info("💬 menu_utama handlers registered (callback + tc_drop_input)")
     print("[DEBUG] register(menu_utama) dipanggil ✅")
+
