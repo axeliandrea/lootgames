@@ -1278,7 +1278,7 @@ async def handle_tc_drop_claim(cq, user_id, uname, chest, umpan):
             logger.error(f"Gagal kirim atau pin info evolve ke group: {e}")
     #TC      
     if data == "tc_drop_claim":
-    await handle_tc_drop_claim(cq, user_id, uname, load_chest_data(), umpan)
+        await handle_tc_drop_claim(cq, user_id, uname, load_chest_data(), umpan)
 
     # di dalam async def callback_handler(client: Client, cq: CallbackQuery):
     # ================== PLAYER CLAIM CHEST ==================
@@ -2145,6 +2145,7 @@ def register(app: Client):
     # --- Logging tambahan ---
     logger.info("💬 menu_utama handlers registered (callback + tc_drop_input)")
     print("[DEBUG] register(menu_utama) dipanggil ✅")
+
 
 
 
