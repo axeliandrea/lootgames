@@ -943,10 +943,10 @@ async def callback_handler(client: Client, cq: CallbackQuery):
 
         save_chest_data(chest)
 
-        # Jeda 3 detik sebelum tampilkan info akhir klaim
+        # 🔹 Delay 3 detik untuk tiap user klaim
         await asyncio.sleep(3)
 
-        # Pesan akhir sukses klaim
+        # Kirim pesan akhir klaim
         await cq.message.reply(f"🎉 @{uname} berhasil klaim 1 umpan Type **{jenis}**!")
         return
     
@@ -2106,6 +2106,7 @@ def register(app: Client):
     # --- Logging tambahan ---
     logger.info("💬 menu_utama handlers registered (callback + tc_drop_input)")
     print("[DEBUG] register(menu_utama) dipanggil ✅")
+
 
 
 
