@@ -932,25 +932,24 @@ async def callback_handler(client: Client, cq: CallbackQuery):
         jenis = random.choice(jenis_list)
         jumlah = 1
 
-        # Proses klaim hadiah (langsung masuk)
+        # Proses klaim hadiah
         umpan.add_umpan(user_id, jenis, jumlah)
         chest["claimed_users"].append(user_id)
         chest["total_claim"] += 1
 
-        # Tutup chest jika sudah penuh
         if chest["total_claim"] >= chest["max_claim"]:
             chest["active"] = False
 
         save_chest_data(chest)
 
-        # 🔹 Delay 2 detik sebelum bot memproses klaim berikutnya (untuk rate limit)
+        # Delay 2 detik sebelum proses klaim berikutnya
         await asyncio.sleep(2)
 
-        # 🔹 Delay tambahan 3 detik sebelum kirim info akhir klaim
-        await asyncio.sleep(3)
+        # 🔹 Kirim 10 pesan info dengan jeda 1 detik
+        for i in range(1, 11):
+            await cq.message.reply(f"🎉 @{uname} berhasil klaim 1 umpan Type **{jenis}**! 🎁 (Info {i})")
+            await asyncio.sleep(1)
 
-        # Kirim pesan akhir klaim
-        await cq.message.reply(f"🎉 @{uname} berhasil klaim 1 umpan Type **{jenis}**!")
         return
     
 #Revisi Part ini aja
@@ -2121,3 +2120,4 @@ def register(app: Client):
 
 
 #TC DROP FIX
+
