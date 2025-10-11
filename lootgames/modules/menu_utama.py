@@ -914,45 +914,45 @@ async def callback_handler(client: Client, cq: CallbackQuery):
     
     # ====================== TC DROP CLAIM ======================
     if data == "tc_drop_claim":
-    chest = load_chest_data()
-    if not chest or not chest.get("active"):
-        await cq.answer("❌ Tidak ada TC DROP aktif.", show_alert=True)
+        chest = load_chest_data()
+        if not chest or not chest.get("active"):
+            await cq.answer("❌ Tidak ada TC DROP aktif.", show_alert=True)
+            return
+    
+        if user_id in chest.get("claimed_users", []):
+            await cq.answer("❌ Kamu sudah klaim TC DROP ini.", show_alert=True)
+            return
+    
+        if chest["total_claim"] >= chest["max_claim"]:
+            await cq.answer("❌ TC DROP sudah habis diklaim semua!", show_alert=True)
+            return
+    
+        # Pilih random jenis umpan
+        jenis_list = list(chest["rewards"].keys())
+        jenis = random.choice(jenis_list)
+        jumlah = 1
+    
+        # Proses klaim hadiah (langsung masuk)
+        umpan.add_umpan(user_id, jenis, jumlah)
+        chest["claimed_users"].append(user_id)
+        chest["total_claim"] += 1
+    
+        # Tutup chest jika sudah penuh
+        if chest["total_claim"] >= chest["max_claim"]:
+            chest["active"] = False
+    
+        save_chest_data(chest)
+    
+        # 🔹 Delay 2 detik sebelum bot memproses klaim berikutnya (untuk rate limit)
+        await asyncio.sleep(2)
+    
+        # 🔹 Delay tambahan 3 detik sebelum kirim info akhir klaim
+        await asyncio.sleep(3)
+    
+        # 🔹 Floating message / toast untuk info klaim
+        await cq.answer(f"🎉 @{uname} berhasil klaim 1 umpan Type **{jenis}**!", show_alert=False)
+    
         return
-
-    if user_id in chest.get("claimed_users", []):
-        await cq.answer("❌ Kamu sudah klaim TC DROP ini.", show_alert=True)
-        return
-
-    if chest["total_claim"] >= chest["max_claim"]:
-        await cq.answer("❌ TC DROP sudah habis diklaim semua!", show_alert=True)
-        return
-
-    # Pilih random jenis umpan
-    jenis_list = list(chest["rewards"].keys())
-    jenis = random.choice(jenis_list)
-    jumlah = 1
-
-    # Proses klaim hadiah (langsung masuk)
-    umpan.add_umpan(user_id, jenis, jumlah)
-    chest["claimed_users"].append(user_id)
-    chest["total_claim"] += 1
-
-    # Tutup chest jika sudah penuh
-    if chest["total_claim"] >= chest["max_claim"]:
-        chest["active"] = False
-
-    save_chest_data(chest)
-
-    # 🔹 Delay 2 detik sebelum bot memproses klaim berikutnya (untuk rate limit)
-    await asyncio.sleep(2)
-
-    # 🔹 Delay tambahan 3 detik sebelum kirim info akhir klaim
-    await asyncio.sleep(3)
-
-    # 🔹 Floating message / toast untuk info klaim
-    await cq.answer(f"🎉 @{uname} berhasil klaim 1 umpan Type **{jenis}**!", show_alert=False)
-
-    return
 
     
 #Revisi Part ini aja
@@ -2113,4 +2113,5 @@ def register(app: Client):
     print("[DEBUG] register(menu_utama) dipanggil ✅")
 
 #TC DROP FIX
+
 
