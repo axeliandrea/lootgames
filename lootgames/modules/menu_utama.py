@@ -1552,7 +1552,7 @@ async def callback_handler(client: Client, cq: CallbackQuery):
             f"🎣 You successfully threw the bait! {jenis} to loot task#{task_id}!",
             reply_markup=InlineKeyboardMarkup([
                 [InlineKeyboardButton("🎣 Catch again", callback_data=f"FISH_CONFIRM_{jenis}")],
-                [InlineKeyboardButton("🤖 Auto Catch 10x", callback_data=f"AUTO_FISH_{jenis}")],
+                [InlineKeyboardButton("🤖 Auto Catch 50x", callback_data=f"AUTO_FISH_{jenis}")],
                 [InlineKeyboardButton("❌ Cancel Auto", callback_data="AUTO_FISH_CANCEL")],  # tombol baru
                 [InlineKeyboardButton("⬅️ Back", callback_data="E")]
             ])
@@ -1580,11 +1580,11 @@ async def callback_handler(client: Client, cq: CallbackQuery):
         jenis = data.replace("AUTO_FISH_", "")
         uname = cq.from_user.username or f"user{user_id}"
 
-        await cq.answer("🤖 Auto Catching 10x!!! Start!")
+        await cq.answer("🤖 Auto Catching 50x!!! Start!")
 
         async def auto_fishing():
             try:
-                for i in range(10):
+                for i in range(50):
                     now = asyncio.get_event_loop().time()
                     if now - user_last_fishing.get(user_id, 0) < 10:
                         break
@@ -2113,5 +2113,6 @@ def register(app: Client):
     print("[DEBUG] register(menu_utama) dipanggil ✅")
 
 #TC DROP FIX
+
 
 
