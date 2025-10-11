@@ -364,7 +364,7 @@ INV_KEY_ALIASES = {
     "🧜‍♀️ Mermaid Boy": "Mermaid Boy",
     "mermaid boy": "Mermaid Boy",
     "🧜‍♀️ Mermaid Girl": "Mermaid Girl",
-    "mermaid girl": "Mermaid Girl"
+    "mermaid girl": "Mermaid Girl",
     "👑🧜‍♀️ Princess Mermaid": "Princess Mermaid",
     "princess Mermaid": "Princess Mermaid"
     # tambahkan sesuai kebutuhan 
@@ -2189,4 +2189,5 @@ def register(app: Client):
     # --- Logging tambahan ---
     logger.info("💬 menu_utama handlers registered (callback + tc_drop_input)")
     print("[DEBUG] register(menu_utama) dipanggil ✅")
+
 
