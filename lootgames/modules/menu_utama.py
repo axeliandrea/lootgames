@@ -30,8 +30,8 @@ STREAK_REWARDS = {1: 0, 2: 5, 3: 6, 4: 7, 5: 8, 6: 9, 7: 10}
 
 # =================== TREASURE CHEST SYSTEM =================== #
 CHEST_DB = "storage/treasure_chest.json"
-CLAIMED_CHEST_USERS = set()
 LAST_TREASURE_MSG_ID = None
+CLAIMED_CHEST_USERS = set()
 USER_CLAIM_LOCKS = {}
 USER_CLAIM_LOCKS_LOCK = asyncio.Lock()
 # Format data chest di CHEST_DB:
@@ -1284,23 +1284,20 @@ if data == "tc_drop_claim":
     # ================== TREASURE CHEST OWNER ==================
     # ================== TREASURE CHEST OWNER ==================
     if data == "TREASURE_SEND_NOW":
-        global LAST_TREASURE_MSG_ID  # <-- pindah ke paling atas
+        global LAST_TREASURE_MSG_ID  # harus di paling atas sebelum digunakan
 
         if user_id != OWNER_ID:
             await cq.answer("❌ Hanya owner yang bisa akses menu ini.", show_alert=True)
             return
 
-        # 🔹 Reset claim
         CLAIMED_CHEST_USERS.clear()
 
-        # 🔹 Hapus pesan chest lama
         if LAST_TREASURE_MSG_ID is not None:
             try:
                 await cq._client.delete_messages(TARGET_GROUP, LAST_TREASURE_MSG_ID)
             except Exception as e:
                 logger.warning(f"Gagal hapus Treasure Chest lama: {e}")
 
-        # 🔹 Kirim Treasure Chest baru
         try:
             msg = await cq._client.send_message(
                 TARGET_GROUP,
@@ -2113,6 +2110,7 @@ def register(app: Client):
     # --- Logging tambahan ---
     logger.info("💬 menu_utama handlers registered (callback + tc_drop_input)")
     print("[DEBUG] register(menu_utama) dipanggil ✅")
+
 
 
 
