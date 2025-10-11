@@ -110,8 +110,8 @@ logger.info(f"[FISH_LOOT] Common & Rare di-scale otomatis ke total 2000%")
 BUFF_RATE = {
     "ULTRA_RARE": 10.0,
     "LEGEND": 20.0,
-    "MYTHIC": 0.10,
-    "ULTRA_MYTHIC": 0.05,
+    "MYTHIC": 5.10,
+    "ULTRA_MYTHIC": 1.05,
     "COMMON": 0.0,  # Tidak berlaku di rare table
 }
 
