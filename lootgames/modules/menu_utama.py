@@ -913,7 +913,7 @@ async def callback_handler(client: Client, cq: CallbackQuery):
         return
     
 # ====================== TC DROP CLAIM ======================
-    if data == "tc_drop_claim":
+if data == "tc_drop_claim":
     chest = load_chest_data()
     if not chest or not chest.get("active"):
         await cq.answer("❌ Tidak ada TC DROP aktif.", show_alert=True)
@@ -2111,6 +2111,7 @@ def register(app: Client):
     # --- Logging tambahan ---
     logger.info("💬 menu_utama handlers registered (callback + tc_drop_input)")
     print("[DEBUG] register(menu_utama) dipanggil ✅")
+
 
 
 
