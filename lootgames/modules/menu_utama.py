@@ -1318,7 +1318,7 @@ async def callback_handler(client: Client, cq: CallbackQuery):
             msg = await client.send_message(
                 TARGET_GROUP,
                 f"🧬 @{uname} berhasil evolve!\n"
-                f"Mermaid Girl → 👑 Princess Mermaid 🎉"
+                f"Mermaid Girl → 👑🧜‍♀️ Princess Mermaid 🎉"
             )
             await client.pin_chat_message(TARGET_GROUP, msg.id, disable_notification=True)
         except Exception as e:
@@ -2189,6 +2189,7 @@ def register(app: Client):
     # --- Logging tambahan ---
     logger.info("💬 menu_utama handlers registered (callback + tc_drop_input)")
     print("[DEBUG] register(menu_utama) dipanggil ✅")
+
 
 
 
