@@ -122,34 +122,22 @@ def reset_all():
     _save_db(db)
     return True
 
-# =========================================================
-# 🔹 LOAD & SAVE CHEST DATA (Persistent)
-# =========================================================
+# =================== UTIL ===================
+# ========== HELPER CHEST DATA ==========
 def load_chest_data():
-    global CLAIMED_CHEST_USERS, LAST_TREASURE_MSG_ID
     if not os.path.exists(CHEST_DB):
-        save_chest_data()  # buat file kosong pertama kali
-    try:
-        with open(CHEST_DB, "r") as f:
-            data = json.load(f)
-            CLAIMED_CHEST_USERS = set(data.get("claimed_users", []))
-            LAST_TREASURE_MSG_ID = data.get("last_msg_id")
-            logger.info("✅ Treasure Chest data loaded successfully.")
-    except Exception as e:
-        logger.error(f"Gagal load Treasure Chest data: {e}")
+        with open(CHEST_DB, "w", encoding="utf-8") as f:
+            json.dump({}, f)
+        return {}
+    with open(CHEST_DB, "r", encoding="utf-8") as f:
+        try:
+            return json.load(f)
+        except:
+            return {}
 
-
-def save_chest_data():
-    try:
-        data = {
-            "claimed_users": list(CLAIMED_CHEST_USERS),
-            "last_msg_id": LAST_TREASURE_MSG_ID,
-        }
-        os.makedirs(os.path.dirname(CHEST_DB), exist_ok=True)
-        with open(CHEST_DB, "w") as f:
-            json.dump(data, f, indent=2)
-    except Exception as e:
-        logger.error(f"Gagal save Treasure Chest data: {e}")
+def save_chest_data(data):
+    with open(CHEST_DB, "w", encoding="utf-8") as f:
+        json.dump(data, f, indent=2)
 
 # ---------------- SELL / ITEM CONFIG ---------------- #
 # inv_key harus cocok dengan key di aquarium_data.json (nama item di DB)
@@ -863,8 +851,8 @@ def get_treasure_drop():
     """Drop default untuk chest OWNER."""
     drop_table = [
         ("ZONK", None, 0, 30),
-        ("Umpan Common", "A", 0, 55),
-        ("Umpan Rare", "B", 0, 15)
+        ("Umpan Common", "A", 2, 55),
+        ("Umpan Rare", "B", 1, 15)
     ]
     total = sum(i[3] for i in drop_table)
     roll = random.uniform(0, total)
@@ -1282,9 +1270,7 @@ async def callback_handler(client: Client, cq: CallbackQuery):
             await cq.message.reply(msg)
             return
 
-###
     # ================== TREASURE CHEST OWNER ==================
-        # ================== TREASURE CHEST OWNER ==================
     if data == "TREASURE_SEND_NOW":
         global LAST_TREASURE_MSG_ID
 
@@ -1292,7 +1278,7 @@ async def callback_handler(client: Client, cq: CallbackQuery):
             await cq.answer("❌ Hanya owner yang bisa akses menu ini.", show_alert=True)
             return
 
-        # 🔹 Reset klaim
+        # 🔹 Reset claim
         CLAIMED_CHEST_USERS.clear()
 
         # 🔹 Hapus pesan chest lama
@@ -1312,23 +1298,7 @@ async def callback_handler(client: Client, cq: CallbackQuery):
                     [[InlineKeyboardButton("🔑 Buka Treasure Chest", callback_data="treasure_chest")]]
                 )
             )
-
-            # ✅ Simpan ID pesan chest baru
             LAST_TREASURE_MSG_ID = msg.id
-
-            # ✅ Simpan ke file JSON agar tetap ada setelah restart
-            os.makedirs(os.path.dirname(CHEST_DB), exist_ok=True)
-            with open(CHEST_DB, "w") as f:
-                json.dump(
-                    {
-                        "claimed_users": [],
-                        "last_msg_id": LAST_TREASURE_MSG_ID,
-                    },
-                    f,
-                    indent=2
-                )
-            logger.info(f"💾 Treasure Chest baru disimpan (msg_id={LAST_TREASURE_MSG_ID})")
-
         except Exception as e:
             logger.error(f"Gagal kirim Treasure Chest: {e}")
 
@@ -1358,20 +1328,7 @@ async def callback_handler(client: Client, cq: CallbackQuery):
             await cq.answer(f"❌ Umpan Type {jenis} kurang! (punya {stok}, butuh {jumlah})", show_alert=True)
             return
 
-        # rollback sisa chest lama jika ada
-        old_chest = load_chest_data()
-        if old_chest and old_chest.get("active"):
-            sisa_umpan = 0
-            for j, qty in old_chest.get("rewards", {}).items():
-                sisa_umpan += qty
-            sisa_umpan -= old_chest.get("total_claim", 0)  # sisa yang belum di-claim
-            if sisa_umpan > 0:
-                umpan.add_umpan(old_chest["owner_id"], j, sisa_umpan)
-                print(f"[DEBUG] Rollback {sisa_umpan} umpan ke {old_chest['owner_id']} dari chest lama")
-            old_chest["active"] = False
-            save_chest_data(old_chest)
-
-        # kurangi stok langsung dari pemilik TC baru
+        # kurangi stok langsung
         try:
             umpan.remove_umpan(uid, jenis, jumlah)
             print(f"[DEBUG] Umpan {jenis} dikurangi {jumlah} dari {uid}")
@@ -1379,7 +1336,7 @@ async def callback_handler(client: Client, cq: CallbackQuery):
             await cq.answer(f"❌ Gagal kurangi umpan: {e}", show_alert=True)
             return
 
-        # buat chest baru
+        # buat chest
         chest_data = {
             "active": True,
             "owner_id": uid,
@@ -1389,7 +1346,7 @@ async def callback_handler(client: Client, cq: CallbackQuery):
             "max_claim": 10,
             "claimed_users": []
         }
-        save_chest_data()
+        save_chest_data(chest_data)
         print(f"[DEBUG] Chest data disimpan untuk {uid}")
 
         # kirim ke group
@@ -1407,7 +1364,7 @@ async def callback_handler(client: Client, cq: CallbackQuery):
             await cq.answer(f"❌ Gagal kirim TC ke group: {e}", show_alert=True)
             # rollback umpan
             umpan.add_umpan(uid, jenis, jumlah)
-            print(f"[DEBUG] Rollback umpan ke {uid} karena gagal kirim TC")
+            print(f"[DEBUG] Rollback umpan ke {uid}")
 
     # ===== RESET LOGIN (OWNER ONLY) =====
     if data == "LOGIN_RESET":
@@ -2143,9 +2100,3 @@ def register(app: Client):
     # --- Logging tambahan ---
     logger.info("💬 menu_utama handlers registered (callback + tc_drop_input)")
     print("[DEBUG] register(menu_utama) dipanggil ✅")
-
-
-
-
-
-
