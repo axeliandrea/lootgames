@@ -1385,7 +1385,7 @@ async def callback_handler(client: Client, cq: CallbackQuery):
             "max_claim": 10,
             "claimed_users": []
         }
-        save_chest_data(chest_data)
+        save_chest_data()
         print(f"[DEBUG] Chest data disimpan untuk {uid}")
 
         # kirim ke group
@@ -2139,6 +2139,7 @@ def register(app: Client):
     # --- Logging tambahan ---
     logger.info("💬 menu_utama handlers registered (callback + tc_drop_input)")
     print("[DEBUG] register(menu_utama) dipanggil ✅")
+
 
 
 
