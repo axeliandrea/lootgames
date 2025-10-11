@@ -122,22 +122,34 @@ def reset_all():
     _save_db(db)
     return True
 
-# =================== UTIL ===================
-# ========== HELPER CHEST DATA ==========
+# =========================================================
+# 🔹 LOAD & SAVE CHEST DATA (Persistent)
+# =========================================================
 def load_chest_data():
+    global CLAIMED_CHEST_USERS, LAST_TREASURE_MSG_ID
     if not os.path.exists(CHEST_DB):
-        with open(CHEST_DB, "w", encoding="utf-8") as f:
-            json.dump({}, f)
-        return {}
-    with open(CHEST_DB, "r", encoding="utf-8") as f:
-        try:
-            return json.load(f)
-        except:
-            return {}
+        save_chest_data()  # buat file kosong pertama kali
+    try:
+        with open(CHEST_DB, "r") as f:
+            data = json.load(f)
+            CLAIMED_CHEST_USERS = set(data.get("claimed_users", []))
+            LAST_TREASURE_MSG_ID = data.get("last_msg_id")
+            logger.info("✅ Treasure Chest data loaded successfully.")
+    except Exception as e:
+        logger.error(f"Gagal load Treasure Chest data: {e}")
 
-def save_chest_data(data):
-    with open(CHEST_DB, "w", encoding="utf-8") as f:
-        json.dump(data, f, indent=2)
+
+def save_chest_data():
+    try:
+        data = {
+            "claimed_users": list(CLAIMED_CHEST_USERS),
+            "last_msg_id": LAST_TREASURE_MSG_ID,
+        }
+        os.makedirs(os.path.dirname(CHEST_DB), exist_ok=True)
+        with open(CHEST_DB, "w") as f:
+            json.dump(data, f, indent=2)
+    except Exception as e:
+        logger.error(f"Gagal save Treasure Chest data: {e}")
 
 # ---------------- SELL / ITEM CONFIG ---------------- #
 # inv_key harus cocok dengan key di aquarium_data.json (nama item di DB)
@@ -1270,6 +1282,7 @@ async def callback_handler(client: Client, cq: CallbackQuery):
             await cq.message.reply(msg)
             return
 
+###
     # ================== TREASURE CHEST OWNER ==================
     if data == "TREASURE_SEND_NOW":
         global LAST_TREASURE_MSG_ID
@@ -1278,7 +1291,7 @@ async def callback_handler(client: Client, cq: CallbackQuery):
             await cq.answer("❌ Hanya owner yang bisa akses menu ini.", show_alert=True)
             return
 
-        # 🔹 Reset claim
+        # 🔹 Reset claim dan simpan perubahan
         CLAIMED_CHEST_USERS.clear()
 
         # 🔹 Hapus pesan chest lama
@@ -1299,6 +1312,19 @@ async def callback_handler(client: Client, cq: CallbackQuery):
                 )
             )
             LAST_TREASURE_MSG_ID = msg.id
+
+            # ✅ Simpan data chest baru
+            os.makedirs(os.path.dirname(CHEST_DB), exist_ok=True)
+            with open(CHEST_DB, "w") as f:
+                json.dump(
+                    {
+                        "claimed_users": [],
+                        "last_msg_id": LAST_TREASURE_MSG_ID,
+                    },
+                    f,
+                    indent=2
+                )
+
         except Exception as e:
             logger.error(f"Gagal kirim Treasure Chest: {e}")
 
@@ -2113,6 +2139,7 @@ def register(app: Client):
     # --- Logging tambahan ---
     logger.info("💬 menu_utama handlers registered (callback + tc_drop_input)")
     print("[DEBUG] register(menu_utama) dipanggil ✅")
+
 
 
 
