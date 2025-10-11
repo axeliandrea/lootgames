@@ -943,18 +943,14 @@ async def callback_handler(client: Client, cq: CallbackQuery):
 
         save_chest_data(chest)
 
-        # 🔹 Delay 2 detik sebelum bot memproses klaim berikutnya
+        # 🔹 Delay 2 detik sebelum bot memproses klaim berikutnya (untuk rate limit)
         await asyncio.sleep(2)
 
-        # 🔹 Delay tambahan 3 detik sebelum kirim info awal klaim
+        # 🔹 Delay tambahan 3 detik sebelum kirim info akhir klaim
         await asyncio.sleep(3)
 
-        # 🔹 Kirim beberapa info pesan akhir klaim dengan jeda 1 detik tiap pesan
-        jumlah_info = 5  # ubah sesuai kebutuhan, misal 20
-        for i in range(1, jumlah_info + 1):
-            await cq.message.reply(f"🎉 @{uname} berhasil klaim 1 umpan Type **{jenis}**! (Info {i})")
-            await asyncio.sleep(1)  # jeda 1 detik antar pesan
-
+        # Kirim pesan akhir klaim
+        await cq.message.reply(f"🎉 @{uname} berhasil klaim 1 umpan Type **{jenis}**!")
         return
     
 #Revisi Part ini aja
