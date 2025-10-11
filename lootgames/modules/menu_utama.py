@@ -912,48 +912,48 @@ async def callback_handler(client: Client, cq: CallbackQuery):
         await cq.message.edit_text(full_text, reply_markup=kb)
         return
     
-# ====================== TC DROP CLAIM ======================
-if data == "tc_drop_claim":
-    chest = load_chest_data()
-    if not chest or not chest.get("active"):
-        await cq.answer("❌ Tidak ada TC DROP aktif.", show_alert=True)
+    # ====================== TC DROP CLAIM ======================
+    if data == "tc_drop_claim":
+        chest = load_chest_data()
+        if not chest or not chest.get("active"):
+            await cq.answer("❌ Tidak ada TC DROP aktif.", show_alert=True)
+            return
+
+        if user_id in chest.get("claimed_users", []):
+            await cq.answer("❌ Kamu sudah klaim TC DROP ini.", show_alert=True)
+            return
+
+        if chest["total_claim"] >= chest["max_claim"]:
+            await cq.answer("❌ TC DROP sudah habis diklaim semua!", show_alert=True)
+            return
+
+        # Kirim pesan pertama
+        msg = await cq.message.reply("⏳ Sedang membuka Treasure Chest...")
+        await asyncio.sleep(3)
+
+        # Pilih random jenis umpan dari rewards
+        jenis_list = list(chest["rewards"].keys())
+        jenis = random.choice(jenis_list)
+        jumlah = 1
+
+        # Update progres
+        await msg.edit_text(f"🎁 Menemukan hadiah di dalam chest...\n\nJenis umpan: **{jenis}**")
+        await asyncio.sleep(3)
+
+        # Proses pemberian hadiah
+        umpan.add_umpan(user_id, jenis, jumlah)
+        chest["claimed_users"].append(user_id)
+        chest["total_claim"] += 1
+
+        # Tutup chest jika sudah penuh
+        if chest["total_claim"] >= chest["max_claim"]:
+            chest["active"] = False
+
+        save_chest_data(chest)
+
+        # Pesan akhir sukses klaim
+        await msg.edit_text(f"🎉 @{uname} berhasil klaim 1 umpan Type **{jenis}**!")
         return
-
-    if user_id in chest.get("claimed_users", []):
-        await cq.answer("❌ Kamu sudah klaim TC DROP ini.", show_alert=True)
-        return
-
-    if chest["total_claim"] >= chest["max_claim"]:
-        await cq.answer("❌ TC DROP sudah habis diklaim semua!", show_alert=True)
-        return
-
-    # Kirim pesan pertama
-    msg = await cq.message.reply("⏳ Sedang membuka Treasure Chest...")
-    await asyncio.sleep(3)
-
-    # Pilih random jenis umpan dari rewards
-    jenis_list = list(chest["rewards"].keys())
-    jenis = random.choice(jenis_list)
-    jumlah = 1
-
-    # Update progres
-    await msg.edit_text(f"🎁 Menemukan hadiah di dalam chest...\n\nJenis umpan: **{jenis}**")
-    await asyncio.sleep(3)
-
-    # Proses pemberian hadiah
-    umpan.add_umpan(user_id, jenis, jumlah)
-    chest["claimed_users"].append(user_id)
-    chest["total_claim"] += 1
-
-    # Tutup chest jika sudah penuh
-    if chest["total_claim"] >= chest["max_claim"]:
-        chest["active"] = False
-
-    save_chest_data(chest)
-
-    # Pesan akhir sukses klaim
-    await msg.edit_text(f"🎉 @{uname} berhasil klaim 1 umpan Type **{jenis}**!")
-    return
     
 #Revisi Part ini aja
     # ===== EVOLVE SMALL FISH CONFIRM =====
@@ -2111,6 +2111,7 @@ def register(app: Client):
     # --- Logging tambahan ---
     logger.info("💬 menu_utama handlers registered (callback + tc_drop_input)")
     print("[DEBUG] register(menu_utama) dipanggil ✅")
+
 
 
 
