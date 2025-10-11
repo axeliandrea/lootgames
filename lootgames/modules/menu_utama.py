@@ -898,6 +898,40 @@ def list_full_inventory(user_id: int) -> str:
     result = "🎣 **HASIL TANGKAPANMU:**\n\n" + "\n".join(lines)
     return result
 
+async def handle_tc_drop_claim(cq, user_id, uname, chest, umpan):
+    if not chest or not chest.get("active"):
+        await cq.answer("❌ Tidak ada TC DROP aktif.", show_alert=True)
+        return
+
+    if user_id in chest.get("claimed_users", []):
+        await cq.answer("❌ Kamu sudah klaim TC DROP ini.", show_alert=True)
+        return
+
+    if chest["total_claim"] >= chest["max_claim"]:
+        await cq.answer("❌ TC DROP sudah habis diklaim semua!", show_alert=True)
+        return
+
+    jenis_list = list(chest["rewards"].keys())
+    jenis = random.choice(jenis_list)
+    jumlah = 1
+
+    umpan.add_umpan(user_id, jenis, jumlah)
+    chest["claimed_users"].append(user_id)
+    chest["total_claim"] += 1
+
+    if chest["total_claim"] >= chest["max_claim"]:
+        chest["active"] = False
+
+    save_chest_data(chest)
+
+    # Delay aman sebelum memproses klaim berikutnya
+    await asyncio.sleep(2)
+
+    # Delay sebelum kirim pesan akhir
+    await asyncio.sleep(3)
+
+    await cq.message.reply(f"🎉 @{uname} berhasil klaim 1 umpan Type **{jenis}**!")
+
 # ---------------- CALLBACK HANDLER ---------------- #
 async def callback_handler(client: Client, cq: CallbackQuery):
     data = cq.data
@@ -913,45 +947,44 @@ async def callback_handler(client: Client, cq: CallbackQuery):
         return
     
     # ====================== TC DROP CLAIM ======================
-    if data == "tc_drop_claim":
-        chest = load_chest_data()
-        if not chest or not chest.get("active"):
-            await cq.answer("❌ Tidak ada TC DROP aktif.", show_alert=True)
-            return
-
-        if user_id in chest.get("claimed_users", []):
-            await cq.answer("❌ Kamu sudah klaim TC DROP ini.", show_alert=True)
-            return
-
-        if chest["total_claim"] >= chest["max_claim"]:
-            await cq.answer("❌ TC DROP sudah habis diklaim semua!", show_alert=True)
-            return
-
-        # Pilih random jenis umpan
-        jenis_list = list(chest["rewards"].keys())
-        jenis = random.choice(jenis_list)
-        jumlah = 1
-
-        # Proses klaim hadiah (langsung masuk)
-        umpan.add_umpan(user_id, jenis, jumlah)
-        chest["claimed_users"].append(user_id)
-        chest["total_claim"] += 1
-
-        # Tutup chest jika sudah penuh
-        if chest["total_claim"] >= chest["max_claim"]:
-            chest["active"] = False
-
-        save_chest_data(chest)
-
-        # 🔹 Delay 2 detik sebelum bot memproses klaim berikutnya (untuk rate limit)
-        await asyncio.sleep(2)
-
-        # 🔹 Delay tambahan 3 detik sebelum kirim info akhir klaim
-        await asyncio.sleep(3)
-
-        # Kirim pesan akhir klaim
-        await cq.message.reply(f"🎉 @{uname} berhasil klaim 1 umpan Type **{jenis}**!")
+# ====================== TC DROP CLAIM ======================
+async def handle_tc_drop_claim(cq, user_id, uname, chest, umpan):
+    if not chest or not chest.get("active"):
+        await cq.answer("❌ Tidak ada TC DROP aktif.", show_alert=True)
         return
+
+    if user_id in chest.get("claimed_users", []):
+        await cq.answer("❌ Kamu sudah klaim TC DROP ini.", show_alert=True)
+        return
+
+    if chest["total_claim"] >= chest["max_claim"]:
+        await cq.answer("❌ TC DROP sudah habis diklaim semua!", show_alert=True)
+        return
+
+    # Pilih random jenis umpan
+    jenis_list = list(chest["rewards"].keys())
+    jenis = random.choice(jenis_list)
+    jumlah = 1
+
+    # Proses klaim hadiah langsung
+    umpan.add_umpan(user_id, jenis, jumlah)
+    chest["claimed_users"].append(user_id)
+    chest["total_claim"] += 1
+
+    if chest["total_claim"] >= chest["max_claim"]:
+        chest["active"] = False
+
+    save_chest_data(chest)
+
+    # Delay 2 detik sebelum memproses klaim berikutnya
+    await asyncio.sleep(2)
+
+    # Delay 3 detik sebelum kirim info klaim
+    await asyncio.sleep(3)
+
+    # Pesan akhir klaim
+    await cq.message.reply(f"🎉 @{uname} berhasil klaim 1 umpan Type **{jenis}**!")
+    return
     
 #Revisi Part ini aja
     # ===== EVOLVE SMALL FISH CONFIRM =====
@@ -1243,6 +1276,9 @@ async def callback_handler(client: Client, cq: CallbackQuery):
             await client.pin_chat_message(TARGET_GROUP, msg.id, disable_notification=True)
         except Exception as e:
             logger.error(f"Gagal kirim atau pin info evolve ke group: {e}")
+    #TC      
+    if data == "tc_drop_claim":
+    await handle_tc_drop_claim(cq, user_id, uname, load_chest_data(), umpan)
 
     # di dalam async def callback_handler(client: Client, cq: CallbackQuery):
     # ================== PLAYER CLAIM CHEST ==================
@@ -2109,6 +2145,7 @@ def register(app: Client):
     # --- Logging tambahan ---
     logger.info("💬 menu_utama handlers registered (callback + tc_drop_input)")
     print("[DEBUG] register(menu_utama) dipanggil ✅")
+
 
 
 
