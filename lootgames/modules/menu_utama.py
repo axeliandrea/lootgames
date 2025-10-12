@@ -1,5 +1,5 @@
-#FIX 
-# lootgames/modules/menu_utama.py Test Nonaktif Umpan Rare
+#TC OWNER FIX, SEDEKAH BUG
+# lootgames/modules/menu_utama.py
 import os
 import time  # pastikan ada di top imports
 import logging
@@ -2266,6 +2266,7 @@ def register_sedekah_handlers(app: Client):
     app.add_handler(MessageHandler(handle_sedekah_input, filters.private & filters.text))
     app.add_handler(CallbackQueryHandler(callback_handler))
     print("[DEBUG] register_sedekah_handlers() aktif ✅")
+
 
 
 
