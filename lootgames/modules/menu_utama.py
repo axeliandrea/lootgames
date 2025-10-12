@@ -1,4 +1,4 @@
-#FIX 07:16 KALO MAU GANTI INI
+#FIX 05:52
 # lootgames/modules/menu_utama.py Test Nonaktif Umpan Rare
 import os
 import logging
@@ -2189,7 +2189,6 @@ def register(app: Client):
     # --- Logging tambahan ---
     logger.info("💬 menu_utama handlers registered (callback + tc_drop_input)")
     print("[DEBUG] register(menu_utama) dipanggil ✅")
-
 
 
 
