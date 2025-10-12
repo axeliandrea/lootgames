@@ -500,7 +500,7 @@
   },
   "5875745650": {
     "\ud83e\udd27 Zonk": 19,
-    "\ud80c\udd9d Small Fish": 11,
+    "\ud80c\udd9d Small Fish": 1,
     "\ud83d\udc0c Snail": 8,
     "\ud83d\udc1a Hermit Crab": 10,
     "\ud83e\uddaa Giant Clam": 2,
@@ -2915,6 +2915,7 @@
     "\ud83d\udc1f Clownfish": 1,
     "\ud83d\udc19 Octopus": 1,
     "\ud83d\udc38 Frog": 1,
-    "\ud83d\udc1f Stingrays Fish": 1
+    "\ud83d\udc1f Stingrays Fish": 1,
+    "\ud83d\udc1a Hermit Crab": 1
   }
 }
