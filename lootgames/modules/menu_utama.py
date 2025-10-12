@@ -1706,7 +1706,7 @@ async def callback_handler(client: Client, cq: CallbackQuery):
             f"🎣 You successfully threw the bait! {jenis} to loot task#{task_id}!",
             reply_markup=InlineKeyboardMarkup([
                 [InlineKeyboardButton("🎣 Catch again", callback_data=f"FISH_CONFIRM_{jenis}")],
-                [InlineKeyboardButton("🤖 Auto Catch 1000x", callback_data=f"AUTO_FISH_{jenis}")],
+                [InlineKeyboardButton("🤖 Auto Catch 20x", callback_data=f"AUTO_FISH_{jenis}")],
                 [InlineKeyboardButton("❌ Cancel Auto", callback_data="AUTO_FISH_CANCEL")],  # tombol baru
                 [InlineKeyboardButton("⬅️ Back", callback_data="E")]
             ])
@@ -1727,16 +1727,16 @@ async def callback_handler(client: Client, cq: CallbackQuery):
             await cq.answer("❌ Tidak ada auto fishing aktif.", show_alert=True)
         return  # jangan lanjut ke auto fishing
 
-    # 2️⃣ Handle Auto Fishing 1000x
+    # 2️⃣ Handle Auto Fishing 20x
     elif data.startswith("AUTO_FISH_"):
         jenis = data.replace("AUTO_FISH_", "")
         uname = cq.from_user.username or f"user{user_id}"
 
-        await cq.answer("🤖 Auto Catching 1000x!!! Start!")
+        await cq.answer("🤖 Auto Catching 20x!!! Start!")
 
         async def auto_fishing():
             try:
-                for i in range(1000):
+                for i in range(20):
                     now = asyncio.get_event_loop().time()
                     if now - user_last_fishing.get(user_id, 0) < 10:
                         break
@@ -2216,6 +2216,7 @@ def register_sedekah_handlers(app: Client):
     app.add_handler(MessageHandler(handle_sedekah_input, filters.private & filters.text))
     app.add_handler(CallbackQueryHandler(callback_handler))
     print("[DEBUG] register_sedekah_handlers() aktif ✅")
+
 
 
 
