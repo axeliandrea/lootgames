@@ -108,21 +108,33 @@ async def send_treasure_chest(client, cq):
     data["created_at"] = time.time()
     save_treasure_data(data)
 
-    keyboard = InlineKeyboardMarkup([
+    # Tombol klaim di grup
+    keyboard_group = InlineKeyboardMarkup([
         [InlineKeyboardButton("🎁 Claim Treasure Chest", callback_data="TREASURE_CLAIM")]
     ])
 
-    await cq.message.edit_text("📦 Treasure Chest baru telah dikirim ke grup!")
-
-    msg = await client.send_message(
+    # Kirim info ke grup
+    await client.send_message(
         TARGET_GROUP,
         "🎉 **Treasure Chest Baru Telah Tiba!** 🎉\n\n"
         "Klik tombol di bawah untuk klaim hadiahmu sebelum 1 jam berlalu!",
-        reply_markup=keyboard
+        reply_markup=keyboard_group
+    )
+
+    # Tombol kembali di DM owner
+    keyboard_owner = InlineKeyboardMarkup([
+        [InlineKeyboardButton("⬅️ Kembali ke Menu Utama", callback_data="main")]
+    ])
+
+    # Edit pesan di private chat owner
+    await cq.message.edit_text(
+        "📦 Treasure Chest baru telah dikirim ke grup!\n\n"
+        "✅ Berhasil mengirim Treasure Chest.\n\n"
+        "Gunakan tombol di bawah untuk kembali ke menu utama.",
+        reply_markup=keyboard_owner
     )
 
     print(f"[TREASURE] Chest #{data['chest_id']} dikirim ke group oleh owner.")
-    return msg
 
 
 # ================= HANDLE CLAIM ================= #
@@ -2254,6 +2266,7 @@ def register_sedekah_handlers(app: Client):
     app.add_handler(MessageHandler(handle_sedekah_input, filters.private & filters.text))
     app.add_handler(CallbackQueryHandler(callback_handler))
     print("[DEBUG] register_sedekah_handlers() aktif ✅")
+
 
 
 
