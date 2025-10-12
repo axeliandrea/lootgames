@@ -1368,7 +1368,7 @@
     "\ud83d\udc38\ud83c\udf40 Bulbasaur": 4,
     "\ud83d\udc1f Moorish Idol": 8,
     "\ud83d\udc31 White Winter Cat": 7,
-    "\ud83d\udc2c Dolphin": 3,
+    "\ud83d\udc2c Dolphin": 4,
     "\ud83d\udc31 Purple Fist Cat": 7,
     "\ud83d\udc31 Red Hammer Cat": 6,
     "\ud83d\udc31 Green Dino Cat": 6,
@@ -1660,7 +1660,7 @@
     "\ud83d\udc2c Dolphin": 1
   },
   "2066716157": {
-    "\ud83e\udd27 Zonk": 259,
+    "\ud83e\udd27 Zonk": 261,
     "Lost cip": 5,
     "\ud83e\udddc\u200d\u2640\ufe0f Mermaid Boy": 1,
     "\ud83e\udddc\u200d\u2640\ufe0f Mermaid Girl": 1,
@@ -1676,7 +1676,16 @@
     "\ud83e\uddec Mysterious DNA": 2,
     "\ud83e\udd8d Gorilla": 1,
     "\ud83d\udc3c Panda": 1,
-    "\ud83d\udc22 Turtle": 1
+    "\ud83d\udc22 Turtle": 2,
+    "\ud83d\udc09 Skull Dragon": 1,
+    "\ud83d\udc1f Seahorse": 1,
+    "\ud83e\udd9e Lobster": 1,
+    "\ud83d\udc0c Snail": 2,
+    "\ud83e\udd80 Crab": 2,
+    "\ud83d\udc1a Hermit Crab": 2,
+    "\ud83d\udc19 Octopus": 1,
+    "\ud80c\udd9d Small Fish": 1,
+    "\ud83d\udc38\ud83c\udf40 Bulbasaur": 1
   },
   "1910337710": {
     "\ud83d\udc0c Snail": 31,
@@ -2934,7 +2943,7 @@
     "\ud83d\udc0c Snail": 1,
     "\ud83e\uddaa Giant Clam": 1,
     "\ud83d\udc0d Snake": 1,
-    "\ud83e\udd27 Zonk": 1,
+    "\ud83e\udd27 Zonk": 2,
     "\ud80c\udd9d Small Fish": 2,
     "\ud83d\udc1f Anglerfish": 1,
     "\ud83d\udc19 Octopus": 1,
