@@ -1,21 +1,16 @@
 {
   "active": true,
-  "owner_id": 6946903915,
-  "owner_name": "justforfun_admin",
+  "owner_id": 7341241548,
+  "owner_name": "Chantikacc",
   "rewards": {
     "A": 10
   },
-  "total_claim": 9,
+  "total_claim": 4,
   "max_claim": 10,
   "claimed_users": [
-    1630624318,
-    6789290524,
-    6580176261,
-    2066716157,
-    7405525319,
-    7435721456,
     6769845093,
-    5166986911,
-    5324087886
+    8050528403,
+    689421283,
+    5875745650
   ]
 }
