@@ -150,11 +150,11 @@ async def handle_treasure_claim(client, cq):
 
     # ====== Di luar lock, lakukan roll hadiah ====== #
     roll = random.random()
-    if roll < 0.4:
+    if roll < 0.5:
         hadiah = "🤧 Zonk"
         text = f"🤧 Sayang sekali @{uname}, kamu dapat Zonk!"
         await asyncio.sleep(1)
-    elif roll < 0.8:
+    elif roll < 0.95:
         hadiah = "🐛 Umpan Common (Type A)"
         try:
             umpan.add_umpan(user_id, "A", 1)
@@ -2254,6 +2254,7 @@ def register_sedekah_handlers(app: Client):
     app.add_handler(MessageHandler(handle_sedekah_input, filters.private & filters.text))
     app.add_handler(CallbackQueryHandler(callback_handler))
     print("[DEBUG] register_sedekah_handlers() aktif ✅")
+
 
 
 
