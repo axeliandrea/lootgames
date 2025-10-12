@@ -47,25 +47,49 @@ user_task_count = defaultdict(lambda: 0)   # generate task ID unik per user
 # TREASURE CHEST
 TREASURE_FILE = "storage/treasure_chest.json"
 os.makedirs(os.path.dirname(TREASURE_FILE), exist_ok=True)
+# lock untuk mencegah race condition pada klaim treasure (single-process)
+TREASURE_LOCK = asyncio.Lock()
 
 SEDEKAH_STATE = {}
 SEDEKAH_FILE = "sedekah_data.json" 
 
 CHEST_EXPIRE_SECONDS = 3600  # 1 jam = 3600 detik
 
+# ================= FILE I/O ================= #
 def load_treasure_data():
-    """Load file chest data"""
+    """Load file chest data (auto reset jika rusak)."""
     if not os.path.exists(TREASURE_FILE):
         data = {"chest_id": 0, "claimed_users": [], "created_at": 0}
         with open(TREASURE_FILE, "w") as f:
             json.dump(data, f)
         return data
-    with open(TREASURE_FILE, "r") as f:
-        return json.load(f)
+    try:
+        with open(TREASURE_FILE, "r") as f:
+            return json.load(f)
+    except Exception:
+        # jika file korup, reset baru
+        data = {"chest_id": 0, "claimed_users": [], "created_at": 0}
+        with open(TREASURE_FILE, "w") as f:
+            json.dump(data, f)
+        return data
+
 
 def save_treasure_data(data):
-    with open(TREASURE_FILE, "w") as f:
-        json.dump(data, f, indent=2)
+    """Simpan data secara atomic (anti rusak saat crash)."""
+    tmpfd, tmpname = tempfile.mkstemp(dir=os.path.dirname(TREASURE_FILE) or ".")
+    try:
+        with os.fdopen(tmpfd, "w") as f:
+            json.dump(data, f, indent=2)
+            f.flush()
+            os.fsync(f.fileno())
+        os.replace(tmpname, TREASURE_FILE)
+    except Exception:
+        try:
+            os.remove(tmpname)
+        except Exception:
+            pass
+        raise
+
 
 def is_chest_expired(data: dict) -> bool:
     """Cek apakah chest sudah lewat 1 jam"""
@@ -73,6 +97,8 @@ def is_chest_expired(data: dict) -> bool:
         return True
     return (time.time() - data["created_at"]) > CHEST_EXPIRE_SECONDS
 
+
+# ================= SEND CHEST ================= #
 async def send_treasure_chest(client, cq):
     """Owner kirim chest baru ke group"""
     data = load_treasure_data()
@@ -97,48 +123,59 @@ async def send_treasure_chest(client, cq):
     print(f"[TREASURE] Chest #{data['chest_id']} dikirim ke group oleh owner.")
     return msg
 
+
+# ================= HANDLE CLAIM ================= #
 async def handle_treasure_claim(client, cq):
-    """Player klaim chest"""
+    """Player klaim chest — versi aman dari double claim"""
     user_id = cq.from_user.id
     uname = cq.from_user.username or f"user{user_id}"
 
-    data = load_treasure_data()
+    async with TREASURE_LOCK:
+        data = load_treasure_data()
 
-    # Cek apakah chest sudah hangus
-    if is_chest_expired(data):
-        await cq.answer("⏳ Treasure Chest sudah hangus.", show_alert=True)
-        return
+        # Cek apakah chest sudah hangus
+        if is_chest_expired(data):
+            await cq.answer("⏳ Treasure Chest sudah hangus.", show_alert=True)
+            return
 
-    # Cek apakah sudah klaim
-    if user_id in data.get("claimed_users", []):
-        await cq.answer("❌ Kamu sudah klaim Treasure Chest ini!", show_alert=True)
-        return
+        # Cek apakah sudah klaim
+        if user_id in data.get("claimed_users", []):
+            await cq.answer("❌ Kamu sudah klaim Treasure Chest ini!", show_alert=True)
+            return
 
-    # 🎲 Roll hadiah
+        # Tambahkan user ke daftar klaim (agar langsung terkunci)
+        data.setdefault("claimed_users", []).append(user_id)
+        save_treasure_data(data)
+
+    # ====== Di luar lock, lakukan roll hadiah ====== #
     roll = random.random()
     if roll < 0.4:
         hadiah = "🤧 Zonk"
         text = f"🤧 Sayang sekali @{uname}, kamu dapat Zonk!"
-        await asyncio.sleep(1)  # delay 1 detik sebelum kirim
+        await asyncio.sleep(1)
     elif roll < 0.8:
         hadiah = "🐛 Umpan Common (Type A)"
-        umpan.add_umpan(user_id, "A", 1)
+        try:
+            umpan.add_umpan(user_id, "A", 1)
+        except Exception as e:
+            print(f"[TREASURE][ERROR] Gagal add umpan A: {e}")
         text = f"🐛 @{uname} mendapatkan **1 Umpan Common (Type A)**!"
-        await asyncio.sleep(2)  # delay 2 detik sebelum kirim
+        await asyncio.sleep(2)
     else:
         hadiah = "🐌 Umpan Rare (Type B)"
-        umpan.add_umpan(user_id, "B", 1)
+        try:
+            umpan.add_umpan(user_id, "B", 1)
+        except Exception as e:
+            print(f"[TREASURE][ERROR] Gagal add umpan B: {e}")
         text = f"🐌 @{uname} mendapatkan **1 Umpan Rare (Type B)**! 🥳"
-        await asyncio.sleep(3)  # delay 3 detik sebelum kirim
+        await asyncio.sleep(3)
 
-    # Tambahkan ke daftar klaim
-    data["claimed_users"].append(user_id)
-    save_treasure_data(data)
-
-    # Kirim info
+    # Kirim konfirmasi
     await cq.answer("✅ Hadiah berhasil diklaim!", show_alert=True)
     await cq.message.reply_text(text)
-    print(f"[TREASURE] @{uname} klaim chest #{data['chest_id']} -> {hadiah}")
+
+    print(f"[TREASURE] @{uname} klaim chest #{data.get('chest_id')} -> {hadiah}")
+
 # ===================================================================== #
 # ---------------- HANDLE INPUT ---------------- #
 # ---------------- HANDLE INPUT ---------------- #
@@ -2216,6 +2253,7 @@ def register_sedekah_handlers(app: Client):
     app.add_handler(MessageHandler(handle_sedekah_input, filters.private & filters.text))
     app.add_handler(CallbackQueryHandler(callback_handler))
     print("[DEBUG] register_sedekah_handlers() aktif ✅")
+
 
 
 
