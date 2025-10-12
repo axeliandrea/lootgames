@@ -54,7 +54,7 @@ TREASURE_LOCK = asyncio.Lock()
 SEDEKAH_STATE = {}
 SEDEKAH_FILE = "sedekah_data.json" 
 
-CHEST_EXPIRE_SECONDS = 3600  # 1 jam = 3600 detik
+CHEST_EXPIRE_SECONDS = 900  # 1 jam = 3600 detik
 
 # ================= FILE I/O ================= #
 def load_treasure_data():
@@ -116,8 +116,8 @@ async def send_treasure_chest(client, cq):
     # Kirim info ke grup
     await client.send_message(
         TARGET_GROUP,
-        "🎉 **Treasure Chest Baru Telah Tiba!** 🎉\n\n"
-        "Klik tombol di bawah untuk klaim hadiahmu sebelum 1 jam berlalu!",
+        "🎉 **Treasure Chest Spawned!** 🎉\n\n"
+        "Expired in 15 minutues",
         reply_markup=keyboard_group
     )
 
@@ -128,9 +128,9 @@ async def send_treasure_chest(client, cq):
 
     # Edit pesan di private chat owner
     await cq.message.edit_text(
-        "📦 Treasure Chest baru telah dikirim ke grup!\n\n"
-        "✅ Berhasil mengirim Treasure Chest.\n\n"
-        "Gunakan tombol di bawah untuk kembali ke menu utama.",
+        "📦 Treasure Chest send to Loot!\n\n"
+        "✅ Treasure Chest Spawned Successfully.\n\n"
+        "Back to Main Menu.",
         reply_markup=keyboard_owner
     )
 
@@ -2266,6 +2266,7 @@ def register_sedekah_handlers(app: Client):
     app.add_handler(MessageHandler(handle_sedekah_input, filters.private & filters.text))
     app.add_handler(CallbackQueryHandler(callback_handler))
     print("[DEBUG] register_sedekah_handlers() aktif ✅")
+
 
 
 
