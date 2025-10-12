@@ -1,4 +1,4 @@
-# lootgames/__main__.py revisi 7
+# lootgames/__main__.py
 import asyncio
 import logging
 import os
@@ -33,7 +33,7 @@ if "LOG_FORMAT" not in globals():
 logging.basicConfig(level=LOG_LEVEL, format=LOG_FORMAT)
 logger = logging.getLogger(__name__)
 
-# Supaya log internal Pyrogram gak terlalu ramai
+# Supaya log internal Pyrogram tidak terlalu ramai
 logging.getLogger("pyrogram").setLevel(logging.WARNING)
 logging.getLogger("pyrogram.session").setLevel(logging.WARNING)
 
@@ -60,6 +60,16 @@ def safe_register(module, name: str):
 
 safe_register(yapping, "yapping")
 safe_register(menu_utama, "menu_utama")
+
+# Register tambahan untuk fungsi sedekah agar bot mendengar input user
+try:
+    if hasattr(menu_utama, "register_sedekah_handlers"):
+        menu_utama.register_sedekah_handlers(app)
+        logger.info("📦 Sedekah Treasure handler registered ✅")
+    else:
+        logger.warning("⚠️ Fungsi register_sedekah_handlers tidak ditemukan di menu_utama")
+except Exception as e:
+    logger.error(f"❌ Gagal register sedekah handler: {e}")
 
 # Dummy register untuk user_database jika tidak ada
 if not hasattr(user_database, "register"):
@@ -90,6 +100,7 @@ async def fishing_callback_handler(client, callback_query):
         except Exception as e:
             logger.error(f"Gagal proses fishing_loot: {e}")
 
+# Tambahkan handler callback untuk fishing
 app.add_handler(CallbackQueryHandler(fishing_callback_handler))
 
 # ================= MAIN BOT ================= #
@@ -114,7 +125,7 @@ async def main():
         logger.error(f"Gagal kirim notifikasi start: {e}")
 
     logger.info("[MAIN] Bot berjalan, tekan Ctrl+C untuk berhenti.")
-    
+
     # Jalankan bot terus-menerus
     await asyncio.Event().wait()
 
@@ -127,4 +138,3 @@ if __name__ == "__main__":
         pass
 
     asyncio.run(main())
-
