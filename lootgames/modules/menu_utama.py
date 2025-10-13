@@ -51,7 +51,7 @@ os.makedirs(os.path.dirname(TREASURE_FILE), exist_ok=True)
 # lock untuk mencegah race condition pada klaim treasure (single-process)
 TREASURE_LOCK = asyncio.Lock()
 # SEDEKAH TREASURE CHEST
-SEDEKAH_CHEST_FILE = "storage/sedekah_chest.json"
+SEDE_CHEST_FILE = "storage/sedekah_chest.json"
 SEDEKAH_LOCK = False
 # ---------------- KONSTANTA GLOBAL ---------------- #
 CLAIM_EXPIRE_SECONDS = 600  # 10 menit (dalam detik)
@@ -1078,7 +1078,7 @@ MENU_STRUCTURE["H"] = {
     "title": "📦 TREASURE CHEST",
     "buttons": [
         ("📤 OWNER Only", "TREASURE_SEND_NOW"),
-        ("🎁 SEDEKAH TREASURE CHEST", "SEDEKAH_TREASURE"),
+        ("🎁 COMING SOON", "SEDEKAH_TREASURE"),
         ("⬅️ Back", "main")
     ]
 }
@@ -2613,3 +2613,4 @@ def register_sedekah_handlers(app: Client):
     app.add_handler(MessageHandler(handle_sedekah_input, filters.private & filters.text))
     app.add_handler(CallbackQueryHandler(callback_handler))
     print("[DEBUG] register_sedekah_handlers() aktif ✅")
+
