@@ -1475,6 +1475,52 @@ async def handle_sedekah_claim(client, cq):
     await cq.message.reply_text(text)
     print(f"[SEDEKAH] @{uname} klaim chest #{data.get('chest_id')} -> {hadiah}")
 
+# ---------------- HANDLE CLAIM ---------------- #
+async def handle_sedekah_claim(client, cq):
+    """Handler untuk claim treasure chest"""
+    user_id = cq.from_user.id
+    username = cq.from_user.first_name or f"user{user_id}"
+
+    # Ambil chest ID dari callback data
+    chest_id = int(cq.data.split(":")[1])
+
+    async with CLAIM_LOCK:
+        if not os.path.exists(SEDEKAH_CHEST_FILE):
+            await cq.answer("❌ Chest tidak ditemukan.", show_alert=True)
+            return
+
+        with open(SEDEKAH_CHEST_FILE, "r") as f:
+            chest_data = json.load(f)
+
+        # Cari chest yang sesuai
+        chest = next((c for c in chest_data["active"] if c["id"] == chest_id), None)
+        if not chest:
+            await cq.answer("❌ Chest sudah kadaluarsa atau tidak ditemukan.", show_alert=True)
+            return
+
+        # Cek user sudah claim sebelumnya
+        if user_id in chest["claimed"]:
+            await cq.answer("⚠️ Kamu sudah claim chest ini.", show_alert=True)
+            return
+
+        # Cek slot tersisa
+        if len(chest["claimed"]) >= chest["slot"]:
+            await cq.answer("⚠️ Semua slot sudah terisi.", show_alert=True)
+            return
+
+        # Tambahkan user ke claimed
+        chest["claimed"].append(user_id)
+
+        # Update file
+        with open(SEDEKAH_CHEST_FILE, "w") as f:
+            json.dump(chest_data, f, indent=2)
+
+    # Beri reward ke user
+    umpan.kurangi_umpan(user_id, chest["jenis"], 0)  # kalau mau bisa tambahkan logika reward
+    await cq.answer(f"✅ {username} berhasil claim {chest['amount']} Umpan Type {chest['jenis']}", show_alert=True)
+    print(f"[DEBUG] User {user_id} claim chest {chest_id} ({len(chest['claimed'])}/{chest['slot']})")
+
+
 
 # ================= CALLBACK HANDLER ================= #
 async def callback_handler(client, cq):
@@ -2613,4 +2659,5 @@ def register_sedekah_handlers(app: Client):
     app.add_handler(MessageHandler(handle_sedekah_input, filters.private & filters.text))
     app.add_handler(CallbackQueryHandler(callback_handler))
     print("[DEBUG] register_sedekah_handlers() aktif ✅")
+
 
