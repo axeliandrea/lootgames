@@ -1,4 +1,4 @@
-# lootgames/modules/umpan.py
+# lootgames/modules/umpan.py 
 import json
 import os
 from threading import Lock
@@ -170,3 +170,22 @@ def init_user_if_missing(user_id: int, username: str = None):
         if str_id not in db:
             db[str_id] = {"username": username or f"user_{user_id}", "umpan": 0}
             save_db(db, jenis)
+
+# ================================================================
+# KOMPATIBILITAS UNTUK MENU_UTAMA (alias fungsi lama)
+# ================================================================
+
+def get_umpan(user_id: int, jenis: str) -> int:
+    """Mengembalikan jumlah umpan user sesuai jenis."""
+    if jenis not in UMPAN_FILES:
+        raise ValueError("Jenis umpan tidak valid")
+    db = load_db(jenis)
+    str_id = str(user_id)
+    if str_id not in db:
+        init_user(user_id)
+        db = load_db(jenis)
+    return db[str_id]["umpan"]
+
+def kurangi_umpan(user_id: int, jenis: str, jumlah: int):
+    """Alias untuk remove_umpan (biar kompatibel dengan menu_utama)."""
+    remove_umpan(user_id, jenis, jumlah)
