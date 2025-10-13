@@ -1,4 +1,4 @@
-#TC OWNER FIX, SEDEKAH BUG
+### EDIT KHUSUS TC ###
 # lootgames/modules/menu_utama.py
 import os
 import time  # pastikan ada di top imports
@@ -2266,6 +2266,7 @@ def register_sedekah_handlers(app: Client):
     app.add_handler(MessageHandler(handle_sedekah_input, filters.private & filters.text))
     app.add_handler(CallbackQueryHandler(callback_handler))
     print("[DEBUG] register_sedekah_handlers() aktif ✅")
+
 
 
 
