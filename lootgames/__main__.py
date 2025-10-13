@@ -1,4 +1,4 @@
-# lootgames/__main__.py  ### EDIT KHUSUS TC ###
+# lootgames/__main__.py 
 import asyncio
 import logging
 import os
