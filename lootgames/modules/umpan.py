@@ -1,4 +1,4 @@
-# lootgames/modules/umpan.py
+# lootgames/modules/umpan.py ### EDIT KHUSUS TC ###
 import json
 import os
 from threading import Lock
