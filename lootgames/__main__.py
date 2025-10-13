@@ -1,4 +1,4 @@
-# lootgames/__main__.py
+# lootgames/__main__.py  ### EDIT KHUSUS TC ###
 import asyncio
 import logging
 import os
@@ -138,3 +138,4 @@ if __name__ == "__main__":
         pass
 
     asyncio.run(main())
+
