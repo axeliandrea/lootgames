@@ -2226,15 +2226,20 @@ def register(app: Client):
     # Menangani format transfer item / koin antara user
     app.add_handler(MessageHandler(handle_transfer_message, filters.text & filters.private))
 
-def register_sedekah_handlers(app: Client):
-    """
-    Registrasi handler khusus sedekah.
-    Fungsi ini memungkinkan bot menerima input angka (jumlah & slot)
-    saat pengguna mengetik di chat private.
-    """
-    app.add_handler(MessageHandler(handle_sedekah_input, filters.private & filters.text))
-    app.add_handler(CallbackQueryHandler(callback_handler))
-    print("[DEBUG] register_sedekah_handlers() aktif ✅")
+# ---------------- REGISTER HANDLERS ---------------- #
+def register_sedekah_handlers(app):
+    try:
+        # Tangani input angka slot di chat (PRIVATE)
+        app.add_handler(MessageHandler(handle_sedekah_input, filters.text & filters.private))
+
+        # Tangani tombol callback SEDEKAH_
+        app.add_handler(CallbackQueryHandler(callback_handler, filters.regex("^SEDEKAH_")))
+
+        print("[DEBUG] register_sedekah_handlers() aktif ✅")
+    except Exception as e:
+        import logging
+        logging.error(f"❌ Gagal register sedekah handler: {e}")
+
 
 
 
