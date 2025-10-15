@@ -192,41 +192,18 @@ async def handle_treasure_claim(client, cq):
 # ===================================================================== #
 # ---------------- HANDLE INPUT ---------------- #
 # ---------------- HANDLE INPUT ---------------- #
-async def handle_sedekah_input(client, message: Message):
-    """Menangani input slot penerima untuk sedekah"""
-    user_id = message.from_user.id
+async def handle_sedekah_slot_input(client, cq):
+    """Handler saat tombol 'Atur Slot Penerima' ditekan"""
+    user_id = cq.from_user.id
     state = SEDEKAH_STATE.get(user_id)
     if not state:
+        await cq.answer("⚠️ Tidak ada proses sedekah aktif.", show_alert=True)
         return
 
-    step = state.get("step")
-    text = (message.text or "").strip()
-    if not text.isdigit():
-        await message.reply("⚠️ Harus berupa angka. Coba lagi.")
-        return
-    slot_value = int(text)
-
-    # STEP INPUT SLOT PENERIMA
-    if step == "await_slot_input":
-        amount = state.get("amount")
-        jenis = state.get("jenis")
-
-        if slot_value < 5 or slot_value > 100:
-            await message.reply("⚠️ Slot penerima harus 5 - 100.")
-            return
-        if slot_value > amount:
-            await message.reply(f"⚠️ Slot tidak boleh lebih besar dari jumlah umpan ({amount}).")
-            return
-
-        # Simpan slot di state
-        state["slot"] = slot_value
-        state["step"] = "sent"
-
-        # Langsung kirim chest ke grup
-        await send_sedekah_to_group(client, user_id, jenis, amount, slot_value, message)
-
-        # Hapus state user agar tidak menumpuk
-        SEDEKAH_STATE.pop(user_id, None)
+    await cq.message.reply(
+        "💬 Silakan ketik jumlah slot penerima (5-100) di chat ini."
+    )
+    await cq.answer("Masukkan angka slot di chat.", show_alert=False)
 
 # ---------------- SEND TO GROUP ---------------- #
 async def send_sedekah_to_group(client, sender_id, jenis, amount, slot, message):
@@ -292,37 +269,29 @@ def save_sedekah_data(data):
         json.dump(data, f, indent=2)
 
 # ---------------- MENU SEDEKAH ---------------- #
+# ---------------- MENU SEDEKAH ---------------- #
 async def handle_sedekah_menu(client, cq):
-    """Sub menu SEDEKAH TREASURE CHEST - flow baru otomatis 20 umpan"""
+    """Sub menu SEDEKAH TREASURE CHEST - flow baru"""
     user_id = cq.from_user.id
 
-    # Jumlah umpan yang otomatis dikurangi
     auto_amount = 20
-    jenis = "A"  # Bisa diubah jadi "B" atau dibuat pilihan nanti
+    jenis = "A"  # default umpan type
 
-    # Cek apakah user punya cukup umpan
-    user_umpan = umpan.get_umpan(user_id, jenis)
-    if user_umpan < auto_amount:
-        await cq.answer(f"⚠️ Kamu tidak punya cukup Umpan Type {jenis} (dibutuhkan {auto_amount}).", show_alert=True)
-        return
-
-    # Simpan state sementara (slot akan diinput selanjutnya)
     SEDEKAH_STATE[user_id] = {
         "step": "await_slot_input",
         "jenis": jenis,
         "amount": auto_amount
     }
 
-    # Tombol untuk input slot atau batal
     keyboard = InlineKeyboardMarkup([
-        [InlineKeyboardButton("📝 Atur Slot Penerima (5-100)", callback_data="SEDEKAH_SLOT_INPUT")],
+        [InlineKeyboardButton("📝 Atur Slot Penerima (5-100)", callback_data="SEDEKAH_SET_SLOT")],
         [InlineKeyboardButton("❌ Batal", callback_data="SEDEKAH_CANCEL")]
     ])
 
     await cq.message.edit_text(
         f"🙏 Kamu akan sedekahkan **{auto_amount} Umpan Type {jenis}**.\n"
-        "Silakan atur jumlah slot penerima (5-100):",
-        reply_markup=kb
+        f"Silakan atur jumlah slot penerima (5-100):",
+        reply_markup=keyboard
     )
 
 # ---------------- PILIH JENIS UMPAN ---------------- #
@@ -1204,19 +1173,19 @@ async def callback_handler(client: Client, cq: CallbackQuery):
 
     # === MENU SEDEKAH ===
     # ---------------- CALLBACK HANDLER ---------------- #
+    # === MENU SEDEKAH ===
     if data == "SEDEKAH_TREASURE":
         await handle_sedekah_menu(client, cq)
-        
-    elif data == "SEDEKAH_SLOT_INPUT":
-        # Minta user input slot di chat private
-        await cq.message.reply(
-            "💬 Silakan ketik jumlah slot penerima (5-100) di chat private."
-        )
+        return
 
-    elif data == "SEDEKAH_SEND":
-        await handle_sedekah_send_menu(client, cq)
+    elif data == "SEDEKAH_SET_SLOT":
+        await handle_sedekah_slot_input(client, cq)
+        return
+
     elif data == "SEDEKAH_CANCEL":
         await handle_sedekah_cancel(client, cq)
+        return
+
 
     # ====== MENU HASIL TANGKAPAN (LIHAT INVENTORY LENGKAP) ======
     if data == "FFF":
@@ -2266,5 +2235,6 @@ def register_sedekah_handlers(app: Client):
     app.add_handler(MessageHandler(handle_sedekah_input, filters.private & filters.text))
     app.add_handler(CallbackQueryHandler(callback_handler))
     print("[DEBUG] register_sedekah_handlers() aktif ✅")
+
 
 
