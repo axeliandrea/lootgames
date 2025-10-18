@@ -361,6 +361,7 @@ async def handle_sedekah_claim(client, cq):
             save_sedekah_data(data)
             print(f"[SEDEKAH][CLAIM][ZONK] @{uname} ZONK saat klaim chest #{chest_id} (will remain active)")
             await cq.answer("😅 ZONK! Tidak dapat apa-apa kali ini. Coba lagi lain waktu.", show_alert=True)
+            await asyncio.sleep(random.uniform(1, 3))
             await cq.message.reply_text(f"😜 @{uname} Sian deh lu... makan nih ZONK! 💩")
             return
 
@@ -2314,5 +2315,6 @@ def register_sedekah_handlers(app: Client):
     app.add_handler(MessageHandler(handle_sedekah_input, filters.private & filters.text))
     app.add_handler(CallbackQueryHandler(callback_handler))
     print("[DEBUG] register_sedekah_handlers() aktif ✅")
+
 
 
