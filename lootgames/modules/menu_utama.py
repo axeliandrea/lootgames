@@ -1,4 +1,4 @@
-### EDIT KHUSUS TC ### 06:34
+### EDIT KHUSUS TC ### 06:20
 # lootgames/modules/menu_utama.py
 import os
 import time  # pastikan ada di top imports
@@ -51,10 +51,13 @@ os.makedirs(os.path.dirname(TREASURE_FILE), exist_ok=True)
 # lock untuk mencegah race condition pada klaim treasure (single-process)
 TREASURE_LOCK = asyncio.Lock()
 
+SEDEKAH_FILE = "storage/sedekah_tc.json"
+os.makedirs(os.path.dirname(SEDEKAH_FILE), exist_ok=True)
+SEDEKAH_LOCK = asyncio.Lock()
 SEDEKAH_STATE = {}
-SEDEKAH_FILE = "sedekah_data.json" 
+SEDEKAH_EXPIRE_SECONDS = 60  # 1 menit
 
-CHEST_EXPIRE_SECONDS = 120  # 2 menit
+CHEST_EXPIRE_SECONDS = 60  # 1 menit
 
 # ================= FILE I/O ================= #
 def load_treasure_data():
@@ -230,15 +233,13 @@ async def handle_sedekah_input(client, message: Message):
 
 # ---------------- SEND TO GROUP ---------------- #
 async def send_sedekah_to_group(client, sender_id, jenis, amount, slot, message):
-    """Kirim sedekah treasure chest ke grup"""
-    # Deduct umpan otomatis
+    """Kirim sedekah chest ke grup"""
     try:
         umpan.remove_umpan(sender_id, jenis, amount)
     except Exception as e:
         await message.reply(f"❌ Gagal mengurangi umpan: {e}")
         return
 
-    # Buat chest baru
     chest_id = int(time.time())
     amount_per_slot = amount // slot
     new_chest = {
@@ -247,43 +248,127 @@ async def send_sedekah_to_group(client, sender_id, jenis, amount, slot, message)
         "jenis": jenis,
         "amount": amount_per_slot,
         "slot": slot,
-        "claimed": [],
-        "created_at": time.time()
+        "claimed": [],        # tidak terlalu dipakai sekarang, tetap ada untuk backward compat
+        "created_at": time.time(),
+        "winner": None,       # akan diisi user_id jika ada pemenang
+        "attempts": []        # user_id yang sudah mencoba (opsional, untuk mencegah spam)
     }
 
-    # Simpan ke data sedekah
     data = load_sedekah_data()
     data["active"].append(new_chest)
     save_sedekah_data(data)
 
-    # Kirim ke grup
     keyboard = InlineKeyboardMarkup([
-        [InlineKeyboardButton("🎁 Claim Sedekah Treasure Chest", callback_data=f"SEDEKAH_CLAIM:{chest_id}")]
+        [InlineKeyboardButton("🎁 Claim Sedekah", callback_data=f"SEDEKAH_CLAIM:{chest_id}")]
     ])
+
     await client.send_message(
         TARGET_GROUP,
         f"🎁 **{message.from_user.first_name}** membagikan **Sedekah Treasure Chest!**\n"
-        f"🎣 Hadiah: {amount_per_slot} Umpan Type {jenis} per orang\n"
-        f"🔢 Total umpan: {amount_per_slot*slot} (slot: {slot})",
+        f"🎣 {amount_per_slot} Umpan Type {jenis} per orang (slot {slot})",
         reply_markup=keyboard
     )
 
-    await message.reply("✅ Sedekah Treasure Chest berhasil dikirim ke grup!")
+    await message.reply("✅ Sedekah Treasure Chest dikirim ke grup!")
 
-# ---------------- CANCEL ---------------- #
-async def handle_sedekah_cancel(client, cq):
+async def handle_sedekah_claim(client, cq):
+    """Handle klaim sedekah:
+    - Jika expired -> refund sisa ke sender
+    - Jika sudah ada winner -> beri tahu chest sudah dimenangkan
+    - Jika belum ada winner -> roll (20% win, 80% zonk)
+      * jika win -> set winner, beri umpan, hapus chest dari active (slot terpakai)
+      * jika zonk -> simpan attempt, chest tetap aktif
+    """
     user_id = cq.from_user.id
-    SEDEKAH_STATE.pop(user_id, None)
-    await cq.message.edit_text("❌ Operasi sedekah dibatalkan.")
+    uname = cq.from_user.username or f"user{user_id}"
+
+    # parse callback data
+    try:
+        _, chest_id_str = cq.data.split(":")
+        chest_id = int(chest_id_str)
+    except Exception:
+        await cq.answer("❌ Data chest tidak valid.", show_alert=True)
+        return
+
+    async with SEDEKAH_LOCK:
+        data = load_sedekah_data()
+        active = data.get("active", [])
+        chest = next((c for c in active if c["id"] == chest_id), None)
+
+        if not chest:
+            await cq.answer("⚠️ Chest tidak ditemukan atau sudah habis.", show_alert=True)
+            return
+
+        # expired -> refund sisa
+        if time.time() - chest["created_at"] > SEDEKAH_EXPIRE_SECONDS:
+            sisa_slot = chest["slot"] - (1 if chest.get("winner") else 0)
+            # jika winner belum ada, refund seluruh amount (slot * amount)
+            if sisa_slot > 0:
+                refund_amount = sisa_slot * chest["amount"]
+                try:
+                    umpan.add_umpan(chest["sender"], chest["jenis"], refund_amount)
+                    print(f"[SEDEKAH][EXPIRE] Chest #{chest_id} expired. Refund {refund_amount} umpan Type {chest['jenis']} to user {chest['sender']}")
+                except Exception as e:
+                    print(f"[SEDEKAH][ERROR][REFUND] Gagal refund ke {chest['sender']}: {e}")
+            else:
+                print(f"[SEDEKAH][EXPIRE] Chest #{chest_id} expired. Tidak ada sisa slot untuk refund.")
+            # hapus chest
+            active.remove(chest)
+            save_sedekah_data(data)
+            await cq.answer("⏳ Chest sudah expired. Sisa umpan dikembalikan ke pengirim.", show_alert=True)
+            return
+
+        # jika sudah ada pemenang, informasikan dan stop
+        if chest.get("winner"):
+            try:
+                winner_uid = chest["winner"]
+                await cq.answer("⚠️ Chest sudah dimenangkan.", show_alert=True)
+            except Exception:
+                pass
+            return
+
+        # optional: cegah user yang sama klik berulang kali (supaya tidak spam zonk)
+        if user_id in chest.get("attempts", []):
+            await cq.answer("⚠️ Kamu sudah mencoba klaim chest ini sebelumnya.", show_alert=True)
+            return
+
+        # lakukan roll gacha — 20% win, 80% zonk
+        roll = random.random()
+        if roll <= 0.2:
+            # pemenang -> set winner, beri reward, hapus chest dari active
+            chest["winner"] = user_id
+            chest["claimed"].append(user_id)
+            # beri umpan
+            try:
+                umpan.add_umpan(user_id, chest["jenis"], chest["amount"])
+                print(f"[SEDEKAH][CLAIM][WIN] @{uname} menang dan mendapat {chest['amount']} umpan Type {chest['jenis']} dari chest #{chest_id}")
+            except Exception as e:
+                print(f"[SEDEKAH][ERROR][ADD_UMPAN] Gagal memberi umpan ke {user_id}: {e}")
+
+            # hapus chest dari active (karena sudah ada pemenang)
+            try:
+                active.remove(chest)
+            except ValueError:
+                pass
+            save_sedekah_data(data)
+
+            await cq.answer("🎉 Kamu BERUNTUNG! Dapat sedekah umpan!", show_alert=True)
+            await cq.message.reply_text(f"🍀 @{uname} BERHASIL mendapatkan {chest['amount']} umpan Type {chest['jenis']} dari sedekah!")
+            return
+        else:
+            # zonk -> catat attempt, tapi chest tetap aktif
+            chest.setdefault("attempts", []).append(user_id)
+            save_sedekah_data(data)
+            print(f"[SEDEKAH][CLAIM][ZONK] @{uname} ZONK saat klaim chest #{chest_id} (will remain active)")
+            await cq.answer("😅 ZONK! Tidak dapat apa-apa kali ini. Coba lagi lain waktu.", show_alert=True)
+            await cq.message.reply_text(f"😜 @{uname} Sian deh lu... makan nih ZONK! 💩")
+            return
 
 
 # ---------------- DATA HANDLER ---------------- #
 def load_sedekah_data():
     if not os.path.exists(SEDEKAH_FILE):
-        data = {"active": []}
-        with open(SEDEKAH_FILE, "w") as f:
-            json.dump(data, f)
-        return data
+        return {"active": []}
     with open(SEDEKAH_FILE, "r") as f:
         return json.load(f)
 
@@ -293,79 +378,26 @@ def save_sedekah_data(data):
 
 # ---------------- MENU SEDEKAH ---------------- #
 async def handle_sedekah_menu(client, cq):
-    """Sub menu SEDEKAH TREASURE CHEST - flow baru otomatis 20 umpan"""
+    """Menu Sedekah Treasure Chest — 1 slot, biaya 5 umpan A"""
     user_id = cq.from_user.id
+    jenis = "A"
+    amount = 5
 
-    # Jumlah umpan yang otomatis dikurangi
-    auto_amount = 20
-    jenis = "A"  # Bisa diubah jadi "B" atau dibuat pilihan nanti
+    # Cek apakah ada sedekah aktif yang belum expired
+    data = load_sedekah_data()
+    now = time.time()
+    for chest in data.get("active", []):
+        if now - chest["created_at"] < SEDEKAH_EXPIRE_SECONDS and len(chest["claimed"]) < chest["slot"]:
+            await cq.answer("⚠️ Masih ada Sedekah Chest aktif! Tunggu sampai habis atau expired dulu.", show_alert=True)
+            return
 
-    # Cek apakah user punya cukup umpan
-    user_umpan = umpan.get_umpan(user_id, jenis)
-    if user_umpan < auto_amount:
-        await cq.answer(f"⚠️ Kamu tidak punya cukup Umpan Type {jenis} (dibutuhkan {auto_amount}).", show_alert=True)
+    # Cek apakah punya cukup umpan
+    if umpan.get_umpan(user_id, jenis) < amount:
+        await cq.answer(f"❌ Umpan Type {jenis} tidak cukup (butuh {amount}).", show_alert=True)
         return
 
-    # Simpan state sementara (slot akan diinput selanjutnya)
-    SEDEKAH_STATE[user_id] = {
-        "step": "await_slot_input",
-        "jenis": jenis,
-        "amount": auto_amount
-    }
-
-    # Tombol untuk input slot atau batal
-    keyboard = InlineKeyboardMarkup([
-        [InlineKeyboardButton("📝 Atur Slot Penerima (5-100)", callback_data="SEDEKAH_SLOT_INPUT")],
-        [InlineKeyboardButton("❌ Batal", callback_data="SEDEKAH_CANCEL")]
-    ])
-
-    await cq.message.edit_text(
-        f"🙏 Kamu akan sedekahkan **{auto_amount} Umpan Type {jenis}**.\n"
-        "Silakan atur jumlah slot penerima (5-100):",
-        reply_markup=kb
-    )
-
-# ---------------- PILIH JENIS UMPAN ---------------- #
-async def handle_sedekah_type(client, cq, jenis):
-    """Set jenis umpan dan tampilkan tombol input jumlah umpan"""
-    user_id = cq.from_user.id
-    SEDEKAH_STATE[user_id] = {"step": "await_amount_menu", "jenis": jenis}
-    kb = InlineKeyboardMarkup([
-        [InlineKeyboardButton("📝 Masukkan jumlah umpan (5-1000)", callback_data="SEDEKAH_SET_AMOUNT")],
-        [InlineKeyboardButton("⬅️ Batal", callback_data="SEDEKAH_CANCEL")]
-    ])
-    await cq.message.edit_text(
-        f"📦 Kamu memilih **Umpan Type {jenis}**.\n\nTekan tombol untuk memasukkan jumlah umpan (5-1000).",
-        reply_markup=kb
-    )
-
-# ---------------- MENU SEDEKAH ---------------- #
-async def handle_sedekah_menu(client, cq):
-    """Sub menu SEDEKAH TREASURE CHEST - flow baru"""
-    user_id = cq.from_user.id
-
-    # Jumlah umpan otomatis dikurangi
-    auto_amount = 20
-    jenis = "A"  # bisa tetap atau dijadikan pilihan nanti
-
-    # Simpan state
-    SEDEKAH_STATE[user_id] = {
-        "step": "await_slot_input",
-        "jenis": jenis,
-        "amount": auto_amount
-    }
-
-    # Tombol untuk atur slot
-    kb = InlineKeyboardMarkup([
-        [InlineKeyboardButton("📝 Atur Slot Penerima (5-100)", callback_data="SEDEKAH_SET_SLOT")],
-        [InlineKeyboardButton("❌ Batal", callback_data="SEDEKAH_CANCEL")]
-    ])
-
-    await cq.message.edit_text(
-        f"🙏 Kamu akan sedekahkan **{auto_amount} Umpan Type {jenis}**.\n"
-        "Silakan atur jumlah slot penerima (5-100):",
-        reply_markup=kb
-    )
+    slot = 1  # hanya 1 orang bisa klaim
+    await send_sedekah_to_group(client, user_id, jenis, amount, slot, cq.message)
 
 # ---------------- HELPER LOAD / SAVE ---------------- #
 def _load_db() -> dict:
@@ -1202,7 +1234,7 @@ async def callback_handler(client: Client, cq: CallbackQuery):
         await handle_treasure_claim(client, cq)
         return
 
-    # === MENU SEDEKAH ===
+# === MENU SEDEKAH $$$ ===
     # ---------------- CALLBACK HANDLER ---------------- #
     if data == "SEDEKAH_TREASURE":
         await handle_sedekah_menu(client, cq)
@@ -1217,6 +1249,22 @@ async def callback_handler(client: Client, cq: CallbackQuery):
         await handle_sedekah_send_menu(client, cq)
     elif data == "SEDEKAH_CANCEL":
         await handle_sedekah_cancel(client, cq)
+
+        # === HANDLER KLAIM SEDEKAH ===
+# callback_data format: "SEDEKAH_CLAIM:<chest_id>"
+    if data.startswith("SEDEKAH_CLAIM"):
+        try:
+            # panggil handler klaim (fungsi sudah ada di file)
+            await handle_sedekah_claim(client, cq)
+        except Exception as e:
+            logger.error(f"[SEDEKAH][ERROR] saat handle_sedekah_claim: {e}")
+            # beri feedback ke user jika terjadi error
+            try:
+                await cq.answer("❌ Terjadi error saat klaim. Coba lagi nanti.", show_alert=True)
+            except Exception:
+                pass
+        return
+
 
     # ====== MENU HASIL TANGKAPAN (LIHAT INVENTORY LENGKAP) ======
     if data == "FFF":
@@ -2266,5 +2314,4 @@ def register_sedekah_handlers(app: Client):
     app.add_handler(MessageHandler(handle_sedekah_input, filters.private & filters.text))
     app.add_handler(CallbackQueryHandler(callback_handler))
     print("[DEBUG] register_sedekah_handlers() aktif ✅")
-
 
