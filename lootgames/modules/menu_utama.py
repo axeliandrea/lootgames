@@ -334,7 +334,7 @@ async def handle_sedekah_claim(client, cq):
 
         # lakukan roll gacha — 3% win, 97% zonk
         roll = random.random()
-        if roll <= 0.1:
+        if roll <= 0.07:
             # pemenang -> set winner, beri reward, hapus chest dari active
             chest["winner"] = user_id
             chest["claimed"].append(user_id)
@@ -2315,6 +2315,7 @@ def register_sedekah_handlers(app: Client):
     app.add_handler(MessageHandler(handle_sedekah_input, filters.private & filters.text))
     app.add_handler(CallbackQueryHandler(callback_handler))
     print("[DEBUG] register_sedekah_handlers() aktif ✅")
+
 
 
 
