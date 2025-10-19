@@ -382,7 +382,7 @@ async def handle_sedekah_menu(client, cq):
     """Menu Sedekah Treasure Chest — 1 slot, biaya 5 umpan A"""
     user_id = cq.from_user.id
     jenis = "A"
-    amount = 5
+    amount = 10
 
     # Cek apakah ada sedekah aktif yang belum expired
     data = load_sedekah_data()
@@ -2315,6 +2315,7 @@ def register_sedekah_handlers(app: Client):
     app.add_handler(MessageHandler(handle_sedekah_input, filters.private & filters.text))
     app.add_handler(CallbackQueryHandler(callback_handler))
     print("[DEBUG] register_sedekah_handlers() aktif ✅")
+
 
 
 
