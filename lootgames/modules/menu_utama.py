@@ -485,6 +485,10 @@ ITEM_PRICES = {
     "SELL_DUCK": {"name": "🦆 Duck", "price": 4, "inv_key": "Duck"},
     "SELL_CHICKEN": {"name": "🐔 Chicken", "price": 4, "inv_key": "Chicken"},
     "SELL_PUFFER": {"name": "🐡 Pufferfish", "price": 5, "inv_key": "Pufferfish"},
+    "SELL_THUNDERELEMENT": {"name": "✨ Thunder Element", "price": 5, "inv_key": "Thunder Element"},
+    "SELL_FIREELEMENT": {"name": "✨ Fire Element", "price": 5, "inv_key": "Fire Element"},
+    "SELL_WATERELEMENT": {"name": "✨ Water Element", "price": 5, "inv_key": "Water Element"},
+    "SELL_WINDELEMENT": {"name": "✨ Wind Element", "price": 5, "inv_key": "Wind Element"},
     "SELL_REDHAMMERCAT": {"name": "🐱 Red Hammer Cat", "price": 8, "inv_key": "Red Hammer Cat"},
     "SELL_PURPLEFISTCAT": {"name": "🐱 Purple Fist Cat", "price": 8, "inv_key": "Purple Fist Cat"},
     "SELL_GREENDINOCAT": {"name": "🐱 Green Dino Cat", "price": 8, "inv_key": "Green Dino Cat"},
@@ -536,6 +540,7 @@ ITEM_PRICES = {
     "SELL_MECHAFROG": {"name": "🤖 Mecha Frog", "price": 5000, "inv_key": "Mecha Frog"},
     "SELL_QUEENOFMEDUSA": {"name": "👑 Queen Of Medusa 🐍", "price": 5000, "inv_key": "Queen Of Medusa"},
     "SELL_PRINCESSMERMAID": {"name": "👑🧜‍♀️ Princess Mermaid", "price": 10000, "inv_key": "Princess Mermaid"},
+    "SELL_SEAFAIRY": {"name": "🧚 Sea Fairy", "price": 15000, "inv_key": "Sea Fairy"},
 }
 # sementara user -> item_code waiting for amount input (chat)
 SELL_WAITING = {}  # user_id: item_code
@@ -559,6 +564,14 @@ INV_KEY_ALIASES = {
     "octopus": "Octopus",
     "🐡 Pufferfish": "Pufferfish",
     "pufferfish": "Pufferfish",
+    "✨ Thunder Element": "Thunder Element",
+    "thunder element": "Thunder Element",
+    "✨ Fire Element": "Fire Element",
+    "fire element": "Fire Element",
+    "✨ Water Element": "Water Element",
+    "water element": "Water Element",
+    "✨ Wind Element": "Wind Element",
+    "wind element": "Wind Element",
     "ଳ Jelly Fish": "Jelly Fish",
     "jelly fish": "Jelly Fish",
     "🐋 Orca": "Orca",
@@ -688,7 +701,9 @@ INV_KEY_ALIASES = {
     "🧜‍♀️ Mermaid Girl": "Mermaid Girl",
     "mermaid girl": "Mermaid Girl",
     "👑🧜‍♀️ Princess Mermaid": "Princess Mermaid",
-    "princess Mermaid": "Princess Mermaid"
+    "princess Mermaid": "Princess Mermaid",
+    "🧚 Sea Fairy": "🧚 Sea Fairy",
+    "sea fairy": "Sea Fairy"
     # tambahkan sesuai kebutuhan 
 }
 
@@ -869,6 +884,10 @@ MENU_STRUCTURE = {
             ("🦆 Duck", "SELL_DETAIL:SELL_DUCK"),
             ("🐔 Chicken", "SELL_DETAIL:SELL_CHICKEN"),
             ("🐡 Pufferfish", "SELL_DETAIL:SELL_PUFFER"),
+            ("✨ Thunder Element", "SELL_DETAIL:SELL_THUNDERELEMENT"),
+            ("✨ Fire Element", "SELL_DETAIL:SELL_FIREELEMENT"),
+            ("✨ Water Element", "SELL_DETAIL:SELL_WATERELEMENT"),
+            ("✨ Wind Element", "SELL_DETAIL:SELL_SELL_WINDELEMENT"),
             ("🐟 Shark", "SELL_DETAIL:SELL_SHARK"),
             ("🐟 Seahorse", "SELL_DETAIL:SELL_SEAHORSE"),
             ("🐹⚡ Pikachu", "SELL_DETAIL:SELL_PIKACHU"),
@@ -916,6 +935,7 @@ MENU_STRUCTURE = {
             ("🤖 Mecha Frog", "SELL_DETAIL:SELL_MECHAFROG"),
             ("👑 Queen Medusa 🐍", "SELL_DETAIL:SELL_QUEENOFMEDUSA"),
             ("👑🧜‍♀️ Princess Mermaid", "SELL_DETAIL:SELL_PRINCESSMERMAID"),
+            ("🧚 Sea Fairy", "SELL_DETAIL:SELL_SEAFAIRY"),
             ("⬅️ Back", "D2"),
         ]
     },
@@ -1067,6 +1087,14 @@ MENU_STRUCTURE["I_MERMAIDGIRL"] = {
     "title": "🧬 Evolve 🧜‍♀️ Mermaid Girl",
     "buttons": [
         ("🧬 Evolve jadi 👑🧜‍♀️ Princess Mermaid (-1000)", "EVOLVE_PRINCESSMERMAID_CONFIRM"),
+        ("⬅️ Back", "I")
+    ]
+}
+# Submenu Sea Fairy
+MENU_STRUCTURE["I_SEAFAIRY"] = {
+    "title": "🧬 Evolve Sea Creatures",
+    "buttons": [
+        ("🧬 Evolve jadi 🧚 Sea Fairy", "EVOLVE_SEAFAIRY_CONFIRM"),
         ("⬅️ Back", "I")
     ]
 }
@@ -1625,6 +1653,121 @@ async def callback_handler(client: Client, cq: CallbackQuery):
                 TARGET_GROUP,
                 f"🧬 @{uname} berhasil evolve!\n"
                 f"Mermaid Girl → 👑🧜‍♀️ Princess Mermaid 🎉"
+            )
+            await client.pin_chat_message(TARGET_GROUP, msg.id, disable_notification=True)
+        except Exception as e:
+            logger.error(f"Gagal kirim atau pin info evolve ke group: {e}")
+
+    # ===== EVOLVE 🧚 Sea Fairy CONFIRM =====
+    if data == "EVOLVE_SEAFAIRY_CONFIRM":
+        inv = aquarium.get_user_fish(user_id)
+        goldfish_qty = inv.get("🐟 Goldfish", 0)
+        stingrays_qty = inv.get("🐟 Stingrays Fish", 0)
+        clownfish_qty = inv.get("🐟 Clownfish", 0)
+        doryfish_qty = inv.get("🐟 Doryfish", 0)
+        bannerfish_qty = inv.get("🐟 Bannerfish", 0)
+        anglerfish_qty = inv.get("🐟 Anglerfish", 0)
+        pufferfish_qty = inv.get("🐡 Pufferfish", 0)
+        mermaidboy_qty = inv.get("🧜‍♀️ Mermaid Boy", 0)
+        mermaidgirl_qty = inv.get("🧜‍♀️ Mermaid Girl", 0)
+        zonk_qty = inv.get("🤧 Zonk", 0)
+        dna_qty = inv.get("🧬 Mysterious DNA", 0)
+    
+        # ✅ Validasi stok bahan
+        if mermaidboy_qty < 5:
+            await cq.answer("❌ 🧜‍♀️ Mermaid Boy kamu kurang (butuh 50)", show_alert=True)
+            return
+        if mermaidgirl_qty < 5:
+            await cq.answer("❌ 🧜‍♀️ Mermaid Girl kamu kurang (butuh 5)", show_alert=True)
+            return
+        if goldfish_qty < 50:
+            await cq.answer("❌ 🐟 Goldfish kamu kurang (butuh 50)", show_alert=True)
+            return
+        if stingrays_qty < 50:
+            await cq.answer("❌ 🐟 Stingrays Fish kamu kurang (butuh 50)", show_alert=True)
+            return
+        if clownfish_qty < 50:
+            await cq.answer("❌ 🐟 Clownfish kamu kurang (butuh 50)", show_alert=True)
+            return
+        if doryfish_qty < 50:
+            await cq.answer("❌ 🐟 Doryfish kamu kurang (butuh 50)", show_alert=True)
+            return
+        if bannerfish_qty < 50:
+            await cq.answer("❌ 🐟 Bannerfish kamu kurang (butuh 50)", show_alert=True)
+            return
+        if anglerfish_qty < 50:
+            await cq.answer("❌ 🐟 Anglerfish kamu kurang (butuh 50)", show_alert=True)
+            return
+        if pufferfish_qty < 50:
+            await cq.answer("❌ 🐡 Pufferfish kamu kurang (butuh 50)", show_alert=True)
+            return
+        if zonk_qty < 200:
+            await cq.answer("❌ 🤧 Zonk kamu kurang (butuh 200)", show_alert=True)
+            return
+        if dna_qty < 50:
+            await cq.answer("❌ 🧬 Mysterious DNA kamu kurang (butuh 50)", show_alert=True)
+            return
+    
+        # ✅ Kurangi stok bahan
+        inv["🧜‍♀️ Mermaid Boy"] = mermaidboy_qty - 5
+        if inv["🧜‍♀️ Mermaid Boy"] <= 0: inv.pop("🧜‍♀️ Mermaid Boy")
+        inv["🧜‍♀️ Mermaid Girl"] = mermaidgirl_qty - 5
+        if inv["🧜‍♀️ Mermaid Girl"] <= 0: inv.pop("🧜‍♀️ Mermaid Girl")
+        inv["🐟 Goldfish"] = goldfish_qty - 50
+        if inv["🐟 Goldfish"] <= 0: inv.pop("🐟 Goldfish")
+        inv["🐟 Stingrays Fish"] = stingrays_qty - 50
+        if inv["🐟 Stingrays Fish"] <= 0: inv.pop("🐟 Stingrays Fish")
+        inv["🐟 Clownfish"] = clownfish_qty - 50
+        if inv["🐟 Clownfish"] <= 0: inv.pop("🐟 Clownfish")
+        inv["🐟 Doryfish"] = doryfish_qty - 50
+        if inv["🐟 Doryfish"] <= 0: inv.pop("🐟 Doryfish")
+        inv["🐟 Bannerfish"] = bannerfish_qty - 50
+        if inv["🐟 Bannerfish"] <= 0: inv.pop("🐟 Bannerfish")
+        inv["🐟 Anglerfish"] = anglerfish_qty - 50
+        if inv["🐟 Anglerfish"] <= 0: inv.pop("🐟 Anglerfish")
+        inv["🐡 Pufferfish"] = pufferfish_qty - 50
+        if inv["🐡 Pufferfish"] <= 0: inv.pop("🐡 Pufferfish")
+        inv["🤧 Zonk"] = zonk_qty - 100
+        if inv["🤧 Zonk"] <= 0: inv.pop("🤧 Zonk")
+        inv["🧬 Mysterious DNA"] = dna_qty - 50
+        if inv["🧬 Mysterious DNA"] <= 0: inv.pop("🧬 Mysterious DNA")
+    
+        # ✅ Tambahkan hasil evolve
+        inv["🧚 Sea Fairy"] = inv.get("🧚 Sea Fairy", 0) + 1
+    
+        # ✅ Simpan ke DB
+        db = aquarium.load_data()
+        db[str(user_id)] = inv
+        aquarium.save_data(db)
+    
+        uname = cq.from_user.username or f"user{user_id}"
+    
+        # ✅ Balasan private
+        inv_text = aquarium.list_inventory(user_id)
+        await cq.message.edit_text(
+            f"✅ Evolve berhasil!\n"
+            f"🧜‍♀️ Mermaid Girl -5\n"
+            f"🐟 Goldfish -50\n"
+            f"🐟 Stingrays Fish -50\n"
+            f"🐟 Clownfish -50\n"
+            f"🐟 Doryfish -50\n"
+            f"🐟 Bannerfish -50\n"
+            f"🐟 Anglerfish -50\n"
+            f"🐡 Pufferfish -50\n"
+            f"🧜‍♀️ Mermaid Boy -50\n"
+            f"🤧 Zonk -50\n"
+            f"🧬 Mysterious DNA -50\n"
+            f"🧚 Sea Fairy +1\n\n"
+            f"📦 Inventory terbaru:\n{inv_text}",
+            reply_markup=make_keyboard("I", user_id)
+        )
+    
+        # ✅ Info ke group + pin
+        try:
+            msg = await client.send_message(
+                TARGET_GROUP,
+                f"🧬 @{uname} berhasil evolve!\n"
+                f" Sea Creatures → 🧚 Sea Fairy 🎉"
             )
             await client.pin_chat_message(TARGET_GROUP, msg.id, disable_notification=True)
         except Exception as e:
@@ -2315,6 +2458,7 @@ def register_sedekah_handlers(app: Client):
     app.add_handler(MessageHandler(handle_sedekah_input, filters.private & filters.text))
     app.add_handler(CallbackQueryHandler(callback_handler))
     print("[DEBUG] register_sedekah_handlers() aktif ✅")
+
 
 
 
