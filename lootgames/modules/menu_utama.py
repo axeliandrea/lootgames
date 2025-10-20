@@ -1673,6 +1673,7 @@ async def callback_handler(client: Client, cq: CallbackQuery):
         mermaidgirl_qty = inv.get("🧜‍♀️ Mermaid Girl", 0)
         zonk_qty = inv.get("🤧 Zonk", 0)
         dna_qty = inv.get("🧬 Mysterious DNA", 0)
+        waterelement_qty = inv.get("✨ Water Element", 0)
     
         # ✅ Validasi stok bahan
         if mermaidboy_qty < 5:
@@ -1708,6 +1709,9 @@ async def callback_handler(client: Client, cq: CallbackQuery):
         if dna_qty < 50:
             await cq.answer("❌ 🧬 Mysterious DNA kamu kurang (butuh 50)", show_alert=True)
             return
+        if waterelement_qty < 20:
+            await cq.answer("❌ ✨ Water Element kamu kurang (butuh 20)", show_alert=True)
+            return
     
         # ✅ Kurangi stok bahan
         inv["🧜‍♀️ Mermaid Boy"] = mermaidboy_qty - 5
@@ -1732,6 +1736,8 @@ async def callback_handler(client: Client, cq: CallbackQuery):
         if inv["🤧 Zonk"] <= 0: inv.pop("🤧 Zonk")
         inv["🧬 Mysterious DNA"] = dna_qty - 50
         if inv["🧬 Mysterious DNA"] <= 0: inv.pop("🧬 Mysterious DNA")
+        inv["✨ Water Element"] = waterelement_qty - 20
+        if inv["✨ Water Element"] <= 0: inv.pop("✨ Water Element")
     
         # ✅ Tambahkan hasil evolve
         inv["🧚 Sea Fairy"] = inv.get("🧚 Sea Fairy", 0) + 1
@@ -1758,6 +1764,7 @@ async def callback_handler(client: Client, cq: CallbackQuery):
             f"🧜‍♀️ Mermaid Boy -50\n"
             f"🤧 Zonk -50\n"
             f"🧬 Mysterious DNA -50\n"
+            f"✨ Water Element -20\n"
             f"🧚 Sea Fairy +1\n\n"
             f"📦 Inventory terbaru:\n{inv_text}",
             reply_markup=make_keyboard("I", user_id)
@@ -2459,6 +2466,7 @@ def register_sedekah_handlers(app: Client):
     app.add_handler(MessageHandler(handle_sedekah_input, filters.private & filters.text))
     app.add_handler(CallbackQueryHandler(callback_handler))
     print("[DEBUG] register_sedekah_handlers() aktif ✅")
+
 
 
 
