@@ -1703,8 +1703,8 @@ async def callback_handler(client: Client, cq: CallbackQuery):
         if pufferfish_qty < 50:
             await cq.answer("❌ 🐡 Pufferfish kamu kurang (butuh 50)", show_alert=True)
             return
-        if zonk_qty < 200:
-            await cq.answer("❌ 🤧 Zonk kamu kurang (butuh 200)", show_alert=True)
+        if zonk_qty < 100:
+            await cq.answer("❌ 🤧 Zonk kamu kurang (butuh 100)", show_alert=True)
             return
         if dna_qty < 50:
             await cq.answer("❌ 🧬 Mysterious DNA kamu kurang (butuh 50)", show_alert=True)
@@ -1762,7 +1762,7 @@ async def callback_handler(client: Client, cq: CallbackQuery):
             f"🐟 Anglerfish -50\n"
             f"🐡 Pufferfish -50\n"
             f"🧜‍♀️ Mermaid Boy -50\n"
-            f"🤧 Zonk -50\n"
+            f"🤧 Zonk -100\n"
             f"🧬 Mysterious DNA -50\n"
             f"✨ Water Element -20\n"
             f"🧚 Sea Fairy +1\n\n"
@@ -2466,6 +2466,7 @@ def register_sedekah_handlers(app: Client):
     app.add_handler(MessageHandler(handle_sedekah_input, filters.private & filters.text))
     app.add_handler(CallbackQueryHandler(callback_handler))
     print("[DEBUG] register_sedekah_handlers() aktif ✅")
+
 
 
 
