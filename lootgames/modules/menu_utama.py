@@ -947,7 +947,7 @@ MENU_STRUCTURE = {
             ("⬅️ Back", "D")
         ]
     },
-    "D3A": {
+    "D3LA": {
         "title": "📋 🔄 POINT CHAT",
         "buttons": [
             ("TUKAR 🔄 UMPAN COMMON 🐛", "TUKAR_POINT"),
@@ -2606,4 +2606,5 @@ def register_sedekah_handlers(app: Client):
     app.add_handler(MessageHandler(handle_sedekah_input, filters.private & filters.text))
     app.add_handler(CallbackQueryHandler(callback_handler))
     print("[DEBUG] register_sedekah_handlers() aktif ✅")
+
 
