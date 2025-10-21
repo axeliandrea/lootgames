@@ -448,19 +448,19 @@
   "1183769897": {
     "\ud83e\udd27 Zonk": 181,
     "Lost cip": 4,
-    "\ud83d\udc1f Goldfish": 7,
+    "\ud83d\udc1f Goldfish": 8,
     "\ud83d\udc1f Beta Fish": 1,
     "\ud83d\udc1a Hermit Crab": 13,
     "\ud83d\udc38 Frog": 6,
     "\ud83d\udc1f Bannerfish": 5,
     "\ud80c\udd9d Small Fish": 11,
-    "\ud83d\udc1f Anglerfish": 3,
+    "\ud83d\udc1f Anglerfish": 4,
     "\ud83e\udda6 Seal": 2,
     "\ud83d\udc1f Axolotl": 9,
     "\ud83d\udc0c Snail": 12,
     "\ud83d\udc1f Stingrays Fish": 3,
     "\ud83d\udc1f Shark": 2,
-    "\ud83e\udd80 Crab": 13,
+    "\ud83e\udd80 Crab": 14,
     "\ud83d\udc1f Doryfish": 4,
     "\u0b33 Jelly Fish": 6,
     "\ud83d\udc1f Seahorse": 4,
@@ -1098,7 +1098,7 @@
     "\ud83d\udc1f Clownfish": 1
   },
   "5926231066": {
-    "\ud83e\udd27 Zonk": 20,
+    "\ud83e\udd27 Zonk": 21,
     "\ud83e\uddaa Giant Clam": 3,
     "Lost cip": 1,
     "\ud83d\udc1a Hermit Crab": 20,
@@ -1131,7 +1131,8 @@
     "\ud83d\udc1f Axolotl": 1,
     "\ud83d\udc31 White Winter Cat": 1,
     "\ud83d\udc22\ud83d\udca7 Squirtle": 1,
-    "\ud83d\udc09\ud83d\udd25 Charmander": 1
+    "\ud83d\udc09\ud83d\udd25 Charmander": 1,
+    "\ud83d\udc31 Red Hammer Cat": 1
   },
   "2097520464": {
     "\u0b33 Jelly Fish": 5,
@@ -3224,7 +3225,10 @@
     "\ud83d\udc0c Snail": 2,
     "\ud83e\udd27 Zonk": 2,
     "\ud83e\udd86 Duck": 1,
-    "\ud83e\uddec Mysterious DNA": 1
+    "\ud83e\uddec Mysterious DNA": 1,
+    "\ud83d\udc0d Snake": 1,
+    "\u2728 Thunder Element": 1,
+    "\u2728 Wind Element": 1
   },
   "7954706202": {
     "\ud83e\uddaa Giant Clam": 1
