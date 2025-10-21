@@ -143,6 +143,7 @@ def roll_loot(umpan_type: str = "COMMON") -> str:
 
         for item, base in loot_table.items():
             if item in ["🐡 Pufferfish","📿 Lucky Jewel","🐱 Red Hammer Cat","🐱 Purple Fist Cat","🐱 Green Dino Cat",
+                        "✨ Thunder Element","✨ Fire Element","✨ Water Element","✨ Wind Element",
                         "🐱 White Winter Cat","🐟 Shark","🐟 Seahorse","🐊 Crocodile","🦦 Seal","🐢 Turtle","🦞 Lobster"]:
                 tier = "ULTRA_RARE"
             elif item in ["🐋 Orca","🐬 Dolphin","🐒 Monkey","🦍 Gorilla","🐼 Panda","🐶 Dog","🦇 bat",
