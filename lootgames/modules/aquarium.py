@@ -1,4 +1,4 @@
-# lootgames/modules/aquarium.py tester 1
+# lootgames/modules/aquarium.py
 import json
 import os
 import logging
@@ -30,10 +30,7 @@ def save_data(data: dict):
 
 # ---------------- USER DATA HANDLER ---------------- #
 def add_fish(user_id: int, fish_name: str, jumlah: int = 1):
-    """
-    Tambahkan ikan ke inventory user
-    Tetap masuk database tanpa mengirim chat ke group
-    """
+    """Tambahkan ikan ke inventory user"""
     data = load_data()
     str_uid = str(user_id)
     if str_uid not in data:
@@ -66,11 +63,45 @@ def get_total_fish(user_id: int) -> int:
     return sum(inventory.values())
 
 def list_inventory(user_id: int) -> str:
-    """Buat string daftar inventory user untuk ditampilkan di menu"""
-    inventory = get_user_fish(user_id)
-    if not inventory:
-        return "🎣 Kamu belum menangkap ikan apapun."
-    lines = []
-    for fish, qty in inventory.items():
-        lines.append(f"{fish}: {qty} pcs")
+    """
+    Buat string daftar inventory user untuk ditampilkan di menu.
+    - Semua monster ditampilkan, termasuk yang 0
+    - Urut dari jumlah terbanyak ke paling sedikit
+    - Tambahkan Total All di bagian bawah
+    """
+    inventory = get_user_fish(user_id) or {}
+
+    # master list semua monster (sesuaikan dengan game)
+    master_monsters = [
+        "🧜‍♀️ Mermaid Girl", "🐟 Axolotl", "🐟 Doryfish", "🧬 Mysterious DNA", "🐊 Crocodile",
+        "🐟 Seahorse", "🐡 Pufferfish", "🐟 Shark", "📿 Lucky Jewel", "🐱 White Winter Cat",
+        "🦦 Seal", "🐢 Turtle", "🐬 Dolphin", "🐙 Octopus", "🐢💧 Squirtle", "🐱 Green Dino Cat",
+        "🐱 Red Hammer Cat", "🐶 Dog", "🦍 Gorilla", "🦞 Lobster", "🐉 Baby Magma Dragon",
+        "🐉 Baby Spirit Dragon", "🐉 Dark Knight Dragon", "🐌 Snail", "🐒 Monkey",
+        "🐦‍🔥 Fire Phoenix", "🐦🌌 Dark Phoenix", "🐯 White Tiger", "🐱 Purple Fist Cat",
+        "🐹⚡ Pikachu", "🐼 Panda", "🦇 bat", "🦪 Giant Clam", "ଳ Jelly Fish", "𓆝 Small Fish",
+        "🐉 Baby Dragon", "🐉 Black Dragon", "🐉 Blue Dragon", "🐉 Cupid Dragon", "🐉 Skull Dragon",
+        "🐉 Snail Dragon", "🐉 Yellow Dragon", "🐉🔥 Charmander", "🐋 Orca", "🐋⚡ Kyogre",
+        "🐍 Snake", "🐔 Chicken", "🐚 Hermit Crab", "🐟 Anglerfish", "🐟 Bannerfish", "🐟 Beta Fish",
+        "🐟 Clownfish", "🐟 Goldfish", "🐟 Moorish Idol", "🐟 Stingrays Fish", "🐦❄️ Frost Phoenix",
+        "🐱 Rainbow Angel Cat", "🐸 Frog", "🐸🍀 Bulbasaur", "🐺 Werewolf", "🐻 Bear",
+        "👑 Queen Of Hermit", "👑 Queen Of Medusa 🐍", "👑🧜‍♀️ Princess Mermaid", "👹 Dark Fish Warrior",
+        "👹 Dark Lord Demon", "🤖 Mecha Frog", "🤧 Zonk", "🦀 Crab", "🦁🐍 Chimera",
+        "🦆 Duck", "🦊 Princess of Nine Tail", "🧜‍♀️ Mermaid Boy", "✨ Thunder Element", "✨ Fire Element",
+        "✨ Water Element", "✨ Wind Element", "🧚 Sea Fairy"
+    ]
+
+    # buat dict lengkap semua monster, default 0 jika belum ada
+    full_inventory = {m: inventory.get(m, 0) for m in master_monsters}
+
+    # urut dari jumlah terbanyak ke paling sedikit
+    sorted_inventory = dict(sorted(full_inventory.items(), key=lambda x: x[1], reverse=True))
+
+    # buat list baris
+    lines = [f"{fish} : {qty}" for fish, qty in sorted_inventory.items()]
+
+    # total all termasuk yang 0
+    total_monster = sum(sorted_inventory.values())
+    lines.append(f"Total All : {total_monster}")
+
     return "\n".join(lines)
