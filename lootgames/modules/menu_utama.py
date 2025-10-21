@@ -1,4 +1,4 @@
-### EDIT KHUSUS TC ### 02:26
+# TF MOBS, UMPAN FIX #
 # lootgames/modules/menu_utama.py
 import os
 import time  # pastikan ada di top imports
@@ -485,6 +485,10 @@ ITEM_PRICES = {
     "SELL_DUCK": {"name": "🦆 Duck", "price": 4, "inv_key": "Duck"},
     "SELL_CHICKEN": {"name": "🐔 Chicken", "price": 4, "inv_key": "Chicken"},
     "SELL_PUFFER": {"name": "🐡 Pufferfish", "price": 5, "inv_key": "Pufferfish"},
+    "SELL_THUNDERELEMENT": {"name": "✨ Thunder Element", "price": 5, "inv_key": "Thunder Element"},
+    "SELL_FIREELEMENT": {"name": "✨ Fire Element", "price": 5, "inv_key": "Fire Element"},
+    "SELL_WATERELEMENT": {"name": "✨ Water Element", "price": 5, "inv_key": "Water Element"},
+    "SELL_WINDELEMENT": {"name": "✨ Wind Element", "price": 5, "inv_key": "Wind Element"},
     "SELL_REDHAMMERCAT": {"name": "🐱 Red Hammer Cat", "price": 8, "inv_key": "Red Hammer Cat"},
     "SELL_PURPLEFISTCAT": {"name": "🐱 Purple Fist Cat", "price": 8, "inv_key": "Purple Fist Cat"},
     "SELL_GREENDINOCAT": {"name": "🐱 Green Dino Cat", "price": 8, "inv_key": "Green Dino Cat"},
@@ -536,6 +540,7 @@ ITEM_PRICES = {
     "SELL_MECHAFROG": {"name": "🤖 Mecha Frog", "price": 5000, "inv_key": "Mecha Frog"},
     "SELL_QUEENOFMEDUSA": {"name": "👑 Queen Of Medusa 🐍", "price": 5000, "inv_key": "Queen Of Medusa"},
     "SELL_PRINCESSMERMAID": {"name": "👑🧜‍♀️ Princess Mermaid", "price": 10000, "inv_key": "Princess Mermaid"},
+    "SELL_SEAFAIRY": {"name": "🧚 Sea Fairy", "price": 15000, "inv_key": "Sea Fairy"},
 }
 # sementara user -> item_code waiting for amount input (chat)
 SELL_WAITING = {}  # user_id: item_code
@@ -559,6 +564,14 @@ INV_KEY_ALIASES = {
     "octopus": "Octopus",
     "🐡 Pufferfish": "Pufferfish",
     "pufferfish": "Pufferfish",
+    "✨ Thunder Element": "Thunder Element",
+    "thunder element": "Thunder Element",
+    "✨ Fire Element": "Fire Element",
+    "fire element": "Fire Element",
+    "✨ Water Element": "Water Element",
+    "water element": "Water Element",
+    "✨ Wind Element": "Wind Element",
+    "wind element": "Wind Element",
     "ଳ Jelly Fish": "Jelly Fish",
     "jelly fish": "Jelly Fish",
     "🐋 Orca": "Orca",
@@ -688,7 +701,9 @@ INV_KEY_ALIASES = {
     "🧜‍♀️ Mermaid Girl": "Mermaid Girl",
     "mermaid girl": "Mermaid Girl",
     "👑🧜‍♀️ Princess Mermaid": "Princess Mermaid",
-    "princess Mermaid": "Princess Mermaid"
+    "princess Mermaid": "Princess Mermaid",
+    "🧚 Sea Fairy": "🧚 Sea Fairy",
+    "sea fairy": "Sea Fairy"
     # tambahkan sesuai kebutuhan 
 }
 
@@ -706,7 +721,8 @@ MENU_STRUCTURE = {
             ("HASIL TANGKAPAN", "F"),
             ("LOGIN CHECK IN", "G"),
             ("TREASURE CHEST", "H"),
-            ("🧬 EVOLVE", "I")
+            ("🧬 EVOLVE", "I"),
+            ("💎 TRANSFER MONSTER", "J")
         ]
     },
     
@@ -869,6 +885,10 @@ MENU_STRUCTURE = {
             ("🦆 Duck", "SELL_DETAIL:SELL_DUCK"),
             ("🐔 Chicken", "SELL_DETAIL:SELL_CHICKEN"),
             ("🐡 Pufferfish", "SELL_DETAIL:SELL_PUFFER"),
+            ("✨ Thunder Element", "SELL_DETAIL:SELL_THUNDERELEMENT"),
+            ("✨ Fire Element", "SELL_DETAIL:SELL_FIREELEMENT"),
+            ("✨ Water Element", "SELL_DETAIL:SELL_WATERELEMENT"),
+            ("✨ Wind Element", "SELL_DETAIL:SELL_SELL_WINDELEMENT"),
             ("🐟 Shark", "SELL_DETAIL:SELL_SHARK"),
             ("🐟 Seahorse", "SELL_DETAIL:SELL_SEAHORSE"),
             ("🐹⚡ Pikachu", "SELL_DETAIL:SELL_PIKACHU"),
@@ -916,6 +936,7 @@ MENU_STRUCTURE = {
             ("🤖 Mecha Frog", "SELL_DETAIL:SELL_MECHAFROG"),
             ("👑 Queen Medusa 🐍", "SELL_DETAIL:SELL_QUEENOFMEDUSA"),
             ("👑🧜‍♀️ Princess Mermaid", "SELL_DETAIL:SELL_PRINCESSMERMAID"),
+            ("🧚 Sea Fairy", "SELL_DETAIL:SELL_SEAFAIRY"),
             ("⬅️ Back", "D2"),
         ]
     },
@@ -926,7 +947,7 @@ MENU_STRUCTURE = {
             ("⬅️ Back", "D")
         ]
     },
-    "D3A": {
+    "D3LA": {
         "title": "📋 🔄 POINT CHAT",
         "buttons": [
             ("TUKAR 🔄 UMPAN COMMON 🐛", "TUKAR_POINT"),
@@ -1013,6 +1034,8 @@ MENU_STRUCTURE["I"] = {
         ("🐸 Frog", "I_FROG"),
         ("🐍 Snake", "I_SNAKE"),
         ("🧜‍♀️ Mermaid Girl", "I_MERMAIDGIRL"),
+        ("🧚 Sea Fairy", "I_SEAFAIRY"),
+        
         ("⬅️ Back", "main")
     ]
 }
@@ -1067,6 +1090,14 @@ MENU_STRUCTURE["I_MERMAIDGIRL"] = {
     "title": "🧬 Evolve 🧜‍♀️ Mermaid Girl",
     "buttons": [
         ("🧬 Evolve jadi 👑🧜‍♀️ Princess Mermaid (-1000)", "EVOLVE_PRINCESSMERMAID_CONFIRM"),
+        ("⬅️ Back", "I")
+    ]
+}
+# Submenu Mermaid
+MENU_STRUCTURE["I_SEAFAIRY"] = {
+    "title": "🧬 Evolve Sea Creatures",
+    "buttons": [
+        ("🧬 Evolve jadi 🧚 Sea Fairy", "EVOLVE_SEAFAIRY_CONFIRM"),
         ("⬅️ Back", "I")
     ]
 }
@@ -1222,6 +1253,41 @@ async def callback_handler(client: Client, cq: CallbackQuery):
     # <-- Pastikan uname didefinisikan di sini
     uname = cq.from_user.username or f"user{user_id}"
 
+    # ====== MENU TRANSFER MONSTER ======
+    if data == "J":
+        inv = aquarium.get_user_fish(user_id) or {}
+        buttons = []
+
+        # Tambahkan semua item kecuali Zonk & yang jumlahnya 0
+        for name, qty in inv.items():
+            if name != "🤧 Zonk" and qty > 0:
+                buttons.append([InlineKeyboardButton(f"{name} ({qty})", callback_data=f"TRANSFER_SELECT|{name}")])
+
+        # Jika user tak punya monster lain
+        if not buttons:
+            await cq.message.edit_text(
+                "❌ Kamu tidak punya monster yang bisa ditransfer.",
+                reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("⬅️ Back", callback_data="main")]])
+            )
+            return
+
+        buttons.append([InlineKeyboardButton("⬅️ Back", callback_data="main")])
+        kb = InlineKeyboardMarkup(buttons)
+        await cq.message.edit_text("💎 Pilih monster yang ingin kamu transfer:", reply_markup=kb)
+        return
+
+    # ====== PILIH MONSTER UNTUK TRANSFER ======
+    if data.startswith("TRANSFER_SELECT|"):
+        monster_name = data.split("|", 1)[1]
+        await cq.message.edit_text(
+            f"🧾 Kamu memilih {monster_name}\n\n"
+            f"Ketik format berikut di chat pribadi bot ini:\n"
+            f"`@username trade jumlah`\n"
+            f"Contoh: `@justforfun_admin trade 5` atau `@username 3`"
+        )
+        TRANSFER_STATE[user_id] = {"jenis": "monster", "monster": monster_name}
+        return
+
     #TREASURE CHEST CALLBACK HANDLER
     if data == "TREASURE_SEND_NOW":
         if user_id != OWNER_ID:
@@ -1269,9 +1335,9 @@ async def callback_handler(client: Client, cq: CallbackQuery):
 
     # ====== MENU HASIL TANGKAPAN (LIHAT INVENTORY LENGKAP) ======
     if data == "FFF":
-        full_text = list_full_inventory(user_id)
-        kb = InlineKeyboardMarkup([[InlineKeyboardButton("⬅️ Back", callback_data="F")]])
-        await cq.message.edit_text(full_text, reply_markup=kb)
+        inv_text = aquarium.list_inventory(user_id)
+        kb = make_keyboard("FFF", user_id)
+        await cq.message.edit_text(f"🎣 HASIL TANGKAPANMU:\n\n{inv_text}", reply_markup=kb)
         return
     
 #Revisi Part ini aja
@@ -1629,6 +1695,129 @@ async def callback_handler(client: Client, cq: CallbackQuery):
             await client.pin_chat_message(TARGET_GROUP, msg.id, disable_notification=True)
         except Exception as e:
             logger.error(f"Gagal kirim atau pin info evolve ke group: {e}")
+
+    # ===== EVOLVE 🧚 Sea Fairy CONFIRM =====
+    if data == "EVOLVE_SEAFAIRY_CONFIRM":
+        inv = aquarium.get_user_fish(user_id)
+        goldfish_qty = inv.get("🐟 Goldfish", 0)
+        stingrays_qty = inv.get("🐟 Stingrays Fish", 0)
+        clownfish_qty = inv.get("🐟 Clownfish", 0)
+        doryfish_qty = inv.get("🐟 Doryfish", 0)
+        bannerfish_qty = inv.get("🐟 Bannerfish", 0)
+        anglerfish_qty = inv.get("🐟 Anglerfish", 0)
+        pufferfish_qty = inv.get("🐡 Pufferfish", 0)
+        mermaidboy_qty = inv.get("🧜‍♀️ Mermaid Boy", 0)
+        mermaidgirl_qty = inv.get("🧜‍♀️ Mermaid Girl", 0)
+        zonk_qty = inv.get("🤧 Zonk", 0)
+        dna_qty = inv.get("🧬 Mysterious DNA", 0)
+        waterelement_qty = inv.get("✨ Water Element", 0)
+    
+        # ✅ Validasi stok bahan
+        if mermaidboy_qty < 5:
+            await cq.answer("❌ 🧜‍♀️ Mermaid Boy kamu kurang (butuh 50)", show_alert=True)
+            return
+        if mermaidgirl_qty < 5:
+            await cq.answer("❌ 🧜‍♀️ Mermaid Girl kamu kurang (butuh 5)", show_alert=True)
+            return
+        if goldfish_qty < 50:
+            await cq.answer("❌ 🐟 Goldfish kamu kurang (butuh 50)", show_alert=True)
+            return
+        if stingrays_qty < 50:
+            await cq.answer("❌ 🐟 Stingrays Fish kamu kurang (butuh 50)", show_alert=True)
+            return
+        if clownfish_qty < 50:
+            await cq.answer("❌ 🐟 Clownfish kamu kurang (butuh 50)", show_alert=True)
+            return
+        if doryfish_qty < 50:
+            await cq.answer("❌ 🐟 Doryfish kamu kurang (butuh 50)", show_alert=True)
+            return
+        if bannerfish_qty < 50:
+            await cq.answer("❌ 🐟 Bannerfish kamu kurang (butuh 50)", show_alert=True)
+            return
+        if anglerfish_qty < 50:
+            await cq.answer("❌ 🐟 Anglerfish kamu kurang (butuh 50)", show_alert=True)
+            return
+        if pufferfish_qty < 50:
+            await cq.answer("❌ 🐡 Pufferfish kamu kurang (butuh 50)", show_alert=True)
+            return
+        if zonk_qty < 100:
+            await cq.answer("❌ 🤧 Zonk kamu kurang (butuh 200)", show_alert=True)
+            return
+        if dna_qty < 50:
+            await cq.answer("❌ 🧬 Mysterious DNA kamu kurang (butuh 50)", show_alert=True)
+            return
+        if waterelement_qty < 20:
+            await cq.answer("❌ ✨ Water Element kamu kurang (butuh 20)", show_alert=True)
+            return
+    
+        # ✅ Kurangi stok bahan
+        inv["🧜‍♀️ Mermaid Boy"] = mermaidboy_qty - 5
+        if inv["🧜‍♀️ Mermaid Boy"] <= 0: inv.pop("🧜‍♀️ Mermaid Boy")
+        inv["🧜‍♀️ Mermaid Girl"] = mermaidgirl_qty - 5
+        if inv["🧜‍♀️ Mermaid Girl"] <= 0: inv.pop("🧜‍♀️ Mermaid Girl")
+        inv["🐟 Goldfish"] = goldfish_qty - 50
+        if inv["🐟 Goldfish"] <= 0: inv.pop("🐟 Goldfish")
+        inv["🐟 Stingrays Fish"] = stingrays_qty - 50
+        if inv["🐟 Stingrays Fish"] <= 0: inv.pop("🐟 Stingrays Fish")
+        inv["🐟 Clownfish"] = clownfish_qty - 50
+        if inv["🐟 Clownfish"] <= 0: inv.pop("🐟 Clownfish")
+        inv["🐟 Doryfish"] = doryfish_qty - 50
+        if inv["🐟 Doryfish"] <= 0: inv.pop("🐟 Doryfish")
+        inv["🐟 Bannerfish"] = bannerfish_qty - 50
+        if inv["🐟 Bannerfish"] <= 0: inv.pop("🐟 Bannerfish")
+        inv["🐟 Anglerfish"] = anglerfish_qty - 50
+        if inv["🐟 Anglerfish"] <= 0: inv.pop("🐟 Anglerfish")
+        inv["🐡 Pufferfish"] = pufferfish_qty - 50
+        if inv["🐡 Pufferfish"] <= 0: inv.pop("🐡 Pufferfish")
+        inv["🤧 Zonk"] = zonk_qty - 100
+        if inv["🤧 Zonk"] <= 0: inv.pop("🤧 Zonk")
+        inv["🧬 Mysterious DNA"] = dna_qty - 50
+        if inv["🧬 Mysterious DNA"] <= 0: inv.pop("🧬 Mysterious DNA")
+        inv["✨ Water Element"] = waterelement_qty - 20
+        if inv["✨ Water Element"] <= 0: inv.pop("✨ Water Element")
+    
+        # ✅ Tambahkan hasil evolve
+        inv["🧚 Sea Fairy"] = inv.get("🧚 Sea Fairy", 0) + 1
+    
+        # ✅ Simpan ke DB
+        db = aquarium.load_data()
+        db[str(user_id)] = inv
+        aquarium.save_data(db)
+    
+        uname = cq.from_user.username or f"user{user_id}"
+    
+        # ✅ Balasan private
+        inv_text = aquarium.list_inventory(user_id)
+        await cq.message.edit_text(
+            f"✅ Evolve berhasil!\n"
+            f"🧜‍♀️ Mermaid Girl -5\n"
+            f"🐟 Goldfish -50\n"
+            f"🐟 Stingrays Fish -50\n"
+            f"🐟 Clownfish -50\n"
+            f"🐟 Doryfish -50\n"
+            f"🐟 Bannerfish -50\n"
+            f"🐟 Anglerfish -50\n"
+            f"🐡 Pufferfish -50\n"
+            f"🧜‍♀️ Mermaid Boy -50\n"
+            f"🤧 Zonk -100\n"
+            f"🧬 Mysterious DNA -50\n"
+            f"✨ Water Element -20\n"
+            f"🧚 Sea Fairy +1\n\n"
+            f"📦 Inventory terbaru:\n{inv_text}",
+            reply_markup=make_keyboard("I", user_id)
+        )
+    
+        # ✅ Info ke group + pin
+        try:
+            msg = await client.send_message(
+                TARGET_GROUP,
+                f"🧬 @{uname} berhasil evolve!\n"
+                f" Sea Creatures → 🧚 Sea Fairy 🎉"
+            )
+            await client.pin_chat_message(TARGET_GROUP, msg.id, disable_notification=True)
+        except Exception as e:
+            logger.error(f"Gagal kirim atau pin info evolve ke group: {e}")
+
 
     # ===== RESET LOGIN (OWNER ONLY) =====
     if data == "LOGIN_RESET":
@@ -2036,9 +2225,9 @@ async def callback_handler(client: Client, cq: CallbackQuery):
     if data == "FFF":
         inv_text = aquarium.list_inventory(user_id)
         kb = make_keyboard("FFF", user_id)
-        await cq.message.edit_text(f"🎣 Inventorymu:\n\n{inv_text}", reply_markup=kb)
+        await cq.message.edit_text(f"🎣 HASIL TANGKAPANMU:\n\n{inv_text}", reply_markup=kb)
         return
-
+ 
     # NAVIGASI MENU
     if data in MENU_STRUCTURE:
         await cq.message.edit_text(MENU_STRUCTURE[data]["title"], reply_markup=make_keyboard(data, user_id))
@@ -2048,9 +2237,6 @@ async def callback_handler(client: Client, cq: CallbackQuery):
 async def handle_transfer_message(client: Client, message: Message):
     uid = message.from_user.id
     uname = message.from_user.username or f"user{uid}"
-    
-    #if TC_DROP_STATE.get(uid):
-        #return
 
     # SELL AMOUNT via chat (user previously pressed SELL_START -> SELL_WAITING populated)
     if SELL_WAITING.get(uid):
@@ -2102,75 +2288,182 @@ async def handle_transfer_message(client: Client, message: Message):
             reply_markup=kb
         )
 
-    # TRANSFER (existing)
-    # TRANSFER (revisi dengan delay & info ke group)
+# TRANSFER (existing) -> handle both UMPAN and MONSTER
+# ================== TRANSFER HANDLER (UMPAN + MONSTER) ================== #
     if TRANSFER_STATE.get(uid):
         try:
             jenis = TRANSFER_STATE[uid]["jenis"]
+    
+# =====================================================
+# 🔹 MONSTER TRANSFER SYSTEM (debug + notif grup)
+# =====================================================
+            if jenis == "monster":
+    
+                text = message.text.strip()
+                logging.info(f"[DEBUG][TRANSFER_MONSTER] Pesan diterima dari {uid}: {text}")
+    
+                # Format fleksibel:
+                # - @username trade 5
+                # - @username 5
+                # - 123456789 trade 3
+                # - usernameaja 2
+                m = re.match(
+                    r"^\s*(?P<target>@[A-Za-z0-9_]+|\d+|[A-Za-z0-9_]+)\s*(?:trade\s*)?(?P<amt>\d+)\s*$",
+                    text,
+                    re.IGNORECASE
+                )
+                if not m:
+                    logging.warning(f"[DEBUG][TRANSFER_MONSTER] Format salah dari user {uid}: {text}")
+                    return await message.reply(
+                        "❌ Format salah.\nGunakan contoh:\n`@username trade 5` atau `123456789 2`"
+                    )
+    
+                target_raw = m.group("target")
+                amt = int(m.group("amt"))
+                if amt <= 0:
+                    return await message.reply("❌ Jumlah harus lebih dari 0.")
+    
+                # Dapatkan user target
+                try:
+                    if target_raw.isdigit():
+                        target_user = await client.get_users(int(target_raw))
+                    else:
+                        if not target_raw.startswith("@"):
+                            target_raw = "@" + target_raw
+                        target_user = await client.get_users(target_raw)
+                except Exception as e:
+                    logging.error(f"[DEBUG][TRANSFER_MONSTER] Gagal dapat user target ({target_raw}): {e}")
+                    return await message.reply("❌ Username atau user_id tidak valid.")
+    
+                rid = target_user.id
+                monster_name = TRANSFER_STATE[uid].get("monster")
+    
+                # Load data aquarium
+                data = aquarium.load_data()
+                str_uid = str(uid)
+                str_rid = str(rid)
+    
+                # Validasi kepemilikan monster
+                if str_uid not in data or monster_name not in data[str_uid]:
+                    logging.warning(f"[DEBUG][TRANSFER_MONSTER] User {uid} tidak memiliki {monster_name}")
+                    return await message.reply("❌ Kamu tidak memiliki monster itu.")
+                if data[str_uid][monster_name] < amt:
+                    logging.warning(
+                        f"[DEBUG][TRANSFER_MONSTER] Stok {monster_name} user {uid} tidak cukup "
+                        f"({data[str_uid][monster_name]} tersedia, {amt} diminta)"
+                    )
+                    return await message.reply(f"❌ Stok {monster_name} kamu tidak cukup ({data[str_uid][monster_name]} tersedia).")
+    
+                # Kurangi dari pengirim
+                old_qty_sender = data[str_uid][monster_name]
+                data[str_uid][monster_name] -= amt
+                if data[str_uid][monster_name] <= 0:
+                    del data[str_uid][monster_name]
+                logging.info(f"[DEBUG][TRANSFER_MONSTER] {uid} mengurangi {amt}x {monster_name} "
+                             f"(sebelum: {old_qty_sender}, sesudah: {data.get(str_uid, {}).get(monster_name, 0)})")
+    
+                # Tambahkan ke penerima
+                if str_rid not in data:
+                    data[str_rid] = {}
+                old_qty_receiver = data[str_rid].get(monster_name, 0)
+                data[str_rid][monster_name] = old_qty_receiver + amt
+                logging.info(f"[DEBUG][TRANSFER_MONSTER] {rid} menambahkan {amt}x {monster_name} "
+                             f"(sebelum: {old_qty_receiver}, sesudah: {data[str_rid][monster_name]})")
+    
+                # Simpan perubahan
+                aquarium.save_data(data)
+    
+                # Notifikasi ke pengirim
+                await message.reply(f"✅ Kamu berhasil mentransfer **{amt}x {monster_name}** ke {target_user.mention}!")
+    
+                # Notifikasi ke penerima
+                try:
+                    await client.send_message(rid, f"🎁 Kamu menerima **{amt}x {monster_name}** dari {message.from_user.mention}!")
+                except Exception as e:
+                    logging.warning(f"[DEBUG][TRANSFER_MONSTER] Gagal kirim DM ke penerima ({rid}): {e}")
+    
+                # Notifikasi ke grup
+                try:
+                    await client.send_message(
+                        TARGET_GROUP,
+                        f"📢 {message.from_user.mention} berhasil mentransfer {amt}x {monster_name} ke {target_user.mention}!"
+                    )
+                except Exception as e:
+                    logging.warning(f"[DEBUG][TRANSFER_MONSTER] Gagal kirim notifikasi ke grup: {e}")
+    
+                # Hapus state transfer
+                TRANSFER_STATE.pop(uid, None)
+                return
+
+# =====================================================
+# 🔹 UMPAN TRANSFER SYSTEM (A/B/C/D)
+# =====================================================
             parts = message.text.strip().split()
             if len(parts) != 2:
                 return await message.reply("Format salah. Contoh: @username 1")
             rname, amt = parts
             if not rname.startswith("@"):
                 return await message.reply("Username harus diawali '@'.")
-            amt = int(amt)
+            try:
+                amt = int(amt)
+            except ValueError:
+                return await message.reply("Jumlah harus angka. Contoh: @username 1")
+
             if amt <= 0:
                 return await message.reply("Jumlah harus > 0.")
+
+            # Cari user target di database
             rid = user_database.get_user_id_by_username(rname)
             if rid is None:
-                await message.reply(f"❌ Username {rname} tidak ada di database!")
+                await message.reply(f"❌ Username {rname} tidak ditemukan di database!")
                 TRANSFER_STATE.pop(uid, None)
                 return
 
-            # ====== PROSES TRANSFER ====== #
-            # ====== PROSES TRANSFER ====== #
-            # 🔒 Batasi transfer umpan Rare hanya untuk OWNER
+            # Hanya OWNER yang bisa transfer Umpan Rare (B)
             if jenis == "B" and uid != OWNER_ID:
                 await message.reply("❌ Hanya OWNER yang bisa transfer Umpan Rare 🐌.")
                 TRANSFER_STATE.pop(uid, None)
                 return
 
+            # Jalankan transfer umpan
             if uid == OWNER_ID:
                 umpan.add_umpan(rid, jenis, amt)
             else:
                 sd = umpan.get_user(uid)
                 if sd[jenis]["umpan"] < amt:
-                    return await message.reply("❌ Umpan tidak cukup!")
+                    return await message.reply("❌ Umpan kamu tidak cukup!")
                 umpan.remove_umpan(uid, jenis, amt)
                 umpan.add_umpan(rid, jenis, amt)
 
-            # Info ke OWNER (langsung)
+            # Notifikasi pengirim
             await message.reply(
                 f"✅ Transfer {amt} umpan ke {rname} berhasil!",
                 reply_markup=make_keyboard("main", uid)
             )
 
-            # Info ke penerima (delay 0.5 detik)
+            # Notifikasi penerima
             try:
                 await asyncio.sleep(0.5)
-                await client.send_message(
-                    rid,
-                    f"🎁 Kamu mendapat {amt} umpan dari @{uname}"
-                )
+                await client.send_message(rid, f"🎁 Kamu mendapat {amt} umpan dari @{uname}")
             except Exception as e:
-                logger.error(f"Gagal notif penerima {rid}: {e}")
+                logger.error(f"Gagal kirim notif ke {rid}: {e}")
 
-            # Info ke GROUP (delay 2 detik)
+            # Notifikasi ke group
             try:
                 await asyncio.sleep(2)
                 await client.send_message(
                     TARGET_GROUP,
-                    f"```\n📢 Transfer Umpan!\n👤 @{uname} memberi {amt} umpan ke {rname}```\n"
+                    f"📢 Transfer Umpan!\n👤 @{uname} memberi {amt} umpan {jenis} ke {rname}"
                 )
             except Exception as e:
-                logger.error(f"Gagal notif group: {e}")
+                logger.error(f"Gagal kirim notif group: {e}")
 
         except Exception as e:
             await message.reply(f"❌ Error: {e}")
-
-        TRANSFER_STATE.pop(uid, None)
+            TRANSFER_STATE.pop(uid, None)
         return
 
+# ================= TUKAR COIN KE UMPAN ================= #
     # TUKAR POINT (existing)
     if TUKAR_POINT_STATE.get(uid):
         step = TUKAR_POINT_STATE[uid].get("step", 0)
@@ -2195,8 +2488,6 @@ async def handle_transfer_message(client: Client, message: Message):
         return
 
 # ================= TUKAR COIN KE UMPAN ================= #
-    # ================= TUKAR COIN KE UMPAN ================= #
-    # ================= TUKAR COIN KE UMPAN ================= #
     uid = message.from_user.id
 
     if TUKAR_COIN_STATE.get(uid):
@@ -2315,10 +2606,5 @@ def register_sedekah_handlers(app: Client):
     app.add_handler(MessageHandler(handle_sedekah_input, filters.private & filters.text))
     app.add_handler(CallbackQueryHandler(callback_handler))
     print("[DEBUG] register_sedekah_handlers() aktif ✅")
-
-
-
-
-
 
 
