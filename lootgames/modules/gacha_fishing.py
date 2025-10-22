@@ -13,28 +13,29 @@ logger = logging.getLogger(__name__)
 # ---------------- COMMON ---------------- #
 FISH_LOOT_COMMON = {
     # monster besar (sudah dikurangi proporsional)
-    "🤧 Zonk": 43.18,
-    "𓆝 Small Fish": 61.75,
-    "🐌 Snail": 48.10,
-    "🐚 Hermit Crab": 50.90,
-    "🦀 Crab": 46.71,
-    "🐸 Frog": 46.71,
-    "🐍 Snake": 46.65,
-    "🐙 Octopus": 29.77,
+    "🤧 Zonk": 39.18,
+    "𓆝 Small Fish": 57.75,
+    "🦠 Slime": 40.00,
+    "🐌 Snail": 44.10,
+    "🐚 Hermit Crab": 46.90,
+    "🦀 Crab": 42.71,
+    "🐸 Frog": 42.71,
+    "🐍 Snake": 42.65,
+    "🐙 Octopus": 42.77,
 
     # item kecil — lebih besar dari element
-    "ଳ Jelly Fish": 40.00,
-    "🦪 Giant Clam": 40.00,
-    "🐟 Goldfish": 40.00,
-    "🐟 Stingrays Fish": 40.00,
-    "🐟 Clownfish": 40.00,
-    "🐟 Doryfish": 40.00,
-    "🐟 Bannerfish": 40.00,
-    "🐟 Moorish Idol": 40.00,
-    "🐟 Axolotl": 40.00,
-    "🐟 Beta Fish": 40.00,
-    "🐟 Anglerfish": 40.00,
-    "🦆 Duck": 40.00,
+    "ଳ Jelly Fish": 38.00,
+    "🦪 Giant Clam": 38.00,
+    "🐟 Goldfish": 38.00,
+    "🐟 Stingrays Fish": 38.00,
+    "🐟 Clownfish": 38.00,
+    "🐟 Doryfish": 38.00,
+    "🐟 Bannerfish": 38.00,
+    "🐟 Moorish Idol": 38.00,
+    "🐟 Axolotl": 38.00,
+    "🐟 Beta Fish": 38.00,
+    "🐟 Anglerfish": 38.00,
+    "🦆 Duck": 38.00,
 
     # kecil tetap
     "🧬 Mysterious DNA": 15.00,
@@ -44,22 +45,24 @@ FISH_LOOT_COMMON = {
     "✨ Fire Element": 30.00,
     "✨ Water Element": 30.00,
     "✨ Wind Element": 30.00,
+    "🦉 Owl": 16.00,
 }
 
 # ---------------- RARE ---------------- #
 FISH_LOOT_RARE = {
     # Ultra Rare
-    "🐡 Pufferfish": 57.62,
-    "📿 Lucky Jewel": 53.66,
-    "🐱 Red Hammer Cat": 53.66,
-    "🐱 Purple Fist Cat": 53.66,
-    "🐱 Green Dino Cat": 53.66,
+    "🐡 Pufferfish": 53.62,
+    "🦉 Owl": 50.00,
+    "📿 Lucky Jewel": 49.66,
+    "🐱 Red Hammer Cat": 49.66,
+    "🐱 Purple Fist Cat": 49.66,
+    "🐱 Green Dino Cat": 49.66,
     "🐱 White Winter Cat": 53.66,
-    "🐟 Shark": 51.66,
-    "🐟 Seahorse": 51.66,
-    "🐊 Crocodile": 51.66,
-    "🦦 Seal": 51.66,
-    "🐢 Turtle": 55.66,
+    "🐟 Shark": 41.66,
+    "🐟 Seahorse": 41.66,
+    "🐊 Crocodile": 41.66,
+    "🦦 Seal": 41.66,
+    "🐢 Turtle": 45.66,
     "🦞 Lobster": 51.66,
     # ✨ ELEMENT MONSTERS ✨
     "✨ Thunder Element": 30.00,
@@ -69,6 +72,7 @@ FISH_LOOT_RARE = {
 
     # Legendary
     "🐋 Orca": 20.39,
+    "🦌 Deer": 20.00,
     "🐬 Dolphin": 20.39,
     "🐒 Monkey": 20.39,
     "🦍 Gorilla": 20.39,
