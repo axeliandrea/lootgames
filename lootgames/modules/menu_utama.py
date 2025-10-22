@@ -1,15 +1,17 @@
-# TF MOBS, UMPAN FIX # 04:56
+#   # 
 # lootgames/modules/menu_utama.py
 import os
 import time  # pastikan ada di top imports
 import logging
 import asyncio
 import re
+import httpx
 import random
 import json
 import tempfile
 from collections import defaultdict
 from pyrogram import Client, filters
+from lootgames.__main__ import load_history
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery, Message
 from pyrogram.handlers import MessageHandler, CallbackQueryHandler
 
@@ -17,7 +19,10 @@ from lootgames.modules import yapping, umpan, user_database
 from lootgames.modules import fizz_coin
 from lootgames.modules import aquarium
 from lootgames.modules.gacha_fishing import fishing_loot
-from datetime import date
+from datetime import datetime, timezone, timedelta
+from lootgames.modules.utils import save_topup_history, calculate_umpan
+
+WEBHOOK_URL = "https://preelemental-marth-exactly.ngrok-free.dev/webhook/saweria"
 
 logger = logging.getLogger(__name__)
 OWNER_ID = 6395738130
@@ -254,6 +259,7 @@ async def send_sedekah_to_group(client, sender_id, jenis, amount, slot, message)
         "attempts": []        # user_id yang sudah mencoba (opsional, untuk mencegah spam)
     }
 
+    #SEDEKAH
     data = load_sedekah_data()
     data["active"].append(new_chest)
     save_sedekah_data(data)
@@ -365,6 +371,32 @@ async def handle_sedekah_claim(client, cq):
             await cq.message.reply_text(f"😜 @{uname} Sian deh lu... makan nih ZONK! 💩")
             return
 
+#TOP UP HISTORY
+TOPUP_HISTORY_FILE = "storage/topup_history.json"
+os.makedirs(os.path.dirname(TOPUP_HISTORY_FILE), exist_ok=True)
+
+def load_topup_history():
+    if not os.path.exists(TOPUP_HISTORY_FILE):
+        return {}
+    with open(TOPUP_HISTORY_FILE, "r") as f:
+        data = json.load(f)
+    return data if isinstance(data, dict) else {}
+
+def save_topup_history(user_id, username, amount, bonus, umpan_type):
+    data = load_topup_history()
+    uid = str(user_id)
+    data.setdefault(uid, [])
+    next_id = len(data[uid]) + 1
+    data[uid].append({
+        "id": next_id,
+        "username": username,
+        "amount": amount,
+        "bonus": bonus,
+        "type": umpan_type,
+        "timestamp": datetime.utcnow().timestamp()
+    })
+    with open(TOPUP_HISTORY_FILE, "w") as f:
+        json.dump(data, f, indent=2)
 
 # ---------------- DATA HANDLER ---------------- #
 def load_sedekah_data():
@@ -465,6 +497,7 @@ def reset_all():
 # inv_key harus cocok dengan key di aquarium_data.json (nama item di DB)
 ITEM_PRICES = {
     "SELL_SMALLFISH": {"name": "𓆝 Small Fish", "price": 1, "inv_key": "Small Fish"},
+    "SELL_SLIME": {"name": "🦠 Slime", "price": 1, "inv_key": "Slime"},
     "SELL_SNAIL": {"name": "🐌 Snail", "price": 2, "inv_key": "Snail"},
     "SELL_HERMITCRAB": {"name": "🐚 Hermit Crab", "price": 2, "inv_key": "Hermit Crab"},
     "SELL_CRAB": {"name": "🦀 Crab", "price": 2, "inv_key": "Crab"},
@@ -489,6 +522,7 @@ ITEM_PRICES = {
     "SELL_FIREELEMENT": {"name": "✨ Fire Element", "price": 5, "inv_key": "Fire Element"},
     "SELL_WATERELEMENT": {"name": "✨ Water Element", "price": 5, "inv_key": "Water Element"},
     "SELL_WINDELEMENT": {"name": "✨ Wind Element", "price": 5, "inv_key": "Wind Element"},
+    "SELL_OWL": {"name": "🦉 Owl", "price": 5, "inv_key": "Owl"},
     "SELL_REDHAMMERCAT": {"name": "🐱 Red Hammer Cat", "price": 8, "inv_key": "Red Hammer Cat"},
     "SELL_PURPLEFISTCAT": {"name": "🐱 Purple Fist Cat", "price": 8, "inv_key": "Purple Fist Cat"},
     "SELL_GREENDINOCAT": {"name": "🐱 Green Dino Cat", "price": 8, "inv_key": "Green Dino Cat"},
@@ -500,6 +534,7 @@ ITEM_PRICES = {
     "SELL_MYSTERIOUSDNA": {"name": "🧬 Mysterious DNA", "price": 10, "inv_key": "Mysterious DNA"},
     "SELL_TURTLE": {"name": "🐢 Turtle", "price": 10, "inv_key": "Turtle"},
     "SELL_LOBSTER": {"name": "🦞 Lobster", "price": 10, "inv_key": "Lobster"},
+    "SELL_DEER": {"name": "🦌 Deer", "price": 5, "inv_key": "Deer"},
     "SELL_LUCKYJEWEL": {"name": "📿 Lucky Jewel", "price": 7, "inv_key": "Lucky Jewel"},
     "SELL_ORCA": {"name": "🐋 Orca", "price": 15, "inv_key": "Orca"},
     "SELL_MONKEY": {"name": "🐒 Monkey", "price": 15, "inv_key": "Monkey"},
@@ -564,6 +599,12 @@ INV_KEY_ALIASES = {
     "octopus": "Octopus",
     "🐡 Pufferfish": "Pufferfish",
     "pufferfish": "Pufferfish",
+    "🦠 Slime": "Slime",
+    "slime": "Slime",
+    "🦉 Owl": "Owl",
+    "owl": "Owl",
+    "🦌 Deer": "Deer",
+    "deer": "Deer",
     "✨ Thunder Element": "Thunder Element",
     "thunder element": "Thunder Element",
     "✨ Fire Element": "Fire Element",
@@ -828,7 +869,9 @@ MENU_STRUCTURE = {
     "D1": {
         "title": "📋 BUY UMPAN",
         "buttons": [
-            ("TOPUP QRIS (cooming soon)", "D1A"),
+            ("TOPUP QRIS UMPAN A", "D1A"),
+            ("TOPUP QRIS UMPAN B", "D1B"),
+            ("📜 HISTORY TOP UP", "D1H"),
             ("⬅️ Back", "D")
         ]
     },
@@ -861,6 +904,7 @@ MENU_STRUCTURE = {
         "title": "💰 DAFTAR HARGA",
         "buttons": [
             ("𓆝 Small Fish", "SELL_DETAIL:SELL_SMALLFISH"),
+            ("🦠 Slime", "SELL_DETAIL:SELL_SLIME"),
             ("🐌 Snail", "SELL_DETAIL:SELL_SNAIL"),
             ("🐚 Hermit Crab", "SELL_DETAIL:SELL_HERMITCRAB"),
             ("🦀 Crab", "SELL_DETAIL:SELL_CRAB"),
@@ -889,6 +933,7 @@ MENU_STRUCTURE = {
             ("✨ Fire Element", "SELL_DETAIL:SELL_FIREELEMENT"),
             ("✨ Water Element", "SELL_DETAIL:SELL_WATERELEMENT"),
             ("✨ Wind Element", "SELL_DETAIL:SELL_SELL_WINDELEMENT"),
+            ("🦉 Owl", "SELL_DETAIL:SELL_OWL"),
             ("🐟 Shark", "SELL_DETAIL:SELL_SHARK"),
             ("🐟 Seahorse", "SELL_DETAIL:SELL_SEAHORSE"),
             ("🐹⚡ Pikachu", "SELL_DETAIL:SELL_PIKACHU"),
@@ -901,6 +946,7 @@ MENU_STRUCTURE = {
             ("🧬 Mysterious DNA", "SELL_DETAIL:SELL_MYSTERIOUS"),
             ("🐢 Turtle", "SELL_DETAIL:SELL_TURTLE"),
             ("🦞 Lobster", "SELL_DETAIL:SELL_LOBSTER"),
+            ("🦌 Deer", "SELL_DETAIL:SELL_DEER"),
             ("📿 Lucky Jewel", "SELL_DETAIL:SELL_LUCKYJEWEL"),
             ("🐋 Orca", "SELL_DETAIL:SELL_ORCA"),
             ("🐒 Monkey", "SELL_DETAIL:SELL_MONKEY"),
@@ -947,7 +993,7 @@ MENU_STRUCTURE = {
             ("⬅️ Back", "D")
         ]
     },
-    "D3A": {
+    "D3LA": {
         "title": "📋 🔄 POINT CHAT",
         "buttons": [
             ("TUKAR 🔄 UMPAN COMMON 🐛", "TUKAR_POINT"),
@@ -1246,13 +1292,97 @@ def list_full_inventory(user_id: int) -> str:
     result = "🎣 **HASIL TANGKAPANMU:**\n\n" + "\n".join(lines)
     return result
 
+# ===========================================================
+# HITUNG BONUS & BULATKAN KE NOMINAL SAWERIA
+# ===========================================================
+def get_umpan_bonus(amount):
+    valid_nominals = [1000, 5000, 10000, 50000]
+    rounded_amount = min(valid_nominals, key=lambda x: abs(x - amount))
+    bonus_map = {1000: 20, 5000: 105, 10000: 210, 50000: 1100}
+    return rounded_amount, bonus_map.get(rounded_amount, 0)
+
 # ---------------- CALLBACK HANDLER ---------------- #
-async def callback_handler(client: Client, cq: CallbackQuery):
+async def callback_handler(client, cq):
     data = cq.data
     user_id = cq.from_user.id
-    # <-- Pastikan uname didefinisikan di sini
     uname = cq.from_user.username or f"user{user_id}"
 
+    # ===== TOPUP QRIS UMPAN A =====
+    if data == "D1A":
+        saweria_url = f"https://saweria.co/axeliandrea?user={user_id}&username={uname}&type=umpanA"
+        text = (
+            "💳 **TOPUP QRIS - UMPAN A (🐛)**\n\n"
+            "Silakan pilih nominal dan lakukan pembayaran melalui link berikut.\n\n"
+            "📦 Konversi otomatis (1 Umpan A = Rp50):\n"
+            "• 1K → 20 Umpan A 🐛\n"
+            "• 5K → 100 Umpan A 🐛 (bonus)\n"
+            "• 10K → 200 Umpan A 🐛 (bonus)\n"
+            "• 50K → 1000 Umpan A 🐛 (bonus)\n\n"
+            "_Nominal lain seperti 1,1K akan otomatis dikonversi proporsional._\n"
+            "_Umpan akan dikirim otomatis setelah pembayaran berhasil._"
+        )
+        await cq.message.edit_text(
+            text,
+            reply_markup=InlineKeyboardMarkup([
+                [InlineKeyboardButton("💰 TOP UP SEKARANG", url=saweria_url)],
+                [InlineKeyboardButton("⬅️ Kembali", callback_data="D1")]
+            ]),
+            disable_web_page_preview=True
+        )
+        return
+
+    # ===== TOPUP QRIS UMPAN B =====
+    if data == "D1B":
+        saweria_url = f"https://saweria.co/axeliandrea?user={user_id}&username={uname}&type=umpanB"
+        text = (
+            "💳 **TOPUP QRIS - UMPAN B (🐌)**\n\n"
+            "Silakan pilih nominal dan lakukan pembayaran melalui link berikut.\n\n"
+            "📦 Konversi otomatis (1 Umpan B = Rp500):\n"
+            "• 1K → 2 Umpan B 🐌\n"
+            "• 5K → 10 Umpan B 🐌 (bonus)\n"
+            "• 10K → 20 Umpan B 🐌 (bonus)\n"
+            "• 50K → 100 Umpan B 🐌 (bonus)\n\n"
+            "_Nominal seperti 1,1K akan dikonversi otomatis ke 2,2 Umpan B._\n"
+            "_Umpan akan dikirim otomatis setelah pembayaran berhasil._"
+        )
+        await cq.message.edit_text(
+            text,
+            reply_markup=InlineKeyboardMarkup([
+                [InlineKeyboardButton("💰 TOP UP SEKARANG", url=saweria_url)],
+                [InlineKeyboardButton("⬅️ Kembali", callback_data="D1")]
+            ]),
+            disable_web_page_preview=True
+        )
+        return
+
+    # ===== HISTORY TOP UP =====
+    if data == "D1H":
+        history_data = load_history()
+        user_history = history_data.get(str(user_id), [])
+
+        if not user_history:
+            history_text = "📜 Kamu belum pernah melakukan top-up."
+        else:
+            lines = []
+            for h in user_history[-10:]:
+                ts = datetime.fromtimestamp(h.get("timestamp", 0)).strftime("%d-%m-%Y %H:%M")
+                amount = h.get("amount", 0)
+                bonus = h.get("bonus", 0)
+                tipe = h.get("type", "?")
+                status = h.get("status", "unknown")
+                lines.append(f"{ts} | Rp{int(amount):,} → {bonus} Umpan {tipe} | Status: {status}")
+
+            history_text = "📜 **Riwayat Top-Up Terakhir:**\n" + "\n".join(lines)
+
+        await cq.message.edit_text(
+            history_text,
+            reply_markup=InlineKeyboardMarkup(
+                [[InlineKeyboardButton("⬅️ Kembali", callback_data="D1")]]
+            )
+        )
+        return
+
+    
     # ====== MENU TRANSFER MONSTER ======
     if data == "J":
         inv = aquarium.get_user_fish(user_id) or {}
@@ -1818,6 +1948,69 @@ async def callback_handler(client: Client, cq: CallbackQuery):
         except Exception as e:
             logger.error(f"Gagal kirim atau pin info evolve ke group: {e}")
 
+    # ===== EVOLVE ⚡ Raichu CONFIRM =====
+    if data == "EVOLVE_RAICHU_CONFIRM":
+        inv = aquarium.get_user_fish(user_id)
+        pikachu_qty = inv.get("🐹⚡ Pikachu", 0)
+        thunder_qty = inv.get("✨ Thunder Element", 0)
+        dna_qty = inv.get("🧬 Mysterious DNA", 0)
+    
+        # ✅ Validasi stok bahan
+        if pikachu_qty < 50:
+            await cq.answer("❌ 🐹⚡ Pikachu kamu kurang (butuh 50)", show_alert=True)
+            return
+        if thunder_qty < 30:
+            await cq.answer("❌ ✨ Thunder Element kamu kurang (butuh 30)", show_alert=True)
+            return
+        if dna_qty < 30:
+            await cq.answer("❌ 🧬 Mysterious DNA kamu kurang (butuh 30)", show_alert=True)
+            return
+    
+        # ✅ Kurangi stok bahan
+        inv["🐹⚡ Pikachu"] = pikachu_qty - 50
+        if inv["🐹⚡ Pikachu"] <= 0:
+            inv.pop("🐹⚡ Pikachu")
+    
+        inv["✨ Thunder Element"] = thunder_qty - 30
+        if inv["✨ Thunder Element"] <= 0:
+            inv.pop("✨ Thunder Element")
+    
+        inv["🧬 Mysterious DNA"] = dna_qty - 30
+        if inv["🧬 Mysterious DNA"] <= 0:
+            inv.pop("🧬 Mysterious DNA")
+    
+        # ✅ Tambahkan hasil evolve
+        inv["🐹⚡ Raichu"] = inv.get("🐹⚡ Raichu", 0) + 1
+    
+        # ✅ Simpan ke DB
+        db = aquarium.load_data()
+        db[str(user_id)] = inv
+        aquarium.save_data(db)
+    
+        uname = cq.from_user.username or f"user{user_id}"
+    
+        # ✅ Balasan private
+        inv_text = aquarium.list_inventory(user_id)
+        await cq.message.edit_text(
+            f"✅ Evolve berhasil!\n"
+            f"🐹⚡ Pikachu -50\n"
+            f"✨ Thunder Element -30\n"
+            f"🧬 Mysterious DNA -30\n"
+            f"🐹⚡ Raichu +1\n\n"
+            f"📦 Inventory terbaru:\n{inv_text}",
+            reply_markup=make_keyboard("I", user_id)
+        )
+    
+        # ✅ Info ke group + pin
+        try:
+            msg = await client.send_message(
+                TARGET_GROUP,
+                f"⚡ @{uname} berhasil evolve!\n"
+                f"Pikachu → 🐹⚡ Raichu 🎉"
+            )
+            await client.pin_chat_message(TARGET_GROUP, msg.id, disable_notification=True)
+        except Exception as e:
+            logger.error(f"Gagal kirim atau pin info evolve ke group: {e}")
 
     # ===== RESET LOGIN (OWNER ONLY) =====
     if data == "LOGIN_RESET":
@@ -2606,7 +2799,4 @@ def register_sedekah_handlers(app: Client):
     app.add_handler(MessageHandler(handle_sedekah_input, filters.private & filters.text))
     app.add_handler(CallbackQueryHandler(callback_handler))
     print("[DEBUG] register_sedekah_handlers() aktif ✅")
-
-
-
 
