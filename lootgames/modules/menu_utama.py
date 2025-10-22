@@ -1073,6 +1073,7 @@ MENU_STRUCTURE["H"] = {
     ]
 }
 # ===== SUBMENU EVOLVE =====
+# ===== SUBMENU EVOLVE =====
 MENU_STRUCTURE["I"] = {
     "title": "🧬 [EVOLVE]",
     "buttons": [
@@ -1083,10 +1084,11 @@ MENU_STRUCTURE["I"] = {
         ("🐍 Snake", "I_SNAKE"),
         ("🧜‍♀️ Mermaid Girl", "I_MERMAIDGIRL"),
         ("🧚 Sea Fairy", "I_SEAFAIRY"),
-        
+        ("🐹⚡ Raichu", "I_RAICHU"),  # 🔹 tombol baru
         ("⬅️ Back", "main")
     ]
 }
+
 
 # Submenu Small Fish
 MENU_STRUCTURE["I_SMALLFISH"] = {
@@ -2801,5 +2803,6 @@ def register_sedekah_handlers(app: Client):
     app.add_handler(MessageHandler(handle_sedekah_input, filters.private & filters.text))
     app.add_handler(CallbackQueryHandler(callback_handler))
     print("[DEBUG] register_sedekah_handlers() aktif ✅")
+
 
 
