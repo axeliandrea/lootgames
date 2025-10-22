@@ -745,7 +745,9 @@ INV_KEY_ALIASES = {
     "👑🧜‍♀️ Princess Mermaid": "Princess Mermaid",
     "princess Mermaid": "Princess Mermaid",
     "🧚 Sea Fairy": "🧚 Sea Fairy",
-    "sea fairy": "Sea Fairy"
+    "sea fairy": "Sea Fairy",
+    "🐹⚡ Raichu": "Raichu",
+    "raichu": "Raichu"
     # tambahkan sesuai kebutuhan 
 }
 
@@ -2812,6 +2814,7 @@ def register_sedekah_handlers(app: Client):
     app.add_handler(MessageHandler(handle_sedekah_input, filters.private & filters.text))
     app.add_handler(CallbackQueryHandler(callback_handler))
     print("[DEBUG] register_sedekah_handlers() aktif ✅")
+
 
 
 
