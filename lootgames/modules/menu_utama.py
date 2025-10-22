@@ -1155,7 +1155,7 @@ MENU_STRUCTURE["I_SEAFAIRY"] = {
 }
 # Submenu 🐹⚡ Raichu
 MENU_STRUCTURE["I_RAICHU"] = {
-    "title": "🧬 Evolve 🐹⚡ Pikachu",
+    "title": "🧬 Evolve Pikachu",
     "buttons": [
         ("🧬 Evolve jadi 🐹⚡ Raichu", "EVOLVE_RAICHU_CONFIRM"),
         ("⬅️ Kembali", "I")
@@ -2792,6 +2792,7 @@ def register_sedekah_handlers(app: Client):
     app.add_handler(MessageHandler(handle_sedekah_input, filters.private & filters.text))
     app.add_handler(CallbackQueryHandler(callback_handler))
     print("[DEBUG] register_sedekah_handlers() aktif ✅")
+
 
 
 
