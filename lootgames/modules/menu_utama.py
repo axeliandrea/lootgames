@@ -576,6 +576,7 @@ ITEM_PRICES = {
     "SELL_QUEENOFMEDUSA": {"name": "👑 Queen Of Medusa 🐍", "price": 5000, "inv_key": "Queen Of Medusa"},
     "SELL_PRINCESSMERMAID": {"name": "👑🧜‍♀️ Princess Mermaid", "price": 10000, "inv_key": "Princess Mermaid"},
     "SELL_SEAFAIRY": {"name": "🧚 Sea Fairy", "price": 15000, "inv_key": "Sea Fairy"},
+    "SELL_RAICHU": {"name": "🐹⚡ Raichu", "price": 10000, "inv_key": "Raichu"},
 }
 # sementara user -> item_code waiting for amount input (chat)
 SELL_WAITING = {}  # user_id: item_code
@@ -983,6 +984,7 @@ MENU_STRUCTURE = {
             ("👑 Queen Medusa 🐍", "SELL_DETAIL:SELL_QUEENOFMEDUSA"),
             ("👑🧜‍♀️ Princess Mermaid", "SELL_DETAIL:SELL_PRINCESSMERMAID"),
             ("🧚 Sea Fairy", "SELL_DETAIL:SELL_SEAFAIRY"),
+            ("🐹⚡ Raichu", "SELL_DETAIL:SELL_RAICHU"),
             ("⬅️ Back", "D2"),
         ]
     },
@@ -2799,4 +2801,5 @@ def register_sedekah_handlers(app: Client):
     app.add_handler(MessageHandler(handle_sedekah_input, filters.private & filters.text))
     app.add_handler(CallbackQueryHandler(callback_handler))
     print("[DEBUG] register_sedekah_handlers() aktif ✅")
+
 
