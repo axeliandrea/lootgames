@@ -1,4 +1,4 @@
-# lootgames/modules/umpan.py  05:00
+# lootgames/modules/umpan.py 
 import json
 import os
 from threading import Lock
