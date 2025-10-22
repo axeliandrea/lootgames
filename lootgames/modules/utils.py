@@ -1,16 +1,19 @@
-# 04:57
+# lootgames/modules/utils.py
 import os
 import json
 from datetime import datetime
 
+# -------------------------------
+# FILE PATHS
+# -------------------------------
 POINT_FILE = "storage/chat_points.json"
 DAILY_POINT_FILE = "storage/daily_points.json"
-DAILY_RESET_FILE = "storage/daily_reset.json"  # simpan tanggal terakhir reset
+DAILY_RESET_FILE = "storage/daily_reset.json"
+TOPUP_HISTORY_FILE = "storage/topup_history.json"
 
 # -------------------------------
-# UTILS UTAMA
+# UTILS UMUM
 # -------------------------------
-
 def load_json(file_path):
     """Load data JSON dari file, aman terhadap error."""
     if os.path.exists(file_path):
@@ -27,21 +30,16 @@ def save_json(file_path, data):
     os.makedirs(os.path.dirname(file_path), exist_ok=True)
     with open(file_path, "w") as f:
         json.dump(data, f, indent=2)
-    print(f"[DEBUG] Data disimpan ke {file_path}:", data)
+    print(f"[DEBUG] Data disimpan ke {file_path}")
 
 # -------------------------------
-# POINTS UTAMA
+# CHAT POINTS & DAILY POINTS
 # -------------------------------
-
 def load_points():
     return load_json(POINT_FILE)
 
 def save_points(data):
     save_json(POINT_FILE, data)
-
-# -------------------------------
-# DAILY POINTS
-# -------------------------------
 
 def load_daily_points():
     daily_points = load_json(DAILY_POINT_FILE)
@@ -50,10 +48,6 @@ def load_daily_points():
 
 def save_daily_points(data):
     save_json(DAILY_POINT_FILE, data)
-
-# -------------------------------
-# TAMBAH USER
-# -------------------------------
 
 def add_user_if_not_exist(points, user_id, username):
     user_id = str(user_id)
@@ -64,10 +58,6 @@ def add_user_if_not_exist(points, user_id, username):
         points[user_id]["username"] = username
         if "level" not in points[user_id]:
             points[user_id]["level"] = 0
-
-# -------------------------------
-# TAMBAH POIN
-# -------------------------------
 
 def add_points(user_id, username, amount=1):
     user_id = str(user_id)
@@ -87,10 +77,6 @@ def add_points(user_id, username, amount=1):
     save_points(points)
     save_daily_points(daily_points)
 
-# -------------------------------
-# RESET DAILY POINTS
-# -------------------------------
-
 def reset_daily_points():
     save_daily_points({})
     save_json(DAILY_RESET_FILE, {"last_reset": datetime.now().strftime("%Y-%m-%d")})
@@ -107,3 +93,37 @@ def auto_reset_daily_points(daily_points):
         save_daily_points(daily_points)
         save_json(DAILY_RESET_FILE, {"last_reset": today})
         print(f"[DEBUG] Daily points direset otomatis: {today}")
+
+# -------------------------------
+# TOPUP HISTORY & UMPAN
+# -------------------------------
+def load_topup_history():
+    return load_json(TOPUP_HISTORY_FILE)
+
+def save_topup_history(user_id, username, amount, bonus, umpan_type):
+    data = load_json(TOPUP_HISTORY_FILE)
+    user_id_str = str(user_id)
+    data.setdefault(user_id_str, [])
+    next_id = len(data[user_id_str]) + 1
+    data[user_id_str].append({
+        "id": next_id,
+        "username": username,
+        "amount": amount,
+        "bonus": bonus,
+        "type": umpan_type,
+        "timestamp": datetime.utcnow().timestamp()
+    })
+    save_json(TOPUP_HISTORY_FILE, data)
+    print(f"[DEBUG] History top-up disimpan untuk user {user_id}")
+
+def calculate_umpan(amount, tipe):
+    """
+    Hitung jumlah umpan berdasarkan tipe dan nominal top-up.
+    Umpan A: 1 pcs = 50
+    Umpan B: 1 pcs = 500
+    """
+    if tipe == "A":
+        return int(amount // 50)
+    elif tipe == "B":
+        return int(amount // 500)
+    return 0
