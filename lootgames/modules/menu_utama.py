@@ -1970,7 +1970,6 @@ async def callback_handler(client, cq):
         thunder_qty = inv.get("✨ Thunder Element", 0)
         dna_qty = inv.get("🧬 Mysterious DNA", 0)
     
-        # ✅ Validasi stok bahan
         if pikachu_qty < 50:
             await cq.answer("❌ 🐹⚡ Pikachu kamu kurang (butuh 50)", show_alert=True)
             return
@@ -1981,51 +1980,30 @@ async def callback_handler(client, cq):
             await cq.answer("❌ 🧬 Mysterious DNA kamu kurang (butuh 30)", show_alert=True)
             return
     
-        # ✅ Kurangi stok bahan
-        inv["🐹⚡ Pikachu"] = pikachu_qty - 50
-        if inv["🐹⚡ Pikachu"] <= 0:
-            inv.pop("🐹⚡ Pikachu")
-    
-        inv["✨ Thunder Element"] = thunder_qty - 30
-        if inv["✨ Thunder Element"] <= 0:
-            inv.pop("✨ Thunder Element")
-    
-        inv["🧬 Mysterious DNA"] = dna_qty - 30
-        if inv["🧬 Mysterious DNA"] <= 0:
-            inv.pop("🧬 Mysterious DNA")
-    
-        # ✅ Tambahkan hasil evolve
+        inv["🐹⚡ Pikachu"] -= 50
+        inv["✨ Thunder Element"] -= 30
+        inv["🧬 Mysterious DNA"] -= 30
         inv["🐹⚡ Raichu"] = inv.get("🐹⚡ Raichu", 0) + 1
     
-        # ✅ Simpan ke DB
         db = aquarium.load_data()
         db[str(user_id)] = inv
         aquarium.save_data(db)
     
-        uname = cq.from_user.username or f"user{user_id}"
-    
-        # ✅ Balasan private
         inv_text = aquarium.list_inventory(user_id)
         await cq.message.edit_text(
             f"✅ Evolve berhasil!\n"
-            f"🐹⚡ Pikachu -50\n"
-            f"✨ Thunder Element -30\n"
-            f"🧬 Mysterious DNA -30\n"
-            f"🐹⚡ Raichu +1\n\n"
-            f"📦 Inventory terbaru:\n{inv_text}",
+            f"🐹⚡ Pikachu -50\n✨ Thunder Element -30\n🧬 Mysterious DNA -30\n🐹⚡ Raichu +1\n\n📦 Inventory terbaru:\n{inv_text}",
             reply_markup=make_keyboard("I", user_id)
         )
     
-        # ✅ Info ke group + pin
-        try:
-            msg = await client.send_message(
-                TARGET_GROUP,
-                f"⚡ @{uname} berhasil evolve!\n"
-                f"Pikachu → 🐹⚡ Raichu 🎉"
-            )
-            await client.pin_chat_message(TARGET_GROUP, msg.id, disable_notification=True)
-        except Exception as e:
-            logger.error(f"Gagal kirim atau pin info evolve ke group: {e}")
+        uname = cq.from_user.username or f"user{user_id}"
+        msg = await client.send_message(
+            TARGET_GROUP,
+            f"⚡ @{uname} berhasil evolve!\nPikachu → 🐹⚡ Raichu 🎉"
+        )
+        await client.pin_chat_message(TARGET_GROUP, msg.id, disable_notification=True)
+        return
+
 
     # ===== RESET LOGIN (OWNER ONLY) =====
     if data == "LOGIN_RESET":
@@ -2814,6 +2792,7 @@ def register_sedekah_handlers(app: Client):
     app.add_handler(MessageHandler(handle_sedekah_input, filters.private & filters.text))
     app.add_handler(CallbackQueryHandler(callback_handler))
     print("[DEBUG] register_sedekah_handlers() aktif ✅")
+
 
 
 
