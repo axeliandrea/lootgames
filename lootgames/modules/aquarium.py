@@ -78,6 +78,7 @@ def list_inventory(user_id: int) -> str:
         "🦦 Seal", "🐢 Turtle", "🐬 Dolphin", "🐙 Octopus", "🐢💧 Squirtle", "🐱 Green Dino Cat",
         "🐱 Red Hammer Cat", "🐶 Dog", "🦍 Gorilla", "🦞 Lobster", "🐉 Baby Magma Dragon",
         "🐉 Baby Spirit Dragon", "🐉 Dark Knight Dragon", "🐌 Snail", "🐒 Monkey",
+        "🦠 Slime", "🦉 Owl", "🦌 Deer", "🐹⚡Raichu",
         "🐦‍🔥 Fire Phoenix", "🐦🌌 Dark Phoenix", "🐯 White Tiger", "🐱 Purple Fist Cat",
         "🐹⚡ Pikachu", "🐼 Panda", "🦇 bat", "🦪 Giant Clam", "ଳ Jelly Fish", "𓆝 Small Fish",
         "🐉 Baby Dragon", "🐉 Black Dragon", "🐉 Blue Dragon", "🐉 Cupid Dragon", "🐉 Skull Dragon",
