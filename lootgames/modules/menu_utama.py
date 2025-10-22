@@ -1153,7 +1153,7 @@ MENU_STRUCTURE["I_SEAFAIRY"] = {
 }
 # Submenu 🐹⚡ Raichu
 MENU_STRUCTURE["I_RAICHU"] = {
-    "title": "🧬 🐹⚡ Pikachu",
+    "title": "🧬 Evolve 🐹⚡ Pikachu",
     "buttons": [
         ("🧬 Evolve jadi 🐹⚡ Raichu", "EVOLVE_RAICHU_CONFIRM"),
         ("⬅️ Back", "I")
@@ -1959,7 +1959,7 @@ async def callback_handler(client, cq):
             await client.pin_chat_message(TARGET_GROUP, msg.id, disable_notification=True)
         except Exception as e:
             logger.error(f"Gagal kirim atau pin info evolve ke group: {e}")
-
+#
     # ===== EVOLVE ⚡ Raichu CONFIRM =====
     if data == "EVOLVE_RAICHU_CONFIRM":
         inv = aquarium.get_user_fish(user_id)
@@ -2811,6 +2811,7 @@ def register_sedekah_handlers(app: Client):
     app.add_handler(MessageHandler(handle_sedekah_input, filters.private & filters.text))
     app.add_handler(CallbackQueryHandler(callback_handler))
     print("[DEBUG] register_sedekah_handlers() aktif ✅")
+
 
 
 
