@@ -1,0 +1,57 @@
+{
+  "6946903915": [
+    {
+      "id": "e6f7dd0c-d95e-4235-8c56-fd96bab69a17",
+      "username": "user6946903915",
+      "amount": 1000,
+      "bonus": 20,
+      "type": "A",
+      "status": "success",
+      "timestamp": 1761175452.265491
+    }
+  ],
+  "2066716157": [
+    {
+      "id": "61f0678b-4086-440c-909b-e5b156d23838",
+      "username": "user2066716157",
+      "amount": 1000,
+      "bonus": 2,
+      "type": "B",
+      "status": "success",
+      "timestamp": 1761175555.912874
+    }
+  ],
+  "7341241548": [
+    {
+      "id": "e0d6db9d-1b2f-473f-adf0-951bb62d9392",
+      "username": "user7341241548",
+      "amount": 1000,
+      "bonus": 20,
+      "type": "A",
+      "status": "success",
+      "timestamp": 1761175669.799919
+    }
+  ],
+  "6789290524": [
+    {
+      "id": "590190b2-7810-49e2-bdc8-ec2e946365dd",
+      "username": "user6789290524",
+      "amount": 1000,
+      "bonus": 20,
+      "type": "A",
+      "status": "success",
+      "timestamp": 1761176571.232461
+    }
+  ],
+  "anon_baby": [
+    {
+      "id": "4d39b507-1a5a-4f5b-9454-79ab4f448d4b",
+      "username": "baby",
+      "amount": 1000,
+      "bonus": 20,
+      "type": "A",
+      "status": "success",
+      "timestamp": 1761177383.569843
+    }
+  ]
+}
