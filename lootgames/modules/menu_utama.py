@@ -125,7 +125,7 @@ async def send_treasure_chest(client, cq):
     await client.send_message(
         TARGET_GROUP,
         "🎉 **Treasure Chest Spawned!** 🎉\n\n"
-        "Expired in 2 minutues",
+        "Expired in 1 minutues",
         reply_markup=keyboard_group
     )
 
@@ -177,7 +177,7 @@ async def handle_treasure_claim(client, cq):
     elif roll < 0.95:
         hadiah = "🐛 Umpan Common (Type A)"
         try:
-            umpan.add_umpan(user_id, "A", 1)
+            umpan.add_umpan(user_id, "A", 2)
         except Exception as e:
             print(f"[TREASURE][ERROR] Gagal add umpan A: {e}")
         text = f"🐛 @{uname} Got **1 Common (Type A)**!"
@@ -429,7 +429,7 @@ async def handle_sedekah_menu(client, cq):
         await cq.answer(f"❌ Umpan Type {jenis} tidak cukup (butuh {amount}).", show_alert=True)
         return
 
-    slot = 1  # hanya 1 orang bisa klaim
+    slot = 5  # hanya 5 orang bisa klaim
     await send_sedekah_to_group(client, user_id, jenis, amount, slot, cq.message)
 
 # ---------------- HELPER LOAD / SAVE ---------------- #
@@ -2792,6 +2792,7 @@ def register_sedekah_handlers(app: Client):
     app.add_handler(MessageHandler(handle_sedekah_input, filters.private & filters.text))
     app.add_handler(CallbackQueryHandler(callback_handler))
     print("[DEBUG] register_sedekah_handlers() aktif ✅")
+
 
 
 
