@@ -180,7 +180,7 @@ async def handle_treasure_claim(client, cq):
             umpan.add_umpan(user_id, "A", 2)
         except Exception as e:
             print(f"[TREASURE][ERROR] Gagal add umpan A: {e}")
-        text = f"🐛 @{uname} Got **1 Common (Type A)**!"
+        text = f"🐛 @{uname} Got **2 Common (Type A)**!"
         await asyncio.sleep(2)
     else:
         hadiah = "🐌 Umpan Rare (Type B)"
@@ -2792,6 +2792,7 @@ def register_sedekah_handlers(app: Client):
     app.add_handler(MessageHandler(handle_sedekah_input, filters.private & filters.text))
     app.add_handler(CallbackQueryHandler(callback_handler))
     print("[DEBUG] register_sedekah_handlers() aktif ✅")
+
 
 
 
