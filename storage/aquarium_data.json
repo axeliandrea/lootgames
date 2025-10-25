@@ -258,7 +258,7 @@
   },
   "6742407313": {
     "\ud80c\udd9d Small Fish": 137,
-    "\ud83d\udc1a Hermit Crab": 70,
+    "\ud83d\udc1a Hermit Crab": 71,
     "\ud83d\udc0c Snail": 56,
     "\ud83e\udd27 Zonk": 124,
     "\ud83d\udcff Lucky Jewel": 7,
@@ -350,7 +350,8 @@
     "\u2728 Fire Element": 1,
     "\u2728 Water Element": 2,
     "\ud83e\udd89 Owl": 1,
-    "\ud83d\udc09 Skull Dragon": 1
+    "\ud83d\udc09 Skull Dragon": 1,
+    "\ud83d\udc09 Baby Magma Dragon": 1
   },
   "6644199317": {
     "\ud83e\udd27 Zonk": 100,
@@ -890,7 +891,7 @@
     "\ud83e\udd80 Crab": 1
   },
   "6769845093": {
-    "\ud83e\udd27 Zonk": 305,
+    "\ud83e\udd27 Zonk": 306,
     "\ud83d\udc2c Dolphin": 3,
     "Lost cip": 5,
     "\ud83d\udc39\u26a1 Pikachu": 2,
@@ -904,7 +905,7 @@
     "\ud83d\udc09 Baby Spirit Dragon": 2,
     "\ud83d\udc09 Skull Dragon": 1,
     "\ud83d\udc22\ud83d\udca7 Squirtle": 1,
-    "\ud83d\udc31 Red Hammer Cat": 5,
+    "\ud83d\udc31 Red Hammer Cat": 3,
     "\ud83d\udc31 Purple Fist Cat": 2,
     "\ud83d\udc31 White Winter Cat": 3,
     "\ud83d\udc0b\u26a1 Kyogre": 1,
@@ -916,17 +917,18 @@
     "\ud83d\udcff Lucky Jewel": 1,
     "\ud83e\udda6 Seal": 1,
     "\ud83e\uddec Mysterious DNA": 3,
-    "\u2728 Thunder Element": 6,
+    "\u2728 Thunder Element": 4,
     "\u2728 Wind Element": 4,
     "\u2728 Fire Element": 3,
     "\u2728 Water Element": 1,
     "\ud83e\udda0 Slime": 1,
     "\u0b33 Jelly Fish": 1,
-    "\ud80c\udd9d Small Fish": 2,
+    "\ud80c\udd9d Small Fish": 3,
     "\ud83d\udc12 Monkey": 1,
-    "\ud83d\udc0d Snake": 1,
     "\ud83d\udc1f Clownfish": 1,
-    "\ud83d\udc1f Beta Fish": 1
+    "\ud83d\udc1f Beta Fish": 1,
+    "\ud83e\uddaa Giant Clam": 1,
+    "\ud83e\udd80 Crab": 1
   },
   "5324087886": {
     "\ud83d\udc0c Snail": 38,
@@ -1038,7 +1040,7 @@
     "\ud83e\udd87 bat": 2,
     "\ud83e\uddec Mysterious DNA": 5,
     "\ud83d\udc09 Skull Dragon": 1,
-    "\ud83d\udc09 Baby Magma Dragon": 3,
+    "\ud83d\udc09 Baby Magma Dragon": 1,
     "\ud83d\udc3a Werewolf": 1,
     "\ud83d\udc09 Blue Dragon": 1,
     "\u2728 Wind Element": 5,
@@ -1668,7 +1670,7 @@
     "\ud83d\udc09\ud83d\udd25 Charmander": 10,
     "\ud83d\udc1f Beta Fish": 20,
     "\ud83d\udc38\ud83c\udf40 Bulbasaur": 4,
-    "\ud83d\udc09 Baby Magma Dragon": 4,
+    "\ud83d\udc09 Baby Magma Dragon": 5,
     "\ud83d\udc09 Skull Dragon": 5,
     "\ud83e\udd86 Duck": 10,
     "\ud83d\udc09 Cupid Dragon": 2,
@@ -2040,7 +2042,7 @@
     "\ud83d\udc38 Frog": 31,
     "\ud83d\udcff Lucky Jewel": 4,
     "\ud83d\udc1f Clownfish": 2,
-    "\ud83d\udc1f Bannerfish": 3,
+    "\ud83d\udc1f Bannerfish": 4,
     "\ud83d\udc0b Orca": 1,
     "\ud83d\udc1f Goldfish": 8,
     "\ud83d\udc1f Anglerfish": 4,
@@ -3296,7 +3298,7 @@
     "\ud83d\udc0d Snake": 1
   },
   "8302486210": {
-    "\ud83d\udc1f Axolotl": 49,
+    "\ud83d\udc1f Axolotl": 50,
     "\ud80c\udd9d Small Fish": 8,
     "\ud83d\udc19 Octopus": 1,
     "\ud83e\uddaa Giant Clam": 39,
