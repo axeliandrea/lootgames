@@ -1988,7 +1988,8 @@
     "Lost cip": 1,
     "\ud83d\udc38 Frog": 3,
     "\u0b33 Jelly Fish": 1,
-    "\ud83d\udc1f Beta Fish": 1
+    "\ud83d\udc1f Beta Fish": 1,
+    "\ud83e\uddec Mysterious DNA": 1
   },
   "5258093045": {
     "\ud83e\udd27 Zonk": 5,
@@ -3257,22 +3258,29 @@
     "\ud83d\udc38 Frog": 1
   },
   "8479514327": {
-    "\ud83d\udc1a Hermit Crab": 1,
-    "\u0b33 Jelly Fish": 2,
+    "\ud83d\udc1a Hermit Crab": 2,
+    "\u0b33 Jelly Fish": 3,
     "\ud83d\udc1f Stingrays Fish": 2,
-    "\ud83d\udc0d Snake": 4,
-    "\ud83d\udc38 Frog": 2,
-    "\ud83e\udd86 Duck": 1,
-    "\ud83d\udc1f Clownfish": 1,
-    "\ud83d\udc1f Doryfish": 2,
-    "\ud83d\udc0c Snail": 2,
+    "\ud83d\udc0d Snake": 6,
+    "\ud83d\udc38 Frog": 3,
+    "\ud83e\udd86 Duck": 2,
+    "\ud83d\udc1f Clownfish": 2,
+    "\ud83d\udc1f Doryfish": 4,
+    "\ud83d\udc0c Snail": 4,
     "\ud83e\uddaa Giant Clam": 1,
     "\ud83e\udd27 Zonk": 1,
     "\ud80c\udd9d Small Fish": 2,
-    "\ud83d\udc19 Octopus": 1,
+    "\ud83d\udc19 Octopus": 3,
     "\ud83d\udc1f Moorish Idol": 1,
     "\u2728 Fire Element": 1,
-    "\ud83d\udc1f Beta Fish": 1
+    "\ud83d\udc1f Beta Fish": 1,
+    "\u2728 Water Element": 1,
+    "\u2728 Wind Element": 1,
+    "\ud83d\udc1f Anglerfish": 2,
+    "\ud83d\udc1f Bannerfish": 1,
+    "\ud83e\udd89 Owl": 1,
+    "\ud83d\udc1f Goldfish": 1,
+    "\ud83e\udd80 Crab": 1
   },
   "6515550588": {
     "\ud83d\udc38 Frog": 4,
@@ -3369,5 +3377,10 @@
     "\ud83d\udc1f Clownfish": 1,
     "\ud83d\udcff Lucky Jewel": 1,
     "\ud83d\udc22\ud83d\udca7 Squirtle": 1
+  },
+  "5718091826": {
+    "\ud80c\udd9d Small Fish": 1,
+    "\u2728 Fire Element": 1,
+    "\ud83d\udc1a Hermit Crab": 1
   }
 }
