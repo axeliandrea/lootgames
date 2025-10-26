@@ -1041,7 +1041,7 @@
     "\ud83d\udc1f Doryfish": 16,
     "\ud83d\udc0b Orca": 2,
     "\ud83e\udda6 Seal": 5,
-    "\ud83d\udc19 Octopus": 32,
+    "\ud83d\udc19 Octopus": 33,
     "\ud83d\udc09 Cupid Dragon": 1,
     "\ud83d\udc1f Moorish Idol": 47,
     "\ud83d\udc31 White Winter Cat": 11,
@@ -1418,9 +1418,9 @@
     "\ud80c\udd9d Small Fish": 128,
     "\ud83e\udd27 Zonk": 101,
     "\ud83d\udc0c Snail": 50,
-    "\ud83d\udc1f Clownfish": 7,
+    "\ud83d\udc1f Clownfish": 8,
     "\ud83d\udc1a Hermit Crab": 53,
-    "\ud83d\udc1f Bannerfish": 4,
+    "\ud83d\udc1f Bannerfish": 5,
     "\ud83d\udc1f Anglerfish": 5,
     "Lost cip": 3,
     "\u0b33 Jelly Fish": 7,
@@ -1453,7 +1453,8 @@
     "\u2728 Thunder Element": 1,
     "\u2728 Fire Element": 1,
     "\u2728 Water Element": 1,
-    "\ud83e\udd87 bat": 2
+    "\ud83e\udd87 bat": 2,
+    "\ud83e\udd86 Duck": 1
   },
   "6190676802": {
     "\ud83d\udc1a Hermit Crab": 15,
@@ -2081,7 +2082,8 @@
     "\ud83d\udc31 Purple Fist Cat": 1,
     "\u2728 Fire Element": 2,
     "\ud83d\udc09\ud83d\udd25 Charmander": 1,
-    "\ud83d\udc09 Baby Dragon": 1
+    "\ud83d\udc09 Baby Dragon": 1,
+    "\ud83d\udc1f Moorish Idol": 1
   },
   "6819025347": {
     "\ud83e\udd27 Zonk": 1
