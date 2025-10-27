@@ -187,8 +187,15 @@ def run_flask():
 async def restart_bot(client, message):
     await message.reply_text("♻️ Bot sedang direstart, tunggu sebentar...")
     logger.info("♻️ Perintah restart diterima, bot akan restart...")
+
     await asyncio.sleep(2)
-    os.execv(sys.executable, [sys.executable] + sys.argv)
+
+    # Pastikan direktori kerja berada di root project
+    os.chdir(os.path.dirname(os.path.abspath(__file__)))
+    os.chdir("..")  # naik 1 folder ke root (bukan /lootgames/lootgames)
+
+    # Jalankan ulang dengan path yang benar
+    os.execv(sys.executable, [sys.executable, "-m", "lootgames"])
 
 # ================= STARTUP TASK ================= #
 async def startup_tasks():
@@ -277,3 +284,4 @@ if __name__ == "__main__":
     except ImportError:
         pass
     asyncio.run(main())
+
