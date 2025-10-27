@@ -263,6 +263,14 @@ async def main():
     logger.info(f"📱 Monitoring group: {ALLOWED_GROUP_ID}")
     logger.info(f"👑 Owner ID: {OWNER_ID}")
 
+    # ------------------ PRELOAD TARGET_GROUP ------------------
+    from lootgames.modules.menu_utama import TARGET_GROUP
+    try:
+        await app.get_chat(TARGET_GROUP)
+        logger.info(f"[BOOT] Grup target {TARGET_GROUP} berhasil dimuat.")
+    except Exception as e:
+        logger.error(f"[BOOT] Gagal memuat grup target {TARGET_GROUP}: {e}")
+
     # Jalankan startup worker
     await startup_tasks()
 
@@ -284,6 +292,7 @@ if __name__ == "__main__":
     except ImportError:
         pass
     asyncio.run(main())
+
 
 
 
