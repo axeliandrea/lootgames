@@ -259,7 +259,7 @@ async def main():
 
     # Start Pyrogram
     await app.start()
-    logger.info("🚀 LOOT Bot started!")
+    logger.info("🚀 LOOT Games Bot started!")
     logger.info(f"📱 Monitoring group: {ALLOWED_GROUP_ID}")
     logger.info(f"👑 Owner ID: {OWNER_ID}")
 
@@ -284,5 +284,6 @@ if __name__ == "__main__":
     except ImportError:
         pass
     asyncio.run(main())
+
 
 
