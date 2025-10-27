@@ -270,19 +270,22 @@ async def send_sedekah_to_group(client, sender_id, jenis, amount, slot, message)
 
     # Pastikan bot mengenali grup target (fix Peer ID invalid setelah restart)
     try:
-        await client.get_chat(TARGET_GROUP)
+        target_chat = await client.get_chat(TARGET_GROUP)
     except Exception as e:
         print(f"[SEDEKAH] ⚠️ Gagal memuat chat {TARGET_GROUP}: {e}")
+        await message.reply("❌ Gagal menemukan grup target untuk sedekah. Pastikan bot sudah join grup.")
+        return
 
-    # Kirim pesan sedekah ke grup
+    # Kirim pesan sedekah ke grup (gunakan ID dari objek chat agar valid)
     await client.send_message(
-        TARGET_GROUP,
+        target_chat.id,
         f"🎁 **{message.from_user.first_name}** membagikan **Sedekah Treasure Chest!**\n"
         f"🎣 {amount_per_slot} Umpan Type {jenis} per orang (slot {slot})",
         reply_markup=keyboard
     )
 
     await message.reply("✅ Sedekah Treasure Chest dikirim ke grup!")
+
 
 async def handle_sedekah_claim(client, cq):
     """Handle klaim sedekah:
@@ -2799,6 +2802,7 @@ def register_sedekah_handlers(app: Client):
     app.add_handler(MessageHandler(handle_sedekah_input, filters.private & filters.text))
     app.add_handler(CallbackQueryHandler(callback_handler))
     print("[DEBUG] register_sedekah_handlers() aktif ✅")
+
 
 
 
