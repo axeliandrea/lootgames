@@ -238,16 +238,13 @@ async def handle_sedekah_input(client, message: Message):
 
 # ---------------- SEND TO GROUP ---------------- #
 async def send_sedekah_to_group(client, sender_id, jenis, amount, slot, message):
-    """Kirim sedekah chest ke grup dengan aman setelah restart"""
-    # --- kurangi umpan ---
+    """Kirim sedekah chest ke grup"""
     try:
-        remove_umpan(sender_id, jenis, amount)
-        print(f"[REMOVE] User {sender_id} -{amount} umpan tipe {jenis}")
+        umpan.remove_umpan(sender_id, jenis, amount)
     except Exception as e:
         await message.reply(f"❌ Gagal mengurangi umpan: {e}")
         return
 
-    # --- buat chest baru ---
     chest_id = int(time.time())
     amount_per_slot = amount // slot
     new_chest = {
@@ -262,18 +259,16 @@ async def send_sedekah_to_group(client, sender_id, jenis, amount, slot, message)
         "attempts": []
     }
 
-    # --- simpan chest ---
+    # SEDEKAH
     data = load_sedekah_data()
     data["active"].append(new_chest)
     save_sedekah_data(data)
-    print(f"[SEDEKAH] Chest {chest_id} disimpan. Total active: {len(data['active'])}")
 
-    # --- keyboard claim ---
     keyboard = InlineKeyboardMarkup([
         [InlineKeyboardButton("🎁 Claim Sedekah", callback_data=f"SEDEKAH_CLAIM:{chest_id}")]
     ])
 
-    # --- kirim ke grup dengan try/catch ---
+    # Langsung kirim ke TARGET_GROUP tanpa get_chat()
     try:
         await client.send_message(
             TARGET_GROUP,
@@ -282,11 +277,8 @@ async def send_sedekah_to_group(client, sender_id, jenis, amount, slot, message)
             reply_markup=keyboard
         )
         await message.reply("✅ Sedekah Treasure Chest dikirim ke grup!")
-        print(f"[SEDEKAH] Chest {chest_id} dikirim ke grup {TARGET_GROUP}")
     except Exception as e:
-        await message.reply(
-            "⚠️ Gagal kirim sedekah: bot belum join grup atau peer invalid."
-        )
+        await message.reply(f"❌ Gagal mengirim ke grup: {e}")
         print(f"[SEDEKAH] Gagal kirim ke {TARGET_GROUP}: {e}")
 
 
@@ -2805,6 +2797,7 @@ def register_sedekah_handlers(app: Client):
     app.add_handler(MessageHandler(handle_sedekah_input, filters.private & filters.text))
     app.add_handler(CallbackQueryHandler(callback_handler))
     print("[DEBUG] register_sedekah_handlers() aktif ✅")
+
 
 
 
