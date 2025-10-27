@@ -4,8 +4,9 @@ import threading
 import logging
 import os
 import json
+import sys
 from datetime import datetime
-from pyrogram import Client
+from pyrogram import Client, filters
 from pyrogram.handlers import CallbackQueryHandler
 from flask import Flask, request
 
@@ -177,8 +178,17 @@ def saweria_webhook():
         logger.error(f"❌ Webhook error: {e}")
         return {"status": "error", "message": str(e)}, 500
 
+
 def run_flask():
     webhook_app.run(host="0.0.0.0", port=8080)
+
+# ================= COMMAND /RESTART ================= #
+@app.on_message(filters.command("restart") & filters.user(OWNER_ID))
+async def restart_bot(client, message):
+    await message.reply_text("♻️ Bot sedang direstart, tunggu sebentar...")
+    logger.info("♻️ Perintah restart diterima, bot akan restart...")
+    await asyncio.sleep(2)
+    os.execv(sys.executable, [sys.executable] + sys.argv)
 
 # ================= STARTUP TASK ================= #
 async def startup_tasks():
@@ -242,7 +252,7 @@ async def main():
 
     # Start Pyrogram
     await app.start()
-    logger.info("🚀 TRIAL Bot started!")
+    logger.info("🚀 LOOT Bot started!")
     logger.info(f"📱 Monitoring group: {ALLOWED_GROUP_ID}")
     logger.info(f"👑 Owner ID: {OWNER_ID}")
 
