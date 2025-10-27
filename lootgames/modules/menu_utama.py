@@ -278,7 +278,7 @@ async def send_sedekah_to_group(client, sender_id, jenis, amount, slot, message)
 
     # Kirim pesan sedekah ke grup (gunakan ID dari objek chat agar valid)
     await client.send_message(
-        target_chat.id,
+        TARGET_GROUP,
         f"🎁 **{message.from_user.first_name}** membagikan **Sedekah Treasure Chest!**\n"
         f"🎣 {amount_per_slot} Umpan Type {jenis} per orang (slot {slot})",
         reply_markup=keyboard
@@ -2802,6 +2802,7 @@ def register_sedekah_handlers(app: Client):
     app.add_handler(MessageHandler(handle_sedekah_input, filters.private & filters.text))
     app.add_handler(CallbackQueryHandler(callback_handler))
     print("[DEBUG] register_sedekah_handlers() aktif ✅")
+
 
 
 
