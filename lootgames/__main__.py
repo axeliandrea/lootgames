@@ -268,7 +268,7 @@ async def main():
 
     # Kirim notifikasi ke owner
     try:
-        await app.send_message(OWNER_ID, "🤖 TRIAL Bot sudah aktif dan siap dipakai!")
+        await app.send_message(OWNER_ID, "🤖 LOOT Games Bot sudah aktif ya!")
         logger.info("📢 Notifikasi start terkirim ke OWNER.")
     except Exception as e:
         logger.error(f"Gagal kirim notifikasi start: {e}")
@@ -284,4 +284,5 @@ if __name__ == "__main__":
     except ImportError:
         pass
     asyncio.run(main())
+
 
