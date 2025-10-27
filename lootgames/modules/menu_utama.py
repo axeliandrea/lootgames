@@ -253,13 +253,13 @@ async def send_sedekah_to_group(client, sender_id, jenis, amount, slot, message)
         "jenis": jenis,
         "amount": amount_per_slot,
         "slot": slot,
-        "claimed": [],        # tidak terlalu dipakai sekarang, tetap ada untuk backward compat
+        "claimed": [],
         "created_at": time.time(),
-        "winner": None,       # akan diisi user_id jika ada pemenang
-        "attempts": []        # user_id yang sudah mencoba (opsional, untuk mencegah spam)
+        "winner": None,
+        "attempts": []
     }
 
-    #SEDEKAH
+    # SEDEKAH
     data = load_sedekah_data()
     data["active"].append(new_chest)
     save_sedekah_data(data)
@@ -268,23 +268,18 @@ async def send_sedekah_to_group(client, sender_id, jenis, amount, slot, message)
         [InlineKeyboardButton("🎁 Claim Sedekah", callback_data=f"SEDEKAH_CLAIM:{chest_id}")]
     ])
 
-    # Pastikan bot mengenali grup target (fix Peer ID invalid setelah restart)
+    # Langsung kirim ke TARGET_GROUP tanpa get_chat()
     try:
-        target_chat = await client.get_chat(TARGET_GROUP)
+        await client.send_message(
+            TARGET_GROUP,
+            f"🎁 **{message.from_user.first_name}** membagikan **Sedekah Treasure Chest!**\n"
+            f"🎣 {amount_per_slot} Umpan Type {jenis} per orang (slot {slot})",
+            reply_markup=keyboard
+        )
+        await message.reply("✅ Sedekah Treasure Chest dikirim ke grup!")
     except Exception as e:
-        print(f"[SEDEKAH] ⚠️ Gagal memuat chat {TARGET_GROUP}: {e}")
-        await message.reply("❌ Gagal menemukan grup target untuk sedekah. Pastikan bot sudah join grup.")
-        return
-
-    # Kirim pesan sedekah ke grup (gunakan ID dari objek chat agar valid)
-    await client.send_message(
-        TARGET_GROUP,
-        f"🎁 **{message.from_user.first_name}** membagikan **Sedekah Treasure Chest!**\n"
-        f"🎣 {amount_per_slot} Umpan Type {jenis} per orang (slot {slot})",
-        reply_markup=keyboard
-    )
-
-    await message.reply("✅ Sedekah Treasure Chest dikirim ke grup!")
+        await message.reply(f"❌ Gagal mengirim ke grup: {e}")
+        print(f"[SEDEKAH] Gagal kirim ke {TARGET_GROUP}: {e}")
 
 
 async def handle_sedekah_claim(client, cq):
@@ -2802,6 +2797,7 @@ def register_sedekah_handlers(app: Client):
     app.add_handler(MessageHandler(handle_sedekah_input, filters.private & filters.text))
     app.add_handler(CallbackQueryHandler(callback_handler))
     print("[DEBUG] register_sedekah_handlers() aktif ✅")
+
 
 
 
