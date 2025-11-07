@@ -7,10 +7,7 @@
   },
   "total_claim": 5,
   "max_claim": 10,
-  "claimed_users": [
-    6395738130,
-    6580176261
-  ],
-  "chest_id": 226,
-  "created_at": 1762522061.448828
+  "claimed_users": [],
+  "chest_id": 227,
+  "created_at": 1762526421.041122
 }
