@@ -2080,7 +2080,7 @@
     "\ud83d\udc09 Yellow Dragon": 1,
     "\ud83e\udda6 Seal": 2,
     "\ud83e\udd80 Crab": 6,
-    "\ud83d\udc1f Stingrays Fish": 5,
+    "\ud83d\udc1f Stingrays Fish": 6,
     "\ud83d\udc0d Snake": 6,
     "\ud83e\udd9e Lobster": 3,
     "\ud83e\uddaa Giant Clam": 4,
@@ -2098,7 +2098,8 @@
     "\ud83d\udc09\ud83d\udd25 Charmander": 1,
     "\ud83d\udc09 Baby Dragon": 1,
     "\ud83d\udc1f Moorish Idol": 1,
-    "\ud83e\udda0 Slime": 1
+    "\ud83e\udda0 Slime": 1,
+    "\u2728 Thunder Element": 1
   },
   "6819025347": {
     "\ud83e\udd27 Zonk": 1
