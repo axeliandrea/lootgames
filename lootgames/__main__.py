@@ -11,7 +11,7 @@ from pyrogram.handlers import CallbackQueryHandler
 from flask import Flask, request
 
 # ================= CONFIG ================= #
-from config import import (
+from config import (
     API_ID,
     API_HASH,
     BOT_TOKEN,
@@ -292,6 +292,7 @@ if __name__ == "__main__":
     except ImportError:
         pass
     asyncio.run(main())
+
 
 
 
