@@ -11,7 +11,7 @@ import json
 import tempfile
 from collections import defaultdict
 from pyrogram import Client, filters
-from __main__ import load_history
+from modules.utils_history import load_history, save_history_entry
 from modules import yapping, umpan, user_database
 from modules import fizz_coin
 from modules import aquarium
@@ -2794,6 +2794,7 @@ def register_sedekah_handlers(app: Client):
     app.add_handler(MessageHandler(handle_sedekah_input, filters.private & filters.text))
     app.add_handler(CallbackQueryHandler(callback_handler))
     print("[DEBUG] register_sedekah_handlers() aktif ✅")
+
 
 
 
