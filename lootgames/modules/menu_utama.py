@@ -11,16 +11,13 @@ import json
 import tempfile
 from collections import defaultdict
 from pyrogram import Client, filters
-from lootgames.__main__ import load_history
-from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery, Message
-from pyrogram.handlers import MessageHandler, CallbackQueryHandler
+from __main__ import load_history
+from modules import yapping, umpan, user_database
+from modules import fizz_coin
+from modules import aquarium
+from modules.gacha_fishing import fishing_loot
+from modules.utils import save_topup_history, calculate_umpan
 
-from lootgames.modules import yapping, umpan, user_database
-from lootgames.modules import fizz_coin
-from lootgames.modules import aquarium
-from lootgames.modules.gacha_fishing import fishing_loot
-from datetime import datetime, timezone, timedelta
-from lootgames.modules.utils import save_topup_history, calculate_umpan
 
 WEBHOOK_URL = "https://preelemental-marth-exactly.ngrok-free.dev/webhook/saweria"
 
@@ -2797,6 +2794,7 @@ def register_sedekah_handlers(app: Client):
     app.add_handler(MessageHandler(handle_sedekah_input, filters.private & filters.text))
     app.add_handler(CallbackQueryHandler(callback_handler))
     print("[DEBUG] register_sedekah_handlers() aktif ✅")
+
 
 
 
