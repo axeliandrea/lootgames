@@ -4,7 +4,7 @@ import logging
 from datetime import datetime
 from pyrogram import Client, filters
 from pyrogram.types import Message
-from lootgames.config import ALLOWED_GROUP_ID, OWNER_ID
+from config import ALLOWED_GROUP_ID, OWNER_ID
 
 # ================= CONFIG ================= #
 YAPPINGPOINT_DB = "storage/chat_points.json"
