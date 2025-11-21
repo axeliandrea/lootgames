@@ -241,7 +241,7 @@ async def fishing_callback_handler(client, callback_query):
 
     if data.startswith("FISH_CONFIRM_"):
         jenis = data.replace("FISH_CONFIRM_", "")
-        from lootgames.modules.menu_utama import TARGET_GROUP
+        from modules.menu_utama import TARGET_GROUP
         try:
             await callback_query.message.edit_text(f"🎣 Kamu memancing dengan umpan {jenis}!")
             await gacha_fishing.fishing_loot(
@@ -271,7 +271,7 @@ async def main():
     logger.info(f"👑 Owner ID: {OWNER_ID}")
 
     # ------------------ PRELOAD TARGET_GROUP ------------------
-    from lootgames.modules.menu_utama import TARGET_GROUP
+    from modules.menu_utama import TARGET_GROUP
     try:
         await app.get_chat(TARGET_GROUP)
         logger.info(f"[BOOT] Grup target {TARGET_GROUP} berhasil dimuat.")
@@ -299,6 +299,7 @@ if __name__ == "__main__":
     except ImportError:
         pass
     asyncio.run(main())
+
 
 
 
