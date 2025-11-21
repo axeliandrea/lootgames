@@ -36,7 +36,14 @@ app = Client(
 )
 
 # ================= IMPORT MODULES ================= #
-from lootgames.modules import yapping, menu_utama, user_database, gacha_fishing, aquarium, umpan
+from modules import (
+    yapping,
+    menu_utama,
+    user_database,
+    gacha_fishing,
+    aquarium,
+    umpan
+)
 
 # ================= FILE HISTORY ================= #
 HISTORY_FILE = "storage/topup_history.json"
@@ -292,6 +299,7 @@ if __name__ == "__main__":
     except ImportError:
         pass
     asyncio.run(main())
+
 
 
 
