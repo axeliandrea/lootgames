@@ -2797,9 +2797,10 @@ def register_sedekah_handlers(app: Client):
     Fungsi ini memungkinkan bot menerima input angka (jumlah & slot)
     saat pengguna mengetik di chat private.
     """
-    app.add_handler(MessageHandler(handle_sedekah_input, filters.ChatType.PRIVATE & filters.text))
+    app.add_handler(MessageHandler(handle_sedekah_input, filters.TEXT & filters.ChatType.PRIVATE))
     app.add_handler(CallbackQueryHandler(callback_handler))
     print("[DEBUG] register_sedekah_handlers() aktif ✅")
+
 
 
 
