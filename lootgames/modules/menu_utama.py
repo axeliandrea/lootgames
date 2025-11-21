@@ -2782,14 +2782,14 @@ def register(app: Client):
     # 🧭 MENU & PERINTAH UTAMA
     # ====================================================
     # Handler untuk membuka menu utama lewat .menufish (debug) atau /menu
-    app.add_handler(MessageHandler(open_menu, filters.regex(r"^\.menufish$") & filters.private))
-    app.add_handler(MessageHandler(open_menu_pm, filters.command("menu") & filters.private))
+    app.add_handler(MessageHandler(open_menu, filters.regex(r"^\.menufish$") & filters.ChatType.PRIVATE))
+    app.add_handler(MessageHandler(open_menu_pm, filters.command("menu") & filters.ChatType.PRIVATE))
 
     # ====================================================
     # 💰 TRANSFER & INPUT COIN
     # ====================================================
     # Menangani format transfer item / koin antara user
-    app.add_handler(MessageHandler(handle_transfer_message, filters.text & filters.private))
+    app.add_handler(MessageHandler(handle_transfer_message, filters.text & filters.ChatType.PRIVATE))
 
 def register_sedekah_handlers(app: Client):
     """
@@ -2797,9 +2797,10 @@ def register_sedekah_handlers(app: Client):
     Fungsi ini memungkinkan bot menerima input angka (jumlah & slot)
     saat pengguna mengetik di chat private.
     """
-    app.add_handler(MessageHandler(handle_sedekah_input, filters.private & filters.text))
+    app.add_handler(MessageHandler(handle_sedekah_input, filters.ChatType.PRIVATE & filters.text))
     app.add_handler(CallbackQueryHandler(callback_handler))
     print("[DEBUG] register_sedekah_handlers() aktif ✅")
+
 
 
 
