@@ -2,7 +2,7 @@ import random
 import asyncio
 import logging
 from pyrogram import Client
-from lootgames.modules import aquarium
+from modules import aquarium
 
 logger = logging.getLogger(__name__)
 
